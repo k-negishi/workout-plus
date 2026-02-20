@@ -1,0 +1,294 @@
+<mxfile host="app.diagrams.net" agent="Claude Code" version="24.0.0">
+  <diagram name="画面遷移図" id="screen-flow">
+    <mxGraphModel dx="1800" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- =============================================
+             TITLE &amp; LEGEND
+             ============================================= -->
+        <mxCell id="title" value="Workout+  画面遷移図" style="text;html=1;fontSize=24;fontStyle=1;fontColor=#1e293b;align=left;verticalAlign=middle;whiteSpace=wrap;fontFamily=Noto Sans JP;" vertex="1" parent="1">
+          <mxGeometry x="30" y="-60" width="400" height="40" as="geometry"/>
+        </mxCell>
+        <mxCell id="subtitle" value="v5 ワイヤーフレームより抽出  |  全15画面・23遷移" style="text;html=1;fontSize=12;fontColor=#64748b;align=left;verticalAlign=middle;fontFamily=Noto Sans JP;" vertex="1" parent="1">
+          <mxGeometry x="30" y="-25" width="400" height="20" as="geometry"/>
+        </mxCell>
+
+        <!-- Legend -->
+        <mxCell id="legend-box" value="" style="rounded=1;whiteSpace=wrap;fillColor=#FAFBFC;strokeColor=#e2e8f0;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="860" y="-70" width="440" height="80" as="geometry"/>
+        </mxCell>
+        <mxCell id="legend-title" value="凡例" style="text;html=1;fontSize=11;fontStyle=1;fontColor=#475569;align=left;verticalAlign=middle;fontFamily=Noto Sans JP;" vertex="1" parent="1">
+          <mxGeometry x="870" y="-68" width="60" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg1" value="" style="rounded=1;fillColor=#DBEAFE;strokeColor=#4D94FF;strokeWidth=2;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="875" y="-44" width="16" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg1t" value="タブバー画面" style="text;fontSize=10;fontColor=#475569;align=left;verticalAlign=middle;fontFamily=Noto Sans JP;" vertex="1" parent="1">
+          <mxGeometry x="896" y="-47" width="80" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg2" value="" style="rounded=1;fillColor=#FFF7ED;strokeColor=#F59E0B;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="990" y="-44" width="16" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg2t" value="モーダル / オーバーレイ" style="text;fontSize=10;fontColor=#475569;align=left;verticalAlign=middle;fontFamily=Noto Sans JP;" vertex="1" parent="1">
+          <mxGeometry x="1011" y="-47" width="130" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg3" value="" style="rounded=1;fillColor=#EDE9FE;strokeColor=#8B5CF6;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="1150" y="-44" width="16" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg3t" value="詳細画面" style="text;fontSize=10;fontColor=#475569;align=left;verticalAlign=middle;fontFamily=Noto Sans JP;" vertex="1" parent="1">
+          <mxGeometry x="1171" y="-47" width="60" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg4" value="" style="rounded=1;fillColor=#F1F5F9;strokeColor=#94A3B8;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="875" y="-20" width="16" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg4t" value="設定画面" style="text;fontSize=10;fontColor=#475569;align=left;verticalAlign=middle;fontFamily=Noto Sans JP;" vertex="1" parent="1">
+          <mxGeometry x="896" y="-23" width="60" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg5" value="" style="rounded=1;fillColor=#FEE2E2;strokeColor=#EF4444;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="990" y="-20" width="16" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg5t" value="ダイアログ" style="text;fontSize=10;fontColor=#475569;align=left;verticalAlign=middle;fontFamily=Noto Sans JP;" vertex="1" parent="1">
+          <mxGeometry x="1011" y="-23" width="70" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg6" value="" style="endArrow=classic;strokeColor=#475569;dashed=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1150" y="-11" as="sourcePoint"/>
+            <mxPoint x="1186" y="-11" as="targetPoint"/>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="leg6t" value="戻る遷移" style="text;fontSize=10;fontColor=#475569;align=left;verticalAlign=middle;fontFamily=Noto Sans JP;" vertex="1" parent="1">
+          <mxGeometry x="1192" y="-23" width="60" height="20" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg7" value="" style="rounded=1;fillColor=#F0FDF4;strokeColor=#10B981;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="1248" y="-44" width="16" height="16" as="geometry"/>
+        </mxCell>
+        <mxCell id="leg7t" value="完了フロー" style="text;fontSize=10;fontColor=#475569;align=left;verticalAlign=middle;fontFamily=Noto Sans JP;" vertex="1" parent="1">
+          <mxGeometry x="1269" y="-47" width="70" height="20" as="geometry"/>
+        </mxCell>
+
+        <!-- =============================================
+             SETTINGS GROUP (Top)
+             ============================================= -->
+        <mxCell id="settings-group" value="設定フロー" style="rounded=1;dashed=1;dashPattern=5 3;strokeColor=#94A3B8;fillColor=none;fontColor=#94A3B8;fontSize=10;fontStyle=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;" vertex="1" parent="1">
+          <mxGeometry x="130" y="20" width="620" height="190" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="settings" value="⚙ 設定" style="rounded=1;whiteSpace=wrap;fillColor=#F1F5F9;strokeColor=#94A3B8;strokeWidth=1.5;fontColor=#334155;fontSize=13;fontStyle=1;shadow=0;spacingTop=2;" vertex="1" parent="1">
+          <mxGeometry x="340" y="140" width="160" height="50" as="geometry"/>
+        </mxCell>
+        <mxCell id="settings-backup" value="バックアップ" style="rounded=1;whiteSpace=wrap;fillColor=#F1F5F9;strokeColor=#94A3B8;fontColor=#475569;fontSize=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="150" y="40" width="140" height="44" as="geometry"/>
+        </mxCell>
+        <mxCell id="settings-timer" value="タイマー設定" style="rounded=1;whiteSpace=wrap;fillColor=#F1F5F9;strokeColor=#94A3B8;fontColor=#475569;fontSize=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="350" y="40" width="140" height="44" as="geometry"/>
+        </mxCell>
+        <mxCell id="settings-unit" value="単位設定" style="rounded=1;whiteSpace=wrap;fillColor=#F1F5F9;strokeColor=#94A3B8;fontColor=#475569;fontSize=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="550" y="40" width="140" height="44" as="geometry"/>
+        </mxCell>
+
+        <!-- Settings edges -->
+        <mxCell id="e-s1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;strokeColor=#94A3B8;fontSize=9;exitX=0.25;exitY=0;entryX=0.5;entryY=1;endArrow=classic;" edge="1" source="settings" target="settings-backup" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-s2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;strokeColor=#94A3B8;fontSize=9;exitX=0.5;exitY=0;entryX=0.5;entryY=1;endArrow=classic;" edge="1" source="settings" target="settings-timer" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-s3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;strokeColor=#94A3B8;fontSize=9;exitX=0.75;exitY=0;entryX=0.5;entryY=1;endArrow=classic;" edge="1" source="settings" target="settings-unit" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-s-back" value="各画面「← 戻る」で設定に戻る" style="text;html=1;fontSize=9;fontColor=#94A3B8;align=center;verticalAlign=middle;fontFamily=Noto Sans JP;fontStyle=2;" vertex="1" parent="1">
+          <mxGeometry x="280" y="100" width="180" height="16" as="geometry"/>
+        </mxCell>
+
+        <!-- =============================================
+             TAB BAR GROUP (Middle)
+             ============================================= -->
+        <mxCell id="tab-group" value="タブバー（下部ナビゲーション）— どの画面からでもアクセス可能" style="rounded=1;dashed=1;dashPattern=5 3;strokeColor=#4D94FF;fillColor=none;fontColor=#4D94FF;fontSize=10;fontStyle=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;opacity=60;" vertex="1" parent="1">
+          <mxGeometry x="10" y="270" width="1160" height="120" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="home" value="ホーム" style="rounded=1;whiteSpace=wrap;fillColor=#DBEAFE;strokeColor=#4D94FF;strokeWidth=2;fontColor=#1e293b;fontSize=14;fontStyle=1;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="340" y="300" width="170" height="65" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="calendar" value="カレンダー" style="rounded=1;whiteSpace=wrap;fillColor=#DBEAFE;strokeColor=#4D94FF;fontColor=#334155;fontSize=13;fontStyle=1;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="650" y="310" width="150" height="56" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="stats" value="統計" style="rounded=1;whiteSpace=wrap;fillColor=#DBEAFE;strokeColor=#4D94FF;fontColor=#334155;fontSize=13;fontStyle=1;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="940" y="310" width="130" height="56" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="ai" value="AI" style="rounded=1;whiteSpace=wrap;fillColor=#DBEAFE;strokeColor=#4D94FF;fontColor=#334155;fontSize=13;fontStyle=1;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="30" y="310" width="110" height="56" as="geometry"/>
+        </mxCell>
+
+        <!-- =============================================
+             RECORD FLOW (Center-Left)
+             ============================================= -->
+        <mxCell id="record-group" value="記録フロー" style="rounded=1;dashed=1;dashPattern=5 3;strokeColor=#4D94FF;fillColor=none;fontColor=#3385FF;fontSize=10;fontStyle=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;opacity=50;" vertex="1" parent="1">
+          <mxGeometry x="10" y="440" width="680" height="490" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="record" value="＋ 記録" style="rounded=1;whiteSpace=wrap;fillColor=#DBEAFE;strokeColor=#4D94FF;strokeWidth=2;fontColor=#1e293b;fontSize=14;fontStyle=1;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="260" y="490" width="170" height="60" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="picker" value="種目選択&lt;br&gt;&lt;font style=&quot;font-size:9px;font-weight:normal;&quot;&gt;フルスクリーンモーダル&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;fillColor=#FFF7ED;strokeColor=#F59E0B;fontColor=#334155;fontSize=12;fontStyle=1;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="30" y="630" width="180" height="56" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="history-full" value="種目別履歴&lt;br&gt;&lt;font style=&quot;font-size:9px;font-weight:normal;&quot;&gt;フルスクリーン&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;fillColor=#FFF7ED;strokeColor=#F59E0B;fontColor=#334155;fontSize=12;fontStyle=1;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="280" y="630" width="180" height="56" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="summary" value="完了サマリー" style="rounded=1;whiteSpace=wrap;fillColor=#F0FDF4;strokeColor=#10B981;strokeWidth=1.5;fontColor=#334155;fontSize=12;fontStyle=1;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="520" y="630" width="150" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- =============================================
+             DETAIL FLOW (Right)
+             ============================================= -->
+        <mxCell id="detail-group" value="詳細フロー" style="rounded=1;dashed=1;dashPattern=5 3;strokeColor=#8B5CF6;fillColor=none;fontColor=#8B5CF6;fontSize=10;fontStyle=1;verticalAlign=top;align=left;spacingLeft=8;spacingTop=2;opacity=50;" vertex="1" parent="1">
+          <mxGeometry x="730" y="440" width="540" height="490" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="workout-detail" value="ワークアウト詳細&lt;br&gt;&lt;font style=&quot;font-size:9px;font-weight:normal;&quot;&gt;閲覧モード&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;fillColor=#EDE9FE;strokeColor=#8B5CF6;strokeWidth=1.5;fontColor=#334155;fontSize=12;fontStyle=1;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="760" y="490" width="200" height="56" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="workout-edit" value="ワークアウト詳細&lt;br&gt;&lt;font style=&quot;font-size:9px;font-weight:normal;&quot;&gt;編集モード&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;fillColor=#EDE9FE;strokeColor=#8B5CF6;strokeWidth=1.5;fontColor=#334155;fontSize=12;fontStyle=1;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="1040" y="630" width="200" height="56" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="discard-dialog" value="破棄確認&lt;br&gt;&lt;font style=&quot;font-size:9px;font-weight:normal;&quot;&gt;ダイアログ&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;fillColor=#FEE2E2;strokeColor=#EF4444;strokeWidth=1.5;fontColor=#334155;fontSize=12;fontStyle=1;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="1040" y="820" width="200" height="50" as="geometry"/>
+        </mxCell>
+
+        <!-- =============================================
+             EDGES: Home → 各画面
+             ============================================= -->
+
+        <!-- Home → Settings (avatar) -->
+        <mxCell id="e-home-settings" value="アバタータップ" style="rounded=1;orthogonalLoop=1;strokeColor=#475569;fontSize=9;fontColor=#475569;endArrow=classic;exitX=0.5;exitY=0;entryX=0.5;entryY=1;curved=1;" edge="1" source="home" target="settings" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Home → Calendar (view all) -->
+        <mxCell id="e-home-cal" value="「すべて表示」" style="rounded=1;orthogonalLoop=1;strokeColor=#475569;fontSize=9;fontColor=#475569;endArrow=classic;exitX=1;exitY=0.25;entryX=0;entryY=0.5;curved=1;" edge="1" source="home" target="calendar" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Home → Workout Detail (card tap) -->
+        <mxCell id="e-home-detail" value="ワークアウトカードタップ" style="rounded=1;orthogonalLoop=1;strokeColor=#475569;fontSize=9;fontColor=#475569;endArrow=classic;exitX=1;exitY=0.75;entryX=0;entryY=0.25;curved=1;" edge="1" source="home" target="workout-detail" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Home ↔ Record (tab bar +) -->
+        <mxCell id="e-home-record" value="タブ「＋」" style="rounded=1;orthogonalLoop=1;strokeColor=#4D94FF;fontSize=9;fontColor=#4D94FF;endArrow=classic;exitX=0.5;exitY=1;entryX=0.5;entryY=0;curved=1;strokeWidth=2;" edge="1" source="home" target="record" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- =============================================
+             EDGES: Record → 各画面
+             ============================================= -->
+
+        <!-- Record → Picker -->
+        <mxCell id="e-rec-picker" value="「種目を追加」" style="rounded=1;orthogonalLoop=1;strokeColor=#475569;fontSize=9;fontColor=#475569;endArrow=classic;exitX=0;exitY=0.75;entryX=0.5;entryY=0;curved=1;" edge="1" source="record" target="picker" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Picker → Record (back) -->
+        <mxCell id="e-picker-rec" value="閉じる / 種目選択" style="rounded=1;orthogonalLoop=1;strokeColor=#475569;fontSize=9;fontColor=#475569;endArrow=classic;dashed=1;exitX=1;exitY=0;entryX=0;entryY=1;curved=1;" edge="1" source="picker" target="record" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Record → History (exercise name tap) -->
+        <mxCell id="e-rec-hist" value="種目名タップ" style="rounded=1;orthogonalLoop=1;strokeColor=#475569;fontSize=9;fontColor=#475569;endArrow=classic;exitX=0.5;exitY=1;entryX=0.5;entryY=0;curved=1;" edge="1" source="record" target="history-full" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- History → Record (back) -->
+        <mxCell id="e-hist-rec" value="「←」戻る" style="rounded=1;orthogonalLoop=1;strokeColor=#475569;fontSize=9;fontColor=#475569;endArrow=classic;dashed=1;exitX=0;exitY=0;entryX=0.25;entryY=1;curved=1;" edge="1" source="history-full" target="record" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Record → Summary -->
+        <mxCell id="e-rec-summary" value="「完了」ボタン" style="rounded=1;orthogonalLoop=1;strokeColor=#10B981;fontSize=9;fontColor=#10B981;endArrow=classic;strokeWidth=2;exitX=1;exitY=0.75;entryX=0.5;entryY=0;curved=1;" edge="1" source="record" target="summary" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Summary → Home -->
+        <mxCell id="e-summary-home" value="「ホームに戻る」" style="rounded=1;orthogonalLoop=1;strokeColor=#10B981;fontSize=9;fontColor=#10B981;endArrow=classic;strokeWidth=2;dashed=1;exitX=0;exitY=0;entryX=1;entryY=1;curved=1;" edge="1" source="summary" target="home" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- =============================================
+             EDGES: Calendar / Stats
+             ============================================= -->
+
+        <!-- Calendar → Workout Detail -->
+        <mxCell id="e-cal-detail" value="日付のカードタップ" style="rounded=1;orthogonalLoop=1;strokeColor=#475569;fontSize=9;fontColor=#475569;endArrow=classic;exitX=0.5;exitY=1;entryX=0.25;entryY=0;curved=1;" edge="1" source="calendar" target="workout-detail" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Stats → History -->
+        <mxCell id="e-stats-hist" value="1RM種目名タップ" style="rounded=1;orthogonalLoop=1;strokeColor=#475569;fontSize=9;fontColor=#475569;endArrow=classic;exitX=0;exitY=1;entryX=1;entryY=0;curved=1;" edge="1" source="stats" target="history-full" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- =============================================
+             EDGES: Detail Flow
+             ============================================= -->
+
+        <!-- Workout Detail → Home (back) -->
+        <mxCell id="e-detail-home" value="「←」戻る" style="rounded=1;orthogonalLoop=1;strokeColor=#475569;fontSize=9;fontColor=#475569;endArrow=classic;dashed=1;exitX=0;exitY=0.5;entryX=1;entryY=0.75;curved=1;" edge="1" source="workout-detail" target="home" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="700" y="518"/>
+              <mxPoint x="700" y="400"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Workout Detail → Edit -->
+        <mxCell id="e-detail-edit" value="「編集」ボタン" style="rounded=1;orthogonalLoop=1;strokeColor=#8B5CF6;fontSize=9;fontColor=#8B5CF6;endArrow=classic;exitX=1;exitY=0.75;entryX=0;entryY=0.25;curved=1;strokeWidth=1.5;" edge="1" source="workout-detail" target="workout-edit" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Edit → Detail (save) -->
+        <mxCell id="e-edit-detail" value="「保存」" style="rounded=1;orthogonalLoop=1;strokeColor=#10B981;fontSize=9;fontColor=#10B981;endArrow=classic;dashed=1;exitX=0;exitY=0;entryX=1;entryY=1;curved=1;strokeWidth=1.5;" edge="1" source="workout-edit" target="workout-detail" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Edit → Discard Dialog -->
+        <mxCell id="e-edit-discard" value="「キャンセル」" style="rounded=1;orthogonalLoop=1;strokeColor=#EF4444;fontSize=9;fontColor=#EF4444;endArrow=classic;exitX=0.5;exitY=1;entryX=0.5;entryY=0;curved=1;" edge="1" source="workout-edit" target="discard-dialog" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Discard → Home (discard) -->
+        <mxCell id="e-discard-home" value="「破棄する」" style="rounded=1;orthogonalLoop=1;strokeColor=#EF4444;fontSize=9;fontColor=#EF4444;endArrow=classic;strokeWidth=1.5;exitX=0;exitY=0;entryX=1;entryY=1;curved=1;" edge="1" source="discard-dialog" target="home" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="750" y="780"/>
+              <mxPoint x="560" y="420"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Discard → Edit (continue) -->
+        <mxCell id="e-discard-edit" value="「編集を続ける」" style="rounded=1;orthogonalLoop=1;strokeColor=#475569;fontSize=9;fontColor=#475569;endArrow=classic;dashed=1;exitX=1;exitY=0;entryX=1;entryY=1;curved=1;" edge="1" source="discard-dialog" target="workout-edit" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- Settings → Home (back) -->
+        <mxCell id="e-settings-home" value="「←」戻る" style="rounded=1;orthogonalLoop=1;strokeColor=#475569;fontSize=9;fontColor=#475569;endArrow=classic;dashed=1;exitX=0.25;exitY=1;entryX=0.25;entryY=0;curved=1;" edge="1" source="settings" target="home" parent="1">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
