@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workout+ | NATURAL WELLNESS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --forest-green: #2D5016;
+    --sage-green: #7C9A6E;
+    --moss-green: #A4BE7B;
+    --cream: #FAF7F0;
+    --warm-beige: #E8DCC4;
+    --earth-brown: #8B7355;
+  }
+
+  body {
+    font-family: 'Manrope', -apple-system, sans-serif;
+    background: var(--cream);
+    color: var(--forest-green);
+  }
+
+  .phone-mockup {
+    width: 390px;
+    height: 844px;
+    margin: 40px auto;
+    background: var(--cream);
+    border-radius: 50px;
+    box-shadow: 0 20px 60px rgba(45, 80, 22, 0.15);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .status-bar {
+    height: 47px;
+    background: var(--cream);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--forest-green);
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .content {
+    height: calc(844px - 47px - 83px);
+    overflow-y: auto;
+    background: var(--cream);
+    padding: 24px;
+  }
+
+  .content::-webkit-scrollbar { display: none; }
+
+  /* Organic Header */
+  .header {
+    background: linear-gradient(135deg, var(--sage-green), var(--moss-green));
+    border-radius: 32px;
+    padding: 32px 28px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -20%;
+    right: -10%;
+    width: 200px;
+    height: 200px;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><circle cx="100" cy="100" r="80" fill="rgba(255,255,255,0.1)"/></svg>');
+    opacity: 0.3;
+  }
+
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -30%;
+    left: -15%;
+    width: 180px;
+    height: 180px;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><circle cx="100" cy="100" r="60" fill="rgba(255,255,255,0.1)"/></svg>');
+    opacity: 0.3;
+  }
+
+  .greeting {
+    font-size: 15px;
+    color: rgba(255,255,255,0.85);
+    font-weight: 500;
+    margin-bottom: 12px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-title {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 34px;
+    font-weight: 700;
+    color: white;
+    line-height: 1.2;
+    margin-bottom: 28px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Soft Streak Card */
+  .streak-card {
+    background: rgba(255,255,255,0.5);
+    border-radius: 24px;
+    padding: 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .streak-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .streak-number {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 56px;
+    font-weight: 800;
+    color: var(--forest-green);
+    line-height: 1;
+  }
+
+  .streak-label {
+    font-size: 14px;
+    color: var(--sage-green);
+    font-weight: 600;
+    margin-top: 4px;
+  }
+
+  .leaf-icon {
+    font-size: 48px;
+  }
+
+  .progress-dots {
+    display: flex;
+    gap: 8px;
+  }
+
+  .progress-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: var(--earth-brown);
+    font-weight: 600;
+  }
+
+  .progress-dot.active {
+    background: var(--forest-green);
+    color: white;
+  }
+
+  /* Stats Section */
+  .stats-section {
+    margin: 24px 0;
+  }
+
+  .section-title {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--forest-green);
+    margin-bottom: 16px;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: white;
+    border-radius: 20px;
+    padding: 20px 16px;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(45, 80, 22, 0.08);
+  }
+
+  .stat-icon {
+    font-size: 24px;
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--forest-green);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .stat-unit {
+    font-size: 12px;
+    color: var(--sage-green);
+    font-weight: 600;
+  }
+
+  /* Workout Cards */
+  .workout-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .workout-card {
+    background: white;
+    border-radius: 24px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(45, 80, 22, 0.08);
+    display: flex;
+    gap: 16px;
+    align-items: center;
+  }
+
+  .workout-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, var(--sage-green), var(--moss-green));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+
+  .workout-details {
+    flex: 1;
+  }
+
+  .workout-date {
+    font-size: 12px;
+    color: var(--earth-brown);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .workout-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--forest-green);
+    margin-bottom: 6px;
+  }
+
+  .workout-meta {
+    font-size: 13px;
+    color: var(--sage-green);
+  }
+
+  .workout-arrow {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--warm-beige);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--forest-green);
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  /* Tab Bar */
+  .tab-bar {
+    height: 83px;
+    background: rgba(250, 247, 240, 0.98);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(45, 80, 22, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding-bottom: 20px;
+  }
+
+  .tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    min-width: 60px;
+  }
+
+  .tab-icon {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    opacity: 0.5;
+  }
+
+  .tab.active .tab-icon {
+    opacity: 1;
+  }
+
+  .tab-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--earth-brown);
+  }
+
+  .tab.active .tab-label {
+    color: var(--forest-green);
+  }
+
+  .tab-record {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--sage-green), var(--moss-green));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: -28px;
+    box-shadow: 0 6px 20px rgba(124, 154, 110, 0.4);
+  }
+
+  .tab-record-icon {
+    font-size: 28px;
+    color: white;
+  }
+
+  /* Design Info */
+  .design-info {
+    background: var(--forest-green);
+    color: white;
+    padding: 40px 24px;
+    text-align: center;
+  }
+
+  .design-info h2 {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: var(--moss-green);
+  }
+
+  .design-info p {
+    color: rgba(255,255,255,0.8);
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+
+  .color-palette {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 24px;
+  }
+
+  .color-swatch {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+  }
+</style>
+</head>
+<body>
+
+<div class="phone-mockup">
+  <div class="status-bar">
+    <span>9:41</span>
+    <div style="display: flex; gap: 6px; align-items: center;">
+      <span>🌤️</span>
+      <span>22°C</span>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="header">
+      <div class="greeting">Good Morning</div>
+      <h1 class="hero-title">Find Your<br>Balance Today 🌿</h1>
+
+      <div class="streak-card">
+        <div class="streak-content">
+          <div>
+            <div class="streak-number">12</div>
+            <div class="streak-label">Days Strong</div>
+          </div>
+          <div class="leaf-icon">🍃</div>
+        </div>
+
+        <div class="progress-dots">
+          <div class="progress-dot active">月</div>
+          <div class="progress-dot active">火</div>
+          <div class="progress-dot active">水</div>
+          <div class="progress-dot active">木</div>
+          <div class="progress-dot active">金</div>
+          <div class="progress-dot">土</div>
+          <div class="progress-dot active">日</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-section">
+      <h2 class="section-title">This Week</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">💪</div>
+          <div class="stat-value">5</div>
+          <div class="stat-unit">SESSIONS</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⚡</div>
+          <div class="stat-value">24t</div>
+          <div class="stat-unit">VOLUME</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">📈</div>
+          <div class="stat-value">+12%</div>
+          <div class="stat-unit">GROWTH</div>
+        </div>
+      </div>
+
+      <h2 class="section-title">Recent Activity</h2>
+      <div class="workout-list">
+        <div class="workout-card">
+          <div class="workout-icon">🏋️</div>
+          <div class="workout-details">
+            <div class="workout-date">Feb 16, Sunday</div>
+            <div class="workout-name">Chest & Triceps</div>
+            <div class="workout-meta">6 exercises · 8,240 kg</div>
+          </div>
+          <div class="workout-arrow">→</div>
+        </div>
+
+        <div class="workout-card">
+          <div class="workout-icon">💪</div>
+          <div class="workout-details">
+            <div class="workout-date">Feb 15, Saturday</div>
+            <div class="workout-name">Back & Biceps</div>
+            <div class="workout-meta">7 exercises · 9,100 kg</div>
+          </div>
+          <div class="workout-arrow">→</div>
+        </div>
+
+        <div class="workout-card">
+          <div class="workout-icon">🦵</div>
+          <div class="workout-details">
+            <div class="workout-date">Feb 14, Friday</div>
+            <div class="workout-name">Leg Day</div>
+            <div class="workout-meta">5 exercises · 12,800 kg</div>
+          </div>
+          <div class="workout-arrow">→</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <div class="tab active">
+      <div class="tab-icon">🏠</div>
+      <div class="tab-label">Home</div>
+    </div>
+    <div class="tab">
+      <div class="tab-icon">📅</div>
+      <div class="tab-label">Calendar</div>
+    </div>
+    <div class="tab-record">
+      <div class="tab-record-icon">+</div>
+    </div>
+    <div class="tab">
+      <div class="tab-icon">📊</div>
+      <div class="tab-label">Stats</div>
+    </div>
+    <div class="tab">
+      <div class="tab-icon">💬</div>
+      <div class="tab-label">AI</div>
+    </div>
+  </div>
+</div>
+
+<div class="design-info">
+  <h2>NATURAL WELLNESS</h2>
+  <p><strong>コンセプト:</strong> 有機的、バランス、ホリスティック</p>
+  <p><strong>タイポグラフィ:</strong> Bricolage Grotesque (見出し) + Manrope (本文)</p>
+  <p><strong>特徴:</strong> アースカラー、柔らかなエッジ、穏やかな雰囲気</p>
+
+  <div class="color-palette">
+    <div class="color-swatch" style="background: #2D5016;"></div>
+    <div class="color-swatch" style="background: #7C9A6E;"></div>
+    <div class="color-swatch" style="background: #A4BE7B;"></div>
+    <div class="color-swatch" style="background: #FAF7F0;"></div>
+    <div class="color-swatch" style="background: #E8DCC4;"></div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workout+ ワイヤーフレーム</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;800&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #FFFFFF; font-family: 'Noto Sans JP', -apple-system, sans-serif; color: #1A1A1A; min-height: 100vh; }
+  button { font-family: inherit; cursor: pointer; }
+
+  .app { padding: 32px 16px; max-width: 100%; }
+  .title-area { text-align: center; margin-bottom: 32px; }
+  .title-area h1 { font-size: 32px; font-weight: 800; color: #FF9500; letter-spacing: -0.5px; }
+  .title-area p { color: rgba(0,0,0,0.4); font-size: 13px; margin-top: 6px; }
+
+  .screen-tabs { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px; margin-bottom: 32px; }
+  .screen-tabs button {
+    padding: 7px 16px; border-radius: 20px; border: 1px solid rgba(0,0,0,0.12);
+    background: rgba(0,0,0,0.04); color: rgba(0,0,0,0.5); font-size: 13px; font-weight: 400;
+    transition: all 0.2s;
+  }
+  .screen-tabs button.active {
+    background: linear-gradient(135deg, #FF9500, #FF6B00); border-color: transparent;
+    color: #fff; font-weight: 600;
+  }
+
+  .phone-wrapper { display: flex; justify-content: center; }
+  .phone {
+    width: 375px; height: 812px; background: #F5F5F5; border-radius: 44px;
+    border: 3px solid #D1D1D6; overflow: hidden; position: relative;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.15), inset 0 1px 0 rgba(0,0,0,0.03);
+    flex-shrink: 0; display: flex; flex-direction: column;
+  }
+  .status-bar {
+    height: 54px; display: flex; align-items: center; justify-content: space-between;
+    padding: 0 28px; background: rgba(255,255,255,0.98); flex-shrink: 0; position: relative; z-index: 2;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+  .status-bar .time { font-size: 15px; font-weight: 600; color: #1A1A1A; }
+  .notch {
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 160px; height: 34px; background: #000; border-radius: 0 0 22px 22px; z-index: 3;
+  }
+  .screen-content { flex: 1; overflow-y: auto; overflow-x: hidden; }
+  .screen-content::-webkit-scrollbar { display: none; }
+
+  .tab-bar {
+    height: 84px; background: rgba(255,255,255,0.98); border-top: 1px solid rgba(0,0,0,0.12);
+    display: flex; align-items: flex-start; justify-content: space-around; padding-top: 8px;
+    flex-shrink: 0;
+  }
+  .tab-bar button {
+    background: none; border: none; display: flex; flex-direction: column; align-items: center;
+    gap: 3px; color: rgba(0,0,0,0.4); padding: 0 6px; min-width: 48px;
+  }
+  .tab-bar button.active { color: #FF9500; }
+  .tab-bar button svg { width: 24px; height: 24px; }
+  .tab-bar .tab-label { font-size: 10px; font-weight: 500; }
+  .tab-bar .record-btn {
+    width: 52px; height: 52px; border-radius: 26px;
+    background: linear-gradient(135deg, #FF6B00, #FF9500);
+    display: flex; align-items: center; justify-content: center; margin-top: -18px;
+    box-shadow: 0 4px 20px rgba(255,107,0,0.4); padding: 0;
+  }
+  .tab-bar .record-btn svg { stroke: #fff; width: 26px; height: 26px; }
+
+  .screen { display: none; padding: 0 20px; }
+  .screen.active { display: block; }
+
+  .card {
+    background: #FFFFFF; border-radius: 16px; padding: 16px;
+    border: 1px solid rgba(0,0,0,0.08); margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .card-accent {
+    background: linear-gradient(135deg, rgba(255,149,0,0.08), rgba(255,107,0,0.03));
+    border: 1px solid rgba(255,149,0,0.15);
+  }
+  .card-blue {
+    background: linear-gradient(135deg, rgba(96,165,250,0.08), rgba(96,165,250,0.03));
+    border: 1px solid rgba(96,165,250,0.12);
+  }
+
+  .label { color: rgba(0,0,0,0.5); font-size: 12px; }
+  .label-sm { color: rgba(0,0,0,0.4); font-size: 11px; }
+  .value-lg { font-size: 42px; font-weight: 800; color: #FF9500; }
+  .value-md { font-size: 24px; font-weight: 700; color: #1A1A1A; }
+  .value-sm { font-size: 20px; font-weight: 700; color: #1A1A1A; }
+  .text-orange { color: #FF9500; }
+  .text-green { color: #34C759; }
+  .text-blue { color: #007AFF; }
+  .text-purple { color: #AF52DE; }
+  .text-pink { color: #FF2D55; }
+  .text-white { color: #1A1A1A; }
+  .text-dim { color: rgba(0,0,0,0.6); }
+  .text-dimmer { color: rgba(0,0,0,0.4); }
+  .fw600 { font-weight: 600; }
+  .fw700 { font-weight: 700; }
+  .fw800 { font-weight: 800; }
+  .mono { font-family: 'SF Mono', 'Menlo', monospace; }
+
+  .flex { display: flex; }
+  .flex-col { flex-direction: column; }
+  .items-center { align-items: center; }
+  .items-baseline { align-items: baseline; }
+  .items-end { align-items: flex-end; }
+  .justify-between { justify-content: space-between; }
+  .justify-center { justify-content: center; }
+  .gap-4 { gap: 4px; }
+  .gap-6 { gap: 6px; }
+  .gap-8 { gap: 8px; }
+  .gap-10 { gap: 10px; }
+  .gap-12 { gap: 12px; }
+  .gap-16 { gap: 16px; }
+  .flex-1 { flex: 1; }
+  .text-center { text-align: center; }
+  .text-right { text-align: right; }
+  .w-full { width: 100%; }
+  .mt-4 { margin-top: 4px; }
+  .mt-6 { margin-top: 6px; }
+  .mt-12 { margin-top: 12px; }
+  .mt-16 { margin-top: 16px; }
+  .mt-20 { margin-top: 20px; }
+  .mt-24 { margin-top: 24px; }
+  .mb-6 { margin-bottom: 6px; }
+  .mb-8 { margin-bottom: 8px; }
+  .mb-12 { margin-bottom: 12px; }
+  .pt-12 { padding-top: 12px; }
+  .pt-16 { padding-top: 16px; }
+
+  .badge { display: inline-block; border-radius: 8px; padding: 4px 10px; font-size: 12px; font-weight: 600; }
+  .badge-green { background: rgba(52,199,89,0.15); color: #34C759; }
+  .badge-blue { background: rgba(0,122,255,0.15); color: #007AFF; }
+  .badge-purple { background: rgba(175,82,222,0.15); color: #AF52DE; }
+
+  .pill { padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; }
+  .pill-active { background: rgba(255,149,0,0.15); color: #FF9500; font-weight: 600; }
+  .pill-inactive { background: rgba(0,0,0,0.06); color: rgba(0,0,0,0.4); }
+
+  .dot { width: 5px; height: 5px; border-radius: 3px; background: #FF9500; }
+
+  .progress-bar { height: 6px; border-radius: 3px; background: rgba(0,0,0,0.08); }
+  .progress-fill { height: 100%; border-radius: 3px; }
+
+  .set-row {
+    display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 12px; margin-bottom: 6px;
+    border: 1px solid rgba(0,0,0,0.08); background: #FFFFFF;
+  }
+  .set-row.done { background: rgba(52,199,89,0.08); border-color: rgba(52,199,89,0.2); }
+  .set-input {
+    flex: 1; background: #F5F5F5; border-radius: 8px; padding: 10px 0;
+    text-align: center; color: #1A1A1A; font-size: 18px; font-weight: 600;
+  }
+  .set-check {
+    width: 44px; height: 44px; border-radius: 12px; border: none;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .set-check.done { background: linear-gradient(135deg, #34C759, #30D158); }
+  .set-check.undone { background: rgba(0,0,0,0.06); }
+
+  .add-set-btn {
+    width: 100%; padding: 12px; background: #FFFFFF;
+    border: 1px dashed rgba(0,0,0,0.2); border-radius: 12px;
+    color: rgba(0,0,0,0.5); font-size: 14px;
+  }
+
+  .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 4px; }
+  .cal-header { text-align: center; color: rgba(0,0,0,0.4); font-size: 13px; padding: 8px 0; }
+  .cal-day {
+    aspect-ratio: 1; border-radius: 12px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 2px; border: 1px solid transparent;
+    font-size: 15px; color: rgba(0,0,0,0.7);
+  }
+  .cal-day.today {
+    background: linear-gradient(135deg, #FF9500, #FF6B00); color: #fff; font-weight: 700;
+  }
+  .cal-day.trained { background: rgba(255,149,0,0.12); border-color: rgba(255,149,0,0.25); }
+
+  .period-tabs {
+    display: flex; background: #F5F5F5; border-radius: 12px; padding: 3px; gap: 0;
+  }
+  .period-tab {
+    flex: 1; text-align: center; padding: 8px 0; border-radius: 10px; font-size: 14px;
+    background: transparent; border: none; color: rgba(0,0,0,0.5);
+  }
+  .period-tab.active { background: #FFFFFF; color: #FF9500; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.08); }
+
+  .bar-chart { display: flex; align-items: flex-end; gap: 8px; height: 120px; }
+  .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .bar { width: 100%; border-radius: 6px; background: rgba(255,149,0,0.2); }
+  .bar.current { background: linear-gradient(180deg, #FF9500, #FF6B00); }
+
+  .msg { max-width: 85%; }
+  .msg-ai { align-self: flex-start; }
+  .msg-user { align-self: flex-end; }
+  .msg-bubble {
+    padding: 14px 16px; border-radius: 18px; font-size: 14px; line-height: 1.6; white-space: pre-line;
+  }
+  .msg-bubble-ai { background: #F5F5F5; border-bottom-left-radius: 4px; color: #1A1A1A; }
+  .msg-bubble-user {
+    background: linear-gradient(135deg, #FF9500, #FF6B00); border-bottom-right-radius: 4px; color: #FFFFFF;
+  }
+
+  .quick-action {
+    padding: 8px 14px; border-radius: 20px; background: #FFFFFF;
+    border: 1px solid rgba(0,0,0,0.12); color: rgba(0,0,0,0.7); font-size: 13px;
+    display: inline-block;
+  }
+
+  .chat-input-area { padding: 12px 0; display: flex; gap: 10px; align-items: center; }
+  .chat-input {
+    flex: 1; background: #F5F5F5; border-radius: 24px; padding: 12px 18px;
+    color: rgba(0,0,0,0.4); font-size: 14px; border: 1px solid rgba(0,0,0,0.08);
+  }
+  .chat-send {
+    width: 44px; height: 44px; border-radius: 22px;
+    background: linear-gradient(135deg, #FF9500, #FF6B00);
+    display: flex; align-items: center; justify-content: center; border: none; flex-shrink: 0;
+  }
+
+  .settings-group-title {
+    color: rgba(0,0,0,0.4); font-size: 13px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 1px; margin: 24px 0 8px;
+  }
+  .settings-list {
+    background: #FFFFFF; border-radius: 16px;
+    border: 1px solid rgba(0,0,0,0.08); overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  }
+  .settings-item {
+    display: flex; align-items: center; padding: 14px 16px;
+    border-bottom: 1px solid rgba(0,0,0,0.06);
+  }
+  .settings-item:last-child { border-bottom: none; }
+  .settings-icon { font-size: 20px; margin-right: 12px; }
+  .settings-chevron { color: rgba(0,0,0,0.2); }
+
+  .plan-card {
+    flex: 1; padding: 16px; border-radius: 16px; text-align: center; cursor: pointer; border: 2px solid rgba(0,0,0,0.12);
+    background: #FFFFFF; position: relative;
+  }
+  .plan-card.selected { background: rgba(175,82,222,0.08); border-color: #AF52DE; }
+  .plan-badge {
+    position: absolute; top: -10px; right: 12px;
+    background: linear-gradient(135deg, #C084FC, #7C3AED); border-radius: 6px;
+    padding: 2px 8px; font-size: 10px; font-weight: 700; color: #fff;
+  }
+  .cta-btn {
+    width: 100%; padding: 18px; border-radius: 16px;
+    background: linear-gradient(135deg, #AF52DE, #5E17EB); border: none;
+    color: #fff; font-size: 17px; font-weight: 700;
+    box-shadow: 0 8px 30px rgba(94,23,235,0.25);
+  }
+
+  .notes-panel {
+    max-width: 500px; margin: 32px auto 0; background: #FFFFFF;
+    border-radius: 16px; padding: 20px 24px; border: 1px solid rgba(0,0,0,0.08);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .notes-title {
+    color: #FF9500; font-size: 13px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 1px; margin-bottom: 8px;
+  }
+  .notes-text { color: rgba(0,0,0,0.6); font-size: 14px; line-height: 1.7; }
+</style>
+</head>
+<body>
+
+<div class="app" id="app"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+
+<script type="text/babel">
+const { useState } = React;
+
+const SCREENS = ['home','record','calendar','stats','ai_chat','settings','paywall'];
+const LABELS = { home:'ホーム', record:'記録', calendar:'カレンダー', stats:'統計', ai_chat:'AIチャット', settings:'設定', paywall:'課金' };
+const NOTES = {
+  home: 'US01, US06, US09 対応。ストリーク表示でモチベーション維持。週次サマリーで前週比較。最近のトレーニング一覧からワンタップで詳細へ。',
+  record: 'US01, US02, US04 対応。前回記録をデフォルト表示し入力を最小化。セット完了チェックでワンタップ記録。インターバルタイマー内蔵。メモ機能あり。',
+  calendar: 'US06 対応。トレーニング日をドット表示。日付タップで詳細展開。月間の一覧性を重視したレイアウト。',
+  stats: 'US07, US08, US09 対応。ボリューム推移チャート・筋群別分布・1RM推定を1画面に集約。期間切り替えタブ付き。',
+  ai_chat: 'US16, US17 対応。チャットUIで自然な会話。クイックアクションボタンで頻出質問をワンタップ。ユーザーの記録データをコンテキストに回答。',
+  settings: 'データ管理（同期・バックアップ・エクスポート）、アプリ設定、アカウント管理をグループ化。Pro状態を明示。',
+  paywall: 'US14, US15 対応。Pro機能を視覚的に訴求。月額/年額プラン選択。34%割引バッジ。7日間無料トライアルCTA。',
+};
+
+function Icon({d, size=24, stroke="currentColor", sw=2, fill="none"}) {
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke={stroke} strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round"><path d={d}/></svg>;
+}
+
+function TabBar({active, onNav}) {
+  return (
+    <div className="tab-bar">
+      <button className={active==='home'?'active':''} onClick={()=>onNav('home')}>
+        <Icon d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+        <span className="tab-label">ホーム</span>
+      </button>
+      <button className={active==='calendar'?'active':''} onClick={()=>onNav('calendar')}>
+        <Icon d="M3 4h18a2 2 0 012 2v14a2 2 0 01-2 2H3a2 2 0 01-2-2V6a2 2 0 012-2zM16 2v4M8 2v4M1 10h22"/>
+        <span className="tab-label">カレンダー</span>
+      </button>
+      <button onClick={()=>onNav('record')}>
+        <div className="record-btn"><Icon d="M12 5v14M5 12h14" stroke="#fff" sw={2.5}/></div>
+      </button>
+      <button className={active==='stats'?'active':''} onClick={()=>onNav('stats')}>
+        <Icon d="M18 20V10M12 20V4M6 20v-6"/>
+        <span className="tab-label">統計</span>
+      </button>
+      <button className={active==='ai_chat'?'active':''} onClick={()=>onNav('ai_chat')}>
+        <Icon d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>
+        <span className="tab-label">AI</span>
+      </button>
+    </div>
+  );
+}
+
+// ═══ HOME ═══
+function HomeScreen({onNav}) {
+  const week = ['月','火','水','木','金','土','日'];
+  const done = [1,1,0,1,1,0,1];
+  return <>
+    <div className="screen active" style={{paddingBottom:16}}>
+      <div className="pt-12">
+        <p className="text-dim" style={{fontSize:14}}>おはようございます</p>
+        <h1 style={{fontSize:28,color:'#1A1A1A'}} className="fw700 mt-4">今日もリフトしよう 💪</h1>
+      </div>
+      <div className="card card-accent mt-20">
+        <div className="flex justify-between items-center">
+          <div>
+            <p className="label">連続トレーニング</p>
+            <div className="flex items-baseline gap-4 mt-4">
+              <span className="value-lg">12</span>
+              <span className="text-dim" style={{fontSize:16}}>日</span>
+            </div>
+          </div>
+          <span style={{fontSize:48}}>🔥</span>
+        </div>
+        <div className="flex justify-between mt-16">
+          {week.map((d,i)=>(
+            <div key={d} className="flex flex-col items-center gap-6">
+              <div style={{width:32,height:32,borderRadius:16,background:done[i]?'linear-gradient(135deg,#FF9500,#FF6B00)':'rgba(0,0,0,0.08)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                {done[i]?<Icon d="M20 6L9 17l-5-5" size={14} stroke="#fff" sw={3}/>:null}
+              </div>
+              <span className="label-sm">{d}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <h3 className="fw600 mt-24 mb-12" style={{fontSize:17,color:'#1A1A1A'}}>今週のサマリー</h3>
+      <div className="flex gap-10">
+        {[{l:'トレ回数',v:'5',u:'回',c:'#FF9500'},{l:'総ボリューム',v:'24.5',u:'t',c:'#34C759'},{l:'前週比',v:'+12',u:'%',c:'#007AFF'}].map(s=>(
+          <div key={s.l} className="card flex-1" style={{padding:'16px 12px'}}>
+            <p className="label-sm">{s.l}</p>
+            <div className="flex items-baseline gap-4 mt-6">
+              <span className="value-md" style={{color:s.c}}>{s.v}</span>
+              <span className="label-sm">{s.u}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <h3 className="fw600 mt-24 mb-12" style={{fontSize:17,color:'#1A1A1A'}}>最近のトレーニング</h3>
+      {[{d:'2/16 (日)',p:'胸・三頭',v:'8,240 kg',n:'6種目'},{d:'2/15 (土)',p:'背中・二頭',v:'9,100 kg',n:'7種目'},{d:'2/14 (金)',p:'脚',v:'12,800 kg',n:'5種目'}].map((w,i)=>(
+        <div key={i} className="card flex justify-between items-center">
+          <div>
+            <p className="label" style={{fontSize:12}}>{w.d}</p>
+            <p className="fw600 mt-4" style={{fontSize:16,color:'#1A1A1A'}}>{w.p}</p>
+            <p className="text-dimmer mt-4" style={{fontSize:12}}>{w.n} · {w.v}</p>
+          </div>
+          <Icon d="M9 18l6-6-6-6" size={20} stroke="rgba(0,0,0,0.2)"/>
+        </div>
+      ))}
+    </div>
+    <TabBar active="home" onNav={onNav}/>
+  </>;
+}
+
+// ═══ RECORD ═══
+function RecordScreen({onNav}) {
+  const [sets,setSets] = useState([{kg:80,reps:10,ok:true},{kg:85,reps:8,ok:true},{kg:90,reps:6,ok:false},{kg:90,reps:6,ok:false}]);
+  const toggle = i => { const n=[...sets]; n[i]={...n[i],ok:!n[i].ok}; setSets(n); };
+  return <>
+    <div className="screen active" style={{paddingBottom:16}}>
+      <div className="flex justify-between items-center pt-12">
+        <button style={{background:'none',border:'none',color:'#FF9500',fontSize:16}} onClick={()=>onNav('home')}>← 戻る</button>
+        <span className="fw600" style={{fontSize:17,color:'#1A1A1A'}}>ワークアウト記録</span>
+        <button style={{background:'none',border:'none',color:'#34C759',fontSize:16,fontWeight:600}}>完了</button>
+      </div>
+      <div className="card card-accent mt-20 flex justify-between items-center">
+        <div>
+          <p className="label" style={{fontSize:12}}>経過時間</p>
+          <span className="text-orange mono" style={{fontSize:32,fontWeight:700}}>00:42:15</span>
+        </div>
+        <div style={{width:44,height:44,borderRadius:22,background:'rgba(0,0,0,0.06)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1A1A1A" strokeWidth="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+        </div>
+      </div>
+      <div className="mt-24">
+        <div className="flex justify-between items-center">
+          <div>
+            <p className="label" style={{fontSize:12}}>胸 · コンパウンド</p>
+            <h2 className="fw700 mt-4" style={{fontSize:22,color:'#1A1A1A'}}>ベンチプレス</h2>
+          </div>
+          <span className="badge badge-blue">前回: 85kg×8</span>
+        </div>
+        <div className="mt-16">
+          <div className="flex" style={{padding:'0 8px 8px',gap:8}}>
+            <span className="label-sm" style={{width:36,textAlign:'center'}}>SET</span>
+            <span className="label-sm flex-1 text-center">KG</span>
+            <span className="label-sm flex-1 text-center">REPS</span>
+            <span className="label-sm" style={{width:44,textAlign:'center'}}>✓</span>
+          </div>
+          {sets.map((s,i)=>(
+            <div key={i} className={`set-row ${s.ok?'done':''}`}>
+              <span className="fw600" style={{width:36,textAlign:'center',fontSize:14,color:'rgba(0,0,0,0.6)'}}>{i+1}</span>
+              <div className="set-input">{s.kg}</div>
+              <div className="set-input">{s.reps}</div>
+              <button className={`set-check ${s.ok?'done':'undone'}`} onClick={()=>toggle(i)}>
+                {s.ok && <Icon d="M20 6L9 17l-5-5" size={18} stroke="#fff" sw={3}/>}
+              </button>
+            </div>
+          ))}
+          <button className="add-set-btn">+ セット追加</button>
+        </div>
+        <div className="card mt-20">
+          <p className="label-sm mb-6">📝 メモ</p>
+          <p style={{fontSize:14,fontStyle:'italic',color:'rgba(0,0,0,0.6)'}}>フォーム安定してきた。次回90kg×8を目標に</p>
+        </div>
+        <div className="card card-blue mt-20 text-center" style={{padding:20}}>
+          <p style={{fontSize:13,color:'rgba(0,0,0,0.6)'}}>インターバルタイマー</p>
+          <span className="text-blue mono" style={{fontSize:48,fontWeight:700}}>1:30</span>
+          <div className="flex justify-center gap-12 mt-12">
+            {['1:00','1:30','2:00','3:00'].map(t=>(
+              <span key={t} className={`pill ${t==='1:30'?'pill-active':'pill-inactive'}`} style={t==='1:30'?{background:'rgba(0,122,255,0.15)',color:'#007AFF'}:{}}>{t}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+    <TabBar active="record" onNav={onNav}/>
+  </>;
+}
+
+// ═══ CALENDAR ═══
+function CalendarScreen({onNav}) {
+  const days = Array.from({length:35},(_,i)=>{const d=i-5; return d>=1&&d<=28?d:null;});
+  const trained = [1,3,4,6,7,8,10,11,13,14,15,16];
+  return <>
+    <div className="screen active" style={{paddingBottom:16}}>
+      <div className="flex justify-between items-center pt-16">
+        <h1 className="fw700" style={{fontSize:28,color:'#1A1A1A'}}>2026年 2月</h1>
+        <div className="flex gap-12">
+          <span className="text-dim" style={{fontSize:20}}>◀</span>
+          <span className="text-dim" style={{fontSize:20}}>▶</span>
+        </div>
+      </div>
+      <div className="cal-grid mt-20">
+        {['月','火','水','木','金','土','日'].map(d=><div key={d} className="cal-header">{d}</div>)}
+      </div>
+      <div className="cal-grid">
+        {days.map((d,i)=>{
+          const t=d&&trained.includes(d);
+          const today=d===16;
+          return <div key={i} className={`cal-day ${today?'today':t?'trained':''}`}>
+            {d&&<><span>{d}</span>{t&&!today&&<div className="dot"/>}</>}
+          </div>;
+        })}
+      </div>
+      <div className="card mt-24" style={{padding:20}}>
+        <div className="flex justify-between items-center">
+          <div>
+            <p className="text-orange fw600" style={{fontSize:13}}>2/16 (日) · 今日</p>
+            <h3 className="fw700 mt-6" style={{fontSize:20,color:'#1A1A1A'}}>胸 · 三頭</h3>
+          </div>
+          <div className="text-right">
+            <p className="label" style={{fontSize:12}}>総ボリューム</p>
+            <span className="text-green value-sm">8,240 kg</span>
+          </div>
+        </div>
+        <div className="flex flex-col gap-8 mt-16">
+          {['ベンチプレス 80kg×10, 85kg×8, 90kg×6','インクラインDB 30kg×12, 32kg×10','ケーブルフライ 20kg×15, 20kg×12'].map((e,i)=>(
+            <div key={i} style={{padding:'10px 12px',background:'#F5F5F5',borderRadius:10,color:'rgba(0,0,0,0.7)',fontSize:13}}>{e}</div>
+          ))}
+        </div>
+      </div>
+    </div>
+    <TabBar active="calendar" onNav={onNav}/>
+  </>;
+}
+
+// ═══ STATS ═══
+function StatsScreen({onNav}) {
+  const bars = [65,78,72,85,90,82,95];
+  const mx = Math.max(...bars);
+  const months = ['8月','9月','10月','11月','12月','1月','2月'];
+  return <>
+    <div className="screen active" style={{paddingBottom:16}}>
+      <h1 className="fw700 pt-16" style={{fontSize:28,color:'#1A1A1A'}}>統計</h1>
+      <div className="period-tabs mt-16">
+        {['週','月','3ヶ月','年'].map((t,i)=><button key={t} className={`period-tab ${i===1?'active':''}`}>{t}</button>)}
+      </div>
+      <div className="card mt-24" style={{padding:20}}>
+        <div className="flex justify-between items-center">
+          <div>
+            <p className="label" style={{fontSize:12}}>月間ボリューム推移</p>
+            <span className="fw700" style={{fontSize:22,color:'#1A1A1A'}}>98,400 kg</span>
+          </div>
+          <span className="badge badge-green">+12.3%</span>
+        </div>
+        <div className="bar-chart mt-20">
+          {bars.map((v,i)=>(
+            <div key={i} className="bar-col">
+              <div className={`bar ${i===bars.length-1?'current':''}`} style={{height:`${(v/mx)*100}%`}}/>
+              <span className="label-sm" style={{fontSize:10}}>{months[i]}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="card" style={{padding:20}}>
+        <p className="label mb-12" style={{fontSize:12}}>筋群別ボリューム分布</p>
+        {[{n:'胸',p:28,c:'#FF9500'},{n:'背中',p:25,c:'#007AFF'},{n:'脚',p:22,c:'#34C759'},{n:'肩',p:15,c:'#AF52DE'},{n:'腕',p:10,c:'#FF2D55'}].map(m=>(
+          <div key={m.n} style={{marginBottom:12}}>
+            <div className="flex justify-between mb-6">
+              <span style={{color:'rgba(0,0,0,0.7)',fontSize:14}}>{m.n}</span>
+              <span style={{color:m.c,fontSize:14,fontWeight:600}}>{m.p}%</span>
+            </div>
+            <div className="progress-bar"><div className="progress-fill" style={{width:`${m.p}%`,background:m.c}}/></div>
+          </div>
+        ))}
+      </div>
+      <div className="card" style={{padding:20}}>
+        <p className="label mb-12" style={{fontSize:12}}>推定1RM (BIG3)</p>
+        <div className="flex gap-10">
+          {[{n:'ベンチ',v:'107.5',t:'↑'},{n:'スクワット',v:'142.5',t:'↑'},{n:'デッドリフト',v:'165.0',t:'→'}].map(e=>(
+            <div key={e.n} className="flex-1 text-center">
+              <p className="label-sm">{e.n}</p>
+              <p className="text-white fw700 mt-4" style={{fontSize:20}}>{e.v}<span className="label-sm">kg</span></p>
+              <span style={{color:e.t==='↑'?'#34C759':'#FF9500',fontSize:16}}>{e.t}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+    <TabBar active="stats" onNav={onNav}/>
+  </>;
+}
+
+// ═══ AI CHAT ═══
+function AIChatScreen({onNav}) {
+  const msgs = [
+    {r:'ai',t:'こんにちは！Workout+ AIです 🏋️ トレーニングや栄養について何でも聞いてください。あなたの記録データを元にアドバイスします。'},
+    {r:'user',t:'胸の種目が伸び悩んでます。アドバイスください'},
+    {r:'ai',t:'記録を分析しました。直近1ヶ月のベンチプレスは85kg前後で停滞していますね。\n\n提案:\n① ボリュームを増やす（週あたり+2セット）\n② ポーズベンチプレスを導入（ボトムで2秒静止）\n③ 補助種目にディップスを追加\n\n来週からこのメニューで試してみませんか？'},
+  ];
+  return <>
+    <div className="screen active" style={{paddingBottom:0,display:'flex',flexDirection:'column',height:'100%'}}>
+      <div className="flex justify-between items-center pt-16">
+        <h1 className="fw700" style={{fontSize:24,color:'#1A1A1A'}}>AI トレーナー</h1>
+        <span className="badge badge-purple">Pro</span>
+      </div>
+      <div className="flex gap-8 mt-16" style={{flexWrap:'wrap'}}>
+        {['今日のメニュー提案','栄養アドバイス','フォーム改善','弱点分析'].map(a=><span key={a} className="quick-action">{a}</span>)}
+      </div>
+      <div className="flex flex-col gap-12 mt-20" style={{flex:1}}>
+        {msgs.map((m,i)=>(
+          <div key={i} className={`msg ${m.r==='ai'?'msg-ai':'msg-user'}`}>
+            {m.r==='ai'&&<div className="flex items-center gap-6 mb-6">
+              <div style={{width:22,height:22,borderRadius:11,background:'linear-gradient(135deg,#AF52DE,#5E17EB)',display:'flex',alignItems:'center',justifyContent:'center'}}>
+                <span style={{fontSize:10,color:'#fff'}}>AI</span>
+              </div>
+              <span className="label-sm">Workout+ AI</span>
+            </div>}
+            <div className={`msg-bubble ${m.r==='ai'?'msg-bubble-ai':'msg-bubble-user'}`}>{m.t}</div>
+          </div>
+        ))}
+      </div>
+      <div className="chat-input-area">
+        <div className="chat-input">メッセージを入力...</div>
+        <button className="chat-send"><Icon d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" size={20} stroke="#fff" sw={2.5}/></button>
+      </div>
+    </div>
+    <TabBar active="ai_chat" onNav={onNav}/>
+  </>;
+}
+
+// ═══ SETTINGS ═══
+function SettingsScreen({onNav}) {
+  const groups = [
+    {title:'データ管理', items:[{i:'☁️',l:'クラウド同期',s:'自動同期 ON'},{i:'💾',l:'バックアップ',s:'最終: 2/16 09:30'},{i:'📤',l:'データエクスポート',s:'CSV / PDF'}]},
+    {title:'アプリ設定', items:[{i:'⏱️',l:'デフォルトインターバル',s:'1分30秒'},{i:'📏',l:'単位',s:'kg / cm'},{i:'🔔',l:'通知設定',s:'リマインダー ON'}]},
+    {title:'アカウント', items:[{i:'👑',l:'サブスクリプション管理',s:'Pro · 年額'},{i:'🔒',l:'プライバシー',s:''},{i:'📧',l:'お問い合わせ',s:''}]},
+  ];
+  return <>
+    <div className="screen active" style={{paddingBottom:16}}>
+      <h1 className="fw700 pt-16" style={{fontSize:28,color:'#1A1A1A'}}>設定</h1>
+      <div className="card mt-20 flex items-center gap-16">
+        <div style={{width:56,height:56,borderRadius:28,background:'linear-gradient(135deg,#FF9500,#FF6B00)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:24}}>💪</div>
+        <div>
+          <p className="fw600" style={{fontSize:18,color:'#1A1A1A'}}>ユーザー名</p>
+          <span className="badge badge-green mt-4">Pro プラン</span>
+        </div>
+      </div>
+      {groups.map(g=>(
+        <div key={g.title}>
+          <p className="settings-group-title">{g.title}</p>
+          <div className="settings-list">
+            {g.items.map(item=>(
+              <div key={item.l} className="settings-item">
+                <span className="settings-icon">{item.i}</span>
+                <div className="flex-1">
+                  <p style={{fontSize:15,color:'#1A1A1A'}}>{item.l}</p>
+                  {item.s&&<p className="label-sm mt-4" style={{marginTop:2}}>{item.s}</p>}
+                </div>
+                <span className="settings-chevron">›</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+    <TabBar active="home" onNav={onNav}/>
+  </>;
+}
+
+// ═══ PAYWALL ═══
+function PaywallScreen({onNav}) {
+  const [plan,setPlan] = useState('yearly');
+  return <>
+    <div className="screen active" style={{paddingBottom:20,background:'linear-gradient(180deg,#F5F0FF 0%,#FFFFFF 50%)'}}>
+      <button style={{background:'none',border:'none',color:'rgba(0,0,0,0.5)',fontSize:16,paddingTop:12}} onClick={()=>onNav('home')}>✕ 閉じる</button>
+      <div className="text-center mt-16">
+        <span style={{fontSize:56}}>🏆</span>
+        <h1 className="fw800 mt-12" style={{fontSize:28,color:'#1A1A1A'}}>Workout+ Pro</h1>
+        <p className="text-dim mt-6" style={{fontSize:15}}>AI トレーナーで最速で成長しよう</p>
+      </div>
+      <div className="mt-24">
+        {[{i:'🤖',t:'AI トレーナー無制限',d:'パーソナライズされたメニュー提案・チャット'},{i:'📊',t:'詳細分析',d:'1RM推定・筋群別ボリューム・疲労度'},{i:'☁️',t:'自動クラウド同期',d:'複数デバイス間でリアルタイム同期'},{i:'📋',t:'テンプレート無制限',d:'カスタムワークアウトを自由に作成'}].map(ft=>(
+          <div key={ft.t} className="flex items-center gap-16 mb-12" style={{marginBottom:16}}>
+            <div style={{width:44,height:44,borderRadius:12,background:'rgba(175,82,222,0.1)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,flexShrink:0}}>{ft.i}</div>
+            <div><p className="fw600" style={{fontSize:15,color:'#1A1A1A'}}>{ft.t}</p><p className="label mt-4" style={{fontSize:12}}>{ft.d}</p></div>
+          </div>
+        ))}
+      </div>
+      <div className="flex gap-10 mt-24">
+        <div className={`plan-card ${plan==='monthly'?'selected':''}`} onClick={()=>setPlan('monthly')}>
+          <p className="text-dim" style={{fontSize:13}}>月額</p>
+          <p className="fw700 mt-6" style={{fontSize:24,color:'#1A1A1A'}}>¥480</p>
+          <p className="label-sm mt-4">/月</p>
+        </div>
+        <div className={`plan-card ${plan==='yearly'?'selected':''}`} onClick={()=>setPlan('yearly')}>
+          <div className="plan-badge">34% OFF</div>
+          <p className="text-dim" style={{fontSize:13}}>年額</p>
+          <p className="fw700 mt-6" style={{fontSize:24,color:'#1A1A1A'}}>¥3,800</p>
+          <p className="label-sm mt-4">¥317/月</p>
+        </div>
+      </div>
+      <button className="cta-btn mt-24">7日間無料で試す</button>
+      <p className="label-sm text-center mt-12">トライアル終了前に通知します · いつでもキャンセル可</p>
+    </div>
+  </>;
+}
+
+// ═══ MAIN ═══
+function App() {
+  const [active,setActive] = useState('home');
+  const render = () => {
+    switch(active) {
+      case 'home': return <HomeScreen onNav={setActive}/>;
+      case 'record': return <RecordScreen onNav={setActive}/>;
+      case 'calendar': return <CalendarScreen onNav={setActive}/>;
+      case 'stats': return <StatsScreen onNav={setActive}/>;
+      case 'ai_chat': return <AIChatScreen onNav={setActive}/>;
+      case 'settings': return <SettingsScreen onNav={setActive}/>;
+      case 'paywall': return <PaywallScreen onNav={setActive}/>;
+      default: return <HomeScreen onNav={setActive}/>;
+    }
+  };
+  return <>
+    <div className="title-area">
+      <h1>Workout+</h1>
+      <p>ワイヤーフレーム · 画面をクリックして切り替え</p>
+    </div>
+    <div className="screen-tabs">
+      {SCREENS.map(s=><button key={s} className={active===s?'active':''} onClick={()=>setActive(s)}>{LABELS[s]}</button>)}
+    </div>
+    <div className="phone-wrapper">
+      <div className="phone">
+        <div className="status-bar">
+          <span className="time">9:41</span>
+          <div className="flex items-center gap-6">
+            <svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="4" width="3" height="8" rx="1" fill="#fff"/><rect x="5" y="2" width="3" height="10" rx="1" fill="#fff"/><rect x="10" y="0" width="3" height="12" rx="1" fill="#fff"/><rect x="15" y="0" width="3" height="12" rx="1" fill="rgba(255,255,255,0.3)"/></svg>
+            <svg width="25" height="12" viewBox="0 0 25 12"><rect x="0" y="0" width="22" height="12" rx="3" stroke="#fff" strokeWidth="1" fill="none"/><rect x="2" y="2" width="16" height="8" rx="1.5" fill="#4ADE80"/><rect x="23" y="3.5" width="2" height="5" rx="1" fill="#fff"/></svg>
+          </div>
+        </div>
+        <div className="notch"/>
+        <div className="screen-content">{render()}</div>
+      </div>
+    </div>
+    <div className="notes-panel">
+      <p className="notes-title">{LABELS[active]} 画面ノート</p>
+      <p className="notes-text">{NOTES[active]}</p>
+    </div>
+  </>;
+}
+
+ReactDOM.render(<App/>, document.getElementById('app'));
+</script>
+</body>
+</html>

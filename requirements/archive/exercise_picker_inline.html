@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>種目選択フロー - インライン追加型（FitNotes方式）</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #F8F9FA;
+    font-family: 'Noto Sans JP', -apple-system, sans-serif;
+    color: #1A1A1A;
+    padding: 20px;
+  }
+
+  .container { max-width: 1400px; margin: 0 auto; }
+  .header { text-align: center; margin-bottom: 40px; }
+  .header h1 { font-size: 32px; font-weight: 700; color: #1A1A1A; margin-bottom: 8px; }
+  .header p { color: rgba(0,0,0,0.6); font-size: 15px; line-height: 1.6; }
+
+  .demo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 32px;
+  }
+
+  @media (max-width: 1400px) {
+    .demo-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .demo-card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #E5E7EB;
+    overflow: hidden;
+  }
+
+  .demo-header {
+    background: #0D9488;
+    color: white;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .demo-header h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .demo-header .subtitle { font-size: 13px; opacity: 0.9; }
+
+  .phone-mockup {
+    width: 375px;
+    height: 812px;
+    background: #FFFFFF;
+    margin: 0 auto;
+    position: relative;
+    overflow-y: auto;
+  }
+
+  /* === ワークアウトヘッダー === */
+  .workout-header {
+    position: sticky;
+    top: 0;
+    background: white;
+    border-bottom: 1px solid #E5E7EB;
+    padding: 12px 16px;
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .workout-title { font-size: 17px; font-weight: 600; color: #1A1A1A; }
+  .done-btn {
+    background: transparent;
+    border: none;
+    color: #0D9488;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* === 種目カード === */
+  .exercise-list {
+    padding: 16px;
+  }
+
+  .exercise-card {
+    background: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .exercise-name { font-size: 16px; font-weight: 700; color: #1A1A1A; margin-bottom: 4px; }
+  .exercise-meta { font-size: 12px; color: #6B7280; }
+
+  /* === インライン追加セクション === */
+  .add-section {
+    padding: 0 16px 16px;
+  }
+
+  .add-trigger {
+    width: 100%;
+    padding: 16px;
+    background: white;
+    border: 2px dashed #0D9488;
+    border-radius: 8px;
+    color: #0D9488;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  /* === 展開UI === */
+  .inline-expanded {
+    background: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+
+  .search-box {
+    width: 100%;
+    background: white;
+    border: 1px solid #D1D5DB;
+    border-radius: 6px;
+    padding: 12px 16px 12px 40px;
+    font-size: 15px;
+    color: #1A1A1A;
+    margin-bottom: 12px;
+    position: relative;
+  }
+  .search-box::placeholder {
+    color: #9CA3AF;
+  }
+  .search-icon-wrapper {
+    position: relative;
+  }
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 14px;
+    color: #6B7280;
+  }
+
+  .category-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    overflow-x: auto;
+  }
+  .category-row::-webkit-scrollbar { display: none; }
+
+  .category-btn {
+    flex-shrink: 0;
+    padding: 8px 16px;
+    background: #E5E7EB;
+    border: none;
+    border-radius: 6px;
+    color: #4B5563;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .category-btn.active {
+    background: #0D9488;
+    color: white;
+  }
+
+  .recent-section-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #6B7280;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+  }
+
+  .exercise-option {
+    background: white;
+    border: 1px solid #E5E7EB;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .exercise-option:hover {
+    background: #F0FDFA;
+    border-color: #0D9488;
+  }
+  .exercise-option-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1A1A1A;
+    margin-bottom: 2px;
+  }
+  .exercise-option-meta {
+    font-size: 12px;
+    color: #6B7280;
+  }
+
+  /* === 追加完了インジケーター === */
+  .added-indicator {
+    background: #D1FAE5;
+    border: 2px solid #10B981;
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #065F46;
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .exercise-card.new {
+    border: 2px solid #0D9488;
+    background: #F0FDFA;
+  }
+  .exercise-card.new .exercise-name {
+    color: #0D9488;
+  }
+
+  /* === セット入力欄 === */
+  .set-inputs {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .set-input-group {
+    flex: 1;
+  }
+  .set-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #6B7280;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+    letter-spacing: 0.3px;
+  }
+  .set-input {
+    width: 100%;
+    background: white;
+    border: 1px solid #D1D5DB;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #1A1A1A;
+    text-align: center;
+  }
+  .set-input:focus {
+    outline: none;
+    border-color: #0D9488;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>種目選択フロー - インライン追加型（FitNotes方式）</h1>
+    <p>
+      画面遷移ゼロ。その場で展開・折りたたみ。<br>
+      シンプルで直感的な1画面完結型フロー。
+    </p>
+  </div>
+
+  <div class="demo-grid">
+
+    <!-- STEP 1: ワークアウト記録画面 -->
+    <div class="demo-card">
+      <div class="demo-header">
+        <h2>STEP 1: ワークアウト記録画面</h2>
+        <div class="subtitle">下部に「+ 種目を追加」が常駐</div>
+      </div>
+      <div class="phone-mockup">
+        <div class="workout-header">
+          <div class="workout-title">プッシュデイ</div>
+          <button class="done-btn">完了</button>
+        </div>
+
+        <div class="exercise-list">
+          <div class="exercise-card">
+            <div class="exercise-name">ベンチプレス</div>
+            <div class="exercise-meta">胸 • コンパウンド • 3セット完了</div>
+          </div>
+
+          <div class="exercise-card">
+            <div class="exercise-name">インクラインプレス</div>
+            <div class="exercise-meta">胸 • コンパウンド • 2セット完了</div>
+          </div>
+        </div>
+
+        <div class="add-section">
+          <button class="add-trigger">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+            種目を追加
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: 展開UI -->
+    <div class="demo-card">
+      <div class="demo-header">
+        <h2>STEP 2: インライン展開</h2>
+        <div class="subtitle">その場で種目選択UIが展開</div>
+      </div>
+      <div class="phone-mockup">
+        <div class="workout-header">
+          <div class="workout-title">プッシュデイ</div>
+          <button class="done-btn">完了</button>
+        </div>
+
+        <div class="exercise-list">
+          <div class="exercise-card">
+            <div class="exercise-name">ベンチプレス</div>
+            <div class="exercise-meta">胸 • コンパウンド • 3セット完了</div>
+          </div>
+
+          <div class="exercise-card">
+            <div class="exercise-name">インクラインプレス</div>
+            <div class="exercise-meta">胸 • コンパウンド • 2セット完了</div>
+          </div>
+        </div>
+
+        <div class="add-section">
+          <div class="inline-expanded">
+            <div class="search-icon-wrapper">
+              <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.35-4.35"/>
+              </svg>
+              <input type="text" class="search-box" placeholder="種目を検索...">
+            </div>
+
+            <div class="category-row">
+              <button class="category-btn active">全て</button>
+              <button class="category-btn">胸</button>
+              <button class="category-btn">背中</button>
+              <button class="category-btn">脚</button>
+              <button class="category-btn">肩</button>
+            </div>
+
+            <div class="recent-section-title">最近使った種目</div>
+
+            <div class="exercise-option">
+              <div>
+                <div class="exercise-option-name">ベンチプレス</div>
+                <div class="exercise-option-meta">胸 • コンパウンド</div>
+              </div>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
+            </div>
+
+            <div class="exercise-option">
+              <div>
+                <div class="exercise-option-name">スクワット</div>
+                <div class="exercise-option-meta">脚 • コンパウンド</div>
+              </div>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
+            </div>
+
+            <div class="exercise-option">
+              <div>
+                <div class="exercise-option-name">デッドリフト</div>
+                <div class="exercise-option-meta">背中 • コンパウンド</div>
+              </div>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" stroke-width="2">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: 種目追加完了 -->
+    <div class="demo-card">
+      <div class="demo-header">
+        <h2>STEP 3: 種目追加完了</h2>
+        <div class="subtitle">即座にセット入力欄が表示される</div>
+      </div>
+      <div class="phone-mockup">
+        <div class="workout-header">
+          <div class="workout-title">プッシュデイ</div>
+          <button class="done-btn">完了</button>
+        </div>
+
+        <div class="exercise-list">
+          <div class="added-indicator">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg>
+            「ダンベルフライ」を追加しました
+          </div>
+
+          <div class="exercise-card">
+            <div class="exercise-name">ベンチプレス</div>
+            <div class="exercise-meta">胸 • コンパウンド • 3セット完了</div>
+          </div>
+
+          <div class="exercise-card">
+            <div class="exercise-name">インクラインプレス</div>
+            <div class="exercise-meta">胸 • コンパウンド • 2セット完了</div>
+          </div>
+
+          <div class="exercise-card new">
+            <div class="exercise-name">ダンベルフライ</div>
+            <div class="exercise-meta">胸 • アイソレーション</div>
+            <div class="set-inputs">
+              <div class="set-input-group">
+                <div class="set-label">重量 (kg)</div>
+                <input type="number" class="set-input" value="20" placeholder="0">
+              </div>
+              <div class="set-input-group">
+                <div class="set-label">回数</div>
+                <input type="number" class="set-input" value="12" placeholder="0">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="add-section">
+          <button class="add-trigger">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+            種目を追加
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 実装仕様 -->
+  <div style="background: white; border-radius: 12px; padding: 32px; border: 1px solid #E5E7EB; margin-top: 40px;">
+    <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 24px;">実装仕様</h2>
+
+    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #0D9488;">1. インライン展開の仕様</h3>
+    <ul style="margin-left: 20px; margin-bottom: 24px; line-height: 1.8;">
+      <li><strong>展開アニメーション:</strong> `AnimatedContainer` で高さ 0px → 280px に変化</li>
+      <li><strong>duration:</strong> 250ms（Flutter標準の高速アニメーション）</li>
+      <li><strong>折りたたみ:</strong> 種目選択 or 外側タップで閉じる</li>
+      <li><strong>画面遷移:</strong> 一切なし（1画面で完結）</li>
+    </ul>
+
+    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #0D9488;">2. 展開UI構成</h3>
+    <ul style="margin-left: 20px; margin-bottom: 24px; line-height: 1.8;">
+      <li><strong>検索ボックス:</strong> リアルタイムフィルタリング</li>
+      <li><strong>カテゴリボタン:</strong> 5個表示（全て/胸/背中/脚/肩）</li>
+      <li><strong>最近使った種目:</strong> 3個固定（これだけで90%カバー）</li>
+      <li><strong>全種目は検索から:</strong> スクロール不要</li>
+    </ul>
+
+    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #0D9488;">3. 種目選択の流れ</h3>
+    <ol style="margin-left: 20px; margin-bottom: 24px; line-height: 1.8;">
+      <li>「+ 種目を追加」タップ → インライン展開</li>
+      <li>種目を選択 → 展開UIが閉じる</li>
+      <li>選択した種目がリストに追加（ハイライト表示）</li>
+      <li>セット入力欄が即座に表示される</li>
+      <li>合計2タップで完了</li>
+    </ol>
+
+    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #0D9488;">4. CSS設計原則（適用済み）</h3>
+    <ul style="margin-left: 20px; margin-bottom: 24px; line-height: 1.8;">
+      <li><strong>グラデーション:</strong> 削除（ベタ塗りのみ）</li>
+      <li><strong>border-radius:</strong> 6px/8px/12pxの3種類のみ</li>
+      <li><strong>shadow:</strong> ボトムシートのみ控えめに使用</li>
+      <li><strong>font-weight:</strong> 400/600/700の3種類のみ</li>
+      <li><strong>padding:</strong> 4の倍数のみ（4px, 8px, 12px, 16px）</li>
+      <li><strong>transition:</strong> 削除（シンプルに）</li>
+    </ul>
+
+    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #0D9488;">5. Flutter実装のポイント</h3>
+    <pre style="background: #F9FAFB; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 13px; line-height: 1.6; border: 1px solid #E5E7EB;">
+// 状態管理
+bool _isExpanded = false;
+
+// 展開/折りたたみ
+AnimatedContainer(
+  duration: Duration(milliseconds: 250),
+  height: _isExpanded ? 280 : 0,
+  child: _isExpanded ? _buildExpandedUI() : SizedBox.shrink(),
+)
+
+// 種目選択時
+void _onExerciseSelected(Exercise exercise) {
+  setState(() {
+    _isExpanded = false;  // 閉じる
+    _exercises.add(exercise);  // 追加
+  });
+  // スクロールして新規種目を表示
+  _scrollToBottom();
+}</pre>
+  </div>
+
+  <!-- メリット/デメリット -->
+  <div style="background: #F0FDFA; border-radius: 12px; padding: 32px; margin-top: 40px; border: 2px solid #0D9488;">
+    <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 16px; color: #0D9488;">このパターンの強み</h2>
+    <div style="font-size: 15px; color: #134E4A; line-height: 1.8;">
+      <strong>メリット:</strong>
+      <ul style="margin-left: 20px; margin-top: 8px; line-height: 2;">
+        <li><strong>画面遷移ゼロ:</strong> 1画面で完結（心理的距離が最も近い）</li>
+        <li><strong>シームレス:</strong> その場で展開・折りたたみ（FitNotesライク）</li>
+        <li><strong>スクロール最小限:</strong> 最近使った3個だけ表示（90%カバー）</li>
+        <li><strong>検索で全種目アクセス:</strong> 中級者も満足</li>
+        <li><strong>実装シンプル:</strong> AnimatedContainerだけで実現可能</li>
+      </ul>
+      <br>
+      <strong>デメリット:</strong>
+      <ul style="margin-left: 20px; margin-top: 8px; line-height: 2;">
+        <li>初回は「最近使った」が空（初期状態の工夫が必要）</li>
+        <li>展開時にリスト全体がやや下にスクロールする（許容範囲）</li>
+        <li>モーダルほど「特別な操作」感がない（逆にメリットでもある）</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 比較表 -->
+  <div style="background: white; border-radius: 12px; padding: 32px; margin-top: 40px; border: 1px solid #E5E7EB;">
+    <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 24px;">他パターンとの比較</h2>
+    <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+      <thead>
+        <tr style="background: #F9FAFB; border-bottom: 2px solid #E5E7EB;">
+          <th style="padding: 12px; text-align: left; font-weight: 700;">評価軸</th>
+          <th style="padding: 12px; text-align: center; font-weight: 700;">インライン型<br>(本案)</th>
+          <th style="padding: 12px; text-align: center; font-weight: 700;">ボトムシート型<br>(Strong/Hevy)</th>
+          <th style="padding: 12px; text-align: center; font-weight: 700;">フルスクリーン型<br>(Jefit)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid #E5E7EB;">
+          <td style="padding: 12px; font-weight: 600;">画面遷移</td>
+          <td style="padding: 12px; text-align: center;">✅ ゼロ</td>
+          <td style="padding: 12px; text-align: center;">⚠️ ボトムシート</td>
+          <td style="padding: 12px; text-align: center;">❌ 別画面</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #E5E7EB;">
+          <td style="padding: 12px; font-weight: 600;">タップ数</td>
+          <td style="padding: 12px; text-align: center;">✅ 2回</td>
+          <td style="padding: 12px; text-align: center;">✅ 2回</td>
+          <td style="padding: 12px; text-align: center;">⚠️ 3回</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #E5E7EB;">
+          <td style="padding: 12px; font-weight: 600;">心理的距離</td>
+          <td style="padding: 12px; text-align: center;">✅ 最も近い</td>
+          <td style="padding: 12px; text-align: center;">⚠️ やや遠い</td>
+          <td style="padding: 12px; text-align: center;">❌ 遠い</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #E5E7EB;">
+          <td style="padding: 12px; font-weight: 600;">実装複雑度</td>
+          <td style="padding: 12px; text-align: center;">✅ シンプル</td>
+          <td style="padding: 12px; text-align: center;">⚠️ やや複雑</td>
+          <td style="padding: 12px; text-align: center;">⚠️ やや複雑</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #E5E7EB;">
+          <td style="padding: 12px; font-weight: 600;">検索機能</td>
+          <td style="padding: 12px; text-align: center;">✅ あり</td>
+          <td style="padding: 12px; text-align: center;">✅ あり</td>
+          <td style="padding: 12px; text-align: center;">✅ あり</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #E5E7EB;">
+          <td style="padding: 12px; font-weight: 600;">全種目閲覧</td>
+          <td style="padding: 12px; text-align: center;">⚠️ 検索経由</td>
+          <td style="padding: 12px; text-align: center;">✅ スクロール可</td>
+          <td style="padding: 12px; text-align: center;">✅ スクロール可</td>
+        </tr>
+        <tr>
+          <td style="padding: 12px; font-weight: 600; background: #F0FDFA;"><strong>推奨度</strong></td>
+          <td style="padding: 12px; text-align: center; background: #D1FAE5; font-weight: 700; color: #065F46;">★★★★★</td>
+          <td style="padding: 12px; text-align: center; background: #FEF3C7; font-weight: 700; color: #92400E;">★★★★☆</td>
+          <td style="padding: 12px; text-align: center; background: #FEE2E2; font-weight: 700; color: #991B1B;">★★★☆☆</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="text-align: center; padding: 20px; color: #6B7280; font-size: 14px; margin-top: 20px;">
+    <p><strong>推奨:</strong> FitNotesライクなインライン型が最もシンプルかつ効率的</p>
+    <p>MVPではこのパターンで実装し、ユーザーフィードバックで改善することを推奨します。</p>
+  </div>
+</div>
+
+</body>
+</html>

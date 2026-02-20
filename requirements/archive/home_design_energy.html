@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workout+ | ENERGY BOOST</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@700;800;900&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --flame-red: #FF3B30;
+    --ember-orange: #FF9500;
+    --bright-yellow: #FFD60A;
+    --deep-black: #0A0A0A;
+    --warm-white: #FAFAF8;
+    --ash-gray: #8E8E93;
+  }
+
+  body {
+    font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+    background: var(--warm-white);
+    color: var(--deep-black);
+    overflow-x: hidden;
+  }
+
+  .phone-mockup {
+    width: 390px;
+    height: 844px;
+    margin: 40px auto;
+    background: white;
+    border-radius: 50px;
+    box-shadow: 0 30px 80px rgba(0,0,0,0.2);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .status-bar {
+    height: 47px;
+    background: linear-gradient(135deg, var(--flame-red), var(--ember-orange));
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: white;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  .content {
+    height: calc(844px - 47px - 83px);
+    overflow-y: auto;
+    background: var(--warm-white);
+  }
+
+  .content::-webkit-scrollbar { display: none; }
+
+  /* Hero Section */
+  .hero {
+    background: linear-gradient(180deg, #FF3B30 0%, #FF9500 100%);
+    padding: 32px 24px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+
+  .greeting {
+    font-size: 16px;
+    color: rgba(255,255,255,0.8);
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+
+  .hero-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 38px;
+    font-weight: 900;
+    color: white;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 32px;
+  }
+
+  /* Streak Card */
+  .streak-card {
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 24px;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+
+  .streak-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .streak-number {
+    font-family: 'Inter', sans-serif;
+    font-size: 72px;
+    font-weight: 900;
+    color: white;
+    line-height: 1;
+    letter-spacing: -0.03em;
+  }
+
+  .streak-unit {
+    font-size: 18px;
+    color: rgba(255,255,255,0.9);
+    font-weight: 600;
+    margin-top: 8px;
+  }
+
+  .fire-icon {
+    font-size: 56px;
+    filter: drop-shadow(0 4px 12px rgba(255,214,10,0.5));
+  }
+
+  .week-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+  }
+
+  .day-dot {
+    aspect-ratio: 1;
+    border-radius: 12px;
+    background: rgba(255,255,255,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+    font-weight: 600;
+    position: relative;
+  }
+
+  .day-dot.active {
+    background: white;
+    color: var(--flame-red);
+    box-shadow: 0 4px 12px rgba(255,255,255,0.3);
+  }
+
+  .day-dot.active::after {
+    content: '✓';
+    position: absolute;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  /* Stats Grid */
+  .stats-section {
+    padding: 24px;
+  }
+
+  .section-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--deep-black);
+    margin-bottom: 16px;
+    letter-spacing: -0.01em;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    background: white;
+    border-radius: 16px;
+    padding: 16px;
+    border: 2px solid transparent;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .stat-card:nth-child(1) { border-color: #FF3B30; }
+  .stat-card:nth-child(2) { border-color: #34C759; }
+  .stat-card:nth-child(3) { border-color: #007AFF; }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--ash-gray);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+  }
+
+  .stat-value {
+    font-family: 'Inter', sans-serif;
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--deep-black);
+    line-height: 1;
+  }
+
+  .stat-card:nth-child(1) .stat-value { color: #FF3B30; }
+  .stat-card:nth-child(2) .stat-value { color: #34C759; }
+  .stat-card:nth-child(3) .stat-value { color: #007AFF; }
+
+  .stat-unit {
+    font-size: 14px;
+    color: var(--ash-gray);
+    font-weight: 500;
+    margin-left: 2px;
+  }
+
+  /* Recent Workouts */
+  .workout-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .workout-item {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 2px solid #F2F2F7;
+    transition: all 0.2s;
+  }
+
+  .workout-item:active {
+    transform: scale(0.98);
+    border-color: var(--ember-orange);
+  }
+
+  .workout-date {
+    font-size: 13px;
+    color: var(--ash-gray);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .workout-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--deep-black);
+    margin-bottom: 6px;
+  }
+
+  .workout-stats {
+    font-size: 13px;
+    color: var(--ash-gray);
+  }
+
+  .workout-arrow {
+    font-size: 20px;
+    color: #C7C7CC;
+  }
+
+  /* Tab Bar */
+  .tab-bar {
+    height: 83px;
+    background: white;
+    border-top: 1px solid #F2F2F7;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding-bottom: 20px;
+  }
+
+  .tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    min-width: 60px;
+  }
+
+  .tab-icon {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+  }
+
+  .tab.active .tab-icon {
+    filter: drop-shadow(0 2px 8px rgba(255,59,48,0.4));
+  }
+
+  .tab-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ash-gray);
+  }
+
+  .tab.active .tab-label {
+    color: var(--flame-red);
+  }
+
+  .tab-record {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--flame-red), var(--ember-orange));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: -28px;
+    box-shadow: 0 8px 24px rgba(255,59,48,0.4);
+  }
+
+  .tab-record-icon {
+    font-size: 28px;
+    color: white;
+  }
+
+  /* Design Info */
+  .design-info {
+    background: var(--deep-black);
+    color: white;
+    padding: 40px 24px;
+    text-align: center;
+  }
+
+  .design-info h2 {
+    font-family: 'Inter', sans-serif;
+    font-size: 32px;
+    font-weight: 900;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, var(--flame-red), var(--ember-orange));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .design-info p {
+    color: rgba(255,255,255,0.7);
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+
+  .color-palette {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 24px;
+  }
+
+  .color-swatch {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+  }
+</style>
+</head>
+<body>
+
+<div class="phone-mockup">
+  <div class="status-bar">
+    <span>9:41</span>
+    <div style="display: flex; gap: 6px; align-items: center;">
+      <span>📶</span>
+      <span>100%</span>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="hero">
+      <div class="greeting">おはよう</div>
+      <h1 class="hero-title">今日も<br>挑戦しよう 💪</h1>
+
+      <div class="streak-card">
+        <div class="streak-top">
+          <div>
+            <div class="streak-number">12</div>
+            <div class="streak-unit">日連続</div>
+          </div>
+          <div class="fire-icon">🔥</div>
+        </div>
+
+        <div class="week-grid">
+          <div class="day-dot active">月</div>
+          <div class="day-dot active">火</div>
+          <div class="day-dot active">水</div>
+          <div class="day-dot active">木</div>
+          <div class="day-dot active">金</div>
+          <div class="day-dot">土</div>
+          <div class="day-dot active">日</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-section">
+      <h2 class="section-title">今週の成果</h2>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">回数</div>
+          <div class="stat-value">5<span class="stat-unit">回</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">ボリューム</div>
+          <div class="stat-value">24<span class="stat-unit">t</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">成長率</div>
+          <div class="stat-value">+12<span class="stat-unit">%</span></div>
+        </div>
+      </div>
+
+      <h2 class="section-title">最近のワークアウト</h2>
+      <div class="workout-list">
+        <div class="workout-item">
+          <div>
+            <div class="workout-date">2/16（日）</div>
+            <div class="workout-name">胸・三頭</div>
+            <div class="workout-stats">6種目 · 8,240 kg</div>
+          </div>
+          <div class="workout-arrow">›</div>
+        </div>
+
+        <div class="workout-item">
+          <div>
+            <div class="workout-date">2/15（土）</div>
+            <div class="workout-name">背中・二頭</div>
+            <div class="workout-stats">7種目 · 9,100 kg</div>
+          </div>
+          <div class="workout-arrow">›</div>
+        </div>
+
+        <div class="workout-item">
+          <div>
+            <div class="workout-date">2/14（金）</div>
+            <div class="workout-name">脚</div>
+            <div class="workout-stats">5種目 · 12,800 kg</div>
+          </div>
+          <div class="workout-arrow">›</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <div class="tab active">
+      <div class="tab-icon">🏠</div>
+      <div class="tab-label">ホーム</div>
+    </div>
+    <div class="tab">
+      <div class="tab-icon">📅</div>
+      <div class="tab-label">カレンダー</div>
+    </div>
+    <div class="tab-record">
+      <div class="tab-record-icon">+</div>
+    </div>
+    <div class="tab">
+      <div class="tab-icon">📊</div>
+      <div class="tab-label">統計</div>
+    </div>
+    <div class="tab">
+      <div class="tab-icon">💬</div>
+      <div class="tab-label">AI</div>
+    </div>
+  </div>
+</div>
+
+<div class="design-info">
+  <h2>ENERGY BOOST</h2>
+  <p><strong>コンセプト:</strong> 情熱的、アクティブ、モチベーション駆動</p>
+  <p><strong>タイポグラフィ:</strong> Inter Display (見出し) + IBM Plex Sans (本文)</p>
+  <p><strong>特徴:</strong> 燃えるようなグラデーション、大胆な数値表現、高コントラスト</p>
+
+  <div class="color-palette">
+    <div class="color-swatch" style="background: #FF3B30;"></div>
+    <div class="color-swatch" style="background: #FF9500;"></div>
+    <div class="color-swatch" style="background: #FFD60A;"></div>
+    <div class="color-swatch" style="background: #0A0A0A;"></div>
+    <div class="color-swatch" style="background: #FAFAF8;"></div>
+  </div>
+</div>
+
+</body>
+</html>

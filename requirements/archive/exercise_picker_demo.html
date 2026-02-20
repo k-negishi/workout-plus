@@ -1,0 +1,585 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>種目選択フロー - ボトムシート検索型</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #F8F9FA;
+    font-family: 'Noto Sans JP', -apple-system, sans-serif;
+    color: #1A1A1A;
+    padding: 20px;
+  }
+
+  .container { max-width: 1400px; margin: 0 auto; }
+  .header { text-align: center; margin-bottom: 40px; }
+  .header h1 { font-size: 32px; font-weight: 700; color: #1A1A1A; margin-bottom: 8px; }
+  .header p { color: rgba(0,0,0,0.6); font-size: 15px; line-height: 1.6; }
+
+  .demo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 32px;
+  }
+
+  @media (max-width: 1400px) {
+    .demo-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .demo-card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #E5E7EB;
+    overflow: hidden;
+  }
+
+  .demo-header {
+    background: #0D9488;
+    color: white;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .demo-header h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .demo-header .subtitle { font-size: 13px; opacity: 0.9; }
+
+  .phone-mockup {
+    width: 375px;
+    height: 812px;
+    background: #FFFFFF;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* === ワークアウト記録画面 === */
+  .workout-header {
+    position: sticky;
+    top: 0;
+    background: white;
+    border-bottom: 1px solid #E5E7EB;
+    padding: 12px 16px;
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .workout-title { font-size: 17px; font-weight: 600; color: #1A1A1A; }
+  .done-btn {
+    background: transparent;
+    border: none;
+    color: #0D9488;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .exercise-list {
+    padding: 16px;
+  }
+
+  .exercise-card {
+    background: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .exercise-name { font-size: 16px; font-weight: 700; color: #1A1A1A; margin-bottom: 4px; }
+  .exercise-meta { font-size: 12px; color: #6B7280; }
+
+  .add-exercise-btn {
+    width: calc(100% - 32px);
+    margin: 0 16px;
+    padding: 16px;
+    background: white;
+    border: 2px dashed #0D9488;
+    border-radius: 12px;
+    color: #0D9488;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .add-exercise-btn:hover {
+    background: #F0FDFA;
+  }
+
+  /* === ボトムシート === */
+  .bottom-sheet {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 70%;
+    background: white;
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .bottom-sheet-hidden {
+    display: none;
+  }
+
+  .drag-handle {
+    width: 36px;
+    height: 4px;
+    background: #D1D5DB;
+    border-radius: 2px;
+    margin: 12px auto 8px;
+  }
+
+  .search-section {
+    padding: 12px 16px;
+    border-bottom: 1px solid #E5E7EB;
+  }
+
+  .search-input {
+    width: 100%;
+    background: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    padding: 12px 16px 12px 40px;
+    font-size: 16px;
+    color: #1A1A1A;
+    position: relative;
+  }
+  .search-input::placeholder {
+    color: #9CA3AF;
+  }
+  .search-icon {
+    position: absolute;
+    left: 28px;
+    top: 24px;
+    color: #6B7280;
+  }
+
+  .category-tabs {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+    overflow-x: auto;
+    border-bottom: 1px solid #E5E7EB;
+  }
+  .category-tabs::-webkit-scrollbar { display: none; }
+  .category-tab {
+    flex-shrink: 0;
+    padding: 8px 16px;
+    background: #F3F4F6;
+    border: none;
+    border-radius: 8px;
+    color: #6B7280;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .category-tab.active {
+    background: #0D9488;
+    color: white;
+  }
+
+  .exercise-sections {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+  }
+
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #6B7280;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .exercise-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    cursor: pointer;
+  }
+  .exercise-item:hover {
+    background: #F0FDFA;
+    border-color: #0D9488;
+  }
+  .exercise-item-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1A1A1A;
+    margin-bottom: 2px;
+  }
+  .exercise-item-meta {
+    font-size: 12px;
+    color: #6B7280;
+  }
+
+  /* === 完了画面 === */
+  .completed-screen {
+    padding: 16px;
+  }
+
+  .added-indicator {
+    background: #D1FAE5;
+    border: 2px solid #10B981;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #065F46;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>種目選択フロー - ボトムシート検索型</h1>
+    <p>
+      Strong/Hevy方式の実績あるパターン<br>
+      検索 + カテゴリ + 最近使った種目で全ユーザー層に対応
+    </p>
+  </div>
+
+  <div class="demo-grid">
+
+    <!-- STEP 1: ワークアウト記録画面 -->
+    <div class="demo-card">
+      <div class="demo-header">
+        <h2>STEP 1: ワークアウト記録画面</h2>
+        <div class="subtitle">「+ 種目を追加」ボタンをタップ</div>
+      </div>
+      <div class="phone-mockup">
+        <div class="workout-header">
+          <div class="workout-title">プッシュデイ</div>
+          <button class="done-btn">完了</button>
+        </div>
+
+        <div class="exercise-list">
+          <div class="exercise-card">
+            <div class="exercise-name">ベンチプレス</div>
+            <div class="exercise-meta">胸 • コンパウンド • 3セット完了</div>
+          </div>
+          <div class="exercise-card">
+            <div class="exercise-name">インクラインプレス</div>
+            <div class="exercise-meta">胸 • コンパウンド • 2セット完了</div>
+          </div>
+        </div>
+
+        <button class="add-exercise-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          種目を追加
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 2: ボトムシート表示 -->
+    <div class="demo-card">
+      <div class="demo-header">
+        <h2>STEP 2: ボトムシート表示</h2>
+        <div class="subtitle">画面下部からスライドアップ</div>
+      </div>
+      <div class="phone-mockup">
+        <div class="workout-header">
+          <div class="workout-title">プッシュデイ</div>
+          <button class="done-btn">完了</button>
+        </div>
+
+        <div class="exercise-list">
+          <div class="exercise-card" style="opacity: 0.5;">
+            <div class="exercise-name">ベンチプレス</div>
+            <div class="exercise-meta">胸 • コンパウンド</div>
+          </div>
+          <div class="exercise-card" style="opacity: 0.5;">
+            <div class="exercise-name">インクラインプレス</div>
+            <div class="exercise-meta">胸 • コンパウンド</div>
+          </div>
+        </div>
+
+        <div class="bottom-sheet">
+          <div class="drag-handle"></div>
+
+          <div class="search-section" style="position: relative;">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" class="search-input" placeholder="種目を検索...">
+          </div>
+
+          <div class="category-tabs">
+            <button class="category-tab active">全て</button>
+            <button class="category-tab">胸</button>
+            <button class="category-tab">背中</button>
+            <button class="category-tab">脚</button>
+            <button class="category-tab">肩</button>
+            <button class="category-tab">腕</button>
+            <button class="category-tab">腹</button>
+          </div>
+
+          <div class="exercise-sections">
+            <div class="section-title">
+              📌 最近使った種目
+            </div>
+
+            <div class="exercise-item">
+              <div>
+                <div class="exercise-item-name">ベンチプレス</div>
+                <div class="exercise-item-meta">胸 • コンパウンド</div>
+              </div>
+            </div>
+
+            <div class="exercise-item">
+              <div>
+                <div class="exercise-item-name">スクワット</div>
+                <div class="exercise-item-meta">脚 • コンパウンド</div>
+              </div>
+            </div>
+
+            <div class="exercise-item">
+              <div>
+                <div class="exercise-item-name">デッドリフト</div>
+                <div class="exercise-item-meta">背中 • コンパウンド</div>
+              </div>
+            </div>
+
+            <div class="section-title" style="margin-top: 24px;">
+              📂 胸の種目
+            </div>
+
+            <div class="exercise-item">
+              <div>
+                <div class="exercise-item-name">ベンチプレス</div>
+                <div class="exercise-item-meta">胸 • コンパウンド • バーベル</div>
+              </div>
+            </div>
+
+            <div class="exercise-item">
+              <div>
+                <div class="exercise-item-name">インクラインプレス</div>
+                <div class="exercise-item-meta">胸 • コンパウンド • バーベル</div>
+              </div>
+            </div>
+
+            <div class="exercise-item">
+              <div>
+                <div class="exercise-item-name">ダンベルフライ</div>
+                <div class="exercise-item-meta">胸 • アイソレーション • ダンベル</div>
+              </div>
+            </div>
+
+            <div class="exercise-item">
+              <div>
+                <div class="exercise-item-name">ケーブルフライ</div>
+                <div class="exercise-item-meta">胸 • アイソレーション • ケーブル</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: 検索使用例 -->
+    <div class="demo-card">
+      <div class="demo-header">
+        <h2>STEP 3: 検索使用</h2>
+        <div class="subtitle">中級者は検索で瞬時にアクセス</div>
+      </div>
+      <div class="phone-mockup">
+        <div class="workout-header">
+          <div class="workout-title">プッシュデイ</div>
+          <button class="done-btn">完了</button>
+        </div>
+
+        <div class="exercise-list" style="opacity: 0.5;">
+          <div class="exercise-card">
+            <div class="exercise-name">ベンチプレス</div>
+            <div class="exercise-meta">胸 • コンパウンド</div>
+          </div>
+        </div>
+
+        <div class="bottom-sheet">
+          <div class="drag-handle"></div>
+
+          <div class="search-section" style="position: relative;">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" class="search-input" value="ダンベル" style="background: white; border-color: #0D9488;">
+          </div>
+
+          <div class="category-tabs">
+            <button class="category-tab active">全て</button>
+            <button class="category-tab">胸</button>
+            <button class="category-tab">背中</button>
+            <button class="category-tab">脚</button>
+          </div>
+
+          <div class="exercise-sections">
+            <div class="section-title">
+              🔍 検索結果（12件）
+            </div>
+
+            <div class="exercise-item">
+              <div>
+                <div class="exercise-item-name">ダンベルフライ</div>
+                <div class="exercise-item-meta">胸 • アイソレーション • ダンベル</div>
+              </div>
+            </div>
+
+            <div class="exercise-item">
+              <div>
+                <div class="exercise-item-name">ダンベルプレス</div>
+                <div class="exercise-item-meta">胸 • コンパウンド • ダンベル</div>
+              </div>
+            </div>
+
+            <div class="exercise-item">
+              <div>
+                <div class="exercise-item-name">ダンベルロウ</div>
+                <div class="exercise-item-meta">背中 • コンパウンド • ダンベル</div>
+              </div>
+            </div>
+
+            <div class="exercise-item">
+              <div>
+                <div class="exercise-item-name">ダンベルカール</div>
+                <div class="exercise-item-meta">腕 • アイソレーション • ダンベル</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4: 種目追加完了 -->
+    <div class="demo-card">
+      <div class="demo-header">
+        <h2>STEP 4: 種目追加完了</h2>
+        <div class="subtitle">ボトムシートが閉じて記録画面に戻る</div>
+      </div>
+      <div class="phone-mockup">
+        <div class="workout-header">
+          <div class="workout-title">プッシュデイ</div>
+          <button class="done-btn">完了</button>
+        </div>
+
+        <div class="completed-screen">
+          <div class="added-indicator">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+            「ダンベルフライ」を追加しました
+          </div>
+
+          <div class="exercise-card">
+            <div class="exercise-name">ベンチプレス</div>
+            <div class="exercise-meta">胸 • コンパウンド • 3セット完了</div>
+          </div>
+
+          <div class="exercise-card">
+            <div class="exercise-name">インクラインプレス</div>
+            <div class="exercise-meta">胸 • コンパウンド • 2セット完了</div>
+          </div>
+
+          <div class="exercise-card" style="border: 2px solid #0D9488; background: #F0FDFA;">
+            <div class="exercise-name" style="color: #0D9488;">ダンベルフライ ✨</div>
+            <div class="exercise-meta">胸 • アイソレーション • 新規追加</div>
+          </div>
+        </div>
+
+        <button class="add-exercise-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          種目を追加
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 実装ガイド -->
+  <div style="background: white; border-radius: 12px; padding: 32px; border: 1px solid #E5E7EB; margin-top: 40px;">
+    <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 24px;">実装仕様</h2>
+
+    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #0D9488;">1. ボトムシートの構成</h3>
+    <ul style="margin-left: 20px; margin-bottom: 24px; line-height: 1.8;">
+      <li><strong>高さ:</strong> 画面の70%（`isScrollControlled: true`）</li>
+      <li><strong>ドラッグハンドル:</strong> 上方向にフルスクリーン展開可能</li>
+      <li><strong>下スワイプ:</strong> 閉じる</li>
+    </ul>
+
+    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #0D9488;">2. 検索機能</h3>
+    <ul style="margin-left: 20px; margin-bottom: 24px; line-height: 1.8;">
+      <li><strong>リアルタイムフィルタリング:</strong> 入力に応じて種目リストを絞り込み</li>
+      <li><strong>検索対象:</strong> 種目名（日本語・英語）、筋群、器具</li>
+      <li><strong>結果表示:</strong> マッチした件数を表示</li>
+    </ul>
+
+    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #0D9488;">3. カテゴリタブ</h3>
+    <ul style="margin-left: 20px; margin-bottom: 24px; line-height: 1.8;">
+      <li><strong>7種類:</strong> 全て/胸/背中/脚/肩/腕/腹</li>
+      <li><strong>横スクロール対応:</strong> タブが多い場合はスワイプ可能</li>
+      <li><strong>アクティブ状態:</strong> 選択中のカテゴリを強調表示</li>
+    </ul>
+
+    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #0D9488;">4. 最近使った種目</h3>
+    <ul style="margin-left: 20px; margin-bottom: 24px; line-height: 1.8;">
+      <li><strong>表示件数:</strong> 3件（90%のケースをカバー）</li>
+      <li><strong>取得ロジック:</strong> `last_used_at DESC LIMIT 3`</li>
+      <li><strong>表示条件:</strong> 1回以上使用した種目のみ</li>
+    </ul>
+
+    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #0D9488;">5. 種目選択の流れ</h3>
+    <ol style="margin-left: 20px; margin-bottom: 24px; line-height: 1.8;">
+      <li>種目をタップ → ボトムシート閉じる</li>
+      <li>記録画面に種目が追加される（ハイライト表示）</li>
+      <li>すぐにセット入力が可能</li>
+      <li>2タップで完了（US01要件を充足）</li>
+    </ol>
+  </div>
+
+  <!-- メリット/デメリット -->
+  <div style="background: #F0FDFA; border-radius: 12px; padding: 32px; margin-top: 40px; border: 2px solid #0D9488;">
+    <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 16px; color: #0D9488;">🏆 このパターンの強み</h2>
+    <div style="font-size: 15px; color: #134E4A; line-height: 1.8;">
+      <strong>メリット：</strong>
+      <ul style="margin-left: 20px; margin-top: 8px; line-height: 2;">
+        <li>画面遷移なし → <strong>心理的距離が近い</strong></li>
+        <li>検索 + カテゴリ + 最近使った種目 → <strong>全ユーザー層に対応</strong></li>
+        <li>2タップで種目選択完了 → <strong>US01要件を充足</strong></li>
+        <li>Strong/Hevyで実績あり → <strong>ユーザーの学習コスト低</strong></li>
+        <li>将来的にお気に入り機能追加が容易 → <strong>拡張性高</strong></li>
+      </ul>
+      <br>
+      <strong>デメリット：</strong>
+      <ul style="margin-left: 20px; margin-top: 8px; line-height: 2;">
+        <li>ボトムシートの高さ調整が必要</li>
+        <li>300種目全表示は重い可能性（仮想スクロール推奨）</li>
+        <li>初回利用時は「最近使った」が空</li>
+      </ul>
+    </div>
+  </div>
+
+  <div style="text-align: center; padding: 20px; color: #6B7280; font-size: 14px; margin-top: 20px;">
+    <p><strong>このフローで実装しますか？</strong></p>
+    <p>または、他のパターン（フルスクリーンモーダル、インライン追加など）も見たい場合はお知らせください。</p>
+  </div>
+</div>
+
+</body>
+</html>

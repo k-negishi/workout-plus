@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workout Plus - Todoist風ホーム画面</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #FAFAFA;
+            color: #202020;
+            line-height: 1.5;
+        }
+
+        /* ヘッダー */
+        .header {
+            background: #FFFFFF;
+            padding: 16px 20px;
+            border-bottom: 1px solid #F0F0F0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #202020;
+        }
+
+        .header-icons {
+            display: flex;
+            gap: 16px;
+        }
+
+        .icon-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            transition: background 0.2s;
+        }
+
+        .icon-btn:hover {
+            background: #F5F5F5;
+        }
+
+        /* 日付表示 */
+        .date-display {
+            font-size: 13px;
+            color: #808080;
+        }
+
+        /* メインコンテンツ */
+        .main {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* 連続記録カード（Karma風） */
+        .streak-card {
+            background: linear-gradient(135deg, #0066FF 0%, #4D94FF 100%);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            color: #FFFFFF;
+            box-shadow: 0 2px 8px rgba(0, 102, 255, 0.15);
+        }
+
+        .streak-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .streak-number {
+            font-size: 48px;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .streak-text {
+            font-size: 15px;
+            opacity: 0.95;
+        }
+
+        /* セクション */
+        .section {
+            margin-bottom: 32px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #202020;
+        }
+
+        .section-count {
+            font-size: 13px;
+            color: #808080;
+        }
+
+        /* 統計カード */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: #FFFFFF;
+            border: 1px solid #F0F0F0;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .stat-card:hover {
+            border-color: #0066FF;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #202020;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #808080;
+        }
+
+        .stat-change {
+            font-size: 11px;
+            color: #058527;
+            margin-top: 4px;
+        }
+
+        /* タスクリスト（ワークアウトリスト） */
+        .task-list {
+            background: #FFFFFF;
+            border: 1px solid #F0F0F0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .task-item {
+            border-bottom: 1px solid #F0F0F0;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .task-item:last-child {
+            border-bottom: none;
+        }
+
+        .task-item:hover {
+            background: #FAFAFA;
+        }
+
+        /* チェックボックス（優先度別） */
+        .task-checkbox {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #E0E0E0;
+            flex-shrink: 0;
+            position: relative;
+            transition: all 0.2s;
+        }
+
+        .task-checkbox.priority-1 {
+            border-color: #0066FF;
+        }
+
+        .task-checkbox.priority-2 {
+            border-color: #4D94FF;
+        }
+
+        .task-checkbox.priority-3 {
+            border-color: #99BFFF;
+        }
+
+        .task-item:hover .task-checkbox {
+            border-width: 2px;
+            background: rgba(0, 102, 255, 0.05);
+        }
+
+        .task-checkbox.completed {
+            background: #0066FF;
+            border-color: #0066FF;
+        }
+
+        .task-checkbox.completed::after {
+            content: "✓";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #FFFFFF;
+            font-size: 12px;
+        }
+
+        /* タスクコンテンツ */
+        .task-content {
+            flex: 1;
+        }
+
+        .task-title {
+            font-size: 14px;
+            color: #202020;
+            margin-bottom: 4px;
+        }
+
+        .task-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 12px;
+            color: #808080;
+        }
+
+        .task-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* 優先度インジケーター */
+        .priority-flag {
+            width: 16px;
+            height: 16px;
+        }
+
+        .priority-flag.p1 {
+            color: #0066FF;
+        }
+
+        .priority-flag.p2 {
+            color: #4D94FF;
+        }
+
+        .priority-flag.p3 {
+            color: #99BFFF;
+        }
+
+        /* 追加ボタン（Todoist風） */
+        .add-task-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            background: transparent;
+            border: none;
+            color: #808080;
+            font-size: 14px;
+            cursor: pointer;
+            width: 100%;
+            text-align: left;
+            transition: color 0.2s;
+        }
+
+        .add-task-btn:hover {
+            color: #0066FF;
+        }
+
+        .add-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid currentColor;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 300;
+        }
+
+        /* フローティング追加ボタン */
+        .fab {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: #0066FF;
+            color: #FFFFFF;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 102, 255, 0.3);
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .fab:hover {
+            background: #0052CC;
+            box-shadow: 0 6px 16px rgba(0, 102, 255, 0.4);
+            transform: scale(1.05);
+        }
+
+        .fab:active {
+            transform: scale(0.95);
+        }
+
+        /* タブバー */
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #FFFFFF;
+            border-top: 1px solid #F0F0F0;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            z-index: 100;
+        }
+
+        .tab-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #808080;
+            transition: color 0.2s;
+        }
+
+        .tab-item.active {
+            color: #0066FF;
+        }
+
+        .tab-icon {
+            width: 24px;
+            height: 24px;
+        }
+
+        .tab-label {
+            font-size: 11px;
+        }
+
+        /* レスポンシブ */
+        @media (max-width: 600px) {
+            .main {
+                padding: 16px;
+            }
+
+            .streak-number {
+                font-size: 40px;
+            }
+
+            .stats-grid {
+                gap: 8px;
+            }
+
+            .stat-card {
+                padding: 12px;
+            }
+
+            .stat-value {
+                font-size: 24px;
+            }
+        }
+
+        /* アニメーション */
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section {
+            animation: slideUp 0.3s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <!-- ヘッダー -->
+    <header class="header">
+        <div class="header-top">
+            <h1 class="header-title">今日</h1>
+            <div class="header-icons">
+                <button class="icon-btn" title="検索">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="M21 21l-4.35-4.35"/>
+                    </svg>
+                </button>
+                <button class="icon-btn" title="通知">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="date-display">2月17日(月) • 今週5回完了</div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="main">
+        <!-- 連続記録カード（Karma風） -->
+        <div class="streak-card">
+            <div class="streak-label">連続記録</div>
+            <div class="streak-number">12</div>
+            <div class="streak-text">日連続でトレーニング中</div>
+        </div>
+
+        <!-- 今週の統計 -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">今週の成果</h2>
+                <span class="section-count">先週比</span>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">5</div>
+                    <div class="stat-label">完了</div>
+                    <div class="stat-change">+2回</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">24t</div>
+                    <div class="stat-label">総重量</div>
+                    <div class="stat-change">+12%</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">3.2h</div>
+                    <div class="stat-label">時間</div>
+                    <div class="stat-change">+0.5h</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 今日のワークアウト -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">今日</h2>
+                <span class="section-count">1件</span>
+            </div>
+            <div class="task-list">
+                <div class="task-item">
+                    <div class="task-checkbox priority-1"></div>
+                    <div class="task-content">
+                        <div class="task-title">胸・三頭トレーニング</div>
+                        <div class="task-meta">
+                            <span class="task-meta-item">
+                                <svg class="priority-flag p1" viewBox="0 0 16 16" fill="currentColor">
+                                    <path d="M2 1v14M2 2l12 4-12 4z"/>
+                                </svg>
+                                優先度1
+                            </span>
+                            <span class="task-meta-item">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <polyline points="12 6 12 12 16 14"/>
+                                </svg>
+                                60分
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <button class="add-task-btn">
+                    <span class="add-icon">+</span>
+                    ワークアウトを追加
+                </button>
+            </div>
+        </section>
+
+        <!-- 最近のワークアウト -->
+        <section class="section">
+            <div class="section-header">
+                <h2 class="section-title">最近完了</h2>
+                <span class="section-count">3件</span>
+            </div>
+            <div class="task-list">
+                <div class="task-item">
+                    <div class="task-checkbox completed"></div>
+                    <div class="task-content">
+                        <div class="task-title">背中・二頭トレーニング</div>
+                        <div class="task-meta">
+                            <span class="task-meta-item">
+                                <svg class="priority-flag p2" viewBox="0 0 16 16" fill="currentColor">
+                                    <path d="M2 1v14M2 2l12 4-12 4z"/>
+                                </svg>
+                                優先度2
+                            </span>
+                            <span class="task-meta-item">昨日 19:30</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="task-item">
+                    <div class="task-checkbox completed"></div>
+                    <div class="task-content">
+                        <div class="task-title">脚トレーニング</div>
+                        <div class="task-meta">
+                            <span class="task-meta-item">
+                                <svg class="priority-flag p1" viewBox="0 0 16 16" fill="currentColor">
+                                    <path d="M2 1v14M2 2l12 4-12 4z"/>
+                                </svg>
+                                優先度1
+                            </span>
+                            <span class="task-meta-item">2月15日</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="task-item">
+                    <div class="task-checkbox completed"></div>
+                    <div class="task-content">
+                        <div class="task-title">肩・腹筋トレーニング</div>
+                        <div class="task-meta">
+                            <span class="task-meta-item">
+                                <svg class="priority-flag p3" viewBox="0 0 16 16" fill="currentColor">
+                                    <path d="M2 1v14M2 2l12 4-12 4z"/>
+                                </svg>
+                                優先度3
+                            </span>
+                            <span class="task-meta-item">2月14日</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- フローティング追加ボタン -->
+    <button class="fab" title="ワークアウトを追加">+</button>
+
+    <!-- タブバー -->
+    <nav class="tab-bar">
+        <button class="tab-item active">
+            <svg class="tab-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+            </svg>
+            <span class="tab-label">ホーム</span>
+        </button>
+        <button class="tab-item">
+            <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                <line x1="16" y1="2" x2="16" y2="6"/>
+                <line x1="8" y1="2" x2="8" y2="6"/>
+                <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <span class="tab-label">カレンダー</span>
+        </button>
+        <button class="tab-item">
+            <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <span class="tab-label">記録</span>
+        </button>
+        <button class="tab-item">
+            <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="20" x2="18" y2="10"/>
+                <line x1="12" y1="20" x2="12" y2="4"/>
+                <line x1="6" y1="20" x2="6" y2="14"/>
+            </svg>
+            <span class="tab-label">統計</span>
+        </button>
+        <button class="tab-item">
+            <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            <span class="tab-label">AI</span>
+        </button>
+    </nav>
+
+    <script>
+        // チェックボックスのインタラクション
+        document.querySelectorAll('.task-item').forEach(item => {
+            const checkbox = item.querySelector('.task-checkbox');
+
+            item.addEventListener('click', (e) => {
+                if (e.target.closest('.task-checkbox')) {
+                    checkbox.classList.toggle('completed');
+
+                    if (checkbox.classList.contains('completed')) {
+                        // 完了アニメーション
+                        item.style.opacity = '0.5';
+                        setTimeout(() => {
+                            item.style.opacity = '1';
+                        }, 300);
+                    }
+                }
+            });
+        });
+
+        // タブの切り替え
+        document.querySelectorAll('.tab-item').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+            });
+        });
+
+        // FABボタン
+        document.querySelector('.fab').addEventListener('click', () => {
+            alert('新しいワークアウトを追加（実装予定）');
+        });
+
+        // 追加ボタン
+        document.querySelector('.add-task-btn').addEventListener('click', () => {
+            alert('新しいワークアウトを追加（実装予定）');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>種目選択フロー - フルスクリーンモーダル型（Hevy Pro方式）</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #F8F9FA;
+    font-family: 'Noto Sans JP', -apple-system, sans-serif;
+    color: #1A1A1A;
+    padding: 20px;
+  }
+
+  .container { max-width: 1400px; margin: 0 auto; }
+  .header { text-align: center; margin-bottom: 40px; }
+  .header h1 { font-size: 32px; font-weight: 700; color: #1A1A1A; margin-bottom: 8px; }
+  .header p { color: rgba(0,0,0,0.6); font-size: 15px; line-height: 1.6; }
+
+  .demo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 32px;
+  }
+
+  @media (max-width: 1400px) {
+    .demo-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .demo-card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #E5E7EB;
+    overflow: hidden;
+  }
+
+  .demo-header {
+    background: #0D9488;
+    color: white;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .demo-header h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .demo-header .subtitle { font-size: 13px; opacity: 0.9; }
+
+  .phone-mockup {
+    width: 375px;
+    height: 812px;
+    background: #FFFFFF;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* === ワークアウト記録画面 === */
+  .workout-header {
+    position: sticky;
+    top: 0;
+    background: white;
+    border-bottom: 1px solid #E5E7EB;
+    padding: 12px 16px;
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .workout-title { font-size: 17px; font-weight: 600; color: #1A1A1A; }
+  .done-btn {
+    background: transparent;
+    border: none;
+    color: #0D9488;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .exercise-list {
+    padding: 16px;
+  }
+
+  .exercise-card {
+    background: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .exercise-name { font-size: 16px; font-weight: 700; color: #1A1A1A; margin-bottom: 4px; }
+  .exercise-meta { font-size: 12px; color: #6B7280; }
+
+  .add-exercise-btn {
+    width: calc(100% - 32px);
+    margin: 0 16px;
+    padding: 16px;
+    background: white;
+    border: 2px dashed #0D9488;
+    border-radius: 8px;
+    color: #0D9488;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  /* === フルスクリーンモーダル === */
+  .fullscreen-modal {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #FFFFFF;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .modal-header {
+    background: white;
+    border-bottom: 1px solid #E5E7EB;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .close-btn {
+    background: transparent;
+    border: none;
+    color: #6B7280;
+    font-size: 28px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+  }
+
+  .modal-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #1A1A1A;
+  }
+
+  .multi-select-toggle {
+    background: transparent;
+    border: none;
+    color: #0D9488;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .search-bar {
+    padding: 12px 16px;
+    background: white;
+    border-bottom: 1px solid #E5E7EB;
+  }
+
+  .search-input-wrapper {
+    position: relative;
+  }
+
+  .search-input {
+    width: 100%;
+    background: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    padding: 12px 16px 12px 40px;
+    font-size: 16px;
+    color: #1A1A1A;
+  }
+  .search-input::placeholder {
+    color: #9CA3AF;
+  }
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 14px;
+    color: #6B7280;
+  }
+
+  .category-tabs {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+    overflow-x: auto;
+    border-bottom: 1px solid #E5E7EB;
+    background: white;
+  }
+  .category-tabs::-webkit-scrollbar { display: none; }
+  .category-tab {
+    flex-shrink: 0;
+    padding: 8px 16px;
+    background: #F3F4F6;
+    border: none;
+    border-radius: 6px;
+    color: #6B7280;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .category-tab.active {
+    background: #0D9488;
+    color: white;
+  }
+
+  .exercise-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #6B7280;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .section-count {
+    font-size: 12px;
+    color: #9CA3AF;
+    font-weight: 600;
+  }
+
+  .exercise-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    cursor: pointer;
+  }
+
+  .exercise-item-content {
+    flex: 1;
+  }
+
+  .exercise-item-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+  }
+
+  .exercise-item-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1A1A1A;
+  }
+
+  .favorite-icon {
+    color: #FFA500;
+    font-size: 14px;
+  }
+
+  .exercise-item-meta {
+    font-size: 12px;
+    color: #6B7280;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .meta-badge {
+    background: #E5E7EB;
+    color: #4B5563;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .muscle-badge {
+    background: #DBEAFE;
+    color: #1E40AF;
+  }
+
+  .equipment-badge {
+    background: #FEE2E2;
+    color: #991B1B;
+  }
+
+  /* === 複数選択モード === */
+  .checkbox {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #D1D5DB;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .checkbox.checked {
+    background: #0D9488;
+    border-color: #0D9488;
+    color: white;
+  }
+
+  .exercise-item.selected {
+    background: #F0FDFA;
+    border-color: #0D9488;
+  }
+
+  .multi-select-footer {
+    background: white;
+    border-top: 1px solid #E5E7EB;
+    padding: 12px 16px;
+    display: flex;
+    gap: 12px;
+  }
+
+  .cancel-btn {
+    flex: 1;
+    padding: 16px;
+    background: white;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    color: #6B7280;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .add-selected-btn {
+    flex: 2;
+    padding: 16px;
+    background: #0D9488;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .add-selected-btn:disabled {
+    background: #D1D5DB;
+    cursor: not-allowed;
+  }
+
+  /* === 完了画面 === */
+  .completed-screen {
+    padding: 16px;
+  }
+
+  .added-indicator {
+    background: #D1FAE5;
+    border: 2px solid #10B981;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #065F46;
+    font-weight: 600;
+  }
+
+  .added-count {
+    background: #10B981;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  /* === その他 === */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #9CA3AF;
+  }
+
+  .empty-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+  }
+
+  .empty-text {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>種目選択フロー - フルスクリーンモーダル型（Hevy Pro方式）</h1>
+    <p>
+      詳細情報（筋群・器具）を表示しやすく、複数選択にも対応<br>
+      お気に入り機能とカテゴリで大量の種目を効率的に管理
+    </p>
+  </div>
+
+  <div class="demo-grid">
+
+    <!-- STEP 1: ワークアウト記録画面 -->
+    <div class="demo-card">
+      <div class="demo-header">
+        <h2>STEP 1: ワークアウト記録画面</h2>
+        <div class="subtitle">「+ 種目を追加」ボタンをタップ</div>
+      </div>
+      <div class="phone-mockup">
+        <div class="workout-header">
+          <div class="workout-title">プッシュデイ</div>
+          <button class="done-btn">完了</button>
+        </div>
+
+        <div class="exercise-list">
+          <div class="exercise-card">
+            <div class="exercise-name">ベンチプレス</div>
+            <div class="exercise-meta">胸 • コンパウンド • 3セット完了</div>
+          </div>
+          <div class="exercise-card">
+            <div class="exercise-name">インクラインプレス</div>
+            <div class="exercise-meta">胸 • コンパウンド • 2セット完了</div>
+          </div>
+        </div>
+
+        <button class="add-exercise-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          種目を追加
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 2: フルスクリーン種目選択 -->
+    <div class="demo-card">
+      <div class="demo-header">
+        <h2>STEP 2: フルスクリーン種目選択</h2>
+        <div class="subtitle">検索・カテゴリ・お気に入りで絞り込み</div>
+      </div>
+      <div class="phone-mockup">
+        <div class="fullscreen-modal">
+          <div class="modal-header">
+            <button class="close-btn">×</button>
+            <div class="modal-title">種目を選択</div>
+            <button class="multi-select-toggle">複数選択</button>
+          </div>
+
+          <div class="search-bar">
+            <div class="search-input-wrapper">
+              <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input type="text" class="search-input" placeholder="種目を検索...">
+            </div>
+          </div>
+
+          <div class="category-tabs">
+            <button class="category-tab active">全て</button>
+            <button class="category-tab">胸</button>
+            <button class="category-tab">背中</button>
+            <button class="category-tab">脚</button>
+            <button class="category-tab">肩</button>
+            <button class="category-tab">腕</button>
+            <button class="category-tab">腹</button>
+          </div>
+
+          <div class="exercise-content">
+            <div class="section-header">
+              <div class="section-title">⭐ お気に入り</div>
+              <div class="section-count">5件</div>
+            </div>
+
+            <div class="exercise-item">
+              <div class="exercise-item-content">
+                <div class="exercise-item-header">
+                  <div class="exercise-item-name">ベンチプレス</div>
+                  <span class="favorite-icon">⭐</span>
+                </div>
+                <div class="exercise-item-meta">
+                  <span class="meta-badge muscle-badge">胸</span>
+                  <span class="meta-badge">コンパウンド</span>
+                  <span class="meta-badge equipment-badge">バーベル</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="exercise-item">
+              <div class="exercise-item-content">
+                <div class="exercise-item-header">
+                  <div class="exercise-item-name">スクワット</div>
+                  <span class="favorite-icon">⭐</span>
+                </div>
+                <div class="exercise-item-meta">
+                  <span class="meta-badge muscle-badge">脚</span>
+                  <span class="meta-badge">コンパウンド</span>
+                  <span class="meta-badge equipment-badge">バーベル</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="exercise-item">
+              <div class="exercise-item-content">
+                <div class="exercise-item-header">
+                  <div class="exercise-item-name">デッドリフト</div>
+                  <span class="favorite-icon">⭐</span>
+                </div>
+                <div class="exercise-item-meta">
+                  <span class="meta-badge muscle-badge">背中</span>
+                  <span class="meta-badge">コンパウンド</span>
+                  <span class="meta-badge equipment-badge">バーベル</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="section-header" style="margin-top: 24px;">
+              <div class="section-title">📂 胸の種目</div>
+              <div class="section-count">24件</div>
+            </div>
+
+            <div class="exercise-item">
+              <div class="exercise-item-content">
+                <div class="exercise-item-header">
+                  <div class="exercise-item-name">インクラインプレス</div>
+                </div>
+                <div class="exercise-item-meta">
+                  <span class="meta-badge muscle-badge">胸</span>
+                  <span class="meta-badge">コンパウンド</span>
+                  <span class="meta-badge equipment-badge">バーベル</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="exercise-item">
+              <div class="exercise-item-content">
+                <div class="exercise-item-header">
+                  <div class="exercise-item-name">ダンベルプレス</div>
+                </div>
+                <div class="exercise-item-meta">
+                  <span class="meta-badge muscle-badge">胸</span>
+                  <span class="meta-badge">コンパウンド</span>
+                  <span class="meta-badge equipment-badge">ダンベル</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="exercise-item">
+              <div class="exercise-item-content">
+                <div class="exercise-item-header">
+                  <div class="exercise-item-name">ダンベルフライ</div>
+                </div>
+                <div class="exercise-item-meta">
+                  <span class="meta-badge muscle-badge">胸</span>
+                  <span class="meta-badge">アイソレーション</span>
+                  <span class="meta-badge equipment-badge">ダンベル</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="exercise-item">
+              <div class="exercise-item-content">
+                <div class="exercise-item-header">
+                  <div class="exercise-item-name">ケーブルフライ</div>
+                </div>
+                <div class="exercise-item-meta">
+                  <span class="meta-badge muscle-badge">胸</span>
+                  <span class="meta-badge">アイソレーション</span>
+                  <span class="meta-badge equipment-badge">ケーブル</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: 複数選択モード -->
+    <div class="demo-card">
+      <div class="demo-header">
+        <h2>STEP 3: 複数選択モード</h2>
+        <div class="subtitle">チェックボックスで一括追加</div>
+      </div>
+      <div class="phone-mockup">
+        <div class="fullscreen-modal">
+          <div class="modal-header">
+            <button class="close-btn">×</button>
+            <div class="modal-title">種目を選択</div>
+            <button class="multi-select-toggle" style="color: #9CA3AF;">キャンセル</button>
+          </div>
+
+          <div class="search-bar">
+            <div class="search-input-wrapper">
+              <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input type="text" class="search-input" placeholder="種目を検索...">
+            </div>
+          </div>
+
+          <div class="category-tabs">
+            <button class="category-tab">全て</button>
+            <button class="category-tab active">胸</button>
+            <button class="category-tab">背中</button>
+            <button class="category-tab">脚</button>
+            <button class="category-tab">肩</button>
+            <button class="category-tab">腕</button>
+          </div>
+
+          <div class="exercise-content" style="padding-bottom: 80px;">
+            <div class="section-header">
+              <div class="section-title">📂 胸の種目</div>
+              <div class="section-count">24件</div>
+            </div>
+
+            <div class="exercise-item selected">
+              <div class="checkbox checked">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+              </div>
+              <div class="exercise-item-content">
+                <div class="exercise-item-header">
+                  <div class="exercise-item-name">ダンベルフライ</div>
+                </div>
+                <div class="exercise-item-meta">
+                  <span class="meta-badge muscle-badge">胸</span>
+                  <span class="meta-badge">アイソレーション</span>
+                  <span class="meta-badge equipment-badge">ダンベル</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="exercise-item selected">
+              <div class="checkbox checked">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+              </div>
+              <div class="exercise-item-content">
+                <div class="exercise-item-header">
+                  <div class="exercise-item-name">ケーブルフライ</div>
+                </div>
+                <div class="exercise-item-meta">
+                  <span class="meta-badge muscle-badge">胸</span>
+                  <span class="meta-badge">アイソレーション</span>
+                  <span class="meta-badge equipment-badge">ケーブル</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="exercise-item selected">
+              <div class="checkbox checked">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+              </div>
+              <div class="exercise-item-content">
+                <div class="exercise-item-header">
+                  <div class="exercise-item-name">ペックフライ</div>
+                </div>
+                <div class="exercise-item-meta">
+                  <span class="meta-badge muscle-badge">胸</span>
+                  <span class="meta-badge">アイソレーション</span>
+                  <span class="meta-badge equipment-badge">マシン</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="exercise-item">
+              <div class="checkbox"></div>
+              <div class="exercise-item-content">
+                <div class="exercise-item-header">
+                  <div class="exercise-item-name">インクラインプレス</div>
+                </div>
+                <div class="exercise-item-meta">
+                  <span class="meta-badge muscle-badge">胸</span>
+                  <span class="meta-badge">コンパウンド</span>
+                  <span class="meta-badge equipment-badge">バーベル</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="exercise-item">
+              <div class="checkbox"></div>
+              <div class="exercise-item-content">
+                <div class="exercise-item-header">
+                  <div class="exercise-item-name">デクラインプレス</div>
+                </div>
+                <div class="exercise-item-meta">
+                  <span class="meta-badge muscle-badge">胸</span>
+                  <span class="meta-badge">コンパウンド</span>
+                  <span class="meta-badge equipment-badge">バーベル</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="multi-select-footer">
+            <button class="cancel-btn">キャンセル</button>
+            <button class="add-selected-btn">
+              <span class="added-count">3</span> 種目を追加
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 4: 種目追加完了 -->
+    <div class="demo-card">
+      <div class="demo-header">
+        <h2>STEP 4: 種目追加完了</h2>
+        <div class="subtitle">モーダルが閉じて記録画面に戻る</div>
+      </div>
+      <div class="phone-mockup">
+        <div class="workout-header">
+          <div class="workout-title">プッシュデイ</div>
+          <button class="done-btn">完了</button>
+        </div>
+
+        <div class="completed-screen">
+          <div class="added-indicator">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+            3種目を追加しました
+          </div>
+
+          <div class="exercise-card">
+            <div class="exercise-name">ベンチプレス</div>
+            <div class="exercise-meta">胸 • コンパウンド • 3セット完了</div>
+          </div>
+
+          <div class="exercise-card">
+            <div class="exercise-name">インクラインプレス</div>
+            <div class="exercise-meta">胸 • コンパウンド • 2セット完了</div>
+          </div>
+
+          <div class="exercise-card" style="border: 2px solid #0D9488; background: #F0FDFA;">
+            <div class="exercise-name" style="color: #0D9488;">ダンベルフライ</div>
+            <div class="exercise-meta">胸 • アイソレーション • 新規追加</div>
+          </div>
+
+          <div class="exercise-card" style="border: 2px solid #0D9488; background: #F0FDFA;">
+            <div class="exercise-name" style="color: #0D9488;">ケーブルフライ</div>
+            <div class="exercise-meta">胸 • アイソレーション • 新規追加</div>
+          </div>
+
+          <div class="exercise-card" style="border: 2px solid #0D9488; background: #F0FDFA;">
+            <div class="exercise-name" style="color: #0D9488;">ペックフライ</div>
+            <div class="exercise-meta">胸 • アイソレーション • 新規追加</div>
+          </div>
+        </div>
+
+        <button class="add-exercise-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          種目を追加
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 実装ガイド -->
+  <div style="background: white; border-radius: 12px; padding: 32px; border: 1px solid #E5E7EB; margin-top: 40px;">
+    <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 24px;">実装仕様</h2>
+
+    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #0D9488;">1. フルスクリーンモーダルの構成</h3>
+    <ul style="margin-left: 20px; margin-bottom: 24px; line-height: 1.8;">
+      <li><strong>表示方式:</strong> 画面全体を覆うモーダル（100% height/width）</li>
+      <li><strong>閉じる:</strong> 左上の「×」ボタンまたは背景タップ</li>
+      <li><strong>アニメーション:</strong> 下から上にスライドイン</li>
+      <li><strong>スクロール:</strong> コンテンツエリアのみスクロール可能</li>
+    </ul>
+
+    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #0D9488;">2. 検索・フィルタリング</h3>
+    <ul style="margin-left: 20px; margin-bottom: 24px; line-height: 1.8;">
+      <li><strong>検索バー:</strong> 常に画面上部に固定</li>
+      <li><strong>リアルタイムフィルタ:</strong> 入力に応じて即座に絞り込み</li>
+      <li><strong>検索対象:</strong> 種目名、筋群名、器具名</li>
+      <li><strong>検索履歴:</strong> 最近の検索ワードを保存（オプション）</li>
+    </ul>
+
+    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #0D9488;">3. カテゴリタブ</h3>
+    <ul style="margin-left: 20px; margin-bottom: 24px; line-height: 1.8;">
+      <li><strong>7種類:</strong> 全て/胸/背中/脚/肩/腕/腹</li>
+      <li><strong>横スクロール対応:</strong> タブが多い場合はスワイプ可能</li>
+      <li><strong>アクティブ状態:</strong> 選択中のカテゴリを強調表示</li>
+      <li><strong>検索との併用:</strong> カテゴリ選択後も検索可能</li>
+    </ul>
+
+    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #0D9488;">4. お気に入り機能</h3>
+    <ul style="margin-left: 20px; margin-bottom: 24px; line-height: 1.8;">
+      <li><strong>表示位置:</strong> リストの最上部に常に表示</li>
+      <li><strong>⭐マーク:</strong> お気に入り登録済みの種目に表示</li>
+      <li><strong>登録方法:</strong> 種目の長押しまたはスワイプアクション</li>
+      <li><strong>上限:</strong> 特になし（ユーザーが自由に登録）</li>
+    </ul>
+
+    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #0D9488;">5. 複数選択モード</h3>
+    <ul style="margin-left: 20px; margin-bottom: 24px; line-height: 1.8;">
+      <li><strong>起動:</strong> 右上の「複数選択」ボタンをタップ</li>
+      <li><strong>チェックボックス表示:</strong> 各種目の左側に表示</li>
+      <li><strong>選択状態:</strong> 選択した種目を視覚的に強調</li>
+      <li><strong>フッター:</strong> 「キャンセル」と「N種目を追加」ボタン</li>
+      <li><strong>完了:</strong> 「N種目を追加」をタップで一括追加</li>
+    </ul>
+
+    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #0D9488;">6. 種目情報の表示</h3>
+    <ul style="margin-left: 20px; margin-bottom: 24px; line-height: 1.8;">
+      <li><strong>種目名:</strong> 16px、太字で視認性を確保</li>
+      <li><strong>筋群バッジ:</strong> 青系の背景で表示（例: 胸、背中）</li>
+      <li><strong>種目タイプ:</strong> グレー背景（例: コンパウンド、アイソレーション）</li>
+      <li><strong>器具バッジ:</strong> 赤系の背景で表示（例: バーベル、ダンベル）</li>
+      <li><strong>行数制限:</strong> 2行まで表示（省略記号で省く）</li>
+    </ul>
+
+    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #0D9488;">7. パフォーマンス最適化</h3>
+    <ul style="margin-left: 20px; margin-bottom: 24px; line-height: 1.8;">
+      <li><strong>仮想スクロール:</strong> 300件以上の種目がある場合に推奨</li>
+      <li><strong>遅延ロード:</strong> 画面に表示される種目のみレンダリング</li>
+      <li><strong>検索デバウンス:</strong> 300ms遅延で検索実行</li>
+      <li><strong>キャッシュ:</strong> 一度取得した種目リストをメモリに保持</li>
+    </ul>
+  </div>
+
+  <!-- メリット/デメリット -->
+  <div style="background: #F0FDFA; border-radius: 12px; padding: 32px; margin-top: 40px; border: 2px solid #0D9488;">
+    <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 16px; color: #0D9488;">このパターンの評価</h2>
+    <div style="font-size: 15px; color: #134E4A; line-height: 1.8;">
+      <strong>メリット：</strong>
+      <ul style="margin-left: 20px; margin-top: 8px; line-height: 2;">
+        <li>フルスクリーン → <strong>詳細情報（筋群・器具）を表示しやすい</strong></li>
+        <li>お気に入り機能 → <strong>よく使う種目に瞬時にアクセス</strong></li>
+        <li>複数選択モード → <strong>一度に複数種目を追加可能</strong></li>
+        <li>視認性が高い → <strong>各種目のバッジで情報を整理</strong></li>
+        <li>Hevy Proで実績あり → <strong>上級者に好まれるパターン</strong></li>
+      </ul>
+      <br>
+      <strong>デメリット：</strong>
+      <ul style="margin-left: 20px; margin-top: 8px; line-height: 2;">
+        <li>画面遷移が発生 → <strong>心理的距離が遠い</strong></li>
+        <li>複数選択モードは初心者には複雑 → <strong>学習コスト</strong></li>
+        <li>お気に入りが空の場合 → <strong>初回利用時に空白感</strong></li>
+        <li>フルスクリーンで圧迫感 → <strong>モバイルでは重く感じる可能性</strong></li>
+      </ul>
+      <br>
+      <strong>推奨ユーザー層：</strong>
+      <ul style="margin-left: 20px; margin-top: 8px; line-height: 2;">
+        <li><strong>中級〜上級者:</strong> 大量の種目を管理したいユーザー</li>
+        <li><strong>効率重視:</strong> 一度に複数種目を追加したいユーザー</li>
+        <li><strong>詳細情報重視:</strong> 筋群・器具などを確認して選びたいユーザー</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- CSS改善ガイドライン適用状況 -->
+  <div style="background: #EFF6FF; border-radius: 12px; padding: 32px; margin-top: 40px; border: 2px solid #3B82F6;">
+    <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 16px; color: #1E40AF;">CSS改善ガイドライン適用状況</h2>
+    <div style="font-size: 15px; color: #1E3A8A; line-height: 1.8;">
+      <ul style="margin-left: 20px; line-height: 2;">
+        <li>✅ <strong>グラデーション削除:</strong> すべてベタ塗り（#0D9488など）</li>
+        <li>✅ <strong>border-radius:</strong> 4px/6px/8px/12pxのみ使用</li>
+        <li>✅ <strong>shadow削除:</strong> 影は一切使用していません</li>
+        <li>✅ <strong>font-weight:</strong> 400/600/700の3種類のみ</li>
+        <li>✅ <strong>padding:</strong> 4の倍数のみ（4px, 8px, 12px, 16px, 20px, 32px, 40px）</li>
+        <li>✅ <strong>transition削除:</strong> アニメーション効果なし</li>
+      </ul>
+      <p style="margin-top: 16px; font-weight: 600;">
+        すべてのガイドラインを厳密に適用し、シンプルで視認性の高いデザインを実現しました。
+      </p>
+    </div>
+  </div>
+
+  <!-- 比較: ボトムシート vs フルスクリーン -->
+  <div style="background: white; border-radius: 12px; padding: 32px; border: 1px solid #E5E7EB; margin-top: 40px;">
+    <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 24px;">比較: ボトムシート vs フルスクリーン</h2>
+
+    <table style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr style="background: #F9FAFB; border-bottom: 2px solid #E5E7EB;">
+          <th style="padding: 12px; text-align: left; font-size: 14px; font-weight: 700; color: #6B7280;">評価軸</th>
+          <th style="padding: 12px; text-align: left; font-size: 14px; font-weight: 700; color: #6B7280;">ボトムシート型</th>
+          <th style="padding: 12px; text-align: left; font-size: 14px; font-weight: 700; color: #6B7280;">フルスクリーン型</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid #E5E7EB;">
+          <td style="padding: 12px; font-weight: 600;">心理的距離</td>
+          <td style="padding: 12px; color: #0D9488;">★★★★★<br><span style="font-size: 12px; color: #6B7280;">画面遷移なし</span></td>
+          <td style="padding: 12px; color: #F59E0B;">★★★☆☆<br><span style="font-size: 12px; color: #6B7280;">フルスクリーン遷移</span></td>
+        </tr>
+        <tr style="border-bottom: 1px solid #E5E7EB;">
+          <td style="padding: 12px; font-weight: 600;">情報表示量</td>
+          <td style="padding: 12px; color: #F59E0B;">★★★☆☆<br><span style="font-size: 12px; color: #6B7280;">限られたスペース</span></td>
+          <td style="padding: 12px; color: #0D9488;">★★★★★<br><span style="font-size: 12px; color: #6B7280;">詳細情報を表示</span></td>
+        </tr>
+        <tr style="border-bottom: 1px solid #E5E7EB;">
+          <td style="padding: 12px; font-weight: 600;">複数選択</td>
+          <td style="padding: 12px; color: #EF4444;">★★☆☆☆<br><span style="font-size: 12px; color: #6B7280;">実装困難</span></td>
+          <td style="padding: 12px; color: #0D9488;">★★★★★<br><span style="font-size: 12px; color: #6B7280;">チェックボックス対応</span></td>
+        </tr>
+        <tr style="border-bottom: 1px solid #E5E7EB;">
+          <td style="padding: 12px; font-weight: 600;">初心者の使いやすさ</td>
+          <td style="padding: 12px; color: #0D9488;">★★★★★<br><span style="font-size: 12px; color: #6B7280;">シンプル</span></td>
+          <td style="padding: 12px; color: #F59E0B;">★★★☆☆<br><span style="font-size: 12px; color: #6B7280;">やや複雑</span></td>
+        </tr>
+        <tr style="border-bottom: 1px solid #E5E7EB;">
+          <td style="padding: 12px; font-weight: 600;">上級者の効率</td>
+          <td style="padding: 12px; color: #F59E0B;">★★★☆☆<br><span style="font-size: 12px; color: #6B7280;">検索で十分</span></td>
+          <td style="padding: 12px; color: #0D9488;">★★★★★<br><span style="font-size: 12px; color: #6B7280;">お気に入り+複数選択</span></td>
+        </tr>
+        <tr>
+          <td style="padding: 12px; font-weight: 600;">実装コスト</td>
+          <td style="padding: 12px; color: #0D9488;">★★★★☆<br><span style="font-size: 12px; color: #6B7280;">比較的シンプル</span></td>
+          <td style="padding: 12px; color: #F59E0B;">★★★☆☆<br><span style="font-size: 12px; color: #6B7280;">機能が多い</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div style="margin-top: 24px; padding: 20px; background: #FEF3C7; border-radius: 8px; border-left: 4px solid #F59E0B;">
+      <p style="font-weight: 700; color: #92400E; margin-bottom: 8px;">推奨事項</p>
+      <p style="color: #78350F; line-height: 1.8;">
+        <strong>フェーズ1（MVP）:</strong> ボトムシート型で実装し、シンプルさを重視<br>
+        <strong>フェーズ2（機能拡張）:</strong> ユーザーフィードバックを基に、フルスクリーン型への移行を検討<br>
+        <strong>または併用:</strong> 基本はボトムシート、複数選択時のみフルスクリーンモーダルを表示
+      </p>
+    </div>
+  </div>
+
+  <div style="text-align: center; padding: 20px; color: #6B7280; font-size: 14px; margin-top: 20px;">
+    <p><strong>次のステップ</strong></p>
+    <p>どちらのパターンで実装するか、または両方を組み合わせるかをご検討ください。</p>
+  </div>
+</div>
+
+</body>
+</html>

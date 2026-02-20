@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>ホーム - Workout Plus (Apple Design)</title>
+  <style>
+    /* === リセット & ベース設定 === */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    :root {
+      /* Apple System Colors - Light Blue Theme */
+      --system-blue: #0066FF;
+      --system-blue-light: #3388FF;
+      --system-blue-lighter: #5599FF;
+      --system-orange: #FF9500;
+      --system-green: #34C759;
+      --system-red: #FF3B30;
+      --system-purple: #AF52DE;
+
+      /* Background Colors */
+      --bg-primary: #FFFFFF;
+      --bg-secondary: #F2F2F7;
+      --bg-tertiary: #FFFFFF;
+      --bg-grouped: #F2F2F7;
+
+      /* Label Colors */
+      --label-primary: #000000;
+      --label-secondary: #3C3C43;
+      --label-tertiary: #3C3C43;
+      --label-quaternary: #3C3C43;
+
+      /* Fill Colors */
+      --fill-primary: rgba(120, 120, 128, 0.2);
+      --fill-secondary: rgba(120, 120, 128, 0.16);
+      --fill-tertiary: rgba(118, 118, 128, 0.12);
+
+      /* Separator */
+      --separator: rgba(60, 60, 67, 0.29);
+      --separator-opaque: #C6C6C8;
+
+      /* Typography */
+      --font-system: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
+
+      /* Spacing */
+      --safe-area-top: env(safe-area-inset-top);
+      --safe-area-bottom: env(safe-area-inset-bottom);
+    }
+
+    body {
+      font-family: var(--font-system);
+      background-color: var(--bg-grouped);
+      color: var(--label-primary);
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* === Large Title Navigation Bar === */
+    .navigation-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background-color: var(--bg-grouped);
+      transition: background-color 0.3s ease;
+    }
+
+    .navigation-bar.scrolled {
+      background-color: rgba(242, 242, 247, 0.8);
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      border-bottom: 0.5px solid var(--separator);
+    }
+
+    .navigation-bar.scrolled .large-title {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+
+    .navigation-bar.scrolled .inline-title {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .nav-content {
+      padding: 0 20px;
+      padding-top: calc(var(--safe-area-top) + 8px);
+    }
+
+    .large-title {
+      font-size: 34px;
+      font-weight: 700;
+      letter-spacing: 0.37px;
+      padding: 16px 0 12px 0;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .inline-title {
+      position: absolute;
+      top: calc(var(--safe-area-top) + 12px);
+      left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      font-size: 17px;
+      font-weight: 600;
+      opacity: 0;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      pointer-events: none;
+    }
+
+    /* === メインコンテンツ === */
+    .main-content {
+      padding: 0 0 calc(var(--safe-area-bottom) + 80px) 0;
+    }
+
+    /* === アクティビティリング（連続記録） === */
+    .activity-section {
+      background-color: var(--bg-tertiary);
+      margin: 0 16px 20px 16px;
+      border-radius: 12px;
+      padding: 24px 20px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .activity-rings-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .activity-rings {
+      position: relative;
+      width: 140px;
+      height: 140px;
+      flex-shrink: 0;
+    }
+
+    .ring {
+      position: absolute;
+      border-radius: 50%;
+      border-style: solid;
+    }
+
+    .ring-outer {
+      width: 140px;
+      height: 140px;
+      border-width: 16px;
+      border-color: rgba(0, 102, 255, 0.15);
+      top: 0;
+      left: 0;
+    }
+
+    .ring-outer-active {
+      width: 140px;
+      height: 140px;
+      border-width: 16px;
+      border-color: var(--system-blue);
+      border-right-color: transparent;
+      border-bottom-color: transparent;
+      top: 0;
+      left: 0;
+      transform: rotate(-90deg);
+    }
+
+    .ring-middle {
+      width: 104px;
+      height: 104px;
+      border-width: 14px;
+      border-color: rgba(51, 136, 255, 0.15);
+      top: 18px;
+      left: 18px;
+    }
+
+    .ring-middle-active {
+      width: 104px;
+      height: 104px;
+      border-width: 14px;
+      border-color: var(--system-blue-light);
+      border-right-color: transparent;
+      border-bottom-color: transparent;
+      border-left-color: transparent;
+      top: 18px;
+      left: 18px;
+      transform: rotate(-90deg);
+    }
+
+    .ring-inner {
+      width: 72px;
+      height: 72px;
+      border-width: 12px;
+      border-color: rgba(85, 153, 255, 0.15);
+      top: 34px;
+      left: 34px;
+    }
+
+    .ring-inner-active {
+      width: 72px;
+      height: 72px;
+      border-width: 12px;
+      border-color: var(--system-blue-lighter);
+      border-bottom-color: transparent;
+      border-left-color: transparent;
+      top: 34px;
+      left: 34px;
+      transform: rotate(-90deg);
+    }
+
+    .streak-number {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    .streak-count {
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: var(--label-primary);
+      display: block;
+    }
+
+    .streak-label {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--label-secondary);
+      opacity: 0.6;
+      margin-top: 2px;
+      display: block;
+    }
+
+    .activity-info {
+      flex: 1;
+    }
+
+    .activity-title {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: 0.38px;
+      margin-bottom: 16px;
+      color: var(--label-primary);
+    }
+
+    .activity-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .stat-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .stat-color {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .stat-color.orange {
+      background-color: var(--system-blue);
+    }
+
+    .stat-color.blue {
+      background-color: var(--system-blue-light);
+    }
+
+    .stat-color.green {
+      background-color: var(--system-blue-lighter);
+    }
+
+    .stat-text {
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--label-primary);
+    }
+
+    .stat-value {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--label-primary);
+      margin-left: auto;
+    }
+
+    /* === グループリスト（iOS設定風） === */
+    .list-group {
+      margin: 0 16px 20px 16px;
+    }
+
+    .list-group-title {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--label-secondary);
+      opacity: 0.6;
+      text-transform: uppercase;
+      letter-spacing: -0.08px;
+      padding: 0 16px 8px 16px;
+    }
+
+    .list-container {
+      background-color: var(--bg-tertiary);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    }
+
+    .list-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      min-height: 56px;
+      border-bottom: 0.5px solid var(--separator);
+      transition: background-color 0.2s ease;
+    }
+
+    .list-item:last-child {
+      border-bottom: none;
+    }
+
+    .list-item:active {
+      background-color: var(--fill-tertiary);
+    }
+
+    .list-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .list-icon.blue {
+      background-color: var(--system-blue);
+      color: white;
+    }
+
+    .list-icon.orange {
+      background-color: var(--system-orange);
+      color: white;
+    }
+
+    .list-icon.green {
+      background-color: var(--system-green);
+      color: white;
+    }
+
+    .list-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .list-title {
+      font-size: 17px;
+      font-weight: 400;
+      color: var(--label-primary);
+      letter-spacing: -0.41px;
+      margin-bottom: 2px;
+    }
+
+    .list-subtitle {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--label-secondary);
+      opacity: 0.6;
+      letter-spacing: -0.08px;
+    }
+
+    .list-value {
+      font-size: 17px;
+      font-weight: 400;
+      color: var(--label-tertiary);
+      opacity: 0.5;
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+
+    .list-chevron {
+      color: var(--label-quaternary);
+      opacity: 0.3;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    /* === 最近のトレーニング === */
+    .workout-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 0.5px solid var(--separator);
+    }
+
+    .workout-item:last-child {
+      border-bottom: none;
+    }
+
+    .workout-item:active {
+      background-color: var(--fill-tertiary);
+    }
+
+    .workout-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .workout-icon.chest {
+      background: linear-gradient(135deg, var(--system-blue), #3388FF);
+      color: white;
+    }
+
+    .workout-icon.back {
+      background: linear-gradient(135deg, var(--system-blue-light), #66AAFF);
+      color: white;
+    }
+
+    .workout-icon.leg {
+      background: linear-gradient(135deg, var(--system-blue-lighter), #88BBFF);
+      color: white;
+    }
+
+    .workout-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .workout-name {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--label-primary);
+      letter-spacing: -0.41px;
+      margin-bottom: 2px;
+    }
+
+    .workout-meta {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--label-secondary);
+      opacity: 0.6;
+      letter-spacing: -0.08px;
+    }
+
+    .workout-chevron {
+      color: var(--label-quaternary);
+      opacity: 0.3;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    /* === タブバー === */
+    .tab-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: rgba(255, 255, 255, 0.8);
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      border-top: 0.5px solid var(--separator);
+      padding-bottom: var(--safe-area-bottom);
+      z-index: 1000;
+    }
+
+    .tab-container {
+      display: flex;
+      height: 50px;
+      align-items: center;
+      justify-content: space-around;
+    }
+
+    .tab-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      padding: 4px 0;
+      cursor: pointer;
+      transition: opacity 0.2s ease;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .tab-item:active {
+      opacity: 0.6;
+    }
+
+    .tab-icon {
+      font-size: 24px;
+      color: var(--label-secondary);
+      opacity: 0.5;
+      transition: color 0.2s ease, opacity 0.2s ease;
+    }
+
+    .tab-item.active .tab-icon {
+      color: var(--system-blue);
+      opacity: 1;
+    }
+
+    .tab-label {
+      font-size: 10px;
+      font-weight: 400;
+      color: var(--label-secondary);
+      opacity: 0.5;
+      letter-spacing: -0.24px;
+      transition: color 0.2s ease, opacity 0.2s ease;
+    }
+
+    .tab-item.active .tab-label {
+      color: var(--system-blue);
+      opacity: 1;
+    }
+
+    /* FABボタン（記録+） */
+    .tab-item.fab {
+      position: relative;
+    }
+
+    .fab-button {
+      width: 56px;
+      height: 56px;
+      border-radius: 28px;
+      background: linear-gradient(135deg, var(--system-blue), #3388FF);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-weight: 300;
+      box-shadow: 0 8px 16px rgba(0, 102, 255, 0.3);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      margin-top: -28px;
+    }
+
+    .fab-button:active {
+      transform: scale(0.95);
+      box-shadow: 0 4px 8px rgba(0, 102, 255, 0.3);
+    }
+
+    /* === アイコン（SFシンボル風） === */
+    .icon-flame::before { content: "🔥"; }
+    .icon-chart::before { content: "📊"; }
+    .icon-target::before { content: "🎯"; }
+    .icon-chest::before { content: "💪"; }
+    .icon-back::before { content: "🏋️"; }
+    .icon-leg::before { content: "🦵"; }
+    .icon-home::before { content: "🏠"; }
+    .icon-calendar::before { content: "📅"; }
+    .icon-stats::before { content: "📈"; }
+    .icon-ai::before { content: "✨"; }
+    .icon-plus::before { content: "+"; }
+    .icon-chevron::before { content: "›"; }
+
+    /* === アニメーション === */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .activity-section {
+      animation: fadeIn 0.5s ease;
+    }
+
+    .list-group {
+      animation: fadeIn 0.6s ease;
+    }
+
+    /* === レスポンシブ === */
+    @media (max-width: 375px) {
+      .activity-rings {
+        width: 120px;
+        height: 120px;
+      }
+
+      .ring-outer,
+      .ring-outer-active {
+        width: 120px;
+        height: 120px;
+        border-width: 14px;
+      }
+
+      .ring-middle,
+      .ring-middle-active {
+        width: 90px;
+        height: 90px;
+        border-width: 12px;
+        top: 15px;
+        left: 15px;
+      }
+
+      .ring-inner,
+      .ring-inner-active {
+        width: 62px;
+        height: 62px;
+        border-width: 10px;
+        top: 29px;
+        left: 29px;
+      }
+
+      .streak-count {
+        font-size: 32px;
+      }
+
+      .activity-title {
+        font-size: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation Bar -->
+  <div class="navigation-bar" id="navBar">
+    <div class="nav-content">
+      <div class="large-title">ホーム</div>
+      <div class="inline-title">ホーム</div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content" id="mainContent">
+
+    <!-- Activity Rings Section -->
+    <div class="activity-section">
+      <div class="activity-rings-container">
+        <div class="activity-rings">
+          <!-- Outer Ring (Orange - 連続記録) -->
+          <div class="ring ring-outer"></div>
+          <div class="ring ring-outer-active"></div>
+
+          <!-- Middle Ring (Blue - 週間目標) -->
+          <div class="ring ring-middle"></div>
+          <div class="ring ring-middle-active"></div>
+
+          <!-- Inner Ring (Green - デイリー目標) -->
+          <div class="ring ring-inner"></div>
+          <div class="ring ring-inner-active"></div>
+
+          <!-- Center Number -->
+          <div class="streak-number">
+            <span class="streak-count">12</span>
+            <span class="streak-label">連続日</span>
+          </div>
+        </div>
+
+        <div class="activity-info">
+          <div class="activity-title">今週の成果</div>
+          <div class="activity-stats">
+            <div class="stat-row">
+              <div class="stat-color orange"></div>
+              <div class="stat-text">トレーニング回数</div>
+              <div class="stat-value">5回</div>
+            </div>
+            <div class="stat-row">
+              <div class="stat-color blue"></div>
+              <div class="stat-text">総重量</div>
+              <div class="stat-value">24t</div>
+            </div>
+            <div class="stat-row">
+              <div class="stat-color green"></div>
+              <div class="stat-text">成長率</div>
+              <div class="stat-value">+12%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="list-group">
+      <div class="list-group-title">クイックアクション</div>
+      <div class="list-container">
+        <div class="list-item">
+          <div class="list-icon blue">
+            <span class="icon-flame"></span>
+          </div>
+          <div class="list-content">
+            <div class="list-title">今日のワークアウト</div>
+            <div class="list-subtitle">おすすめ: 胸・三頭</div>
+          </div>
+          <div class="list-chevron icon-chevron"></div>
+        </div>
+        <div class="list-item">
+          <div class="list-icon orange">
+            <span class="icon-chart"></span>
+          </div>
+          <div class="list-content">
+            <div class="list-title">進捗レポート</div>
+            <div class="list-subtitle">週次サマリーを確認</div>
+          </div>
+          <div class="list-chevron icon-chevron"></div>
+        </div>
+        <div class="list-item">
+          <div class="list-icon green">
+            <span class="icon-target"></span>
+          </div>
+          <div class="list-content">
+            <div class="list-title">目標設定</div>
+            <div class="list-subtitle">新しい目標を追加</div>
+          </div>
+          <div class="list-chevron icon-chevron"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Workouts -->
+    <div class="list-group">
+      <div class="list-group-title">最近のトレーニング</div>
+      <div class="list-container">
+        <div class="workout-item">
+          <div class="workout-icon chest">
+            <span class="icon-chest"></span>
+          </div>
+          <div class="workout-info">
+            <div class="workout-name">胸・三頭</div>
+            <div class="workout-meta">今日 14:30 • 8種目 • 45分</div>
+          </div>
+          <div class="workout-chevron icon-chevron"></div>
+        </div>
+        <div class="workout-item">
+          <div class="workout-icon back">
+            <span class="icon-back"></span>
+          </div>
+          <div class="workout-info">
+            <div class="workout-name">背中・二頭</div>
+            <div class="workout-meta">昨日 16:00 • 7種目 • 50分</div>
+          </div>
+          <div class="workout-chevron icon-chevron"></div>
+        </div>
+        <div class="workout-item">
+          <div class="workout-icon leg">
+            <span class="icon-leg"></span>
+          </div>
+          <div class="workout-info">
+            <div class="workout-name">脚</div>
+            <div class="workout-meta">2日前 10:00 • 6種目 • 55分</div>
+          </div>
+          <div class="workout-chevron icon-chevron"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Tab Bar -->
+  <div class="tab-bar">
+    <div class="tab-container">
+      <div class="tab-item active">
+        <div class="tab-icon icon-home"></div>
+        <div class="tab-label">ホーム</div>
+      </div>
+      <div class="tab-item">
+        <div class="tab-icon icon-calendar"></div>
+        <div class="tab-label">カレンダー</div>
+      </div>
+      <div class="tab-item fab">
+        <div class="fab-button">
+          <span class="icon-plus"></span>
+        </div>
+      </div>
+      <div class="tab-item">
+        <div class="tab-icon icon-stats"></div>
+        <div class="tab-label">統計</div>
+      </div>
+      <div class="tab-item">
+        <div class="tab-icon icon-ai"></div>
+        <div class="tab-label">AI</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Large Title スクロールアニメーション
+    const navBar = document.getElementById('navBar');
+    const mainContent = document.getElementById('mainContent');
+
+    let lastScrollTop = 0;
+    const scrollThreshold = 20;
+
+    mainContent.addEventListener('scroll', function() {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+      if (scrollTop > scrollThreshold) {
+        navBar.classList.add('scrolled');
+      } else {
+        navBar.classList.remove('scrolled');
+      }
+
+      lastScrollTop = scrollTop;
+    });
+
+    // 実際のスクロール対応（bodyのスクロール）
+    window.addEventListener('scroll', function() {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+      if (scrollTop > scrollThreshold) {
+        navBar.classList.add('scrolled');
+      } else {
+        navBar.classList.remove('scrolled');
+      }
+
+      lastScrollTop = scrollTop;
+    });
+
+    // タブ切り替え
+    const tabItems = document.querySelectorAll('.tab-item:not(.fab)');
+    tabItems.forEach(item => {
+      item.addEventListener('click', function() {
+        tabItems.forEach(tab => tab.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+
+    // FABボタンのフィードバック
+    const fabButton = document.querySelector('.fab-button');
+    fabButton.addEventListener('click', function() {
+      // ここに記録追加のモーダル表示処理を追加
+      console.log('記録追加ボタンがクリックされました');
+    });
+  </script>
+</body>
+</html>

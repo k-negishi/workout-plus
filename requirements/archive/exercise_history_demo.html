@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>種目別履歴表示 - Strong風</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap');
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #F8F9FA;
+    font-family: 'Noto Sans JP', -apple-system, sans-serif;
+    color: #1A1A1A;
+    padding: 20px;
+  }
+
+  .container { max-width: 1600px; margin: 0 auto; }
+  .header { text-align: center; margin-bottom: 40px; }
+  .header h1 { font-size: 32px; font-weight: 700; color: #1A1A1A; margin-bottom: 8px; }
+  .header p { color: rgba(0,0,0,0.6); font-size: 15px; line-height: 1.6; }
+
+  .demo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 32px;
+  }
+
+  @media (max-width: 1600px) {
+    .demo-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .demo-card {
+    background: white;
+    border-radius: 12px;
+    border: 1px solid #E5E7EB;
+    overflow: hidden;
+  }
+
+  .demo-header {
+    background: #0D9488;
+    color: white;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .demo-header h2 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .demo-header .subtitle { font-size: 13px; opacity: 0.9; }
+
+  .phone-mockup {
+    width: 375px;
+    height: 812px;
+    background: #FFFFFF;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* === ワークアウト記録画面 === */
+  .workout-header {
+    position: sticky;
+    top: 0;
+    background: white;
+    border-bottom: 1px solid #E5E7EB;
+    padding: 12px 16px;
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .workout-title { font-size: 17px; font-weight: 600; color: #1A1A1A; }
+  .done-btn {
+    background: transparent;
+    border: none;
+    color: #0D9488;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .timer-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: #F9FAFB;
+    border-bottom: 1px solid #E5E7EB;
+  }
+  .timer-text { font-size: 20px; font-weight: 700; font-family: 'SF Mono', monospace; color: #0D9488; }
+
+  /* === Exercise Card === */
+  .exercise {
+    border-bottom: 8px solid #F3F4F6;
+    padding: 16px;
+  }
+
+  .exercise-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .exercise-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0D9488;
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    text-underline-offset: 4px;
+  }
+  .exercise-meta { font-size: 12px; color: #6B7280; margin-top: 2px; }
+  .previous-badge {
+    background: #EFF6FF;
+    color: #0D9488;
+    padding: 4px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  /* === Set Display === */
+  .sets-view {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .set-view-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px;
+    background: #F9FAFB;
+    border-radius: 8px;
+    border: 1px solid #E5E7EB;
+  }
+  .set-view-row.completed {
+    background: #F0FDF4;
+    border-color: #86EFAC;
+  }
+  .set-number {
+    width: 32px;
+    text-align: center;
+    font-weight: 600;
+    color: #6B7280;
+    font-size: 14px;
+  }
+  .set-values {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .set-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1A1A1A;
+  }
+  .set-unit {
+    font-size: 13px;
+    color: #9CA3AF;
+  }
+  .set-separator {
+    font-size: 16px;
+    font-weight: 700;
+    color: #D1D5DB;
+  }
+
+  /* === ボトムシート === */
+  .bottom-sheet {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 70%;
+    background: white;
+    border-radius: 20px 20px 0 0;
+    border-top: 1px solid #E5E7EB;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .bottom-sheet-hidden {
+    display: none;
+  }
+
+  .drag-handle {
+    width: 36px;
+    height: 4px;
+    background: #D1D5DB;
+    border-radius: 2px;
+    margin: 12px auto 8px;
+  }
+
+  .sheet-header {
+    padding: 12px 16px 16px;
+    border-bottom: 1px solid #E5E7EB;
+  }
+  .sheet-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1A1A1A;
+    margin-bottom: 4px;
+  }
+  .sheet-subtitle {
+    font-size: 13px;
+    color: #6B7280;
+  }
+
+  .sheet-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+  }
+
+  /* === 統計サマリー === */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+  }
+  .stat-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #6B7280;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .stat-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1A1A1A;
+  }
+  .stat-unit {
+    font-size: 13px;
+    color: #9CA3AF;
+    margin-left: 2px;
+  }
+
+  /* === 重量推移グラフ（簡易棒グラフ） === */
+  .chart-section {
+    margin-bottom: 24px;
+  }
+  .section-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1A1A1A;
+    margin-bottom: 12px;
+  }
+  .chart-container {
+    background: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    padding: 16px;
+    height: 180px;
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+  }
+  .chart-bar {
+    flex: 1;
+    background: #0D9488;
+    border-radius: 4px 4px 0 0;
+    min-height: 8px;
+    position: relative;
+  }
+  .chart-bar.highlight {
+    background: #10B981;
+  }
+  .chart-label {
+    position: absolute;
+    bottom: -20px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 10px;
+    color: #9CA3AF;
+  }
+
+  /* === 履歴リスト === */
+  .history-list {
+    margin-bottom: 24px;
+  }
+  .history-item {
+    background: #F9FAFB;
+    border: 1px solid #E5E7EB;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+  }
+  .history-date {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1A1A1A;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .history-badge {
+    background: #10B981;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .history-sets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .history-set {
+    font-size: 12px;
+    color: #6B7280;
+    background: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #E5E7EB;
+  }
+
+  /* === フルスクリーン === */
+  .fullscreen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: white;
+    overflow-y: auto;
+  }
+
+  .fullscreen-header {
+    position: sticky;
+    top: 0;
+    background: white;
+    border-bottom: 1px solid #E5E7EB;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 10;
+  }
+  .back-btn {
+    background: transparent;
+    border: none;
+    color: #0D9488;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .fullscreen-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: #1A1A1A;
+  }
+
+  .fullscreen-content {
+    padding: 20px 16px;
+  }
+
+  /* === 詳細表示ボタン === */
+  .view-more-btn {
+    width: 100%;
+    padding: 12px;
+    background: white;
+    border: 1px solid #0D9488;
+    border-radius: 8px;
+    color: #0D9488;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 16px;
+  }
+
+  /* === 大きなグラフ（フルスクリーン用） === */
+  .large-chart {
+    height: 280px;
+  }
+
+  /* === PR履歴 === */
+  .pr-list {
+    margin-top: 24px;
+  }
+  .pr-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: #FEF3C7;
+    border: 1px solid #FDE047;
+    border-radius: 8px;
+    margin-bottom: 8px;
+  }
+  .pr-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1A1A1A;
+  }
+  .pr-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1A1A1A;
+  }
+  .pr-date {
+    font-size: 11px;
+    color: #6B7280;
+    margin-top: 2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>種目別履歴表示 - Strong風</h1>
+    <p>
+      種目名タップ → ボトムシート表示 → フルスクリーン展開の3ステップ<br>
+      履歴リスト + 重量推移グラフ + 統計サマリーをシンプルに表示
+    </p>
+  </div>
+
+  <div class="demo-grid">
+
+    <!-- STEP 1: ワークアウト記録画面 -->
+    <div class="demo-card">
+      <div class="demo-header">
+        <h2>STEP 1: ワークアウト記録画面</h2>
+        <div class="subtitle">種目名をタップして履歴を確認</div>
+      </div>
+      <div class="phone-mockup">
+        <div class="workout-header">
+          <div class="workout-title">プッシュデイ</div>
+          <button class="done-btn">完了</button>
+        </div>
+        <div class="timer-bar">
+          <span style="font-size: 13px; color: #6B7280;">経過時間</span>
+          <span class="timer-text">00:42:15</span>
+        </div>
+
+        <div class="exercise">
+          <div class="exercise-header">
+            <div>
+              <div class="exercise-name">ベンチプレス</div>
+              <div class="exercise-meta">胸 • コンパウンド • 3セット完了</div>
+            </div>
+            <div class="previous-badge">前回: 85kg×8</div>
+          </div>
+
+          <div class="sets-view">
+            <div class="set-view-row completed">
+              <div class="set-number">1</div>
+              <div class="set-values">
+                <span class="set-value">80</span>
+                <span class="set-unit">kg</span>
+                <span class="set-separator">×</span>
+                <span class="set-value">10</span>
+                <span class="set-unit">reps</span>
+              </div>
+            </div>
+
+            <div class="set-view-row completed">
+              <div class="set-number">2</div>
+              <div class="set-values">
+                <span class="set-value">85</span>
+                <span class="set-unit">kg</span>
+                <span class="set-separator">×</span>
+                <span class="set-value">8</span>
+                <span class="set-unit">reps</span>
+              </div>
+            </div>
+
+            <div class="set-view-row completed">
+              <div class="set-number">3</div>
+              <div class="set-values">
+                <span class="set-value">90</span>
+                <span class="set-unit">kg</span>
+                <span class="set-separator">×</span>
+                <span class="set-value">6</span>
+                <span class="set-unit">reps</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="exercise">
+          <div class="exercise-header">
+            <div>
+              <div class="exercise-name">インクラインプレス</div>
+              <div class="exercise-meta">胸 • コンパウンド • 2セット完了</div>
+            </div>
+            <div class="previous-badge">前回: 30kg×12</div>
+          </div>
+
+          <div class="sets-view">
+            <div class="set-view-row completed">
+              <div class="set-number">1</div>
+              <div class="set-values">
+                <span class="set-value">30</span>
+                <span class="set-unit">kg</span>
+                <span class="set-separator">×</span>
+                <span class="set-value">12</span>
+                <span class="set-unit">reps</span>
+              </div>
+            </div>
+
+            <div class="set-view-row completed">
+              <div class="set-number">2</div>
+              <div class="set-values">
+                <span class="set-value">32</span>
+                <span class="set-unit">kg</span>
+                <span class="set-separator">×</span>
+                <span class="set-value">10</span>
+                <span class="set-unit">reps</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="exercise">
+          <div class="exercise-header">
+            <div>
+              <div class="exercise-name">ケーブルフライ</div>
+              <div class="exercise-meta">胸 • アイソレーション • 未記録</div>
+            </div>
+            <div class="previous-badge">前回: 20kg×15</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 2: ボトムシート表示 -->
+    <div class="demo-card">
+      <div class="demo-header">
+        <h2>STEP 2: ボトムシート表示</h2>
+        <div class="subtitle">履歴 + グラフ + 統計を一覧表示</div>
+      </div>
+      <div class="phone-mockup">
+        <div class="workout-header">
+          <div class="workout-title">プッシュデイ</div>
+          <button class="done-btn">完了</button>
+        </div>
+
+        <div class="exercise" style="opacity: 0.3;">
+          <div class="exercise-header">
+            <div>
+              <div class="exercise-name" style="text-decoration: none; color: #1A1A1A;">ベンチプレス</div>
+              <div class="exercise-meta">胸 • コンパウンド</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bottom-sheet">
+          <div class="drag-handle"></div>
+
+          <div class="sheet-header">
+            <div class="sheet-title">ベンチプレス</div>
+            <div class="sheet-subtitle">胸 • コンパウンド • 過去10回分の記録</div>
+          </div>
+
+          <div class="sheet-content">
+            <!-- 統計サマリー -->
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-label">最大重量</div>
+                <div class="stat-value">90<span class="stat-unit">kg</span></div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">最大ボリューム</div>
+                <div class="stat-value">2080<span class="stat-unit">kg</span></div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">平均重量</div>
+                <div class="stat-value">82<span class="stat-unit">kg</span></div>
+              </div>
+            </div>
+
+            <!-- 重量推移グラフ -->
+            <div class="chart-section">
+              <div class="section-title">直近30日間の重量推移</div>
+              <div class="chart-container">
+                <div class="chart-bar" style="height: 75%;"></div>
+                <div class="chart-bar" style="height: 82%;"></div>
+                <div class="chart-bar" style="height: 78%;"></div>
+                <div class="chart-bar" style="height: 85%;"></div>
+                <div class="chart-bar" style="height: 88%;"></div>
+                <div class="chart-bar" style="height: 92%;"></div>
+                <div class="chart-bar highlight" style="height: 100%;"></div>
+              </div>
+            </div>
+
+            <!-- 履歴リスト -->
+            <div class="history-list">
+              <div class="section-title">過去10回分の履歴</div>
+
+              <div class="history-item">
+                <div class="history-date">
+                  <span>2026-02-15（今日）</span>
+                  <span class="history-badge">PR</span>
+                </div>
+                <div class="history-sets">
+                  <div class="history-set">80kg × 10</div>
+                  <div class="history-set">85kg × 8</div>
+                  <div class="history-set">90kg × 6</div>
+                </div>
+              </div>
+
+              <div class="history-item">
+                <div class="history-date">
+                  <span>2026-02-12（3日前）</span>
+                </div>
+                <div class="history-sets">
+                  <div class="history-set">75kg × 10</div>
+                  <div class="history-set">80kg × 8</div>
+                  <div class="history-set">85kg × 6</div>
+                </div>
+              </div>
+
+              <div class="history-item">
+                <div class="history-date">
+                  <span>2026-02-08（7日前）</span>
+                </div>
+                <div class="history-sets">
+                  <div class="history-set">75kg × 10</div>
+                  <div class="history-set">75kg × 8</div>
+                  <div class="history-set">80kg × 8</div>
+                </div>
+              </div>
+
+              <div class="history-item">
+                <div class="history-date">
+                  <span>2026-02-05（10日前）</span>
+                </div>
+                <div class="history-sets">
+                  <div class="history-set">70kg × 10</div>
+                  <div class="history-set">75kg × 8</div>
+                  <div class="history-set">75kg × 6</div>
+                </div>
+              </div>
+
+              <div class="history-item">
+                <div class="history-date">
+                  <span>2026-02-01（14日前）</span>
+                </div>
+                <div class="history-sets">
+                  <div class="history-set">70kg × 10</div>
+                  <div class="history-set">70kg × 8</div>
+                  <div class="history-set">75kg × 6</div>
+                </div>
+              </div>
+            </div>
+
+            <button class="view-more-btn">詳細を見る</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: フルスクリーン展開 -->
+    <div class="demo-card">
+      <div class="demo-header">
+        <h2>STEP 3: フルスクリーン展開</h2>
+        <div class="subtitle">詳細統計 + 全履歴 + PR記録</div>
+      </div>
+      <div class="phone-mockup">
+        <div class="fullscreen">
+          <div class="fullscreen-header">
+            <button class="back-btn">← 戻る</button>
+            <div class="fullscreen-title">ベンチプレス</div>
+            <div style="width: 40px;"></div>
+          </div>
+
+          <div class="fullscreen-content">
+            <!-- 統計サマリー -->
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-label">最大重量</div>
+                <div class="stat-value">90<span class="stat-unit">kg</span></div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">最大ボリューム</div>
+                <div class="stat-value">2080<span class="stat-unit">kg</span></div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">平均重量</div>
+                <div class="stat-value">82<span class="stat-unit">kg</span></div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">総トレ回数</div>
+                <div class="stat-value">47<span class="stat-unit">回</span></div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">総ボリューム</div>
+                <div class="stat-value">91.2<span class="stat-unit">t</span></div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">最終PR</div>
+                <div class="stat-value">今日</div>
+              </div>
+            </div>
+
+            <!-- 大きなグラフ -->
+            <div class="chart-section" style="margin-top: 24px;">
+              <div class="section-title">過去3ヶ月の重量推移（週平均）</div>
+              <div class="chart-container large-chart">
+                <div class="chart-bar" style="height: 45%;"></div>
+                <div class="chart-bar" style="height: 52%;"></div>
+                <div class="chart-bar" style="height: 48%;"></div>
+                <div class="chart-bar" style="height: 55%;"></div>
+                <div class="chart-bar" style="height: 58%;"></div>
+                <div class="chart-bar" style="height: 62%;"></div>
+                <div class="chart-bar" style="height: 68%;"></div>
+                <div class="chart-bar" style="height: 72%;"></div>
+                <div class="chart-bar" style="height: 75%;"></div>
+                <div class="chart-bar" style="height: 82%;"></div>
+                <div class="chart-bar" style="height: 88%;"></div>
+                <div class="chart-bar highlight" style="height: 100%;"></div>
+              </div>
+            </div>
+
+            <!-- PR履歴 -->
+            <div class="pr-list">
+              <div class="section-title">PR（自己ベスト）履歴</div>
+
+              <div class="pr-item">
+                <div>
+                  <div class="pr-label">最大重量（1RM推定）</div>
+                  <div class="pr-date">2026-02-15</div>
+                </div>
+                <div class="pr-value">103kg</div>
+              </div>
+
+              <div class="pr-item">
+                <div>
+                  <div class="pr-label">最大ボリューム（1セッション）</div>
+                  <div class="pr-date">2026-02-15</div>
+                </div>
+                <div class="pr-value">2080kg</div>
+              </div>
+
+              <div class="pr-item">
+                <div>
+                  <div class="pr-label">最大レップス（80kg）</div>
+                  <div class="pr-date">2026-02-15</div>
+                </div>
+                <div class="pr-value">10回</div>
+              </div>
+            </div>
+
+            <!-- 全履歴 -->
+            <div class="history-list" style="margin-top: 24px;">
+              <div class="section-title">全履歴（47回）</div>
+
+              <div class="history-item">
+                <div class="history-date">
+                  <span>2026-02-15（今日）</span>
+                  <span class="history-badge">PR</span>
+                </div>
+                <div class="history-sets">
+                  <div class="history-set">80kg × 10</div>
+                  <div class="history-set">85kg × 8</div>
+                  <div class="history-set">90kg × 6</div>
+                </div>
+              </div>
+
+              <div class="history-item">
+                <div class="history-date">
+                  <span>2026-02-12（3日前）</span>
+                </div>
+                <div class="history-sets">
+                  <div class="history-set">75kg × 10</div>
+                  <div class="history-set">80kg × 8</div>
+                  <div class="history-set">85kg × 6</div>
+                </div>
+              </div>
+
+              <div class="history-item">
+                <div class="history-date">
+                  <span>2026-02-08（7日前）</span>
+                </div>
+                <div class="history-sets">
+                  <div class="history-set">75kg × 10</div>
+                  <div class="history-set">75kg × 8</div>
+                  <div class="history-set">80kg × 8</div>
+                </div>
+              </div>
+
+              <div class="history-item">
+                <div class="history-date">
+                  <span>2026-02-05（10日前）</span>
+                </div>
+                <div class="history-sets">
+                  <div class="history-set">70kg × 10</div>
+                  <div class="history-set">75kg × 8</div>
+                  <div class="history-set">75kg × 6</div>
+                </div>
+              </div>
+
+              <div class="history-item">
+                <div class="history-date">
+                  <span>2026-02-01（14日前）</span>
+                </div>
+                <div class="history-sets">
+                  <div class="history-set">70kg × 10</div>
+                  <div class="history-set">70kg × 8</div>
+                  <div class="history-set">75kg × 6</div>
+                </div>
+              </div>
+
+              <div class="history-item">
+                <div class="history-date">
+                  <span>2026-01-29（17日前）</span>
+                </div>
+                <div class="history-sets">
+                  <div class="history-set">70kg × 10</div>
+                  <div class="history-set">70kg × 8</div>
+                  <div class="history-set">70kg × 6</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- 実装ガイド -->
+  <div style="background: white; border-radius: 12px; padding: 32px; border: 1px solid #E5E7EB; margin-top: 40px;">
+    <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 24px;">実装仕様</h2>
+
+    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #0D9488;">1. 種目名タップ時の動作</h3>
+    <ul style="margin-left: 20px; margin-bottom: 24px; line-height: 1.8;">
+      <li><strong>トリガー:</strong> 種目名（下線付き緑色テキスト）をタップ</li>
+      <li><strong>アニメーション:</strong> 画面下部からボトムシートがスライドアップ</li>
+      <li><strong>背景:</strong> 記録画面は半透明オーバーレイで暗転</li>
+    </ul>
+
+    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #0D9488;">2. ボトムシートの構成</h3>
+    <ul style="margin-left: 20px; margin-bottom: 24px; line-height: 1.8;">
+      <li><strong>高さ:</strong> 画面の70%</li>
+      <li><strong>ドラッグハンドル:</strong> 上下スワイプで高さ調整/閉じる</li>
+      <li><strong>表示内容:</strong> 統計3項目 + グラフ + 履歴5件</li>
+      <li><strong>スクロール:</strong> コンテンツエリアのみ縦スクロール可能</li>
+    </ul>
+
+    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #0D9488;">3. 統計サマリー</h3>
+    <ul style="margin-left: 20px; margin-bottom: 24px; line-height: 1.8;">
+      <li><strong>最大重量:</strong> 全セット中の最大値（kg）</li>
+      <li><strong>最大ボリューム:</strong> 1セッションの総重量（kg × reps）の最大値</li>
+      <li><strong>平均重量:</strong> 直近10回の平均値</li>
+    </ul>
+
+    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #0D9488;">4. 重量推移グラフ</h3>
+    <ul style="margin-left: 20px; margin-bottom: 24px; line-height: 1.8;">
+      <li><strong>期間:</strong> 直近30日間（または過去7回分）</li>
+      <li><strong>Y軸:</strong> 各セッションの最大重量</li>
+      <li><strong>ハイライト:</strong> 最新のセッションを緑色で強調</li>
+      <li><strong>実装:</strong> CSSのみの棒グラフ（height: %指定）</li>
+    </ul>
+
+    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #0D9488;">5. 履歴リスト</h3>
+    <ul style="margin-left: 20px; margin-bottom: 24px; line-height: 1.8;">
+      <li><strong>表示件数:</strong> 直近10回分（ボトムシートでは5件に省略）</li>
+      <li><strong>並び順:</strong> 新しい順（降順）</li>
+      <li><strong>PRバッジ:</strong> 自己ベスト更新時に緑色バッジ表示</li>
+      <li><strong>日付表示:</strong> 絶対日付 + 相対日付（例: 2026-02-15（今日））</li>
+    </ul>
+
+    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #0D9488;">6. フルスクリーン展開</h3>
+    <ul style="margin-left: 20px; margin-bottom: 24px; line-height: 1.8;">
+      <li><strong>トリガー:</strong> 「詳細を見る」ボタンタップ</li>
+      <li><strong>追加コンテンツ:</strong> 統計6項目 + 大きなグラフ + PR履歴 + 全履歴</li>
+      <li><strong>戻る:</strong> 左上の「← 戻る」ボタンでボトムシートに戻る</li>
+    </ul>
+  </div>
+
+  <!-- CSS改善ガイドライン準拠 -->
+  <div style="background: #F0FDFA; border-radius: 12px; padding: 32px; margin-top: 40px; border: 2px solid #0D9488;">
+    <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 16px; color: #0D9488;">CSS改善ガイドライン準拠</h2>
+    <div style="font-size: 15px; color: #134E4A; line-height: 1.8;">
+      <strong>このデモで適用した改善:</strong>
+      <ul style="margin-left: 20px; margin-top: 8px; line-height: 2;">
+        <li>✅ グラデーション削除 → 全てベタ塗り</li>
+        <li>✅ border-radius: 4px/8px/12px/20pxの4種類のみ</li>
+        <li>✅ shadow削除（ボトムシートのみ境界線使用）</li>
+        <li>✅ font-weight: 400/600/700の3種類のみ</li>
+        <li>✅ padding: 4の倍数のみ（4px, 8px, 12px, 16px, 20px, 32px）</li>
+        <li>✅ transition削除（シンプルに）</li>
+      </ul>
+      <br>
+      <strong>Strong風のシンプルさ:</strong>
+      <ul style="margin-left: 20px; margin-top: 8px; line-height: 2;">
+        <li>過剰な装飾を避け、情報の見やすさを優先</li>
+        <li>グラフは簡易的な棒グラフ（CSS heightのみで実装）</li>
+        <li>統計は3〜6項目に絞り、一目で把握可能</li>
+        <li>履歴リストは日付 + セット内訳のシンプルな構成</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- 技術判断 -->
+  <div style="background: white; border-radius: 12px; padding: 32px; border: 1px solid #E5E7EB; margin-top: 40px;">
+    <h2 style="font-size: 24px; font-weight: 700; margin-bottom: 24px;">技術判断の根拠</h2>
+
+    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 12px;">なぜボトムシート方式を選択したか</h3>
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px;">
+      <thead>
+        <tr style="background: #F9FAFB; border-bottom: 2px solid #E5E7EB;">
+          <th style="padding: 12px; text-align: left; font-size: 13px; font-weight: 700; color: #6B7280;">評価軸</th>
+          <th style="padding: 12px; text-align: left; font-size: 13px; font-weight: 700; color: #6B7280;">ボトムシート</th>
+          <th style="padding: 12px; text-align: left; font-size: 13px; font-weight: 700; color: #6B7280;">フルスクリーン遷移</th>
+          <th style="padding: 12px; text-align: left; font-size: 13px; font-weight: 700; color: #6B7280;">インライン展開</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="border-bottom: 1px solid #F3F4F6;">
+          <td style="padding: 12px; font-weight: 600;">操作負荷</td>
+          <td style="padding: 12px; color: #10B981;">低（戻る不要）</td>
+          <td style="padding: 12px; color: #6B7280;">中（戻るボタン必要）</td>
+          <td style="padding: 12px; color: #10B981;">低</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #F3F4F6;">
+          <td style="padding: 12px; font-weight: 600;">コンテキスト維持</td>
+          <td style="padding: 12px; color: #10B981;">高（記録画面が見える）</td>
+          <td style="padding: 12px; color: #EF4444;">低（完全に隠れる）</td>
+          <td style="padding: 12px; color: #10B981;">高</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #F3F4F6;">
+          <td style="padding: 12px; font-weight: 600;">情報密度</td>
+          <td style="padding: 12px; color: #10B981;">中（70%の高さ）</td>
+          <td style="padding: 12px; color: #10B981;">高（画面全体）</td>
+          <td style="padding: 12px; color: #EF4444;">低（スクロール長大化）</td>
+        </tr>
+        <tr style="border-bottom: 1px solid #F3F4F6;">
+          <td style="padding: 12px; font-weight: 600;">実装コスト</td>
+          <td style="padding: 12px; color: #10B981;">低（標準UI）</td>
+          <td style="padding: 12px; color: #6B7280;">中（画面追加）</td>
+          <td style="padding: 12px; color: #6B7280;">中（状態管理複雑）</td>
+        </tr>
+        <tr>
+          <td style="padding: 12px; font-weight: 600;">推奨度</td>
+          <td style="padding: 12px; color: #10B981; font-weight: 700;">⭐⭐⭐⭐⭐</td>
+          <td style="padding: 12px; color: #6B7280; font-weight: 700;">⭐⭐⭐</td>
+          <td style="padding: 12px; color: #6B7280; font-weight: 700;">⭐⭐</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 12px;">グラフをCSSのみで実装した理由</h3>
+    <ul style="margin-left: 20px; line-height: 1.8;">
+      <li><strong>シンプルさ優先:</strong> Chart.jsなどのライブラリは過剰（バンドルサイズ増加）</li>
+      <li><strong>要件充足:</strong> ユーザーは厳密な数値より「傾向」を知りたい</li>
+      <li><strong>パフォーマンス:</strong> DOMのみで軽量・高速</li>
+      <li><strong>保守性:</strong> 外部依存なし、カスタマイズ容易</li>
+    </ul>
+  </div>
+
+  <div style="text-align: center; padding: 20px; color: #6B7280; font-size: 14px; margin-top: 20px;">
+    <p><strong>このデザインで実装しますか？</strong></p>
+    <p>または、調整が必要な箇所があればお知らせください。</p>
+  </div>
+</div>
+
+</body>
+</html>
