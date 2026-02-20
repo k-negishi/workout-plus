@@ -1,0 +1,4722 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workout+ ワイヤーフレーム v5 (MD3)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ===============================================
+     Design System Tokens
+     =============================================== */
+  :root {
+    /* ── MD3 Reference Palette ── */
+    --md-ref-palette-primary10: #001A4D;
+    --md-ref-palette-primary40: #3385FF;
+    --md-ref-palette-primary50: #4D94FF;
+    --md-ref-palette-primary90: #D1E6FF;
+    --md-ref-palette-primary95: #E6F2FF;
+    --md-ref-palette-primary100: #FFFFFF;
+
+    --md-ref-palette-neutral10: #1e293b;
+    --md-ref-palette-neutral17: #334155;
+    --md-ref-palette-neutral25: #475569;
+    --md-ref-palette-neutral40: #64748b;
+    --md-ref-palette-neutral87: #e2e8f0;
+    --md-ref-palette-neutral92: #F1F3F5;
+    --md-ref-palette-neutral96: #f9fafb;
+    --md-ref-palette-neutral100: #FFFFFF;
+
+    --md-ref-palette-tertiary50: #10B981;
+    --md-ref-palette-tertiary95: #F0FDF4;
+    --md-ref-palette-error40: #EF4444;
+    --md-ref-palette-error90: #FEE2E2;
+
+    /* ── MD3 System Colors ── */
+    --md-sys-color-primary: var(--md-ref-palette-primary50);
+    --md-sys-color-on-primary: var(--md-ref-palette-primary100);
+    --md-sys-color-primary-container: var(--md-ref-palette-primary95);
+    --md-sys-color-tertiary: var(--md-ref-palette-tertiary50);
+    --md-sys-color-tertiary-container: var(--md-ref-palette-tertiary95);
+    --md-sys-color-error: var(--md-ref-palette-error40);
+    --md-sys-color-error-container: var(--md-ref-palette-error90);
+    --md-sys-color-surface: var(--md-ref-palette-neutral100);
+    --md-sys-color-on-surface: var(--md-ref-palette-neutral25);
+    --md-sys-color-on-surface-variant: var(--md-ref-palette-neutral40);
+    --md-sys-color-outline-variant: var(--md-ref-palette-neutral87);
+    --md-sys-color-background: var(--md-ref-palette-neutral96);
+    --md-sys-color-surface-container-low: #FAFBFC;
+    --md-sys-color-surface-container-high: var(--md-ref-palette-neutral92);
+
+    /* ── Custom Colors ── */
+    --md-custom-color-on-surface-strong: var(--md-ref-palette-neutral17);
+
+    /* ── MD3 Typescale ── */
+    --md-sys-typescale-label-small-size: 11px;
+    --md-sys-typescale-label-small-line-height: 16px;
+    --md-sys-typescale-label-small-tracking: 0.5px;
+
+    --md-sys-typescale-label-medium-size: 12px;
+    --md-sys-typescale-label-medium-line-height: 16px;
+    --md-sys-typescale-label-medium-tracking: 0.5px;
+
+    --md-sys-typescale-label-large-size: 14px;
+    --md-sys-typescale-label-large-line-height: 20px;
+    --md-sys-typescale-label-large-tracking: 0.1px;
+
+    --md-sys-typescale-body-small-size: 13px;
+    --md-sys-typescale-body-small-line-height: 18px;
+    --md-sys-typescale-body-small-tracking: 0.4px;
+
+    --md-sys-typescale-body-medium-size: 14px;
+    --md-sys-typescale-body-medium-line-height: 20px;
+    --md-sys-typescale-body-medium-tracking: 0.25px;
+
+    --md-sys-typescale-body-large-size: 15px;
+    --md-sys-typescale-body-large-line-height: 22px;
+    --md-sys-typescale-body-large-tracking: 0.5px;
+
+    --md-sys-typescale-title-medium-size: 16px;
+    --md-sys-typescale-title-medium-line-height: 24px;
+    --md-sys-typescale-title-medium-tracking: 0.15px;
+
+    --md-sys-typescale-title-large-size: 18px;
+    --md-sys-typescale-title-large-line-height: 26px;
+    --md-sys-typescale-title-large-tracking: 0px;
+
+    --md-sys-typescale-headline-small-size: 20px;
+    --md-sys-typescale-headline-small-line-height: 28px;
+    --md-sys-typescale-headline-small-tracking: 0px;
+
+    --md-sys-typescale-headline-medium-size: 26px;
+    --md-sys-typescale-headline-medium-line-height: 34px;
+    --md-sys-typescale-headline-medium-tracking: 0px;
+
+    --md-sys-typescale-headline-large-size: 28px;
+    --md-sys-typescale-headline-large-line-height: 36px;
+    --md-sys-typescale-headline-large-tracking: 0px;
+
+    --md-sys-typescale-display-small-size: 32px;
+    --md-sys-typescale-display-small-line-height: 40px;
+    --md-sys-typescale-display-small-tracking: 0px;
+
+    --md-sys-typescale-display-large-size: 48px;
+    --md-sys-typescale-display-large-line-height: 56px;
+    --md-sys-typescale-display-large-tracking: -0.25px;
+
+    /* ── MD3 Shape ── */
+    --md-sys-shape-extra-small: 4px;
+    --md-sys-shape-small: 8px;
+    --md-sys-shape-medium: 12px;
+    --md-sys-shape-large: 16px;
+    --md-sys-shape-full: 9999px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #ffffff;
+    font-family: 'Noto Sans JP', -apple-system, sans-serif;
+    color: var(--md-sys-color-on-surface);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  button { font-family: inherit; cursor: pointer; }
+
+  /* ===============================================
+     Page Layout (outside phone)
+     =============================================== */
+  .app {
+    padding: 32px 16px;
+    max-width: 100%;
+  }
+
+  .title-area {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  .title-area h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--md-custom-color-on-surface-strong);
+    letter-spacing: -0.5px;
+  }
+
+  .title-area p {
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 13px;
+    margin-top: 6px;
+  }
+
+  /* ===============================================
+     Screen Tabs (top navigation)
+     =============================================== */
+  .screen-tabs {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 32px;
+  }
+
+  .screen-tabs button {
+    padding: 8px 16px;
+    border-radius: var(--md-sys-shape-small);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    background: var(--md-sys-color-background);
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 13px;
+    font-weight: 400;
+    font-family: inherit;
+  }
+
+  .screen-tabs button.active {
+    background: var(--md-sys-color-primary);
+    border-color: var(--md-sys-color-primary);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  /* ===============================================
+     Phone Frame
+     =============================================== */
+  .phone-wrapper {
+    display: flex;
+    justify-content: center;
+  }
+
+  .phone {
+    width: 390px;
+    height: 844px;
+    background: var(--md-sys-color-background);
+    border-radius: 44px;
+    border: 3px solid #D1D5DB;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.12);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .status-bar {
+    height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 28px;
+    background: var(--md-sys-color-surface);
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  }
+
+  .status-bar .time {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--md-custom-color-on-surface-strong);
+  }
+
+  .status-bar-icons {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .notch {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 160px;
+    height: 34px;
+    background: #000;
+    border-radius: 0 0 22px 22px;
+    z-index: 3;
+  }
+
+  .screen-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  .screen-content::-webkit-scrollbar { display: none; }
+
+  /* ===============================================
+     Screen visibility
+     =============================================== */
+  .screen {
+    display: none;
+  }
+
+  .screen.active {
+    display: block;
+  }
+
+  /* Screens that need to fill viewport height (overlay/modal patterns) */
+  #screen-picker,
+  #screen-discard-dialog {
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #screen-history-full {
+    height: 100%;
+    overflow-y: auto;
+  }
+
+  #screen-history-full::-webkit-scrollbar { display: none; }
+
+  /* ===============================================
+     Tab Bar (bottom navigation)
+     =============================================== */
+  .tab-bar {
+    height: 84px;
+    background: var(--md-sys-color-surface);
+    border-top: 1px solid var(--md-sys-color-outline-variant);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-around;
+    padding: 8px 16px 0;
+    flex-shrink: 0;
+  }
+
+  .tab-bar-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    padding: 8px;
+    background: none;
+    border: none;
+    color: var(--md-sys-color-on-surface-variant);
+    font-family: inherit;
+  }
+
+  .tab-bar-item.active {
+    color: var(--md-sys-color-primary);
+  }
+
+  .tab-bar-item.active .tab-bar-icon svg {
+    stroke-width: 2.5;
+  }
+
+  .tab-bar-item.active .tab-bar-label {
+    font-weight: 700;
+  }
+
+  .tab-bar-icon {
+    font-size: 24px;
+  }
+
+  .tab-bar-label {
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.2px;
+  }
+
+  /* SVG icon sizing (inherits font-size from parent) */
+  .task-icon svg,
+  .widget-icon svg,
+  .placeholder-icon svg,
+  .tab-bar-icon svg,
+  .stat-item svg {
+    width: 1em;
+    height: 1em;
+    flex-shrink: 0;
+  }
+
+  .tab-bar-item.center {
+    position: relative;
+    margin-top: -24px;
+  }
+
+  .add-button {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--md-sys-color-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: white;
+    box-shadow: 0 4px 16px rgba(77, 148, 255, 0.4);
+    border: 4px solid var(--md-sys-color-background);
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  /* ===============================================
+     Home Screen: Header
+     =============================================== */
+  .home-header {
+    background: var(--md-sys-color-surface);
+    padding: 40px 20px 20px;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  }
+
+  .home-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .home-greeting {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.3px;
+    color: var(--md-custom-color-on-surface-strong);
+  }
+
+  .user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--md-sys-color-primary-container);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 13px;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    color: var(--md-sys-color-primary);
+    cursor: pointer;
+  }
+
+  /* ===============================================
+     Home Screen: Streak Card
+     =============================================== */
+  .streak-card {
+    background: rgba(77, 148, 255, 0.08);
+    border-radius: var(--md-sys-shape-medium);
+    padding: 14px 16px;
+    border: 1px solid rgba(77, 148, 255, 0.15);
+  }
+
+  .streak-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .streak-label {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--md-sys-color-primary);
+    opacity: 0.85;
+    margin-bottom: 4px;
+  }
+
+  .streak-number {
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--md-ref-palette-primary40);
+  }
+
+  .streak-unit {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--md-sys-color-primary);
+    margin-left: 2px;
+  }
+
+  .streak-fire {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    color: var(--md-sys-color-primary);
+    opacity: 0.7;
+  }
+
+  .streak-week {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .streak-day {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .streak-day-circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .streak-day-circle.done {
+    background: var(--md-sys-color-primary);
+  }
+
+  .streak-day-circle.done svg {
+    width: 14px;
+    height: 14px;
+    color: #fff;
+  }
+
+  .streak-day-circle.rest {
+    background: rgba(77, 148, 255, 0.10);
+  }
+
+  .streak-day-label {
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--md-sys-color-primary);
+    opacity: 0.7;
+  }
+
+  /* ===============================================
+     Home Screen: Main Content
+     =============================================== */
+  .home-main {
+    padding: 20px;
+  }
+
+  /* Section Header */
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .section-header--spaced {
+    margin-top: 24px;
+  }
+
+  .section-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--md-sys-color-on-surface);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .section-count {
+    font-size: 12px;
+    color: var(--md-sys-color-on-surface-variant);
+    font-weight: 400;
+  }
+
+  .view-all-link {
+    font-size: 14px;
+    color: var(--md-sys-color-primary);
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  /* Weekly Goals Card */
+  .weekly-goals {
+    background: var(--md-sys-color-surface);
+    border-radius: var(--md-sys-shape-medium);
+    padding: 20px;
+    margin-bottom: 24px;
+    border: 1px solid var(--md-sys-color-outline-variant);
+  }
+
+  .goals-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .goals-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--md-custom-color-on-surface-strong);
+  }
+
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    border-radius: var(--md-sys-shape-small);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+
+  .status-badge.on-track {
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-ref-palette-primary40);
+  }
+
+  .status-badge.completed {
+    background: #cce5ff;
+    color: var(--md-ref-palette-primary40);
+  }
+
+  .status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .goals-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .goal-item { text-align: center; }
+
+  .goal-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--md-custom-color-on-surface-strong);
+    margin-bottom: 4px;
+  }
+
+  .goal-label {
+    font-size: 12px;
+    color: var(--md-sys-color-on-surface-variant);
+    font-weight: 400;
+  }
+
+  .goal-change {
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 2px;
+  }
+
+  .goal-change.positive { color: var(--md-sys-color-tertiary); }
+
+  /* Progress Bar */
+  .progress-container { margin-top: 12px; }
+
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .progress-label {
+    font-size: 13px;
+    color: var(--md-sys-color-on-surface-variant);
+    font-weight: 400;
+  }
+
+  .progress-percentage {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--md-sys-color-primary);
+  }
+
+  .progress-bar {
+    height: 8px;
+    background: var(--md-sys-color-surface-container-high);
+    border-radius: var(--md-sys-shape-small);
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--md-sys-color-primary);
+    border-radius: var(--md-sys-shape-small);
+  }
+
+  /* Workout Task Cards */
+  .workout-tasks { margin-bottom: 24px; }
+
+  .task-card {
+    background: var(--md-sys-color-surface);
+    border-radius: var(--md-sys-shape-medium);
+    padding: 16px;
+    margin-bottom: 12px;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    cursor: pointer;
+  }
+
+  .task-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .task-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--md-sys-shape-medium);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .task-icon.chest { background: var(--md-sys-color-primary-container); }
+  .task-icon.back { background: #E0ECFF; }
+  .task-icon.legs { background: #D6E8FF; }
+
+  .task-info { flex: 1; }
+
+  .task-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--md-custom-color-on-surface-strong);
+    margin-bottom: 4px;
+  }
+
+  .task-meta {
+    font-size: 13px;
+    color: var(--md-sys-color-on-surface-variant);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .task-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+
+  .task-tag {
+    padding: 4px 8px;
+    border-radius: var(--md-sys-shape-small);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+  }
+
+  .task-tag.sets { background: #fef3c7; color: #92400e; }
+  .task-tag.volume { background: #dbeafe; color: #1e40af; }
+  .task-tag.time { background: #f3e8ff; color: #6b21a8; }
+
+  .task-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .task-stats {
+    display: flex;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* Dashboard Widgets */
+  .dashboard-widgets { margin-bottom: 24px; }
+
+  .widgets-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .widget-card {
+    background: var(--md-sys-color-surface);
+    border-radius: var(--md-sys-shape-medium);
+    padding: 16px;
+    border: 1px solid var(--md-sys-color-outline-variant);
+  }
+
+  .widget-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .widget-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--md-sys-shape-small);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+
+  .widget-icon.target { background: var(--md-sys-color-primary-container); }
+  .widget-icon.calendar { background: #E0ECFF; }
+  .widget-icon.trophy { background: #D6E8FF; }
+  .widget-icon.chart { background: #CCE0FF; }
+
+  .widget-title {
+    font-size: 13px;
+    color: var(--md-sys-color-on-surface-variant);
+    font-weight: 400;
+  }
+
+  .widget-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--md-custom-color-on-surface-strong);
+    margin-bottom: 4px;
+  }
+
+  .widget-subtitle {
+    font-size: 12px;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  .widget-trend {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 4px;
+    padding: 2px 8px;
+    border-radius: var(--md-sys-shape-small);
+  }
+
+  .widget-trend.up {
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-ref-palette-primary40);
+  }
+
+  /* Tab bar spacer inside home */
+  .tab-bar-spacer { height: 84px; }
+
+  /* ===============================================
+     Record Screen
+     =============================================== */
+  .workout-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background: var(--md-sys-color-surface);
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  }
+
+  .workout-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .done-btn {
+    padding: 8px 20px;
+    border-radius: var(--md-sys-shape-small);
+    border: none;
+    background: var(--md-sys-color-tertiary);
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .timer-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px;
+    background: var(--md-sys-color-surface-container-low);
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  }
+
+  .timer-bar .timer-text {
+    margin-left: auto;
+  }
+
+  .timer-bar .done-btn {
+    margin-left: 12px;
+  }
+
+  .timer-label {
+    font-size: 13px;
+    color: var(--md-sys-color-on-surface-variant);
+    font-weight: 400;
+  }
+
+  .timer-text {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--md-custom-color-on-surface-strong);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .timer-control {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1.5px solid #4D94FF;
+    background: transparent;
+    color: #4D94FF;
+    font-size: 10px;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  .timer-paused-label {
+    font-size: 11px;
+    color: #64748b;
+    font-weight: 400;
+  }
+
+  .scroll-content {
+    padding: 0 0 120px;
+  }
+
+  .exercise {
+    padding: 12px 20px;
+    border-bottom: 8px solid var(--md-sys-color-surface-container-high);
+  }
+
+  .exercise-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 4px;
+  }
+
+  .exercise-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--md-sys-color-primary);
+    cursor: pointer;
+  }
+
+  .exercise-meta {
+    font-size: 12px;
+    color: var(--md-sys-color-on-surface-variant);
+    font-weight: 400;
+    margin-top: 2px;
+  }
+
+  .previous-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--md-sys-color-on-surface-variant);
+    background: var(--md-sys-color-surface-container-high);
+    padding: 4px 8px;
+    border-radius: var(--md-sys-shape-small);
+    font-weight: 400;
+    white-space: nowrap;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+  }
+
+  .previous-badge:hover {
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-primary);
+  }
+
+  .previous-badge .copy-icon {
+    width: 11px;
+    height: 11px;
+    opacity: 0.6;
+  }
+
+  .previous-badge:hover .copy-icon {
+    opacity: 1;
+  }
+
+  .sets-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .set-previous {
+    padding: 2px 0 0 36px;
+  }
+
+  .set-previous button {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: var(--md-sys-color-on-surface-variant);
+    background: none;
+    padding: 2px 0;
+    border-radius: var(--md-sys-shape-extra-small);
+    font-weight: 400;
+    white-space: nowrap;
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+  }
+
+  .set-previous button .copy-icon {
+    width: 11px;
+    height: 11px;
+    opacity: 0.5;
+  }
+
+  .set-previous button:hover {
+    color: var(--md-sys-color-primary);
+  }
+
+  .set-previous button:hover .copy-icon {
+    opacity: 1;
+  }
+
+  .set-row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--md-sys-color-surface);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--md-sys-shape-small);
+  }
+
+  .set-number {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--md-sys-color-surface-container-high);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface-variant);
+    flex-shrink: 0;
+  }
+
+  .set-inputs {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+  }
+
+  .set-input {
+    width: 56px;
+    padding: 6px 8px;
+    border: none;
+    border-radius: var(--md-sys-shape-small);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--md-custom-color-on-surface-strong);
+    text-align: center;
+    background: var(--md-sys-color-surface-container-low);
+    font-family: inherit;
+    outline: none;
+    -webkit-appearance: none;
+    -moz-appearance: textfield;
+  }
+
+  .set-input::-webkit-outer-spin-button,
+  .set-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .set-input:focus {
+    box-shadow: 0 0 0 1.5px var(--md-sys-color-primary);
+  }
+
+  .set-unit {
+    font-size: 12px;
+    color: var(--md-sys-color-on-surface-variant);
+    font-weight: 400;
+  }
+
+  .set-separator {
+    font-size: 14px;
+    color: var(--md-sys-color-on-surface-variant);
+    font-weight: 400;
+    margin: 0 2px;
+  }
+
+  .set-rm {
+    font-size: 11px;
+    color: var(--md-sys-color-on-surface-variant);
+    font-weight: 400;
+    white-space: nowrap;
+  }
+
+  .set-delete {
+    width: 20px;
+    height: 20px;
+    border-radius: var(--md-sys-shape-extra-small);
+    background: none;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--md-sys-color-on-surface-variant);
+    opacity: 0.4;
+    padding: 0;
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+
+  .set-delete svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .set-delete:hover {
+    opacity: 1;
+    color: var(--md-sys-color-error);
+  }
+
+  .add-set-btn {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin-top: 8px;
+    border: 1px dashed var(--md-sys-color-primary);
+    border-radius: var(--md-sys-shape-small);
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-primary);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+  }
+
+  .add-exercise-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: calc(100% - 40px);
+    margin: 16px 20px;
+    padding: 14px;
+    border: 1px dashed var(--md-sys-color-primary);
+    border-radius: var(--md-sys-shape-small);
+    background: none;
+    color: var(--md-sys-color-primary);
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+  }
+
+  .exercise-memo {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  .exercise-memo-icon {
+    width: 14px;
+    height: 14px;
+    color: #94a3b8;
+    flex-shrink: 0;
+  }
+
+  .exercise-memo-input {
+    flex: 1;
+    padding: 4px 0;
+    border: none;
+    border-bottom: 1px solid transparent;
+    background: none;
+    font-size: 12px;
+    font-family: inherit;
+    color: var(--md-sys-color-on-surface);
+    outline: none;
+  }
+
+  .exercise-memo-input:focus {
+    border-bottom-color: var(--md-sys-color-primary);
+  }
+
+  .exercise-memo-input::placeholder {
+    color: #cbd5e1;
+    font-weight: 400;
+  }
+
+  .workout-memo {
+    padding: 12px 20px;
+    border-top: 1px solid var(--md-sys-color-outline-variant);
+  }
+
+  .workout-memo-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface-variant);
+    margin-bottom: 6px;
+  }
+
+  .workout-memo-input {
+    width: 100%;
+    min-height: 60px;
+    padding: 10px 12px;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--md-sys-shape-small);
+    background: var(--md-sys-color-surface-container-low);
+    font-size: 13px;
+    font-family: inherit;
+    color: var(--md-sys-color-on-surface);
+    resize: vertical;
+    outline: none;
+  }
+
+  .workout-memo-input:focus {
+    box-shadow: 0 0 0 1.5px var(--md-sys-color-primary);
+  }
+
+  .workout-memo-input::placeholder {
+    color: #94a3b8;
+  }
+
+  /* ===============================================
+     Exercise Picker (Fullscreen Modal)
+     =============================================== */
+  .fullscreen-modal {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--md-sys-color-background);
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: var(--md-sys-color-surface);
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  }
+
+  .close-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: none;
+    color: var(--md-sys-color-on-surface-variant);
+    padding: 0;
+  }
+
+  .modal-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .multi-select-toggle {
+    border: none;
+    background: none;
+    color: var(--md-sys-color-primary);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    padding: 0;
+  }
+
+  .search-bar {
+    padding: 12px 20px;
+    background: var(--md-sys-color-surface);
+  }
+
+  .search-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--md-sys-shape-small);
+    background: var(--md-sys-color-surface-container-low);
+  }
+
+  .search-icon {
+    flex-shrink: 0;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  .search-input {
+    border: none;
+    background: none;
+    font-size: 14px;
+    color: var(--md-sys-color-on-surface);
+    font-family: inherit;
+    outline: none;
+    width: 100%;
+  }
+
+  .search-input::placeholder {
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  .category-tabs {
+    display: flex;
+    gap: 6px;
+    padding: 12px 20px;
+    overflow-x: auto;
+    background: var(--md-sys-color-surface);
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  }
+
+  .category-tabs::-webkit-scrollbar { display: none; }
+
+  .category-tab {
+    padding: 6px 16px;
+    border-radius: var(--md-sys-shape-small);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    background: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 13px;
+    font-weight: 400;
+    font-family: inherit;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .category-tab.active {
+    background: var(--md-sys-color-primary);
+    border-color: var(--md-sys-color-primary);
+    color: white;
+    font-weight: 600;
+  }
+
+  .exercise-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 0 80px;
+  }
+
+  .exercise-content::-webkit-scrollbar { display: none; }
+
+  .exercise-content .section-header {
+    padding: 12px 20px 8px;
+  }
+
+  .exercise-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    background: var(--md-sys-color-surface);
+  }
+
+  .exercise-item.selected {
+    background: var(--md-sys-color-primary-container);
+    border-left: 3px solid var(--md-sys-color-primary);
+  }
+
+  .exercise-item-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .exercise-item-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+
+  .exercise-item-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .favorite-icon {
+    flex-shrink: 0;
+  }
+
+  .exercise-item-meta {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .meta-badge {
+    padding: 2px 8px;
+    border-radius: var(--md-sys-shape-small);
+    font-size: 11px;
+    font-weight: 400;
+    background: var(--md-sys-color-surface-container-high);
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  .meta-badge.muscle-badge {
+    background: var(--md-sys-color-primary-container);
+    color: var(--md-ref-palette-primary40);
+    font-weight: 600;
+  }
+
+  .meta-badge.equipment-badge {
+    background: var(--md-sys-color-surface-container-high);
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  .checkbox {
+    width: 22px;
+    height: 22px;
+    border-radius: var(--md-sys-shape-small);
+    border: 2px solid var(--md-sys-color-outline-variant);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: var(--md-sys-color-surface);
+  }
+
+  .checkbox.checked {
+    background: var(--md-sys-color-primary);
+    border-color: var(--md-sys-color-primary);
+    color: white;
+  }
+
+  /* ── Exercise Item Actions (edit, favorite toggle) ── */
+  .exercise-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .exercise-item-action-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: var(--md-sys-shape-extra-small);
+    background: none;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--md-sys-color-on-surface-variant);
+    opacity: 0.5;
+    padding: 0;
+  }
+
+  .exercise-item-action-btn svg {
+    width: 15px;
+    height: 15px;
+  }
+
+  .exercise-item-action-btn:hover {
+    opacity: 1;
+    color: var(--md-sys-color-primary);
+  }
+
+  .exercise-item-action-btn.fav-active {
+    opacity: 1;
+    color: #F59E0B;
+  }
+
+  .exercise-item-action-btn.fav-active:hover {
+    opacity: 0.6;
+  }
+
+  /* ── Custom Exercise Inline Form ── */
+  .custom-exercise-section {
+    margin: 16px 20px 20px;
+    border: 1px dashed var(--md-sys-color-outline-variant);
+    border-radius: var(--md-sys-shape-small);
+    overflow: hidden;
+  }
+
+  .custom-exercise-toggle {
+    width: 100%;
+    padding: 12px 16px;
+    background: none;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--md-sys-color-on-surface-variant);
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .custom-exercise-toggle svg {
+    width: 16px;
+    height: 16px;
+    opacity: 0.6;
+  }
+
+  .custom-exercise-toggle:hover {
+    color: var(--md-sys-color-primary);
+  }
+
+  .custom-exercise-form {
+    padding: 0 16px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .custom-exercise-form input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--md-sys-shape-small);
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--md-sys-color-on-surface);
+    background: var(--md-sys-color-surface);
+  }
+
+  .custom-exercise-form input:focus {
+    outline: none;
+    border-color: var(--md-sys-color-primary);
+  }
+
+  .custom-form-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface-variant);
+    letter-spacing: 0.3px;
+  }
+
+  .custom-form-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .custom-form-chip {
+    padding: 4px 10px;
+    border-radius: var(--md-sys-shape-full);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    background: none;
+    font-size: 12px;
+    font-family: inherit;
+    color: var(--md-sys-color-on-surface-variant);
+    cursor: pointer;
+  }
+
+  .custom-form-chip.selected {
+    background: var(--md-sys-color-primary-container);
+    border-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-primary);
+    font-weight: 600;
+  }
+
+  .custom-form-submit {
+    padding: 10px;
+    border: none;
+    border-radius: var(--md-sys-shape-small);
+    background: var(--md-sys-color-primary);
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+  }
+
+  .multi-select-footer {
+    display: flex;
+    gap: 12px;
+    padding: 12px 20px;
+    border-top: 1px solid var(--md-sys-color-outline-variant);
+    background: var(--md-sys-color-surface);
+  }
+
+  .cancel-btn {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--md-sys-shape-small);
+    background: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+  }
+
+  .add-selected-btn {
+    flex: 2;
+    padding: 12px;
+    border: none;
+    border-radius: var(--md-sys-shape-small);
+    background: var(--md-sys-color-primary);
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+  }
+
+  .added-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    font-size: 11px;
+    font-weight: 700;
+    margin-right: 4px;
+  }
+
+  /* ===============================================
+     Exercise History: Bottom Sheet
+     =============================================== */
+  .history-backdrop {
+    position: relative;
+    height: 30%;
+    overflow: hidden;
+    background: var(--md-sys-color-background);
+  }
+
+  .bottom-sheet {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 70%;
+    background: var(--md-sys-color-surface);
+    border-top: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--md-sys-shape-medium) var(--md-sys-shape-medium) 0 0;
+    display: flex;
+    flex-direction: column;
+    z-index: 10;
+  }
+
+  .drag-handle {
+    width: 36px;
+    height: 4px;
+    background: #D1D5DB;
+    border-radius: 2px;
+    margin: 8px auto;
+    flex-shrink: 0;
+  }
+
+  .sheet-header {
+    padding: 8px 20px 16px;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    flex-shrink: 0;
+  }
+
+  .sheet-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: 4px;
+  }
+
+  .sheet-subtitle {
+    font-size: 12px;
+    color: var(--md-sys-color-on-surface-variant);
+    font-weight: 400;
+  }
+
+  .sheet-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 20px;
+  }
+
+  .sheet-content::-webkit-scrollbar { display: none; }
+
+  /* Stats Grid (shared between bottom sheet and fullscreen) */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .stats-grid-6 {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .stat-card {
+    padding: 12px;
+    background: var(--md-sys-color-background);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--md-sys-shape-small);
+    text-align: center;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface-variant);
+    margin-bottom: 4px;
+  }
+
+  .stat-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .stat-unit {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  /* Chart */
+  .chart-section {
+    margin-bottom: 16px;
+  }
+
+  .chart-section .section-title {
+    margin-bottom: 8px;
+  }
+
+  .chart-container {
+    height: 180px;
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--md-sys-shape-small);
+    background: var(--md-sys-color-background);
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+    padding: 16px 12px;
+  }
+
+  .chart-container.large-chart {
+    height: 280px;
+  }
+
+  .chart-bar {
+    flex: 1;
+    background: var(--md-sys-color-primary);
+    border-radius: var(--md-sys-shape-small) var(--md-sys-shape-small) 0 0;
+    min-height: 4px;
+  }
+
+  .chart-bar.highlight {
+    background: var(--md-sys-color-tertiary);
+  }
+
+  /* History List */
+  .history-list {
+    margin-bottom: 16px;
+  }
+
+  .history-list .section-title {
+    margin-bottom: 8px;
+  }
+
+  .history-item {
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--md-sys-shape-small);
+    padding: 12px;
+    margin-bottom: 8px;
+    background: var(--md-sys-color-background);
+  }
+
+  .history-date {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .history-date span {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .history-badge {
+    font-size: 10px;
+    font-weight: 700;
+    color: white;
+    background: var(--md-sys-color-tertiary);
+    padding: 2px 8px;
+    border-radius: var(--md-sys-shape-small);
+    letter-spacing: 0.5px;
+  }
+
+  .history-sets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .history-set {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--md-sys-color-on-surface-variant);
+    background: var(--md-sys-color-surface);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--md-sys-shape-small);
+    padding: 4px 8px;
+  }
+
+  .view-more-btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--md-sys-color-primary);
+    border-radius: var(--md-sys-shape-small);
+    background: none;
+    color: var(--md-sys-color-primary);
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    margin-top: 8px;
+  }
+
+  /* ===============================================
+     Exercise History: Fullscreen
+     =============================================== */
+  .fullscreen-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: var(--md-sys-color-surface);
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  }
+
+  .back-btn {
+    border: none;
+    background: none;
+    color: var(--md-sys-color-primary);
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    padding: 0;
+  }
+
+  .fullscreen-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .fullscreen-content {
+    padding: 16px 20px 120px;
+    overflow-y: auto;
+  }
+
+  /* PR List */
+  .pr-list {
+    margin-bottom: 16px;
+  }
+
+  .pr-list .section-title {
+    margin-bottom: 8px;
+  }
+
+  .pr-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: #FEF3C7;
+    border: 1px solid #FDE047;
+    border-radius: var(--md-sys-shape-small);
+    margin-bottom: 8px;
+  }
+
+  .pr-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: 2px;
+  }
+
+  .pr-date {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  .pr-value {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  /* ===============================================
+     Placeholder Screens
+     =============================================== */
+  .placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 600px;
+    color: var(--md-sys-color-on-surface-variant);
+    padding: 40px 20px;
+    text-align: center;
+  }
+
+  .placeholder-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+  }
+
+  .placeholder-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--md-custom-color-on-surface-strong);
+    margin-bottom: 8px;
+  }
+
+  .placeholder-text {
+    font-size: 14px;
+    color: var(--md-sys-color-on-surface-variant);
+    line-height: 1.6;
+  }
+
+  /* ===============================================
+     Calendar Screen
+     =============================================== */
+  #screen-calendar {
+    padding: 16px 20px 120px;
+  }
+
+  .calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    margin-bottom: 12px;
+  }
+
+  .calendar-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--md-custom-color-on-surface-strong);
+  }
+
+  .calendar-nav {
+    display: flex;
+    gap: 12px;
+  }
+
+  .calendar-nav-btn {
+    background: transparent;
+    border: none;
+    color: var(--md-sys-color-on-surface-variant);
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .icon-20 {
+    width: 20px;
+    height: 20px;
+  }
+
+  .calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 4px;
+  }
+
+  .calendar-weekday {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface-variant);
+    padding: 4px 0;
+  }
+
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 16px;
+  }
+
+  .calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    border-radius: var(--md-sys-shape-small);
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--md-sys-color-on-surface);
+    background: var(--md-sys-color-surface);
+  }
+
+  .calendar-day.empty {
+    background: transparent;
+  }
+
+  .calendar-day.has-training {
+    background: var(--md-sys-color-primary-container);
+  }
+
+  .calendar-day.today {
+    background: var(--md-sys-color-primary);
+    color: #ffffff;
+    font-weight: 600;
+  }
+
+  .calendar-dot {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--md-sys-color-primary);
+    position: absolute;
+    bottom: 6px;
+  }
+
+  /* Calendar - Workout Detail Section */
+  .cal-detail-section {
+    margin-top: 20px;
+  }
+
+  .cal-detail-header {
+    padding: 12px 0;
+    margin-bottom: 12px;
+  }
+
+  .cal-detail-date {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--md-custom-color-on-surface-strong);
+  }
+
+  .cal-summary-card {
+    background: var(--md-sys-color-surface);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--md-sys-shape-small);
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .cal-summary-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .cal-summary-label {
+    font-size: 11px;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  .cal-summary-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--md-custom-color-on-surface-strong);
+  }
+
+  .cal-summary-divider {
+    width: 1px;
+    height: 28px;
+    background: var(--md-sys-color-outline-variant);
+  }
+
+  .cal-exercises {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .cal-exercise-block {
+    background: var(--md-sys-color-surface);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--md-sys-shape-small);
+    padding: 12px;
+  }
+
+  .cal-exercise-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--md-sys-color-primary);
+    margin-bottom: 8px;
+  }
+
+  .cal-sets {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .cal-set-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: var(--md-sys-shape-small);
+    background: var(--md-sys-color-tertiary-container);
+  }
+
+  .cal-check-icon {
+    width: 14px;
+    height: 14px;
+    color: var(--md-sys-color-tertiary);
+    flex-shrink: 0;
+  }
+
+  .cal-set-number {
+    font-size: 13px;
+    color: var(--md-sys-color-on-surface-variant);
+    width: 14px;
+  }
+
+  .cal-set-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--md-custom-color-on-surface-strong);
+    flex: 1;
+  }
+
+  .cal-set-orm {
+    font-size: 11px;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  /* ===============================================
+     Statistics Screen
+     =============================================== */
+  #screen-stats {
+    background: var(--md-sys-color-background);
+    padding-bottom: 80px;
+  }
+
+  .stats-header {
+    padding: 16px 16px 8px;
+  }
+
+  .stats-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--md-custom-color-on-surface-strong);
+  }
+
+  .period-tabs {
+    display: flex;
+    gap: 8px;
+    padding: 16px;
+  }
+
+  .period-tab {
+    flex: 1;
+    text-align: center;
+    padding: 8px 16px;
+    border-radius: var(--md-sys-shape-small);
+    border: 1px solid transparent;
+    background: var(--md-sys-color-surface-container-high);
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 14px;
+    font-weight: 400;
+    font-family: inherit;
+  }
+
+  .period-tab.active {
+    background: var(--md-sys-color-surface);
+    color: var(--md-sys-color-primary);
+    border-color: var(--md-sys-color-outline-variant);
+    font-weight: 600;
+  }
+
+  .volume-card,
+  .muscle-distribution-card,
+  .one-rm-card {
+    background: var(--md-sys-color-surface);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--md-sys-shape-medium);
+    padding: 20px;
+    margin: 0 16px 16px;
+  }
+
+  .volume-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .volume-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .volume-label {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  .volume-value {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--md-sys-color-on-surface);
+    line-height: 1.2;
+  }
+
+  .volume-unit {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  .volume-badge {
+    padding: 4px 8px;
+    border-radius: var(--md-sys-shape-small);
+    background: var(--md-sys-color-tertiary);
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .volume-chart {
+    margin-top: 16px;
+  }
+
+  .volume-chart .chart-bar {
+    width: 100%;
+  }
+
+  .chart-column {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .chart-label {
+    margin-top: 8px;
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--md-sys-color-on-surface-variant);
+    text-align: center;
+  }
+
+  .muscle-distribution-card .section-title,
+  .one-rm-card .section-title {
+    margin-bottom: 16px;
+  }
+
+  .muscle-group {
+    margin-bottom: 16px;
+  }
+
+  .muscle-group:last-child {
+    margin-bottom: 0;
+  }
+
+  .muscle-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .muscle-name {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .muscle-percent {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .one-rm-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  .one-rm-item {
+    text-align: center;
+  }
+
+  .one-rm-label {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--md-sys-color-on-surface-variant);
+    margin-bottom: 8px;
+  }
+
+  .one-rm-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--md-sys-color-on-surface);
+    margin-bottom: 4px;
+  }
+
+  .one-rm-unit {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  .one-rm-trend {
+    display: flex;
+    justify-content: center;
+  }
+
+  .one-rm-trend.trend-up {
+    color: var(--md-sys-color-tertiary);
+  }
+
+  .one-rm-trend.trend-neutral {
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  /* ===============================================
+     Completion Summary Screen
+     =============================================== */
+  #screen-summary {
+    padding: 16px 20px 120px;
+  }
+
+  .summary-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-top: 16px;
+  }
+
+  .summary-check-icon {
+    width: 48px;
+    height: 48px;
+    color: var(--md-sys-color-tertiary);
+    margin-bottom: 12px;
+  }
+
+  .summary-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--md-custom-color-on-surface-strong);
+  }
+
+  .summary-main-card {
+    background: var(--md-sys-color-surface);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--md-sys-shape-medium);
+    padding: 20px;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+
+  .summary-workout-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--md-custom-color-on-surface-strong);
+    margin-bottom: 8px;
+  }
+
+  .summary-datetime {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--md-sys-color-on-surface-variant);
+    margin-bottom: 12px;
+  }
+
+  .summary-duration {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid var(--md-sys-color-surface-container-high);
+  }
+
+  .summary-duration-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  .summary-duration-text {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  /* Summary screen: stats-grid override to 2 columns */
+  #screen-summary .stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* Summary screen: streak card override */
+  #screen-summary .streak-card {
+    background: var(--md-sys-color-primary-container);
+    border: 1px solid var(--md-sys-color-primary);
+    border-radius: var(--md-sys-shape-small);
+    padding: 16px;
+  }
+
+  .pr-section {
+    margin-bottom: 16px;
+  }
+
+  .pr-section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--md-custom-color-on-surface-strong);
+    margin-bottom: 8px;
+  }
+
+  .pr-badge {
+    font-size: 11px;
+    font-weight: 700;
+    color: #D97706;
+    background: #FBBF24;
+    padding: 2px 8px;
+    border-radius: var(--md-sys-shape-small);
+  }
+
+  .exercise-summary-section {
+    margin-bottom: 24px;
+  }
+
+  .exercise-summary-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--md-custom-color-on-surface-strong);
+    margin-bottom: 8px;
+  }
+
+  .exercise-summary-list {
+    background: var(--md-sys-color-surface);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--md-sys-shape-small);
+    overflow: hidden;
+  }
+
+  .exercise-summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--md-sys-color-surface-container-high);
+  }
+
+  .exercise-summary-item:last-child {
+    border-bottom: none;
+  }
+
+  .exercise-summary-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--md-custom-color-on-surface-strong);
+  }
+
+  .exercise-summary-stats {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  .exercise-summary-volume {
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .summary-actions {
+    margin-top: 24px;
+  }
+
+  .btn-primary {
+    background: var(--md-sys-color-primary);
+    color: white;
+    border: none;
+    border-radius: var(--md-sys-shape-small);
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: inherit;
+    width: 100%;
+  }
+
+  /* ===============================================
+     Workout Detail (View Mode - 6a)
+     =============================================== */
+  .wd-header {
+    background: var(--md-sys-color-surface);
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  }
+  .wd-back-btn, .wd-cancel-btn {
+    background: none; border: none; padding: 0;
+    color: var(--md-sys-color-on-surface); cursor: pointer;
+  }
+  .wd-back-btn { width: 24px; height: 24px; }
+  .wd-icon { width: 100%; height: 100%; }
+  .wd-header-info { flex: 1; }
+  .wd-title { font-size: 18px; font-weight: 600; color: var(--md-custom-color-on-surface-strong); margin: 0; }
+  .wd-datetime { font-size: 13px; color: var(--md-sys-color-on-surface-variant); margin: 4px 0 0; }
+  .wd-edit-btn {
+    background: none;
+    border: 1px solid var(--md-sys-color-primary);
+    color: var(--md-sys-color-primary);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 14px;
+    border-radius: var(--md-sys-shape-small);
+    cursor: pointer;
+    font-family: inherit;
+    white-space: nowrap;
+  }
+  .wd-edit-btn:hover {
+    background: var(--md-sys-color-primary-container);
+  }
+  .wd-summary-card {
+    background: var(--md-sys-color-surface); margin: 8px 16px; padding: 16px;
+    border-radius: var(--md-sys-shape-small); border: 1px solid var(--md-sys-color-outline-variant);
+    display: flex; align-items: center;
+  }
+  .wd-summary-item {
+    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .wd-summary-label { font-size: 12px; color: var(--md-sys-color-on-surface-variant); }
+  .wd-summary-value { font-size: 16px; font-weight: 600; color: var(--md-custom-color-on-surface-strong); }
+  .wd-summary-divider { width: 1px; height: 32px; background: var(--md-sys-color-outline-variant); }
+  .wd-exercises { padding: 8px 16px 16px; }
+  .wd-exercise-block {
+    background: var(--md-sys-color-surface); border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--md-sys-shape-small); padding: 16px; margin-bottom: 12px;
+  }
+  .wd-exercise-name {
+    background: none; border: none; color: var(--md-sys-color-primary);
+    font-size: 16px; font-weight: 600; padding: 0; margin-bottom: 12px;
+    text-align: left; cursor: pointer; display: block;
+  }
+  .wd-sets { display: flex; flex-direction: column; gap: 8px; }
+  .wd-set-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 8px 12px; border-radius: var(--md-sys-shape-small); background: var(--md-sys-color-background);
+  }
+  .wd-set-completed { background: var(--md-sys-color-tertiary-container); }
+  .wd-check-icon { width: 16px; height: 16px; color: var(--md-sys-color-tertiary); flex-shrink: 0; }
+  .wd-set-number { font-size: 14px; color: var(--md-sys-color-on-surface-variant); width: 16px; }
+  .wd-set-value { font-size: 15px; font-weight: 600; color: var(--md-custom-color-on-surface-strong); flex: 1; }
+  .wd-set-orm { font-size: 12px; color: var(--md-sys-color-on-surface-variant); }
+  .wd-footer { padding: 16px; text-align: center; }
+  .wd-delete-btn {
+    background: none; border: none; color: var(--md-sys-color-error);
+    font-size: 14px; padding: 0; cursor: pointer;
+  }
+
+  /* ===============================================
+     Workout Edit Mode (6b)
+     =============================================== */
+  .wd-cancel-btn { font-size: 15px; }
+  .wd-save-btn {
+    background: var(--md-sys-color-tertiary); border: none; color: white;
+    font-size: 15px; font-weight: 600; padding: 8px 16px;
+    border-radius: var(--md-sys-shape-small); cursor: pointer;
+  }
+  .wd-edit-exercises { padding: 8px 16px 16px; }
+  .wd-edit-exercise-block {
+    background: var(--md-sys-color-surface); border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--md-sys-shape-small); padding: 16px; margin-bottom: 12px;
+  }
+  .wd-edit-exercise-header {
+    display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
+  }
+  .wd-edit-exercise-name { font-size: 16px; font-weight: 600; color: var(--md-custom-color-on-surface-strong); }
+  .wd-delete-exercise-btn {
+    background: none; border: none; padding: 4px;
+    color: var(--md-sys-color-on-surface-variant); cursor: pointer;
+  }
+  .wd-icon-small { width: 18px; height: 18px; }
+  .wd-edit-set-table { display: flex; flex-direction: column; gap: 8px; }
+  .wd-edit-set-header {
+    display: grid; grid-template-columns: 32px 1fr 16px 1fr 48px;
+    gap: 8px; padding: 0 8px 8px; font-size: 11px;
+    font-weight: 600; color: var(--md-sys-color-on-surface-variant); text-align: center;
+  }
+  .wd-edit-col-set { text-align: left; }
+  .wd-edit-set-row {
+    display: grid; grid-template-columns: 32px 1fr 16px 1fr 48px;
+    gap: 8px; align-items: center; overflow: hidden;
+  }
+  .wd-edit-set-number { font-size: 14px; color: var(--md-sys-color-on-surface-variant); text-align: left; }
+  .wd-edit-input {
+    background: var(--md-sys-color-surface-container-low); border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--md-sys-shape-small); padding: 8px; font-size: 15px; font-weight: 600;
+    color: var(--md-custom-color-on-surface-strong); text-align: center; font-family: inherit;
+    width: 100%; min-width: 0; -moz-appearance: textfield;
+  }
+  .wd-edit-input::-webkit-outer-spin-button,
+  .wd-edit-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .wd-edit-input:focus { outline: none; border-color: var(--md-sys-color-primary); }
+  .wd-edit-x { font-size: 14px; color: var(--md-sys-color-on-surface-variant); text-align: center; }
+  .wd-edit-orm-value { font-size: 13px; color: var(--md-sys-color-on-surface-variant); text-align: center; }
+  .wd-add-set-btn {
+    background: none; border: none; color: var(--md-sys-color-primary);
+    font-size: 14px; font-weight: 600; padding: 8px; margin-top: 8px;
+    cursor: pointer; width: 100%; text-align: left;
+  }
+  .wd-add-exercise-btn {
+    background: var(--md-sys-color-surface); border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--md-sys-shape-small); color: var(--md-sys-color-primary); font-size: 15px;
+    font-weight: 600; padding: 16px; margin: 0 16px 16px;
+    cursor: pointer; width: calc(100% - 32px);
+  }
+
+  /* ===============================================
+     Discard Dialog (6c)
+     =============================================== */
+  .dialog-overlay {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 10; display: flex; align-items: center; justify-content: center;
+  }
+  .dialog-backdrop {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+  .dialog-container {
+    position: relative; background: var(--md-sys-color-surface); border-radius: var(--md-sys-shape-medium);
+    width: 90%; max-width: 320px; padding: 24px;
+  }
+  .dialog-header {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 12px; margin-bottom: 24px;
+  }
+  .dialog-icon-warning { width: 48px; height: 48px; color: #F59E0B; }
+  .dialog-icon-warning svg { width: 100%; height: 100%; }
+  .dialog-title {
+    font-size: 18px; font-weight: 700; color: var(--md-custom-color-on-surface-strong);
+    text-align: center; line-height: 1.4;
+  }
+  .dialog-description {
+    font-size: 14px; font-weight: 400; color: var(--md-sys-color-on-surface-variant);
+    text-align: center; line-height: 1.5;
+  }
+  .dialog-actions { display: flex; gap: 8px; }
+  .button-dialog-cancel {
+    flex: 1; padding: 12px 16px; background: var(--md-sys-color-surface);
+    border: 1px solid var(--md-sys-color-outline-variant); border-radius: var(--md-sys-shape-small);
+    font-size: 15px; font-weight: 600; color: var(--md-sys-color-on-surface); cursor: pointer;
+  }
+  .button-dialog-destructive {
+    flex: 1; padding: 12px 16px; background: var(--md-sys-color-error); border: none;
+    border-radius: var(--md-sys-shape-small); font-size: 15px; font-weight: 600; color: #fff; cursor: pointer;
+  }
+
+  /* ===============================================
+     Settings Top (6d)
+     =============================================== */
+  .settings-header {
+    display: flex; align-items: center; padding: 12px 16px;
+    background: var(--md-sys-color-surface); border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  }
+  .settings-back-btn {
+    width: 40px; height: 40px; display: flex; align-items: center;
+    justify-content: center; background: none; border: none;
+    color: var(--md-sys-color-on-surface); cursor: pointer;
+  }
+  .settings-back-btn svg { width: 24px; height: 24px; }
+  .settings-header-title {
+    flex: 1; font-size: 18px; font-weight: 700;
+    color: var(--md-custom-color-on-surface-strong); text-align: center;
+  }
+  .settings-header-spacer { width: 40px; }
+  .settings-main { padding: 16px; }
+  #screen-settings .settings-user-card {
+    display: flex; align-items: center; gap: 16px; padding: 20px;
+    background: var(--md-sys-color-surface); border-radius: var(--md-sys-shape-medium);
+    border: 1px solid var(--md-sys-color-outline-variant); margin-bottom: 24px;
+  }
+  #screen-settings .settings-user-avatar {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--md-sys-color-primary-container); color: var(--md-sys-color-primary);
+    font-size: 20px; font-weight: 700; display: flex;
+    align-items: center; justify-content: center;
+  }
+  .settings-user-name { font-size: 16px; font-weight: 700; color: var(--md-custom-color-on-surface-strong); }
+  .settings-user-email { font-size: 13px; color: var(--md-sys-color-on-surface-variant); margin-top: 4px; }
+  #screen-settings .settings-group { margin-bottom: 24px; }
+  #screen-settings .settings-group-title {
+    font-size: 13px; font-weight: 600; color: var(--md-sys-color-on-surface-variant);
+    padding: 0 4px 8px; letter-spacing: 0.5px;
+  }
+  #screen-settings .settings-list {
+    background: var(--md-sys-color-surface); border-radius: var(--md-sys-shape-medium);
+    border: 1px solid var(--md-sys-color-outline-variant); overflow: hidden;
+  }
+  #screen-settings .settings-item {
+    display: flex; align-items: center; gap: 12px; padding: 16px;
+    background: none; border: none; border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    width: 100%; text-align: left; cursor: pointer; font-family: inherit;
+  }
+  #screen-settings .settings-item:last-child { border-bottom: none; }
+  .settings-item-icon { width: 20px; height: 20px; color: var(--md-sys-color-on-surface-variant); flex-shrink: 0; }
+  .settings-item-icon svg { width: 100%; height: 100%; }
+  .settings-item-content { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+  .settings-item-label { font-size: 15px; font-weight: 400; color: var(--md-sys-color-on-surface); }
+  .settings-item-value { font-size: 13px; color: var(--md-sys-color-on-surface-variant); }
+  .settings-item-chevron { width: 20px; height: 20px; color: var(--md-sys-color-on-surface-variant); flex-shrink: 0; }
+  .settings-item-chevron svg { width: 100%; height: 100%; }
+
+  /* ===============================================
+     Settings Sub-screens (6e/6f/6g)
+     =============================================== */
+  .wf-header {
+    display: flex; align-items: center; padding: 12px 16px;
+    background: var(--md-sys-color-surface); border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    gap: 12px;
+  }
+  .wf-header-back {
+    background: none; border: none; padding: 0;
+    color: var(--md-sys-color-on-surface); cursor: pointer;
+  }
+  .wf-icon-back { width: 20px; height: 20px; }
+  .wf-header-title { font-size: 17px; font-weight: 600; color: var(--md-custom-color-on-surface-strong); }
+  .wf-content { padding: 16px; }
+  .wf-settings-section { margin-bottom: 24px; }
+  .wf-section-title {
+    font-size: 13px; font-weight: 600; color: var(--md-sys-color-on-surface-variant);
+    margin-bottom: 8px; padding-left: 4px;
+  }
+  .wf-card {
+    background: var(--md-sys-color-surface); border-radius: var(--md-sys-shape-small);
+    border: 1px solid var(--md-sys-color-outline-variant); padding: 12px;
+  }
+  .wf-settings-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 0;
+  }
+  .wf-settings-row + .wf-settings-row { border-top: 1px solid var(--md-sys-color-surface-container-high); }
+  .wf-settings-label { font-size: 15px; color: var(--md-sys-color-on-surface); }
+  .wf-settings-text { flex: 1; }
+  .wf-settings-desc { font-size: 13px; color: var(--md-sys-color-on-surface-variant); margin-top: 4px; display: block; }
+
+  /* Toggle */
+  .toggle-switch {
+    width: 44px; height: 24px; background: var(--md-sys-color-outline-variant);
+    border-radius: var(--md-sys-shape-medium); position: relative; flex-shrink: 0;
+  }
+  .toggle-knob {
+    width: 20px; height: 20px; background: var(--md-sys-color-surface);
+    border-radius: 50%; position: absolute; top: 2px; left: 2px;
+  }
+  .toggle-switch.active { background: var(--md-sys-color-primary); }
+  .toggle-switch.active .toggle-knob { left: 22px; }
+
+  /* Segment Control */
+  .wf-segment-control {
+    display: flex; gap: 4px; background: var(--md-sys-color-surface-container-low);
+    border-radius: var(--md-sys-shape-small); padding: 2px;
+  }
+  .wf-segment-item {
+    flex: 1; padding: 6px 12px; border-radius: var(--md-sys-shape-small); font-size: 14px;
+    color: var(--md-sys-color-on-surface-variant); background: transparent; border: none;
+    cursor: pointer; font-family: inherit; text-align: center;
+  }
+  .wf-segment-item.active {
+    background: var(--md-sys-color-surface); color: var(--md-sys-color-on-surface); font-weight: 600;
+  }
+
+  /* Info rows */
+  .wf-info-row {
+    display: flex; justify-content: space-between; padding: 12px 0;
+  }
+  .wf-info-row + .wf-info-row { border-top: 1px solid var(--md-sys-color-surface-container-high); }
+  .wf-info-label { font-size: 15px; color: var(--md-sys-color-on-surface-variant); }
+  .wf-info-value { font-size: 15px; color: var(--md-sys-color-on-surface); }
+
+  /* Timer */
+  .wf-timer-display {
+    display: flex; align-items: center; justify-content: center; gap: 16px; padding: 24px 0;
+  }
+  .wf-timer-btn {
+    width: 44px; height: 44px; border-radius: var(--md-sys-shape-small); background: var(--md-sys-color-surface-container-low);
+    border: 1px solid var(--md-sys-color-outline-variant); font-size: 24px; font-weight: 600;
+    color: var(--md-sys-color-on-surface); cursor: pointer; font-family: inherit;
+  }
+  .wf-timer-value {
+    font-size: 48px; font-weight: 700; color: var(--md-custom-color-on-surface-strong);
+    min-width: 120px; text-align: center;
+  }
+  .wf-timer-presets {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 16px;
+  }
+  .wf-preset-btn {
+    padding: 12px; border-radius: var(--md-sys-shape-small); background: var(--md-sys-color-surface-container-low);
+    border: 1px solid var(--md-sys-color-outline-variant); font-size: 14px;
+    color: var(--md-sys-color-on-surface); cursor: pointer; font-family: inherit;
+  }
+  .wf-settings-note {
+    font-size: 13px; color: var(--md-sys-color-on-surface-variant); margin-top: 12px; padding-left: 4px;
+  }
+  .wf-btn-primary {
+    width: 100%; padding: 16px; border-radius: var(--md-sys-shape-small); background: var(--md-sys-color-primary);
+    color: #fff; font-size: 15px; font-weight: 600; border: none;
+    cursor: pointer; font-family: inherit;
+  }
+
+  /* ===============================================
+     AI Chat Screen
+     =============================================== */
+  .ai-chat-container {
+    display: flex; flex-direction: column; height: 100%;
+  }
+  .ai-chat-messages {
+    flex: 1; overflow-y: auto; padding: 16px;
+  }
+  .ai-message {
+    display: flex; gap: 12px; margin-bottom: 16px;
+  }
+  .ai-avatar {
+    width: 32px; height: 32px; border-radius: var(--md-sys-shape-small);
+    background: var(--md-sys-color-primary-container); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .ai-avatar svg {
+    width: 18px; height: 18px; color: var(--md-sys-color-primary);
+  }
+  .ai-message-content {
+    flex: 1; padding: 12px 16px; background: var(--md-sys-color-surface);
+    border: 1px solid var(--md-sys-color-outline-variant); border-radius: var(--md-sys-shape-small);
+    font-size: 15px; line-height: 1.6; color: var(--md-sys-color-on-surface);
+  }
+  .ai-suggestions {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; padding: 0 16px;
+  }
+  .ai-suggestion-chip {
+    padding: 8px 16px; border-radius: var(--md-sys-shape-small); background: var(--md-sys-color-surface-container-low);
+    border: 1px solid var(--md-sys-color-outline-variant); font-size: 14px;
+    color: var(--md-sys-color-on-surface); cursor: pointer; font-family: inherit;
+  }
+  .ai-input-area {
+    padding: 16px; border-top: 1px solid var(--md-sys-color-outline-variant);
+    background: var(--md-sys-color-surface); flex-shrink: 0;
+  }
+  .ai-input-wrapper {
+    display: flex; gap: 8px; align-items: flex-end;
+  }
+  .ai-textarea {
+    flex: 1; min-height: 44px; max-height: 120px; padding: 12px;
+    border-radius: var(--md-sys-shape-small); border: 1px solid var(--md-sys-color-outline-variant);
+    background: var(--md-sys-color-surface-container-low); font-size: 15px; color: var(--md-sys-color-on-surface);
+    font-family: inherit; resize: none; line-height: 1.5;
+  }
+  .ai-send-btn {
+    width: 44px; height: 44px; border-radius: var(--md-sys-shape-small);
+    background: var(--md-sys-color-primary); border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .ai-send-btn svg {
+    width: 20px; height: 20px; color: #fff;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Page Title -->
+  <div class="title-area">
+    <h1>Workout+</h1>
+    <p>Wireframe v5 (MD3)</p>
+  </div>
+
+  <!-- Screen Tabs -->
+  <div class="screen-tabs" id="screenTabs">
+    <button class="active" data-screen="home">ホーム</button>
+    <button data-screen="record">記録</button>
+    <button data-screen="picker">種目選択</button>
+    <button data-screen="history-full">種目履歴</button>
+    <button data-screen="calendar">カレンダー</button>
+    <button data-screen="stats">統計</button>
+    <button data-screen="ai">AI</button>
+    <button data-screen="summary">完了サマリー</button>
+    <button data-screen="workout-detail">詳細(閲覧)</button>
+    <button data-screen="workout-edit">詳細(編集)</button>
+    <button data-screen="discard-dialog">破棄確認</button>
+    <button data-screen="settings">設定</button>
+    <button data-screen="settings-backup">バックアップ</button>
+    <button data-screen="settings-timer">タイマー</button>
+    <button data-screen="settings-unit">単位</button>
+  </div>
+
+  <!-- Phone Frame -->
+  <div class="phone-wrapper">
+    <div class="phone">
+      <!-- Status Bar -->
+      <div class="status-bar">
+        <span class="time">9:41</span>
+        <div class="status-bar-icons">
+          <svg width="18" height="12" viewBox="0 0 18 12">
+            <rect x="0" y="4" width="3" height="8" rx="1" fill="#334155"/>
+            <rect x="5" y="2" width="3" height="10" rx="1" fill="#334155"/>
+            <rect x="10" y="0" width="3" height="12" rx="1" fill="#334155"/>
+            <rect x="15" y="0" width="3" height="12" rx="1" fill="#D1D5DB"/>
+          </svg>
+          <svg width="25" height="12" viewBox="0 0 25 12">
+            <rect x="0" y="0" width="22" height="12" rx="3" stroke="#334155" stroke-width="1" fill="none"/>
+            <rect x="2" y="2" width="16" height="8" rx="1.5" fill="#10B981"/>
+            <rect x="23" y="3.5" width="2" height="5" rx="1" fill="#334155"/>
+          </svg>
+        </div>
+      </div>
+      <div class="notch"></div>
+
+      <!-- Screen Content -->
+      <div class="screen-content" id="screenContent">
+
+        <!-- ═══ HOME SCREEN ═══ -->
+        <div id="screen-home" class="screen active">
+          <!-- Header -->
+          <div class="home-header">
+            <div class="home-header-top">
+              <div class="home-greeting">おはよう、Keiさん</div>
+              <div class="user-avatar">K</div>
+            </div>
+            <div class="streak-card">
+              <div class="streak-top">
+                <div>
+                  <div class="streak-label">今月のトレーニング</div>
+                  <div class="streak-number">12<span class="streak-unit">日</span></div>
+                </div>
+                <svg class="streak-fire" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 12c2-2.96 0-7-1-8 0 3.038-1.773 4.741-3 6-1.226 1.26-2 3.24-2 5a6 6 0 1 0 12 0c0-1.532-1.056-3.94-2-5-1.786 3-2.791 3-4 2z"/></svg>
+              </div>
+              <div class="streak-week">
+                <div class="streak-day">
+                  <div class="streak-day-circle done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                  <span class="streak-day-label">月</span>
+                </div>
+                <div class="streak-day">
+                  <div class="streak-day-circle done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                  <span class="streak-day-label">火</span>
+                </div>
+                <div class="streak-day">
+                  <div class="streak-day-circle rest"></div>
+                  <span class="streak-day-label">水</span>
+                </div>
+                <div class="streak-day">
+                  <div class="streak-day-circle done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                  <span class="streak-day-label">木</span>
+                </div>
+                <div class="streak-day">
+                  <div class="streak-day-circle done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                  <span class="streak-day-label">金</span>
+                </div>
+                <div class="streak-day">
+                  <div class="streak-day-circle rest"></div>
+                  <span class="streak-day-label">土</span>
+                </div>
+                <div class="streak-day">
+                  <div class="streak-day-circle done"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
+                  <span class="streak-day-label">日</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main Content -->
+          <div class="home-main">
+            <!-- Weekly Goals -->
+            <div class="weekly-goals">
+              <div class="goals-header">
+                <div class="goals-title">今週の目標</div>
+                <div class="status-badge on-track">
+                  <span class="status-dot"></span>
+                  順調
+                </div>
+              </div>
+              <div class="goals-grid">
+                <div class="goal-item">
+                  <div class="goal-value">5</div>
+                  <div class="goal-label">ワークアウト</div>
+                  <div class="goal-change positive">↑ 達成</div>
+                </div>
+                <div class="goal-item">
+                  <div class="goal-value">24t</div>
+                  <div class="goal-label">総負荷量</div>
+                  <div class="goal-change positive">↑ 12%</div>
+                </div>
+                <div class="goal-item">
+                  <div class="goal-value">86%</div>
+                  <div class="goal-label">達成率</div>
+                  <div class="goal-change positive">↑ 8%</div>
+                </div>
+              </div>
+              <div class="progress-container">
+                <div class="progress-header">
+                  <span class="progress-label">週間目標進捗</span>
+                  <span class="progress-percentage">86%</span>
+                </div>
+                <div class="progress-bar">
+                  <div class="progress-fill" style="width: 86%"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Recent Workouts -->
+            <div class="workout-tasks">
+              <div class="section-header">
+                <h2 class="section-title">最近のワークアウト</h2>
+                <a class="view-all-link">すべて表示</a>
+              </div>
+
+              <div class="task-card">
+                <div class="task-header">
+                  <div class="task-icon chest"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="5" x2="20" y2="5"/><rect x="2" y="3" width="3" height="4" rx="1"/><rect x="19" y="3" width="3" height="4" rx="1"/><line x1="9" y1="12" x2="9" y2="5"/><line x1="15" y1="12" x2="15" y2="5"/><circle cx="4" cy="12" r="2"/><line x1="6" y1="12" x2="20" y2="12"/><line x1="8" y1="15" x2="20" y2="15"/><line x1="10" y1="15" x2="10" y2="20"/><line x1="18" y1="15" x2="18" y2="20"/></svg></div>
+                  <div class="task-info">
+                    <div class="task-title">胸・三頭トレーニング</div>
+                    <div class="task-meta"><span>今日 14:30</span></div>
+                  </div>
+                  <div class="status-badge completed">
+                    <span class="status-dot"></span>
+                    完了
+                  </div>
+                </div>
+                <div class="task-tags">
+                  <span class="task-tag sets">12セット</span>
+                  <span class="task-tag volume">8.5t</span>
+                  <span class="task-tag time">68分</span>
+                </div>
+                <div class="task-footer">
+                  <div class="task-stats">
+                    <div class="stat-item">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                      <span>ベンチプレス +2.5kg</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="task-card">
+                <div class="task-header">
+                  <div class="task-icon back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="2" y1="2" x2="22" y2="2"/><circle cx="12" cy="7" r="2"/><line x1="7" y1="2" x2="10" y2="6"/><line x1="17" y1="2" x2="14" y2="6"/><line x1="12" y1="9" x2="12" y2="16"/><line x1="12" y1="16" x2="9" y2="22"/><line x1="12" y1="16" x2="15" y2="22"/></svg></div>
+                  <div class="task-info">
+                    <div class="task-title">背中・二頭トレーニング</div>
+                    <div class="task-meta"><span>昨日 10:00</span></div>
+                  </div>
+                  <div class="status-badge completed">
+                    <span class="status-dot"></span>
+                    完了
+                  </div>
+                </div>
+                <div class="task-tags">
+                  <span class="task-tag sets">14セット</span>
+                  <span class="task-tag volume">9.2t</span>
+                  <span class="task-tag time">72分</span>
+                </div>
+                <div class="task-footer">
+                  <div class="task-stats">
+                    <div class="stat-item">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                      <span>デッドリフト 120kg × 5</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="task-card">
+                <div class="task-header">
+                  <div class="task-icon legs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="7" x2="20" y2="7"/><rect x="2" y="5" width="3" height="4" rx="1"/><rect x="19" y="5" width="3" height="4" rx="1"/><circle cx="12" cy="3" r="2"/><line x1="12" y1="7" x2="11" y2="14"/><line x1="11" y1="14" x2="7" y2="17"/><line x1="7" y1="17" x2="6" y2="22"/><line x1="11" y1="14" x2="15" y2="17"/><line x1="15" y1="17" x2="16" y2="22"/></svg></div>
+                  <div class="task-info">
+                    <div class="task-title">脚トレーニング</div>
+                    <div class="task-meta"><span>2日前 15:00</span></div>
+                  </div>
+                  <div class="status-badge completed">
+                    <span class="status-dot"></span>
+                    完了
+                  </div>
+                </div>
+                <div class="task-tags">
+                  <span class="task-tag sets">10セット</span>
+                  <span class="task-tag volume">6.3t</span>
+                  <span class="task-tag time">55分</span>
+                </div>
+                <div class="task-footer">
+                  <div class="task-stats">
+                    <div class="stat-item">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                      <span>スクワット 100kg × 8</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Stats Widgets -->
+            <div class="dashboard-widgets">
+              <div class="section-header">
+                <h2 class="section-title">クイック統計</h2>
+              </div>
+              <div class="widgets-grid">
+                <div class="widget-card">
+                  <div class="widget-header">
+                    <div class="widget-icon target"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div>
+                    <div class="widget-title">今月の目標</div>
+                  </div>
+                  <div class="widget-value">18/20</div>
+                  <div class="widget-subtitle">ワークアウト完了</div>
+                  <div class="widget-trend up">↑ 90%達成</div>
+                </div>
+                <div class="widget-card">
+                  <div class="widget-header">
+                    <div class="widget-icon calendar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+                    <div class="widget-title">次回予定</div>
+                  </div>
+                  <div class="widget-value">明日</div>
+                  <div class="widget-subtitle">脚トレーニング</div>
+                </div>
+                <div class="widget-card">
+                  <div class="widget-header">
+                    <div class="widget-icon trophy"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h2"/><path d="M18 9h2a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2"/><path d="M6 3h12v7a6 6 0 0 1-12 0V3z"/><path d="M12 16v2"/><path d="M8 21h8"/><path d="M9 18h6"/></svg></div>
+                    <div class="widget-title">月間記録</div>
+                  </div>
+                  <div class="widget-value">5</div>
+                  <div class="widget-subtitle">新しいPR達成</div>
+                  <div class="widget-trend up">↑ 2 先月比</div>
+                </div>
+                <div class="widget-card">
+                  <div class="widget-header">
+                    <div class="widget-icon chart"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg></div>
+                    <div class="widget-title">総負荷量</div>
+                  </div>
+                  <div class="widget-value">68t</div>
+                  <div class="widget-subtitle">今月の合計</div>
+                  <div class="widget-trend up">↑ 15%</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-bar-spacer"></div>
+          </div>
+        </div>
+
+        <!-- ═══ RECORD SCREEN ═══ -->
+        <div id="screen-record" class="screen">
+          <!-- タイマー＋完了 -->
+          <div class="timer-bar">
+            <span class="timer-label">経過時間</span>
+            <button class="timer-control" title="再開">&#9654;</button>
+            <span class="timer-paused-label">一時停止中</span>
+            <span class="timer-text">00:42:15</span>
+            <button class="done-btn">完了</button>
+          </div>
+
+          <!-- スクロール領域 -->
+          <div class="scroll-content">
+
+            <!-- 種目1: ベンチプレス（前回4セット） -->
+            <div class="exercise">
+              <div class="exercise-header">
+                <div>
+                  <div class="exercise-name">ベンチプレス</div>
+                  <div class="exercise-meta">胸 &#8226; コンパウンド</div>
+                </div>
+                <button class="previous-badge"><svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>前回: 4セット (2/14)</button>
+              </div>
+
+              <div class="sets-list">
+                <div>
+                  <div class="set-previous"><button title="前回の記録をコピー"><svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>前回: 55.5kg × 4</button></div>
+                  <div class="set-row">
+                    <div class="set-number">1</div>
+                    <div class="set-inputs">
+                      <input type="number" class="set-input" placeholder="55.5">
+                      <span class="set-unit">kg</span>
+                      <span class="set-separator">×</span>
+                      <input type="number" class="set-input" placeholder="4">
+                      <span class="set-unit">reps</span>
+                    </div>
+                    <div class="set-rm">1RM 63</div>
+                    <button class="set-delete" title="セットを削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="set-previous"><button title="前回の記録をコピー"><svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>前回: 55.5kg × 4</button></div>
+                  <div class="set-row">
+
+                    <div class="set-number">2</div>
+                    <div class="set-inputs">
+                      <input type="number" class="set-input" placeholder="55.5">
+                      <span class="set-unit">kg</span>
+                      <span class="set-separator">×</span>
+                      <input type="number" class="set-input" placeholder="4">
+                      <span class="set-unit">reps</span>
+                    </div>
+                    <div class="set-rm">1RM 63</div>
+                    <button class="set-delete" title="セットを削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="set-previous"><button title="前回の記録をコピー"><svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>前回: 55.5kg × 4</button></div>
+                  <div class="set-row">
+
+                    <div class="set-number">3</div>
+                    <div class="set-inputs">
+                      <input type="number" class="set-input" placeholder="55.5">
+                      <span class="set-unit">kg</span>
+                      <span class="set-separator">×</span>
+                      <input type="number" class="set-input" placeholder="4">
+                      <span class="set-unit">reps</span>
+                    </div>
+                    <div class="set-rm">1RM 63</div>
+                    <button class="set-delete" title="セットを削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="set-previous"><button title="前回の記録をコピー"><svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>前回: 55.5kg × 4</button></div>
+                  <div class="set-row">
+
+                    <div class="set-number">4</div>
+                    <div class="set-inputs">
+                      <input type="number" class="set-input" placeholder="55.5">
+                      <span class="set-unit">kg</span>
+                      <span class="set-separator">×</span>
+                      <input type="number" class="set-input" placeholder="4">
+                      <span class="set-unit">reps</span>
+                    </div>
+                    <div class="set-rm">1RM 63</div>
+                    <button class="set-delete" title="セットを削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                  </div>
+                </div>
+              </div>
+
+              <button class="add-set-btn">+ セットを追加</button>
+              <div class="exercise-memo">
+                <svg class="exercise-memo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                <input type="text" class="exercise-memo-input" placeholder="メモ（フォーム、体感など）">
+              </div>
+            </div>
+
+            <!-- 種目2: インクラインプレス（前回2セット） -->
+            <div class="exercise">
+              <div class="exercise-header">
+                <div>
+                  <div class="exercise-name">インクラインプレス</div>
+                  <div class="exercise-meta">胸 &#8226; コンパウンド</div>
+                </div>
+                <button class="previous-badge"><svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>前回: 2セット (2/14)</button>
+              </div>
+
+              <div class="sets-list">
+                <div>
+                  <div class="set-previous"><button title="前回の記録をコピー"><svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>前回: 30kg × 12</button></div>
+                  <div class="set-row">
+                    <div class="set-number">1</div>
+                    <div class="set-inputs">
+                      <input type="number" class="set-input" placeholder="30">
+                      <span class="set-unit">kg</span>
+                      <span class="set-separator">×</span>
+                      <input type="number" class="set-input" placeholder="12">
+                      <span class="set-unit">reps</span>
+                    </div>
+                    <div class="set-rm">1RM 42</div>
+                    <button class="set-delete" title="セットを削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="set-previous"><button title="前回の記録をコピー"><svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>前回: 32kg × 10</button></div>
+                  <div class="set-row">
+
+                    <div class="set-number">2</div>
+                    <div class="set-inputs">
+                      <input type="number" class="set-input" placeholder="32">
+                      <span class="set-unit">kg</span>
+                      <span class="set-separator">×</span>
+                      <input type="number" class="set-input" placeholder="10">
+                      <span class="set-unit">reps</span>
+                    </div>
+                    <div class="set-rm">1RM 43</div>
+                    <button class="set-delete" title="セットを削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                  </div>
+                </div>
+              </div>
+
+              <button class="add-set-btn">+ セットを追加</button>
+              <div class="exercise-memo">
+                <svg class="exercise-memo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                <input type="text" class="exercise-memo-input" placeholder="メモ（フォーム、体感など）">
+              </div>
+            </div>
+
+            <!-- 種目3: ケーブルフライ（前回3セット） -->
+            <div class="exercise">
+              <div class="exercise-header">
+                <div>
+                  <div class="exercise-name">ケーブルフライ</div>
+                  <div class="exercise-meta">胸 &#8226; アイソレーション</div>
+                </div>
+                <button class="previous-badge"><svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>前回: 3セット (2/14)</button>
+              </div>
+
+              <div class="sets-list">
+                <div>
+                  <div class="set-previous"><button title="前回の記録をコピー"><svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>前回: 20kg × 15</button></div>
+                  <div class="set-row">
+                    <div class="set-number">1</div>
+                    <div class="set-inputs">
+                      <input type="number" class="set-input" placeholder="20">
+                      <span class="set-unit">kg</span>
+                      <span class="set-separator">×</span>
+                      <input type="number" class="set-input" placeholder="15">
+                      <span class="set-unit">reps</span>
+                    </div>
+                    <div class="set-rm">1RM 30</div>
+                    <button class="set-delete" title="セットを削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="set-previous"><button title="前回の記録をコピー"><svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>前回: 20kg × 15</button></div>
+                  <div class="set-row">
+                    <div class="set-number">2</div>
+                    <div class="set-inputs">
+                      <input type="number" class="set-input" placeholder="20">
+                      <span class="set-unit">kg</span>
+                      <span class="set-separator">×</span>
+                      <input type="number" class="set-input" placeholder="15">
+                      <span class="set-unit">reps</span>
+                    </div>
+                    <div class="set-rm">1RM 30</div>
+                    <button class="set-delete" title="セットを削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="set-previous"><button title="前回の記録をコピー"><svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1"/></svg>前回: 20kg × 12</button></div>
+                  <div class="set-row">
+                    <div class="set-number">3</div>
+                    <div class="set-inputs">
+                      <input type="number" class="set-input" placeholder="20">
+                      <span class="set-unit">kg</span>
+                      <span class="set-separator">×</span>
+                      <input type="number" class="set-input" placeholder="12">
+                      <span class="set-unit">reps</span>
+                    </div>
+                    <div class="set-rm">1RM 28</div>
+                    <button class="set-delete" title="セットを削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                  </div>
+                </div>
+              </div>
+
+              <button class="add-set-btn">+ セットを追加</button>
+              <div class="exercise-memo">
+                <svg class="exercise-memo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                <input type="text" class="exercise-memo-input" placeholder="メモ（フォーム、体感など）">
+              </div>
+            </div>
+
+            <!-- 種目追加ボタン -->
+            <button class="add-exercise-btn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+              種目を追加
+            </button>
+
+            <!-- ワークアウト全体メモ -->
+            <div class="workout-memo">
+              <div class="workout-memo-label">ワークアウトメモ</div>
+              <textarea class="workout-memo-input" placeholder="今日の体調、感想など"></textarea>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ═══ EXERCISE PICKER ═══ -->
+        <div id="screen-picker" class="screen">
+          <div class="fullscreen-modal">
+
+            <!-- モーダルヘッダー -->
+            <div class="modal-header">
+              <button class="close-btn" aria-label="閉じる">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+              </button>
+              <div class="modal-title">種目を選択</div>
+              <button class="multi-select-toggle">複数選択</button>
+            </div>
+
+            <!-- 検索バー -->
+            <div class="search-bar">
+              <div class="search-input-wrapper">
+                <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                <input type="text" class="search-input" placeholder="種目を検索...">
+              </div>
+            </div>
+
+            <!-- カテゴリタブ -->
+            <div class="category-tabs">
+              <button class="category-tab active">全て</button>
+              <button class="category-tab">胸</button>
+              <button class="category-tab">背中</button>
+              <button class="category-tab">脚</button>
+              <button class="category-tab">肩</button>
+              <button class="category-tab">二頭</button>
+              <button class="category-tab">三頭</button>
+              <button class="category-tab">腹</button>
+            </div>
+
+            <!-- 種目リスト -->
+            <div class="exercise-content">
+
+              <!-- お気に入りセクション -->
+              <div class="section-header">
+                <div class="section-title">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="#F59E0B" stroke="#F59E0B" stroke-width="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  お気に入り
+                </div>
+                <div class="section-count">5件</div>
+              </div>
+
+              <div class="exercise-item">
+                <div class="exercise-item-content">
+                  <div class="exercise-item-header">
+                    <div class="exercise-item-name">ベンチプレス</div>
+                  </div>
+                  <div class="exercise-item-meta">
+                    <span class="meta-badge muscle-badge">胸</span>
+                    <span class="meta-badge equipment-badge">バーベル</span>
+                  </div>
+                </div>
+                <div class="exercise-item-actions">
+                  <button class="exercise-item-action-btn fav-active" title="お気に入り解除"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+                </div>
+              </div>
+
+              <div class="exercise-item">
+                <div class="exercise-item-content">
+                  <div class="exercise-item-header">
+                    <div class="exercise-item-name">スクワット</div>
+                  </div>
+                  <div class="exercise-item-meta">
+                    <span class="meta-badge muscle-badge">脚</span>
+                    <span class="meta-badge equipment-badge">バーベル</span>
+                  </div>
+                </div>
+                <div class="exercise-item-actions">
+                  <button class="exercise-item-action-btn fav-active" title="お気に入り解除"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+                </div>
+              </div>
+
+              <div class="exercise-item">
+                <div class="exercise-item-content">
+                  <div class="exercise-item-header">
+                    <div class="exercise-item-name">デッドリフト</div>
+                  </div>
+                  <div class="exercise-item-meta">
+                    <span class="meta-badge muscle-badge">背中</span>
+                    <span class="meta-badge equipment-badge">バーベル</span>
+                  </div>
+                </div>
+                <div class="exercise-item-actions">
+                  <button class="exercise-item-action-btn fav-active" title="お気に入り解除"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+                </div>
+              </div>
+
+              <!-- カテゴリセクション -->
+              <div class="section-header section-header--spaced">
+                <div class="section-title">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                  胸の種目
+                </div>
+                <div class="section-count">24件</div>
+              </div>
+
+              <!-- 選択済みアイテム -->
+              <div class="exercise-item selected">
+                <div class="checkbox checked">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>
+                </div>
+                <div class="exercise-item-content">
+                  <div class="exercise-item-header">
+                    <div class="exercise-item-name">ダンベルフライ</div>
+                  </div>
+                  <div class="exercise-item-meta">
+                    <span class="meta-badge muscle-badge">胸</span>
+                    <span class="meta-badge equipment-badge">ダンベル</span>
+                  </div>
+                </div>
+                <div class="exercise-item-actions">
+                  <button class="exercise-item-action-btn" title="お気に入りに追加"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+                </div>
+              </div>
+
+              <!-- 未選択アイテム -->
+              <div class="exercise-item">
+                <div class="checkbox"></div>
+                <div class="exercise-item-content">
+                  <div class="exercise-item-header">
+                    <div class="exercise-item-name">インクラインプレス</div>
+                  </div>
+                  <div class="exercise-item-meta">
+                    <span class="meta-badge muscle-badge">胸</span>
+                    <span class="meta-badge equipment-badge">バーベル</span>
+                  </div>
+                </div>
+                <div class="exercise-item-actions">
+                  <button class="exercise-item-action-btn" title="お気に入りに追加"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+                </div>
+              </div>
+
+              <div class="exercise-item">
+                <div class="checkbox"></div>
+                <div class="exercise-item-content">
+                  <div class="exercise-item-header">
+                    <div class="exercise-item-name">ダンベルプレス</div>
+                  </div>
+                  <div class="exercise-item-meta">
+                    <span class="meta-badge muscle-badge">胸</span>
+                    <span class="meta-badge equipment-badge">ダンベル</span>
+                  </div>
+                </div>
+                <div class="exercise-item-actions">
+                  <button class="exercise-item-action-btn" title="お気に入りに追加"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+                </div>
+              </div>
+
+              <div class="exercise-item">
+                <div class="checkbox"></div>
+                <div class="exercise-item-content">
+                  <div class="exercise-item-header">
+                    <div class="exercise-item-name">ケーブルフライ</div>
+                  </div>
+                  <div class="exercise-item-meta">
+                    <span class="meta-badge muscle-badge">胸</span>
+                    <span class="meta-badge equipment-badge">ケーブル</span>
+                  </div>
+                </div>
+                <div class="exercise-item-actions">
+                  <button class="exercise-item-action-btn" title="お気に入りに追加"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+                </div>
+              </div>
+
+              <div class="exercise-item">
+                <div class="checkbox"></div>
+                <div class="exercise-item-content">
+                  <div class="exercise-item-header">
+                    <div class="exercise-item-name">ペックフライ</div>
+                  </div>
+                  <div class="exercise-item-meta">
+                    <span class="meta-badge muscle-badge">胸</span>
+                    <span class="meta-badge equipment-badge">マシン</span>
+                  </div>
+                </div>
+                <div class="exercise-item-actions">
+                  <button class="exercise-item-action-btn" title="お気に入りに追加"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+                </div>
+              </div>
+
+              <div class="exercise-item">
+                <div class="checkbox"></div>
+                <div class="exercise-item-content">
+                  <div class="exercise-item-header">
+                    <div class="exercise-item-name">デクラインプレス</div>
+                  </div>
+                  <div class="exercise-item-meta">
+                    <span class="meta-badge muscle-badge">胸</span>
+                    <span class="meta-badge equipment-badge">バーベル</span>
+                  </div>
+                </div>
+                <div class="exercise-item-actions">
+                  <button class="exercise-item-action-btn" title="お気に入りに追加"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+                </div>
+              </div>
+
+              <!-- マイ種目（カスタム作成済み） -->
+              <div class="section-header section-header--spaced">
+                <div class="section-title">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                  マイ種目
+                </div>
+                <div class="section-count">2件</div>
+              </div>
+
+              <div class="exercise-item">
+                <div class="exercise-item-content">
+                  <div class="exercise-item-header">
+                    <div class="exercise-item-name">ワンハンドロー</div>
+                  </div>
+                  <div class="exercise-item-meta">
+                    <span class="meta-badge muscle-badge">背中</span>
+                    <span class="meta-badge equipment-badge">ダンベル</span>
+                    <span class="meta-badge" style="font-style: italic; opacity: 0.7;">カスタム</span>
+                  </div>
+                </div>
+                <div class="exercise-item-actions">
+                  <button class="exercise-item-action-btn" title="お気に入りに追加"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+                  <button class="exercise-item-action-btn" title="編集"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                </div>
+              </div>
+
+              <div class="exercise-item">
+                <div class="exercise-item-content">
+                  <div class="exercise-item-header">
+                    <div class="exercise-item-name">スミスマシンスクワット</div>
+                  </div>
+                  <div class="exercise-item-meta">
+                    <span class="meta-badge muscle-badge">脚</span>
+                    <span class="meta-badge equipment-badge">マシン</span>
+                    <span class="meta-badge" style="font-style: italic; opacity: 0.7;">カスタム</span>
+                  </div>
+                </div>
+                <div class="exercise-item-actions">
+                  <button class="exercise-item-action-btn fav-active" title="お気に入り解除"><svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></button>
+                  <button class="exercise-item-action-btn" title="編集"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                </div>
+              </div>
+
+              <!-- カスタム種目作成 (インラインフォーム) -->
+              <div class="custom-exercise-section">
+                <button class="custom-exercise-toggle">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  カスタム種目を作成
+                </button>
+                <div class="custom-exercise-form">
+                  <div>
+                    <div class="custom-form-label">種目名</div>
+                    <input type="text" placeholder="例: ワンハンドロー">
+                  </div>
+                  <div>
+                    <div class="custom-form-label">部位</div>
+                    <div class="custom-form-chips">
+                      <button class="custom-form-chip">胸</button>
+                      <button class="custom-form-chip selected">背中</button>
+                      <button class="custom-form-chip">脚</button>
+                      <button class="custom-form-chip">肩</button>
+                      <button class="custom-form-chip">二頭</button>
+                      <button class="custom-form-chip">三頭</button>
+                      <button class="custom-form-chip">腹</button>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="custom-form-label">器具</div>
+                    <div class="custom-form-chips">
+                      <button class="custom-form-chip selected">ダンベル</button>
+                      <button class="custom-form-chip">バーベル</button>
+                      <button class="custom-form-chip">マシン</button>
+                      <button class="custom-form-chip">ケーブル</button>
+                      <button class="custom-form-chip">自重</button>
+                    </div>
+                  </div>
+                  <button class="custom-form-submit">追加する</button>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- 複数選択フッター -->
+            <div class="multi-select-footer">
+              <button class="cancel-btn">キャンセル</button>
+              <button class="add-selected-btn">
+                <span class="added-count">1</span> 種目を追加
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ═══ EXERCISE HISTORY (Fullscreen) ═══ -->
+        <div id="screen-history-full" class="screen">
+
+          <!-- フルスクリーンヘッダー -->
+          <div class="fullscreen-header">
+            <button class="back-btn">&#8592; 戻る</button>
+            <div class="fullscreen-title">ベンチプレス</div>
+            <div style="width: 40px;"></div>
+          </div>
+
+          <div class="fullscreen-content">
+
+            <!-- 統計サマリー (6項目) -->
+            <div class="stats-grid stats-grid-6">
+              <div class="stat-card">
+                <div class="stat-label">最大重量</div>
+                <div class="stat-value">90<span class="stat-unit">kg</span></div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">最大ボリューム</div>
+                <div class="stat-value">2080<span class="stat-unit">kg</span></div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">平均重量</div>
+                <div class="stat-value">82<span class="stat-unit">kg</span></div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">総トレ回数</div>
+                <div class="stat-value">47<span class="stat-unit">回</span></div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">総ボリューム</div>
+                <div class="stat-value">91.2<span class="stat-unit">t</span></div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-label">最終PR</div>
+                <div class="stat-value">今日</div>
+              </div>
+            </div>
+
+            <!-- 大きなグラフ (過去3ヶ月・週平均) -->
+            <div class="chart-section" style="margin-top: 24px;">
+              <div class="section-title">過去3ヶ月の重量推移 (週平均)</div>
+              <div class="chart-container large-chart">
+                <div class="chart-bar" style="height: 45%;"></div>
+                <div class="chart-bar" style="height: 52%;"></div>
+                <div class="chart-bar" style="height: 48%;"></div>
+                <div class="chart-bar" style="height: 55%;"></div>
+                <div class="chart-bar" style="height: 58%;"></div>
+                <div class="chart-bar" style="height: 62%;"></div>
+                <div class="chart-bar" style="height: 68%;"></div>
+                <div class="chart-bar" style="height: 72%;"></div>
+                <div class="chart-bar" style="height: 75%;"></div>
+                <div class="chart-bar" style="height: 82%;"></div>
+                <div class="chart-bar" style="height: 88%;"></div>
+                <div class="chart-bar highlight" style="height: 100%;"></div>
+              </div>
+            </div>
+
+            <!-- PR (自己ベスト) 履歴 -->
+            <div class="pr-list">
+              <div class="section-title">PR (自己ベスト) 履歴</div>
+
+              <div class="pr-item">
+                <div>
+                  <div class="pr-label">最大重量 (1RM推定)</div>
+                  <div class="pr-date">2026-02-15</div>
+                </div>
+                <div class="pr-value">103kg</div>
+              </div>
+
+              <div class="pr-item">
+                <div>
+                  <div class="pr-label">最大ボリューム (1セッション)</div>
+                  <div class="pr-date">2026-02-15</div>
+                </div>
+                <div class="pr-value">2080kg</div>
+              </div>
+
+              <div class="pr-item">
+                <div>
+                  <div class="pr-label">最大レップス (80kg)</div>
+                  <div class="pr-date">2026-02-15</div>
+                </div>
+                <div class="pr-value">10回</div>
+              </div>
+            </div>
+
+            <!-- 全履歴 (47回) -->
+            <div class="history-list" style="margin-top: 24px;">
+              <div class="section-title">全履歴 (47回)</div>
+
+              <div class="history-item">
+                <div class="history-date">
+                  <span>2026-02-15 (今日)</span>
+                  <span class="history-badge">PR</span>
+                </div>
+                <div class="history-sets">
+                  <div class="history-set">80kg x 10</div>
+                  <div class="history-set">85kg x 8</div>
+                  <div class="history-set">90kg x 6</div>
+                </div>
+              </div>
+
+              <div class="history-item">
+                <div class="history-date">
+                  <span>2026-02-12 (3日前)</span>
+                </div>
+                <div class="history-sets">
+                  <div class="history-set">75kg x 10</div>
+                  <div class="history-set">80kg x 8</div>
+                  <div class="history-set">85kg x 6</div>
+                </div>
+              </div>
+
+              <div class="history-item">
+                <div class="history-date">
+                  <span>2026-02-08 (7日前)</span>
+                </div>
+                <div class="history-sets">
+                  <div class="history-set">75kg x 10</div>
+                  <div class="history-set">75kg x 8</div>
+                  <div class="history-set">80kg x 8</div>
+                </div>
+              </div>
+
+              <div class="history-item">
+                <div class="history-date">
+                  <span>2026-02-05 (10日前)</span>
+                </div>
+                <div class="history-sets">
+                  <div class="history-set">70kg x 10</div>
+                  <div class="history-set">75kg x 8</div>
+                  <div class="history-set">75kg x 6</div>
+                </div>
+              </div>
+
+              <div class="history-item">
+                <div class="history-date">
+                  <span>2026-02-01 (14日前)</span>
+                </div>
+                <div class="history-sets">
+                  <div class="history-set">70kg x 10</div>
+                  <div class="history-set">70kg x 8</div>
+                  <div class="history-set">75kg x 6</div>
+                </div>
+              </div>
+
+              <div class="history-item">
+                <div class="history-date">
+                  <span>2026-01-29 (17日前)</span>
+                </div>
+                <div class="history-sets">
+                  <div class="history-set">70kg x 10</div>
+                  <div class="history-set">70kg x 8</div>
+                  <div class="history-set">70kg x 6</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ═══ CALENDAR SCREEN ═══ -->
+        <div id="screen-calendar" class="screen">
+          <div class="calendar-header">
+            <h1 class="calendar-title">2026年 2月</h1>
+            <div class="calendar-nav">
+              <button class="calendar-nav-btn" aria-label="前月">
+                <svg class="icon-20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+              </button>
+              <button class="calendar-nav-btn" aria-label="次月">
+                <svg class="icon-20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="calendar-weekdays">
+            <div class="calendar-weekday">月</div>
+            <div class="calendar-weekday">火</div>
+            <div class="calendar-weekday">水</div>
+            <div class="calendar-weekday">木</div>
+            <div class="calendar-weekday">金</div>
+            <div class="calendar-weekday">土</div>
+            <div class="calendar-weekday">日</div>
+          </div>
+
+          <div class="calendar-grid">
+            <div class="calendar-day empty"></div>
+            <div class="calendar-day empty"></div>
+            <div class="calendar-day empty"></div>
+            <div class="calendar-day empty"></div>
+            <div class="calendar-day empty"></div>
+            <div class="calendar-day has-training"><span class="calendar-day-number">1</span><div class="calendar-dot"></div></div>
+            <div class="calendar-day"><span class="calendar-day-number">2</span></div>
+            <div class="calendar-day has-training"><span class="calendar-day-number">3</span><div class="calendar-dot"></div></div>
+            <div class="calendar-day has-training"><span class="calendar-day-number">4</span><div class="calendar-dot"></div></div>
+            <div class="calendar-day"><span class="calendar-day-number">5</span></div>
+            <div class="calendar-day has-training"><span class="calendar-day-number">6</span><div class="calendar-dot"></div></div>
+            <div class="calendar-day has-training"><span class="calendar-day-number">7</span><div class="calendar-dot"></div></div>
+            <div class="calendar-day has-training"><span class="calendar-day-number">8</span><div class="calendar-dot"></div></div>
+            <div class="calendar-day"><span class="calendar-day-number">9</span></div>
+            <div class="calendar-day has-training"><span class="calendar-day-number">10</span><div class="calendar-dot"></div></div>
+            <div class="calendar-day has-training"><span class="calendar-day-number">11</span><div class="calendar-dot"></div></div>
+            <div class="calendar-day"><span class="calendar-day-number">12</span></div>
+            <div class="calendar-day has-training"><span class="calendar-day-number">13</span><div class="calendar-dot"></div></div>
+            <div class="calendar-day has-training"><span class="calendar-day-number">14</span><div class="calendar-dot"></div></div>
+            <div class="calendar-day has-training"><span class="calendar-day-number">15</span><div class="calendar-dot"></div></div>
+            <div class="calendar-day today"><span class="calendar-day-number">16</span></div>
+            <div class="calendar-day"><span class="calendar-day-number">17</span></div>
+            <div class="calendar-day"><span class="calendar-day-number">18</span></div>
+            <div class="calendar-day"><span class="calendar-day-number">19</span></div>
+            <div class="calendar-day"><span class="calendar-day-number">20</span></div>
+            <div class="calendar-day"><span class="calendar-day-number">21</span></div>
+            <div class="calendar-day"><span class="calendar-day-number">22</span></div>
+            <div class="calendar-day"><span class="calendar-day-number">23</span></div>
+            <div class="calendar-day"><span class="calendar-day-number">24</span></div>
+            <div class="calendar-day"><span class="calendar-day-number">25</span></div>
+            <div class="calendar-day"><span class="calendar-day-number">26</span></div>
+            <div class="calendar-day"><span class="calendar-day-number">27</span></div>
+            <div class="calendar-day"><span class="calendar-day-number">28</span></div>
+            <div class="calendar-day empty"></div>
+            <div class="calendar-day empty"></div>
+            <div class="calendar-day empty"></div>
+          </div>
+
+          <!-- Workout Detail for Selected Date -->
+          <div class="cal-detail-section">
+            <div class="cal-detail-header">
+              <div class="cal-detail-date">2026年2月15日（土）のワークアウト</div>
+            </div>
+
+            <div class="cal-summary-card">
+              <div class="cal-summary-item"><span class="cal-summary-label">所要時間</span><span class="cal-summary-value">1時間8分</span></div><div class="cal-summary-divider"></div>
+              <div class="cal-summary-item"><span class="cal-summary-label">総ボリューム</span><span class="cal-summary-value">3,240kg</span></div><div class="cal-summary-divider"></div>
+              <div class="cal-summary-item"><span class="cal-summary-label">種目数</span><span class="cal-summary-value">3</span></div><div class="cal-summary-divider"></div>
+              <div class="cal-summary-item"><span class="cal-summary-label">セット数</span><span class="cal-summary-value">9</span></div>
+            </div>
+
+            <div class="cal-exercises">
+              <div class="cal-exercise-block">
+                <div class="cal-exercise-name">ベンチプレス</div>
+                <div class="cal-sets">
+                  <div class="cal-set-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="cal-check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg><span class="cal-set-number">1</span><span class="cal-set-value">80kg × 10</span><span class="cal-set-orm">1RM: 107kg</span></div>
+                  <div class="cal-set-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="cal-check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg><span class="cal-set-number">2</span><span class="cal-set-value">85kg × 8</span><span class="cal-set-orm">1RM: 105kg</span></div>
+                  <div class="cal-set-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="cal-check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg><span class="cal-set-number">3</span><span class="cal-set-value">90kg × 6</span><span class="cal-set-orm">1RM: 107kg</span></div>
+                  <div class="cal-set-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="cal-check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg><span class="cal-set-number">4</span><span class="cal-set-value">90kg × 5</span><span class="cal-set-orm">1RM: 101kg</span></div>
+                </div>
+              </div>
+
+              <div class="cal-exercise-block">
+                <div class="cal-exercise-name">インクラインプレス</div>
+                <div class="cal-sets">
+                  <div class="cal-set-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="cal-check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg><span class="cal-set-number">1</span><span class="cal-set-value">30kg × 12</span><span class="cal-set-orm">1RM: 42kg</span></div>
+                  <div class="cal-set-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="cal-check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg><span class="cal-set-number">2</span><span class="cal-set-value">32kg × 10</span><span class="cal-set-orm">1RM: 43kg</span></div>
+                </div>
+              </div>
+
+              <div class="cal-exercise-block">
+                <div class="cal-exercise-name">ケーブルフライ</div>
+                <div class="cal-sets">
+                  <div class="cal-set-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="cal-check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg><span class="cal-set-number">1</span><span class="cal-set-value">20kg × 15</span><span class="cal-set-orm">1RM: 30kg</span></div>
+                  <div class="cal-set-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="cal-check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg><span class="cal-set-number">2</span><span class="cal-set-value">20kg × 15</span><span class="cal-set-orm">1RM: 30kg</span></div>
+                  <div class="cal-set-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="cal-check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg><span class="cal-set-number">3</span><span class="cal-set-value">20kg × 12</span><span class="cal-set-orm">1RM: 28kg</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ STATISTICS SCREEN ═══ -->
+        <div id="screen-stats" class="screen">
+          <div class="stats-header">
+            <h1 class="stats-title">統計</h1>
+          </div>
+
+          <div class="period-tabs">
+            <button class="period-tab">週</button>
+            <button class="period-tab active">月</button>
+            <button class="period-tab">3ヶ月</button>
+            <button class="period-tab">年</button>
+          </div>
+
+          <div class="volume-card">
+            <div class="volume-header">
+              <div class="volume-left">
+                <div class="volume-label">月間ボリューム推移</div>
+                <div class="volume-value">98,400<span class="volume-unit">kg</span></div>
+              </div>
+              <div class="volume-badge">+12.3%</div>
+            </div>
+            <div class="chart-container volume-chart">
+              <div class="chart-column">
+                <div class="chart-bar" style="height: 68%;"></div>
+                <div class="chart-label">8月</div>
+              </div>
+              <div class="chart-column">
+                <div class="chart-bar" style="height: 82%;"></div>
+                <div class="chart-label">9月</div>
+              </div>
+              <div class="chart-column">
+                <div class="chart-bar" style="height: 76%;"></div>
+                <div class="chart-label">10月</div>
+              </div>
+              <div class="chart-column">
+                <div class="chart-bar" style="height: 89%;"></div>
+                <div class="chart-label">11月</div>
+              </div>
+              <div class="chart-column">
+                <div class="chart-bar" style="height: 95%;"></div>
+                <div class="chart-label">12月</div>
+              </div>
+              <div class="chart-column">
+                <div class="chart-bar" style="height: 86%;"></div>
+                <div class="chart-label">1月</div>
+              </div>
+              <div class="chart-column">
+                <div class="chart-bar highlight" style="height: 100%;"></div>
+                <div class="chart-label">2月</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="muscle-distribution-card">
+            <div class="section-title">筋群別ボリューム分布</div>
+            <div class="muscle-group">
+              <div class="muscle-header"><span class="muscle-name">胸</span><span class="muscle-percent">28%</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width: 28%; background: #FF9500;"></div></div>
+            </div>
+            <div class="muscle-group">
+              <div class="muscle-header"><span class="muscle-name">背中</span><span class="muscle-percent">25%</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width: 25%; background: #007AFF;"></div></div>
+            </div>
+            <div class="muscle-group">
+              <div class="muscle-header"><span class="muscle-name">脚</span><span class="muscle-percent">22%</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width: 22%; background: #34C759;"></div></div>
+            </div>
+            <div class="muscle-group">
+              <div class="muscle-header"><span class="muscle-name">肩</span><span class="muscle-percent">15%</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width: 15%; background: #AF52DE;"></div></div>
+            </div>
+            <div class="muscle-group">
+              <div class="muscle-header"><span class="muscle-name">腕</span><span class="muscle-percent">10%</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width: 10%; background: #FF2D55;"></div></div>
+            </div>
+          </div>
+
+          <div class="one-rm-card">
+            <div class="section-title">推定1RM (BIG3)</div>
+            <div class="one-rm-grid">
+              <div class="one-rm-item">
+                <div class="one-rm-label">ベンチ</div>
+                <div class="one-rm-value">107.5<span class="one-rm-unit">kg</span></div>
+                <div class="one-rm-trend trend-up">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                </div>
+              </div>
+              <div class="one-rm-item">
+                <div class="one-rm-label">スクワット</div>
+                <div class="one-rm-value">142.5<span class="one-rm-unit">kg</span></div>
+                <div class="one-rm-trend trend-up">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"></polyline></svg>
+                </div>
+              </div>
+              <div class="one-rm-item">
+                <div class="one-rm-label">デッド</div>
+                <div class="one-rm-value">165.0<span class="one-rm-unit">kg</span></div>
+                <div class="one-rm-trend trend-neutral">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ COMPLETION SUMMARY SCREEN ═══ -->
+        <div id="screen-summary" class="screen">
+          <div class="summary-header">
+            <svg class="summary-check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9 12l2 2 4-4"></path></svg>
+            <h1 class="summary-title">ワークアウト完了</h1>
+          </div>
+
+          <div class="summary-main-card">
+            <div class="summary-workout-name">プッシュデイ</div>
+            <div class="summary-datetime">2026-02-16 14:30 - 15:38</div>
+            <div class="summary-duration">
+              <svg class="summary-duration-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg>
+              <span class="summary-duration-text">1時間8分</span>
+            </div>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-value">8,240<span class="stat-unit">kg</span></div>
+              <div class="stat-label">総ボリューム</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">3<span class="stat-unit">種目</span></div>
+              <div class="stat-label">種目数</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">9<span class="stat-unit">セット</span></div>
+              <div class="stat-label">セット数</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-value">100<span class="stat-unit">%</span></div>
+              <div class="stat-label">完了率</div>
+            </div>
+          </div>
+
+          <div class="streak-card">
+            <svg class="streak-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h8l-1 8 10-12h-8l1-8z"></path></svg>
+            <div class="streak-content">
+              <div class="streak-number">13日連続!</div>
+              <div class="streak-label">ストリーク継続中</div>
+            </div>
+          </div>
+
+          <div class="pr-section">
+            <div class="pr-section-title">新記録達成</div>
+            <div class="pr-item">
+              <div>
+                <div class="pr-label">ベンチプレス</div>
+                <div class="pr-date">90kg × 6 → 推定1RM 103kg</div>
+              </div>
+              <div class="pr-badge">NEW</div>
+            </div>
+          </div>
+
+          <div class="exercise-summary-section">
+            <div class="exercise-summary-title">種目別サマリー</div>
+            <div class="exercise-summary-list">
+              <div class="exercise-summary-item">
+                <div class="exercise-summary-name">ベンチプレス</div>
+                <div class="exercise-summary-stats">
+                  <span>4セット</span>
+                  <span>•</span>
+                  <span class="exercise-summary-volume">3,340kg</span>
+                </div>
+              </div>
+              <div class="exercise-summary-item">
+                <div class="exercise-summary-name">インクラインプレス</div>
+                <div class="exercise-summary-stats">
+                  <span>2セット</span>
+                  <span>•</span>
+                  <span class="exercise-summary-volume">1,940kg</span>
+                </div>
+              </div>
+              <div class="exercise-summary-item">
+                <div class="exercise-summary-name">ケーブルフライ</div>
+                <div class="exercise-summary-stats">
+                  <span>3セット</span>
+                  <span>•</span>
+                  <span class="exercise-summary-volume">2,960kg</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="summary-actions">
+            <button class="btn-primary">ホームに戻る</button>
+          </div>
+        </div>
+
+        <!-- ═══ WORKOUT DETAIL: View Mode (6a) ═══ -->
+        <div id="screen-workout-detail" class="screen">
+          <div class="wd-header">
+            <button class="wd-back-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="wd-icon"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+            <div class="wd-header-info"><h1 class="wd-title">プッシュデイ</h1><p class="wd-datetime">2026-02-15（土）14:30 - 15:38</p></div>
+            <button class="wd-edit-btn">編集</button>
+          </div>
+          <div class="wd-summary-card">
+            <div class="wd-summary-item"><span class="wd-summary-label">所要時間</span><span class="wd-summary-value">1時間8分</span></div><div class="wd-summary-divider"></div>
+            <div class="wd-summary-item"><span class="wd-summary-label">総ボリューム</span><span class="wd-summary-value">3,240kg</span></div><div class="wd-summary-divider"></div>
+            <div class="wd-summary-item"><span class="wd-summary-label">種目数</span><span class="wd-summary-value">3</span></div><div class="wd-summary-divider"></div>
+            <div class="wd-summary-item"><span class="wd-summary-label">セット数</span><span class="wd-summary-value">9</span></div>
+          </div>
+          <div class="wd-exercises">
+            <div class="wd-exercise-block">
+              <button class="wd-exercise-name">ベンチプレス</button>
+              <div class="wd-sets">
+                <div class="wd-set-row wd-set-completed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="wd-check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg><span class="wd-set-number">1</span><span class="wd-set-value">80kg × 10</span><span class="wd-set-orm">1RM: 107kg</span></div>
+                <div class="wd-set-row wd-set-completed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="wd-check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg><span class="wd-set-number">2</span><span class="wd-set-value">85kg × 8</span><span class="wd-set-orm">1RM: 105kg</span></div>
+                <div class="wd-set-row wd-set-completed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="wd-check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg><span class="wd-set-number">3</span><span class="wd-set-value">90kg × 6</span><span class="wd-set-orm">1RM: 107kg</span></div>
+                <div class="wd-set-row wd-set-completed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="wd-check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg><span class="wd-set-number">4</span><span class="wd-set-value">90kg × 5</span><span class="wd-set-orm">1RM: 101kg</span></div>
+              </div>
+            </div>
+            <div class="wd-exercise-block">
+              <button class="wd-exercise-name">インクラインプレス</button>
+              <div class="wd-sets">
+                <div class="wd-set-row wd-set-completed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="wd-check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg><span class="wd-set-number">1</span><span class="wd-set-value">30kg × 12</span><span class="wd-set-orm">1RM: 42kg</span></div>
+                <div class="wd-set-row wd-set-completed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="wd-check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg><span class="wd-set-number">2</span><span class="wd-set-value">32kg × 10</span><span class="wd-set-orm">1RM: 43kg</span></div>
+              </div>
+            </div>
+            <div class="wd-exercise-block">
+              <button class="wd-exercise-name">ケーブルフライ</button>
+              <div class="wd-sets">
+                <div class="wd-set-row wd-set-completed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="wd-check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg><span class="wd-set-number">1</span><span class="wd-set-value">20kg × 15</span><span class="wd-set-orm">1RM: 30kg</span></div>
+                <div class="wd-set-row wd-set-completed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="wd-check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg><span class="wd-set-number">2</span><span class="wd-set-value">20kg × 15</span><span class="wd-set-orm">1RM: 30kg</span></div>
+                <div class="wd-set-row wd-set-completed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="wd-check-icon"><polyline points="20 6 9 17 4 12"></polyline></svg><span class="wd-set-number">3</span><span class="wd-set-value">20kg × 12</span><span class="wd-set-orm">1RM: 28kg</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="wd-footer"><button class="wd-delete-btn">ワークアウトを削除</button></div>
+        </div>
+
+        <!-- ═══ WORKOUT DETAIL: Edit Mode (6b) ═══ -->
+        <div id="screen-workout-edit" class="screen">
+          <div class="wd-header">
+            <button class="wd-cancel-btn">キャンセル</button>
+            <div class="wd-header-info"><h1 class="wd-title">プッシュデイ</h1><p class="wd-datetime">2026-02-15（土）14:30</p></div>
+            <button class="wd-save-btn">保存</button>
+          </div>
+
+          <!-- スクロール領域（記録画面と共通構造） -->
+          <div class="scroll-content">
+
+            <!-- 種目1: ベンチプレス -->
+            <div class="exercise">
+              <div class="exercise-header">
+                <div>
+                  <div class="exercise-name">ベンチプレス</div>
+                  <div class="exercise-meta">胸 &#8226; コンパウンド</div>
+                </div>
+                <button class="wd-delete-exercise-btn" title="種目を削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="wd-icon-small"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+              </div>
+
+              <div class="sets-list">
+                <div>
+                  <div class="set-row">
+                    <div class="set-number">1</div>
+                    <div class="set-inputs">
+                      <input type="number" class="set-input" value="80">
+                      <span class="set-unit">kg</span>
+                      <span class="set-separator">×</span>
+                      <input type="number" class="set-input" value="10">
+                      <span class="set-unit">reps</span>
+                    </div>
+                    <div class="set-rm">1RM 107</div>
+                    <button class="set-delete" title="セットを削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="set-row">
+                    <div class="set-number">2</div>
+                    <div class="set-inputs">
+                      <input type="number" class="set-input" value="85">
+                      <span class="set-unit">kg</span>
+                      <span class="set-separator">×</span>
+                      <input type="number" class="set-input" value="8">
+                      <span class="set-unit">reps</span>
+                    </div>
+                    <div class="set-rm">1RM 105</div>
+                    <button class="set-delete" title="セットを削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="set-row">
+                    <div class="set-number">3</div>
+                    <div class="set-inputs">
+                      <input type="number" class="set-input" value="90">
+                      <span class="set-unit">kg</span>
+                      <span class="set-separator">×</span>
+                      <input type="number" class="set-input" value="6">
+                      <span class="set-unit">reps</span>
+                    </div>
+                    <div class="set-rm">1RM 107</div>
+                    <button class="set-delete" title="セットを削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="set-row">
+                    <div class="set-number">4</div>
+                    <div class="set-inputs">
+                      <input type="number" class="set-input" value="90">
+                      <span class="set-unit">kg</span>
+                      <span class="set-separator">×</span>
+                      <input type="number" class="set-input" value="5">
+                      <span class="set-unit">reps</span>
+                    </div>
+                    <div class="set-rm">1RM 101</div>
+                    <button class="set-delete" title="セットを削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                  </div>
+                </div>
+              </div>
+
+              <button class="add-set-btn">+ セットを追加</button>
+              <div class="exercise-memo">
+                <svg class="exercise-memo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                <input type="text" class="exercise-memo-input" placeholder="メモ（フォーム、体感など）">
+              </div>
+            </div>
+
+            <!-- 種目2: インクラインプレス -->
+            <div class="exercise">
+              <div class="exercise-header">
+                <div>
+                  <div class="exercise-name">インクラインプレス</div>
+                  <div class="exercise-meta">胸 &#8226; コンパウンド</div>
+                </div>
+                <button class="wd-delete-exercise-btn" title="種目を削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="wd-icon-small"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+              </div>
+
+              <div class="sets-list">
+                <div>
+                  <div class="set-row">
+                    <div class="set-number">1</div>
+                    <div class="set-inputs">
+                      <input type="number" class="set-input" value="30">
+                      <span class="set-unit">kg</span>
+                      <span class="set-separator">×</span>
+                      <input type="number" class="set-input" value="12">
+                      <span class="set-unit">reps</span>
+                    </div>
+                    <div class="set-rm">1RM 42</div>
+                    <button class="set-delete" title="セットを削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="set-row">
+                    <div class="set-number">2</div>
+                    <div class="set-inputs">
+                      <input type="number" class="set-input" value="32">
+                      <span class="set-unit">kg</span>
+                      <span class="set-separator">×</span>
+                      <input type="number" class="set-input" value="10">
+                      <span class="set-unit">reps</span>
+                    </div>
+                    <div class="set-rm">1RM 43</div>
+                    <button class="set-delete" title="セットを削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                  </div>
+                </div>
+              </div>
+
+              <button class="add-set-btn">+ セットを追加</button>
+              <div class="exercise-memo">
+                <svg class="exercise-memo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                <input type="text" class="exercise-memo-input" placeholder="メモ（フォーム、体感など）">
+              </div>
+            </div>
+
+            <!-- 種目3: ケーブルフライ -->
+            <div class="exercise">
+              <div class="exercise-header">
+                <div>
+                  <div class="exercise-name">ケーブルフライ</div>
+                  <div class="exercise-meta">胸 &#8226; アイソレーション</div>
+                </div>
+                <button class="wd-delete-exercise-btn" title="種目を削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="wd-icon-small"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
+              </div>
+
+              <div class="sets-list">
+                <div>
+                  <div class="set-row">
+                    <div class="set-number">1</div>
+                    <div class="set-inputs">
+                      <input type="number" class="set-input" value="20">
+                      <span class="set-unit">kg</span>
+                      <span class="set-separator">×</span>
+                      <input type="number" class="set-input" value="15">
+                      <span class="set-unit">reps</span>
+                    </div>
+                    <div class="set-rm">1RM 30</div>
+                    <button class="set-delete" title="セットを削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="set-row">
+                    <div class="set-number">2</div>
+                    <div class="set-inputs">
+                      <input type="number" class="set-input" value="20">
+                      <span class="set-unit">kg</span>
+                      <span class="set-separator">×</span>
+                      <input type="number" class="set-input" value="15">
+                      <span class="set-unit">reps</span>
+                    </div>
+                    <div class="set-rm">1RM 30</div>
+                    <button class="set-delete" title="セットを削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="set-row">
+                    <div class="set-number">3</div>
+                    <div class="set-inputs">
+                      <input type="number" class="set-input" value="20">
+                      <span class="set-unit">kg</span>
+                      <span class="set-separator">×</span>
+                      <input type="number" class="set-input" value="12">
+                      <span class="set-unit">reps</span>
+                    </div>
+                    <div class="set-rm">1RM 28</div>
+                    <button class="set-delete" title="セットを削除"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+                  </div>
+                </div>
+              </div>
+
+              <button class="add-set-btn">+ セットを追加</button>
+              <div class="exercise-memo">
+                <svg class="exercise-memo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                <input type="text" class="exercise-memo-input" placeholder="メモ（フォーム、体感など）">
+              </div>
+            </div>
+
+            <!-- 種目追加ボタン -->
+            <button class="add-exercise-btn">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+              種目を追加
+            </button>
+
+          </div>
+        </div>
+
+        <!-- ═══ DISCARD DIALOG (6c) ═══ -->
+        <div id="screen-discard-dialog" class="screen">
+          <div class="dialog-overlay">
+            <div class="dialog-backdrop"></div>
+            <div class="dialog-container">
+              <div class="dialog-header">
+                <div class="dialog-icon-warning"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
+                <h2 class="dialog-title">ワークアウトを破棄しますか?</h2>
+                <p class="dialog-description">記録中のデータはすべて失われます。この操作は取り消せません。</p>
+              </div>
+              <div class="dialog-actions">
+                <button class="button-dialog-cancel">続ける</button>
+                <button class="button-dialog-destructive">破棄する</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ SETTINGS TOP (6d) ═══ -->
+        <div id="screen-settings" class="screen">
+          <div class="settings-header">
+            <button class="settings-back-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+            <h1 class="settings-header-title">設定</h1>
+            <div class="settings-header-spacer"></div>
+          </div>
+          <div class="settings-main">
+            <div class="settings-user-card">
+              <div class="settings-user-avatar">K</div>
+              <div><div class="settings-user-name">Kei</div><div class="settings-user-email">kei@example.com</div></div>
+            </div>
+            <section class="settings-group">
+              <h3 class="settings-group-title">データ管理</h3>
+              <div class="settings-list">
+                <button class="settings-item"><div class="settings-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"></path></svg></div><div class="settings-item-content"><div class="settings-item-label">バックアップ</div><div class="settings-item-value">最終: 2/16 09:30</div></div><div class="settings-item-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></div></button>
+                <button class="settings-item"><div class="settings-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg></div><div class="settings-item-content"><div class="settings-item-label">データエクスポート</div><div class="settings-item-value">CSV / PDF</div></div><div class="settings-item-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></div></button>
+              </div>
+            </section>
+            <section class="settings-group">
+              <h3 class="settings-group-title">アプリ設定</h3>
+              <div class="settings-list">
+                <button class="settings-item"><div class="settings-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 6v6l4 2"></path></svg></div><div class="settings-item-content"><div class="settings-item-label">デフォルトインターバル</div><div class="settings-item-value">1分30秒</div></div><div class="settings-item-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></div></button>
+                <button class="settings-item"><div class="settings-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line></svg></div><div class="settings-item-content"><div class="settings-item-label">単位設定</div><div class="settings-item-value">kg / cm</div></div><div class="settings-item-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></div></button>
+                <button class="settings-item"><div class="settings-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></div><div class="settings-item-content"><div class="settings-item-label">通知設定</div><div class="settings-item-value">リマインダー ON</div></div><div class="settings-item-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></div></button>
+              </div>
+            </section>
+            <section class="settings-group">
+              <h3 class="settings-group-title">その他</h3>
+              <div class="settings-list">
+                <button class="settings-item"><div class="settings-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div><div class="settings-item-content"><div class="settings-item-label">ヘルプ・フィードバック</div></div><div class="settings-item-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></div></button>
+                <button class="settings-item"><div class="settings-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></div><div class="settings-item-content"><div class="settings-item-label">利用規約</div></div><div class="settings-item-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></div></button>
+                <button class="settings-item"><div class="settings-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg></div><div class="settings-item-content"><div class="settings-item-label">プライバシーポリシー</div></div><div class="settings-item-chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></div></button>
+                <button class="settings-item"><div class="settings-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></div><div class="settings-item-content"><div class="settings-item-label">バージョン</div><div class="settings-item-value">v1.0.0</div></div></button>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <!-- ═══ SETTINGS: BACKUP (6e) ═══ -->
+        <div id="screen-settings-backup" class="screen">
+          <div class="wf-header"><button class="wf-header-back"><svg class="wf-icon-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg></button><h1 class="wf-header-title">バックアップ</h1></div>
+          <div class="wf-content">
+            <section class="wf-settings-section"><h2 class="wf-section-title">バックアップ先</h2><div class="wf-card"><div class="wf-settings-row"><span class="wf-settings-label">iCloud</span><div class="toggle-switch active"><div class="toggle-knob"></div></div></div><div class="wf-settings-row"><span class="wf-settings-label">Google Drive</span><div class="toggle-switch"><div class="toggle-knob"></div></div></div></div></section>
+            <section class="wf-settings-section"><h2 class="wf-section-title">自動バックアップ</h2><div class="wf-card"><div class="wf-settings-row"><span class="wf-settings-label">自動バックアップ</span><div class="toggle-switch active"><div class="toggle-knob"></div></div></div><div class="wf-settings-row"><span class="wf-settings-label">頻度</span><div class="wf-segment-control"><button class="wf-segment-item active">毎日</button><button class="wf-segment-item">週1</button><button class="wf-segment-item">月1</button></div></div></div></section>
+            <section class="wf-settings-section"><h2 class="wf-section-title">最終バックアップ</h2><div class="wf-card"><div class="wf-info-row"><span class="wf-info-label">日時</span><span class="wf-info-value">2026-02-16 09:30</span></div><div class="wf-info-row"><span class="wf-info-label">サイズ</span><span class="wf-info-value">2.4 MB</span></div></div></section>
+            <button class="wf-btn-primary">今すぐバックアップ</button>
+          </div>
+        </div>
+
+        <!-- ═══ SETTINGS: TIMER (6f) ═══ -->
+        <div id="screen-settings-timer" class="screen">
+          <div class="wf-header"><button class="wf-header-back"><svg class="wf-icon-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg></button><h1 class="wf-header-title">タイマー設定</h1></div>
+          <div class="wf-content">
+            <section class="wf-settings-section"><h2 class="wf-section-title">デフォルトインターバル</h2><div class="wf-card"><div class="wf-timer-display"><button class="wf-timer-btn">−</button><div class="wf-timer-value">1:30</div><button class="wf-timer-btn">+</button></div><div class="wf-timer-presets"><button class="wf-preset-btn">60秒</button><button class="wf-preset-btn">90秒</button><button class="wf-preset-btn">120秒</button><button class="wf-preset-btn">180秒</button></div></div></section>
+            <section class="wf-settings-section"><h2 class="wf-section-title">自動タイマー開始</h2><div class="wf-card"><div class="wf-settings-row"><div class="wf-settings-text"><span class="wf-settings-label">自動タイマー開始</span><span class="wf-settings-desc">セット完了時にインターバルタイマーを自動で開始します</span></div><div class="toggle-switch active"><div class="toggle-knob"></div></div></div></div></section>
+            <section class="wf-settings-section"><h2 class="wf-section-title">通知</h2><div class="wf-card"><div class="wf-settings-row"><div class="wf-settings-text"><span class="wf-settings-label">バイブレーション通知</span><span class="wf-settings-desc">インターバル終了時に振動で通知します</span></div><div class="toggle-switch active"><div class="toggle-knob"></div></div></div></div></section>
+          </div>
+        </div>
+
+        <!-- ═══ SETTINGS: UNIT (6g) ═══ -->
+        <div id="screen-settings-unit" class="screen">
+          <div class="wf-header"><button class="wf-header-back"><svg class="wf-icon-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg></button><h1 class="wf-header-title">単位設定</h1></div>
+          <div class="wf-content">
+            <section class="wf-settings-section"><h2 class="wf-section-title">重量単位</h2><div class="wf-card"><div class="wf-segment-control"><button class="wf-segment-item active">kg</button><button class="wf-segment-item">lb</button></div><p class="wf-settings-note">既存の記録は自動的に変換されます</p></div></section>
+            <section class="wf-settings-section"><h2 class="wf-section-title">身長単位</h2><div class="wf-card"><div class="wf-segment-control"><button class="wf-segment-item active">cm</button><button class="wf-segment-item">ft/in</button></div><p class="wf-settings-note">既存の記録は自動的に変換されます</p></div></section>
+            <section class="wf-settings-section"><h2 class="wf-section-title">体重単位</h2><div class="wf-card"><div class="wf-segment-control"><button class="wf-segment-item active">kg</button><button class="wf-segment-item">lb</button></div><p class="wf-settings-note">既存の記録は自動的に変換されます</p></div></section>
+          </div>
+        </div>
+
+        <!-- ═══ AI ASSISTANT (7) ═══ -->
+        <div id="screen-ai" class="screen">
+          <div class="wf-header">
+            <h1 class="wf-header-title">AI アシスタント</h1>
+          </div>
+          <div class="wf-content" style="padding: 0;">
+            <div class="ai-chat-container">
+              <div class="ai-chat-messages">
+                <div class="ai-message">
+                  <div class="ai-avatar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                  </div>
+                  <div class="ai-message-content">
+                    こんにちは！トレーニングについて何でも聞いてください。メニュー提案、フォームチェック、栄養アドバイスなど対応できます。
+                  </div>
+                </div>
+                <div class="ai-suggestions">
+                  <button class="ai-suggestion-chip">今日のメニューを提案</button>
+                  <button class="ai-suggestion-chip">ベンチプレスのフォーム</button>
+                  <button class="ai-suggestion-chip">増量期の食事</button>
+                  <button class="ai-suggestion-chip">疲労回復のコツ</button>
+                </div>
+              </div>
+              <div class="ai-input-area">
+                <div class="ai-input-wrapper">
+                  <textarea class="ai-textarea" placeholder="メッセージを入力..." rows="1"></textarea>
+                  <button class="ai-send-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="22" y1="2" x2="11" y2="13"/>
+                      <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Tab Bar -->
+      <div class="tab-bar">
+        <button class="tab-bar-item active" data-tab="home">
+          <div class="tab-bar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+          <div class="tab-bar-label">ホーム</div>
+        </button>
+        <button class="tab-bar-item" data-tab="calendar">
+          <div class="tab-bar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+          <div class="tab-bar-label">カレンダー</div>
+        </button>
+        <button class="tab-bar-item center" data-tab="record">
+          <div class="add-button">+</div>
+        </button>
+        <button class="tab-bar-item" data-tab="stats">
+          <div class="tab-bar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+          <div class="tab-bar-label">統計</div>
+        </button>
+        <button class="tab-bar-item" data-tab="ai">
+          <div class="tab-bar-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+          <div class="tab-bar-label">AI</div>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  /* 遷移インジケーター */
+  .transition-hint {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--md-custom-color-on-surface-strong);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: var(--md-sys-shape-small);
+    font-size: 12px;
+    z-index: 9999;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .transition-hint.show { opacity: 1; }
+
+  /* クリック可能要素のヒント */
+  [data-goto] {
+    cursor: pointer !important;
+  }
+  [data-goto]:hover {
+    opacity: 0.85;
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var screenTabs = document.querySelectorAll('.screen-tabs button');
+    var screens = document.querySelectorAll('.screen');
+    var screenContent = document.getElementById('screenContent');
+
+    // 遷移ヒント表示用
+    var hint = document.createElement('div');
+    hint.className = 'transition-hint';
+    document.body.appendChild(hint);
+    var hintTimer;
+
+    function showHint(text) {
+      hint.textContent = '→ ' + text;
+      hint.classList.add('show');
+      clearTimeout(hintTimer);
+      hintTimer = setTimeout(function() { hint.classList.remove('show'); }, 1500);
+    }
+
+    // === 画面切り替え関数 ===
+    function goTo(screenId, label) {
+      // 上部タブのactive更新
+      screenTabs.forEach(function(t) {
+        t.classList.toggle('active', t.getAttribute('data-screen') === screenId);
+      });
+      // 画面切替
+      screens.forEach(function(s) { s.classList.remove('active'); });
+      var target = document.getElementById('screen-' + screenId);
+      if (target) { target.classList.add('active'); }
+      screenContent.scrollTop = 0;
+      // タブバーのactive更新
+      var tabMap = { home: 'home', calendar: 'calendar', stats: 'stats', ai: 'ai', record: 'record' };
+      var tabBarItems = document.querySelectorAll('.tab-bar-item');
+      // タブ画面ならタブバーも更新
+      if (tabMap[screenId]) {
+        tabBarItems.forEach(function(t) {
+          t.classList.toggle('active', t.getAttribute('data-tab') === screenId);
+        });
+      }
+      if (label) showHint(label);
+    }
+
+    // === 上部タブ ===
+    screenTabs.forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        goTo(this.getAttribute('data-screen'));
+      });
+    });
+
+    // === タブバー（下部） ===
+    document.querySelectorAll('.tab-bar-item').forEach(function(item) {
+      item.addEventListener('click', function() {
+        var tab = this.getAttribute('data-tab');
+        if (tab) goTo(tab, 'タブ: ' + this.querySelector('.tab-bar-label, .add-button').textContent.trim());
+      });
+    });
+
+    // === data-goto 属性による汎用遷移 ===
+    document.addEventListener('click', function(e) {
+      var el = e.target.closest('[data-goto]');
+      if (el) {
+        e.preventDefault();
+        e.stopPropagation();
+        goTo(el.getAttribute('data-goto'), el.getAttribute('data-label') || '');
+      }
+    });
+
+    // === 画面固有の遷移をdata-goto属性で設定 ===
+
+    // ホーム → 設定（アバタータップ）
+    var avatar = document.querySelector('#screen-home .user-avatar');
+    if (avatar) { avatar.setAttribute('data-goto', 'settings'); avatar.setAttribute('data-label', '設定'); }
+
+    // ホーム → ワークアウト詳細（最近のトレーニングカード）
+    document.querySelectorAll('#screen-home .task-card').forEach(function(card) {
+      card.setAttribute('data-goto', 'workout-detail');
+      card.setAttribute('data-label', 'ワークアウト詳細');
+    });
+
+    // ホーム → カレンダー（すべて表示リンク）
+    var viewAll = document.querySelector('#screen-home .view-all-link');
+    if (viewAll) { viewAll.setAttribute('data-goto', 'calendar'); viewAll.setAttribute('data-label', 'カレンダー'); }
+
+    // 記録 → 種目選択（種目を追加ボタン）
+    var addExBtn = document.querySelector('#screen-record .add-exercise-btn');
+    if (addExBtn) { addExBtn.setAttribute('data-goto', 'picker'); addExBtn.setAttribute('data-label', '種目選択'); }
+
+    // 記録 → 完了サマリー（完了ボタン）
+    var doneBtn = document.querySelector('#screen-record .done-btn');
+    if (doneBtn) { doneBtn.setAttribute('data-goto', 'summary'); doneBtn.setAttribute('data-label', 'ワークアウト完了'); }
+
+    // 記録 → 種目別履歴（種目名タップ）
+    document.querySelectorAll('#screen-record .exercise-name').forEach(function(name) {
+      name.setAttribute('data-goto', 'history-full');
+      name.setAttribute('data-label', '種目別履歴');
+    });
+
+    // 種目選択 → 記録（閉じるボタン）
+    var closeBtn = document.querySelector('#screen-picker .close-btn');
+    if (closeBtn) { closeBtn.setAttribute('data-goto', 'record'); closeBtn.setAttribute('data-label', '記録画面に戻る'); }
+
+    // 種目選択 → 記録（種目タップ）
+    document.querySelectorAll('#screen-picker .exercise-item').forEach(function(item) {
+      item.setAttribute('data-goto', 'record');
+      item.setAttribute('data-label', '種目を選択 → 記録');
+    });
+
+    // 種目別履歴 → 記録に戻る（戻るボタン）
+    var histBackBtn = document.querySelector('#screen-history-full .back-btn');
+    if (histBackBtn) { histBackBtn.setAttribute('data-goto', 'record'); histBackBtn.setAttribute('data-label', '記録画面に戻る'); }
+
+    // 完了サマリー → ホーム
+    var homeBtn = document.querySelector('#screen-summary .btn-primary');
+    if (homeBtn) { homeBtn.setAttribute('data-goto', 'home'); homeBtn.setAttribute('data-label', 'ホームに戻る'); }
+
+    // カレンダー → ワークアウト詳細（詳細セクションのカードタップ）
+    var calDetail = document.querySelector('#screen-calendar .cal-detail-section');
+    if (calDetail) { calDetail.setAttribute('data-goto', 'workout-detail'); calDetail.setAttribute('data-label', 'ワークアウト詳細'); }
+
+    // 統計 → 種目別履歴（種目名タップ）※ 1RM種目名
+    document.querySelectorAll('#screen-stats .one-rm-exercise').forEach(function(name) {
+      name.setAttribute('data-goto', 'history-full');
+      name.setAttribute('data-label', '種目別履歴');
+      name.style.cursor = 'pointer';
+    });
+
+    // ワークアウト詳細 → 編集モード
+    var editBtn = document.querySelector('#screen-workout-detail .wd-edit-btn');
+    if (editBtn) { editBtn.setAttribute('data-goto', 'workout-edit'); editBtn.setAttribute('data-label', '編集モード'); }
+    // ワークアウト詳細 → 戻る
+    var wdBackBtn = document.querySelector('#screen-workout-detail .wd-back-btn');
+    if (wdBackBtn) { wdBackBtn.setAttribute('data-goto', 'home'); wdBackBtn.setAttribute('data-label', 'ホームに戻る'); }
+
+    // 編集モード → 詳細（保存/キャンセル）
+    var saveBtn = document.querySelector('#screen-workout-edit .wd-save-btn');
+    if (saveBtn) { saveBtn.setAttribute('data-goto', 'workout-detail'); saveBtn.setAttribute('data-label', '保存 → 詳細'); }
+    var cancelBtn = document.querySelector('#screen-workout-edit .wd-cancel-btn');
+    if (cancelBtn) { cancelBtn.setAttribute('data-goto', 'discard-dialog'); cancelBtn.setAttribute('data-label', '破棄確認'); }
+
+    // 破棄確認 → 各遷移
+    var discardBtn = document.querySelector('#screen-discard-dialog .button-dialog-destructive');
+    if (discardBtn) { discardBtn.setAttribute('data-goto', 'home'); discardBtn.setAttribute('data-label', '破棄 → ホーム'); }
+    var continueBtn = document.querySelector('#screen-discard-dialog .button-dialog-cancel');
+    if (continueBtn) { continueBtn.setAttribute('data-goto', 'workout-edit'); continueBtn.setAttribute('data-label', '編集を続ける'); }
+
+    // 設定 → 戻る
+    var settingsBackBtn = document.querySelector('#screen-settings .settings-back-btn');
+    if (settingsBackBtn) { settingsBackBtn.setAttribute('data-goto', 'home'); settingsBackBtn.setAttribute('data-label', 'ホームに戻る'); }
+
+    // 設定 → サブ画面
+    document.querySelectorAll('#screen-settings .settings-item').forEach(function(item) {
+      var text = item.textContent.trim();
+      if (text.includes('バックアップ')) { item.setAttribute('data-goto', 'settings-backup'); item.setAttribute('data-label', 'バックアップ設定'); }
+      else if (text.includes('インターバル') || text.includes('タイマー')) { item.setAttribute('data-goto', 'settings-timer'); item.setAttribute('data-label', 'タイマー設定'); }
+      else if (text.includes('単位')) { item.setAttribute('data-goto', 'settings-unit'); item.setAttribute('data-label', '単位設定'); }
+    });
+
+    // 設定サブ画面 → 設定に戻る
+    document.querySelectorAll('.wf-header-back').forEach(function(btn) {
+      btn.setAttribute('data-goto', 'settings');
+      btn.setAttribute('data-label', '設定に戻る');
+    });
+  });
+</script>
+
+</body>
+</html>
