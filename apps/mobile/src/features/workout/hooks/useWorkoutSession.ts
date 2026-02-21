@@ -16,6 +16,59 @@ import type { WorkoutExercise, WorkoutSet } from '@/types';
 
 import { calculate1RM, calculateVolume } from '../utils/calculate1RM';
 
+/**
+ * 1種目分のPRチェックを行い、更新があれば保存してPRCheckResultを返す
+ * completeWorkout からPRロジックを分離して複雑度を下げるモジュールレベルヘルパー
+ */
+async function checkAndSavePRForExercise(
+  exerciseId: string,
+  sets: WorkoutSet[],
+  workoutId: string,
+  now: number
+): Promise<PRCheckResult[]> {
+  const newPRs: PRCheckResult[] = [];
+  const exerciseSets = sets.filter((s) => s.weight != null && s.reps != null);
+  if (exerciseSets.length === 0) return newPRs;
+
+  const existing = await PersonalRecordRepository.findByExerciseId(exerciseId);
+
+  // max_weight
+  const maxWeightSet = exerciseSets.reduce((max, s) =>
+    (s.weight ?? 0) > (max.weight ?? 0) ? s : max
+  );
+  if (maxWeightSet.weight != null && maxWeightSet.weight > 0) {
+    const current = existing.find((p) => p.pr_type === 'max_weight');
+    if (!current || maxWeightSet.weight > current.value) {
+      await PersonalRecordRepository.upsert({ exercise_id: exerciseId, pr_type: 'max_weight', value: maxWeightSet.weight, workout_id: workoutId, achieved_at: now });
+      newPRs.push({ exerciseId, exerciseName: '', prType: 'max_weight', value: maxWeightSet.weight, label: `${maxWeightSet.weight}kg` });
+    }
+  }
+
+  // max_reps
+  const maxRepsSet = exerciseSets.reduce((max, s) =>
+    (s.reps ?? 0) > (max.reps ?? 0) ? s : max
+  );
+  if (maxRepsSet.reps != null && maxRepsSet.reps > 0) {
+    const current = existing.find((p) => p.pr_type === 'max_reps');
+    if (!current || maxRepsSet.reps > current.value) {
+      await PersonalRecordRepository.upsert({ exercise_id: exerciseId, pr_type: 'max_reps', value: maxRepsSet.reps, workout_id: workoutId, achieved_at: now });
+      newPRs.push({ exerciseId, exerciseName: '', prType: 'max_reps', value: maxRepsSet.reps, label: `${maxRepsSet.reps} reps` });
+    }
+  }
+
+  // max_volume（種目単位の合計）
+  const exerciseVolume = calculateVolume(exerciseSets);
+  if (exerciseVolume > 0) {
+    const current = existing.find((p) => p.pr_type === 'max_volume');
+    if (!current || exerciseVolume > current.value) {
+      await PersonalRecordRepository.upsert({ exercise_id: exerciseId, pr_type: 'max_volume', value: exerciseVolume, workout_id: workoutId, achieved_at: now });
+      newPRs.push({ exerciseId, exerciseName: '', prType: 'max_volume', value: exerciseVolume, label: `${exerciseVolume}kg` });
+    }
+  }
+
+  return newPRs;
+}
+
 /** PR チェック結果 */
 export type PRCheckResult = {
   exerciseId: string;
