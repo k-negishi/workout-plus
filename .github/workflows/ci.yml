@@ -34,4 +34,4 @@ jobs:
         run: pnpm --filter mobile format:check
 
       - name: Test
-        run: pnpm --filter mobile test -- --coverage
+        run: pnpm --filter mobile test:coverage
