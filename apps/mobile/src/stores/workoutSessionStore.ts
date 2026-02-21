@@ -72,7 +72,7 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>((set) => ({
 
   removeExercise: (workoutExerciseId) =>
     set((state) => {
-      const { [workoutExerciseId]: _removed, ...remainingSets } = state.currentSets;
+      const { [workoutExerciseId]: _, ...remainingSets } = state.currentSets;
       return {
         currentExercises: state.currentExercises.filter(
           (e) => e.id !== workoutExerciseId,

@@ -53,7 +53,7 @@ const MUSCLE_GROUP_LABELS: Record<string, string> = {
 
 export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
   exercise,
-  workoutExerciseId,
+  workoutExerciseId: _workoutExerciseId,
   sets,
   previousRecord,
   memo,

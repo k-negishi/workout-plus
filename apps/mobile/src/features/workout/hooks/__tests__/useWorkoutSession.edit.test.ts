@@ -8,7 +8,6 @@
  */
 import { getDatabase } from '@/database/client';
 import { PersonalRecordRepository } from '@/database/repositories/pr';
-import { SetRepository } from '@/database/repositories/set';
 import { WorkoutRepository } from '@/database/repositories/workout';
 import { useWorkoutSessionStore } from '@/stores/workoutSessionStore';
 import type { Workout, WorkoutExercise, WorkoutSet } from '@/types';
@@ -16,7 +15,6 @@ import type { Workout, WorkoutExercise, WorkoutSet } from '@/types';
 // 各リポジトリをモック
 jest.mock('@/database/repositories/workout');
 jest.mock('@/database/repositories/pr');
-jest.mock('@/database/repositories/set');
 jest.mock('@/database/client');
 
 const mockWorkoutUpdate = WorkoutRepository.update as jest.MockedFunction<
@@ -48,15 +46,6 @@ const mockExercise1: WorkoutExercise = {
   workoutId: 'workout-1',
   exerciseId: 'exercise-chest-1',
   displayOrder: 0,
-  memo: null,
-  createdAt: Date.now(),
-};
-
-const mockExercise2: WorkoutExercise = {
-  id: 'we-2',
-  workoutId: 'workout-1',
-  exerciseId: 'exercise-back-1',
-  displayOrder: 1,
   memo: null,
   createdAt: Date.now(),
 };

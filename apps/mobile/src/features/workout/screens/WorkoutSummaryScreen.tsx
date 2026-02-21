@@ -9,7 +9,7 @@ import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 import { getDatabase } from '@/database/client';
 import { PersonalRecordRepository } from '@/database/repositories/pr';
-import type { Exercise, RecordStackParamList, RootStackParamList } from '@/types';
+import type { RecordStackParamList, RootStackParamList } from '@/types';
 
 import { calculateVolume } from '../utils/calculate1RM';
 

@@ -13,7 +13,7 @@ import { format } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import { ActivityIndicator,Pressable, ScrollView, Text, View } from 'react-native';
 import { BarChart } from 'react-native-gifted-charts';
-import { Path, Polyline,Svg } from 'react-native-svg';
+import { Path, Svg } from 'react-native-svg';
 
 import type { RecordStackParamList } from '@/types';
 
