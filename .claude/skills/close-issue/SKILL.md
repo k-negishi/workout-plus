@@ -6,26 +6,26 @@ GitHub Issueに実装完了のコメントを追加してクローズするス�
 
 - 実装完了後、GitHub Issueに詳細なコメントを自動生成して追加
 - Issueを適切にクローズ
-- 実装内容、品質チェック結果、関連ドキュメントを記録
+- 実装内容、品質チェック結果、関連仕様書を記録
 
 ## 使用タイミング
 
 以下のタイミングで使用してください:
 
 1. **実装完了後**: コードの実装とテストが完了し、コミット・プッシュ済み
-2. **品質チェック完了後**: pytest, ruff, mypyなどの品質チェックが全てパス
+2. **品質チェック完了後**: lint / test / tsc などの品質チェックが全てパス
 3. **Issue対応完了時**: GitHub Issueで報告された問題や機能要求が完了した時
 
 ## 前提条件
 
 **必須**:
 - ✅ コードの実装が完了していること
-- ✅ 全ての品質チェック（pytest, ruff, mypy）がパス
+- ✅ 全ての品質チェックがパスしていること
 - ✅ git commit & git push が完了していること
 - ✅ ghコマンドがインストールされていること
 
 **推奨**:
-- ステアリングファイル（`.steering/[日付]-[タスク名]/`）が作成されていること
+- 対応する仕様書（`specs/<feature>/`）が作成されていること
 - 変更内容がコミットメッセージに明確に記録されていること
 
 ## 使用方法
@@ -57,7 +57,7 @@ GitHub Issueに実装完了のコメントを追加してクローズするス�
    - 実装完了の報告
    - 変更内容の詳細
    - 品質保証の結果
-   - 関連ドキュメントへのリンク
+   - 関連仕様書へのリンク
 
 4. **Issueをクローズ**
    - 完了メッセージと共にクローズ
@@ -75,8 +75,8 @@ git log -1 --pretty=format:"%H %s"
 # 2. 変更されたファイル
 git diff --name-only HEAD~1 HEAD
 
-# 3. ステアリングファイルの確認
-ls -la .steering/
+# 3. 仕様書の確認
+ls specs/
 ```
 
 ### ステップ2: コメント内容の生成
@@ -97,10 +97,9 @@ ls -la .steering/
 
 ### 品質チェック
 
-- ✅ pytest: [結果]
-- ✅ ruff check: [結果]
-- ✅ ruff format: [結果]
-- ✅ mypy: [結果]
+- ✅ ESLint: パス（`pnpm lint`）
+- ✅ Jest: パス（`pnpm --filter mobile test`）
+- ✅ TypeScript: パス（`pnpm --filter mobile tsc --noEmit`）
 
 ### コミット
 
@@ -109,10 +108,10 @@ ls -la .steering/
 
 ### 関連ドキュメント
 
-- ステアリングファイル: `.steering/[実際のディレクトリ名]/`
-  - 例: `.steering/20260215-メールの体裁変更/`
-  - requirements.md, design.md, tasklist.md を参照
-- [その他の関連ドキュメント]
+> 1つの spec から複数の Issue が生成されるため、同じ spec/plan を複数の Issue のクローズコメントから参照することになる。これは正常であり、まとめて記載して問題ない。
+
+- 仕様書: `specs/[feature]/spec.md`
+- 実装計画: `specs/[feature]/plan.md`
 
 🤖 Generated with Claude Code
 ```
@@ -156,25 +155,23 @@ git diff --name-only HEAD~1 HEAD
 git diff --stat HEAD~1 HEAD
 ```
 
-### 手順3: ステアリングファイルの確認
+### 手順3: 仕様書の確認
 
 ```bash
-# 最新のステアリングディレクトリを取得
-ls -t .steering/ | head -1
+# 対応する仕様書ディレクトリを確認
+ls specs/
 ```
 
-**重要**: ステアリングファイル名を明確に記録すること:
-- 最新のステアリングディレクトリ名を取得し、コメントに含める
-- 形式: `.steering/[YYYYMMDD]-[タスク名]/`
-- 例: `.steering/20260215-メールの体裁変更/`
+**重要**: 仕様書ディレクトリ名をコメントに含めること:
+- 形式: `specs/<feature>/`
+- 例: `specs/001-workout-core-screens/`
 
 ### 手順4: 品質チェック結果の取得
 
 実装時に記録された品質チェック結果を使用:
-- pytestの結果（コミットメッセージまたは最終実行結果から）
-- ruff checkの結果
-- ruff formatの結果
-- mypyの結果
+- ESLint の結果（`pnpm lint`）
+- Jest テストの結果（`pnpm --filter mobile test`）
+- TypeScript 型チェックの結果（`pnpm --filter mobile tsc --noEmit`）
 
 ### 手順5: コメントの生成と追加
 
@@ -232,9 +229,6 @@ gh issue close <issue番号> --comment "実装完了しました。コミット 
 
 GitHub CLIをインストールしてください:
 brew install gh
-
-または:
-https://cli.github.com/
 ```
 
 ### エラー3: Issueが存在しない
@@ -259,25 +253,6 @@ gh issue list
 git push
 ```
 
-## カスタマイズ
-
-### コメントテンプレートのカスタマイズ
-
-コメント内容は、プロジェクトの要件に応じてカスタマイズ可能です:
-
-- PRDへの準拠状況
-- パフォーマンス測定結果
-- セキュリティチェック結果
-- デプロイ手順
-
-### Issue ラベルの自動設定
-
-Issue をクローズする際に、ラベルを自動設定することも可能:
-
-```bash
-gh issue edit <issue番号> --add-label "completed,verified"
-```
-
 ## 使用例
 
 ### 例1: 基本的な使用
@@ -292,8 +267,8 @@ Issue #5の情報を取得しています...
 ✅ 完了しました
 
 ### GitHub Issue更新
-- ✅ コメント追加: https://github.com/user/repo/issues/5#issuecomment-123
-- ✅ Issue #5クローズ: メール文面の調整
+- ✅ コメント追加: https://github.com/k-negishi/workout-plus/issues/5#issuecomment-123
+- ✅ Issue #5クローズ: ワークアウト記録画面の実装
 
 ### 実装サマリ
 - コミット: 5baa371
@@ -309,9 +284,6 @@ Issue #5の情報を取得しています...
 Claude:
 ❌ エラー: ローカルの変更がリモートにプッシュされていません。
 
-以下のコマンドで確認できます:
-git status
-
 先に以下を実行してください:
 git push
 ```
@@ -321,7 +293,9 @@ git push
 スキル実行前に確認:
 
 - [ ] コードの実装が完了している
-- [ ] 全ての品質チェックがパス（pytest, ruff, mypy）
+- [ ] ESLint がパス（`pnpm lint`）
+- [ ] Jest テストがパス（`pnpm --filter mobile test`）
+- [ ] TypeScript 型チェックがパス（`pnpm --filter mobile tsc --noEmit`）
 - [ ] git commit が完了している
 - [ ] git push が完了している
 - [ ] Issue番号を把握している
@@ -359,24 +333,5 @@ git diff --stat HEAD~1 HEAD
 
 - [GitHub CLI Manual](https://cli.github.com/manual/)
 - [GitHub CLI - Issues](https://cli.github.com/manual/gh_issue)
-- プロジェクトの `CLAUDE.md` - Git Protocol
-
-## スキルの効果
-
-このスキルを使用すると:
-
-- ✅ Issue更新の手間が削減される
-- ✅ 実装内容が統一されたフォーマットで記録される
-- ✅ 品質保証の結果が自動的に記録される
-- ✅ プロジェクトの履歴管理が改善される
-- ✅ チーム内のコミュニケーションが円滑になる
-
-## 重要な注意事項
-
-🚨 **このスキルを実行する前に必ず以下を確認してください**:
-
-1. **品質チェックが全てパス**: pytest, ruff, mypyが成功していること
-2. **git push完了**: リモートリポジトリに変更がプッシュされていること
-3. **Issue番号の確認**: 正しいIssue番号を指定すること
-
-実行後は自動的にIssueがクローズされるため、取り消しはできません。
+- プロジェクトの `CLAUDE.md` - 開発ワークフロー
+- `specs/` - 機能仕様書

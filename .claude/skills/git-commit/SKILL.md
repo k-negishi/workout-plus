@@ -47,22 +47,22 @@ allowed-tools: Read, Write, Bash
 例:
 
 ```text
-add: 記事選定ロジックに重複除外ルールを追加
+add: セット入力画面に前回記録のインライン表示を追加
 
-候補記事の重複判定を導入し、配信品質を安定化。
-- src/newsletter/selector.py
-- tests/test_selector.py
+前回ワークアウトのセット数・重量をグレーで表示し、入力補助とする。
+- apps/mobile/src/screens/WorkoutScreen.tsx
+- apps/mobile/src/components/SetRow.tsx
 ```
 
 ```text
-fix: タイムアウト時に再試行回数が増えない不具合を修正
+fix: ワークアウト保存時に空セットが登録される不具合を修正
 
-リトライカウンタ更新条件の分岐漏れを修正。
-- src/lambda/handler.py
+セット追加前のバリデーション漏れを修正。
+- apps/mobile/src/stores/workoutStore.ts
 ```
 
-```text`
-docs: ローカル実行手順と環境変数の説明を更新
+```text
+docs: ワークフロー表に各コマンドの成果物列を追加
 
 READMEの手順を最新構成に合わせて整理。
 - README.md
