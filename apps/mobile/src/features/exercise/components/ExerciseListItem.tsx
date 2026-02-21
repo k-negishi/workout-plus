@@ -5,7 +5,7 @@
  * single/multi モードに対応
  */
 import React, { useCallback } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { type ViewStyle, Pressable, Text, View } from 'react-native';
 
 import { borderRadius } from '@/shared/constants/borderRadius';
 import { colors } from '@/shared/constants/colors';
@@ -31,6 +31,22 @@ const EQUIPMENT_LABELS: Record<string, string> = {
   cable: 'ケーブル',
   bodyweight: '自重',
 };
+
+/** リストアイテムのベーススタイルを計算する純粋関数（複雑な条件分岐をコンポーネント外に分離） */
+function getListItemStyle(isSelected: boolean, pressed: boolean): ViewStyle {
+  return {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    backgroundColor: isSelected ? colors.primaryBg : pressed ? colors.background : colors.white,
+    borderLeftWidth: isSelected ? 3 : 0,
+    borderLeftColor: isSelected ? colors.primary : 'transparent',
+  };
+}
 
 type ExerciseListItemProps = {
   /** 種目データ */
@@ -63,22 +79,7 @@ export function ExerciseListItem({
   return (
     <Pressable
       onPress={handlePress}
-      style={({ pressed }) => ({
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-        paddingVertical: 12,
-        paddingHorizontal: 20,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border,
-        backgroundColor: isSelected
-          ? colors.primaryBg
-          : pressed
-            ? colors.background
-            : colors.white,
-        borderLeftWidth: isSelected ? 3 : 0,
-        borderLeftColor: isSelected ? colors.primary : 'transparent',
-      })}
+      style={({ pressed }) => getListItemStyle(isSelected, pressed)}
     >
       {/* multi モード時のチェックボックス */}
       {mode === 'multi' && (

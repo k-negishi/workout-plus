@@ -51,6 +51,16 @@ const EQUIPMENT_LABELS: Record<Equipment, string> = {
   bodyweight: '自重',
 };
 
+/** 部位ラベルを返すヘルパー（renderItem の ?? 演算子を削減） */
+function getMuscleGroupLabel(key: MuscleGroup | string): string {
+  return MUSCLE_GROUP_LABELS[key as MuscleGroup] ?? key;
+}
+
+/** 器具ラベルを返すヘルパー（renderItem の ?? 演算子を削減） */
+function getEquipmentLabel(key: Equipment | string): string {
+  return EQUIPMENT_LABELS[key as Equipment] ?? key;
+}
+
 /** 器具チップ選択肢 */
 const EQUIPMENT_OPTIONS: Array<{ key: Equipment; label: string }> = [
   { key: 'barbell', label: 'バーベル' },
@@ -317,12 +327,12 @@ export const ExercisePickerScreen: React.FC = () => {
                   <View className="flex-row gap-1.5 mt-1">
                     <View className="px-2 py-[2px] rounded-lg bg-[#E6F2FF]">
                       <Text className="text-[11px] font-semibold text-[#3385FF]">
-                        {MUSCLE_GROUP_LABELS[item.muscleGroup] ?? item.muscleGroup}
+                        {getMuscleGroupLabel(item.muscleGroup)}
                       </Text>
                     </View>
                     <View className="px-2 py-[2px] rounded-lg bg-[#F1F3F5]">
                       <Text className="text-[11px] text-[#64748b]">
-                        {EQUIPMENT_LABELS[item.equipment] ?? item.equipment}
+                        {getEquipmentLabel(item.equipment)}
                       </Text>
                     </View>
                   </View>

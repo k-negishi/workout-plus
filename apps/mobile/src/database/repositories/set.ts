@@ -54,6 +54,32 @@ function calculateEstimated1RM(
   return weight * (1 + reps / 30);
 }
 
+/**
+ * update()でweight/repsが省略された場合にDBから現在値を取得するヘルパー
+ * 複雑度を分離してupdate()をシンプルに保つ
+ */
+async function resolveWeightAndReps(
+  db: Awaited<ReturnType<typeof getDatabase>>,
+  id: string,
+  paramsWeight: number | null | undefined,
+  paramsReps: number | null | undefined
+): Promise<{ weight: number | null | undefined; reps: number | null | undefined }> {
+  if (paramsWeight !== undefined && paramsReps !== undefined) {
+    return { weight: paramsWeight, reps: paramsReps };
+  }
+  const current = await db.getFirstAsync<SetRow>(
+    'SELECT * FROM sets WHERE id = ?',
+    [id]
+  );
+  if (!current) {
+    throw new Error('更新対象のセットが見つかりません');
+  }
+  return {
+    weight: paramsWeight !== undefined ? paramsWeight : current.weight,
+    reps: paramsReps !== undefined ? paramsReps : current.reps,
+  };
+}
+
 export const SetRepository = {
   /** workout_exercise_id に紐づくセットを set_number 順で取得する */
   async findByWorkoutExerciseId(
@@ -97,8 +123,10 @@ export const SetRepository = {
   /** セットを更新する（weight/reps変更時にestimated_1rmも再計算） */
   async update(id: string, params: UpdateSetParams): Promise<void> {
     const db = await getDatabase();
-    const fields: string[] = [];
-    const values: (string | number | null)[] = [];
+    // 現在値の解決（省略されたフィールドはDBから補完）
+    const { weight: newWeight, reps: newReps } = await resolveWeightAndReps(
+      db, id, params.weight, params.reps
+    );
 
     // camelCase → snake_case マッピング
     const keyMap: Record<string, string> = {
@@ -108,23 +136,8 @@ export const SetRepository = {
       setNumber: 'set_number',
     };
 
-    // weight/reps の変更がある場合、estimated_1rm も再計算する
-    let newWeight = params.weight;
-    let newReps = params.reps;
-
-    // 現在値が必要な場合は取得する
-    if (newWeight === undefined || newReps === undefined) {
-      const current = await db.getFirstAsync<SetRow>(
-        'SELECT * FROM sets WHERE id = ?',
-        [id]
-      );
-      if (!current) {
-        throw new Error('更新対象のセットが見つかりません');
-      }
-      if (newWeight === undefined) newWeight = current.weight;
-      if (newReps === undefined) newReps = current.reps;
-    }
-
+    const fields: string[] = [];
+    const values: (string | number | null)[] = [];
     for (const [key, value] of Object.entries(params)) {
       if (value !== undefined && key !== 'estimated1rm') {
         const column = keyMap[key];
@@ -135,18 +148,9 @@ export const SetRepository = {
       }
     }
 
-    // estimated_1rm を再計算
-    const estimated1rm = calculateEstimated1RM(newWeight, newReps);
-    fields.push('estimated_1rm = ?');
-    values.push(estimated1rm);
-
-    // updated_at を自動更新
-    fields.push('updated_at = ?');
-    values.push(Date.now());
-
-    if (fields.length === 0) {
-      return;
-    }
+    // estimated_1rm を再計算して追加
+    fields.push('estimated_1rm = ?', 'updated_at = ?');
+    values.push(calculateEstimated1RM(newWeight, newReps), Date.now());
 
     values.push(id);
     await db.runAsync(

@@ -21,6 +21,85 @@ function rowToPR(row: PRRow): PersonalRecord {
   };
 }
 
+/** セットの配列からmax_weight / max_repsと、それぞれのワークアウト情報を抽出するヘルパー */
+function findMaxWeightAndReps(sets: Array<{
+  weight: number | null;
+  reps: number | null;
+  workout_id: string;
+  completed_at: number;
+}>): {
+  maxWeight: number;
+  maxWeightWorkoutId: string;
+  maxWeightAchievedAt: number;
+  maxReps: number;
+  maxRepsWorkoutId: string;
+  maxRepsAchievedAt: number;
+} {
+  let maxWeight = 0;
+  let maxWeightWorkoutId = '';
+  let maxWeightAchievedAt = 0;
+  let maxReps = 0;
+  let maxRepsWorkoutId = '';
+  let maxRepsAchievedAt = 0;
+
+  for (const set of sets) {
+    if (set.weight != null && set.weight > maxWeight) {
+      maxWeight = set.weight;
+      maxWeightWorkoutId = set.workout_id;
+      maxWeightAchievedAt = set.completed_at;
+    }
+    if (set.reps != null && set.reps > maxReps) {
+      maxReps = set.reps;
+      maxRepsWorkoutId = set.workout_id;
+      maxRepsAchievedAt = set.completed_at;
+    }
+  }
+
+  return { maxWeight, maxWeightWorkoutId, maxWeightAchievedAt, maxReps, maxRepsWorkoutId, maxRepsAchievedAt };
+}
+
+/** セットの配列からセッション単位のmax_volumeを計算するヘルパー */
+function findMaxVolume(sets: Array<{
+  weight: number | null;
+  reps: number | null;
+  workout_id: string;
+  completed_at: number;
+}>): {
+  maxVolume: number;
+  maxVolumeWorkoutId: string;
+  maxVolumeAchievedAt: number;
+} {
+  const volumeByWorkout = new Map<string, { volume: number; completedAt: number }>();
+
+  for (const set of sets) {
+    if (set.weight != null && set.reps != null) {
+      const existing = volumeByWorkout.get(set.workout_id);
+      if (existing) {
+        existing.volume += set.weight * set.reps;
+      } else {
+        volumeByWorkout.set(set.workout_id, {
+          volume: set.weight * set.reps,
+          completedAt: set.completed_at,
+        });
+      }
+    }
+  }
+
+  let maxVolume = 0;
+  let maxVolumeWorkoutId = '';
+  let maxVolumeAchievedAt = 0;
+
+  for (const [workoutId, data] of volumeByWorkout) {
+    if (data.volume > maxVolume) {
+      maxVolume = data.volume;
+      maxVolumeWorkoutId = workoutId;
+      maxVolumeAchievedAt = data.completedAt;
+    }
+  }
+
+  return { maxVolume, maxVolumeWorkoutId, maxVolumeAchievedAt };
+}
+
 export const PersonalRecordRepository = {
   /**
    * PRをUPSERTする
@@ -126,103 +205,18 @@ export const PersonalRecordRepository = {
       [exerciseId]
     );
 
-    if (sets.length === 0) {
-      return;
-    }
+    if (sets.length === 0) return;
 
-    // max_weight: 単一セットの最大重量
-    let maxWeight = 0;
-    let maxWeightWorkoutId = '';
-    let maxWeightAchievedAt = 0;
-
-    // max_reps: 単一セットの最大レップ数
-    let maxReps = 0;
-    let maxRepsWorkoutId = '';
-    let maxRepsAchievedAt = 0;
-
-    // max_volume: 1セッション内の全セット合計（Σ weight * reps）
-    const volumeByWorkout = new Map<
-      string,
-      { volume: number; completedAt: number }
-    >();
-
-    for (const set of sets) {
-      // max_weight 判定
-      if (set.weight != null && set.weight > maxWeight) {
-        maxWeight = set.weight;
-        maxWeightWorkoutId = set.workout_id;
-        maxWeightAchievedAt = set.completed_at;
-      }
-
-      // max_reps 判定
-      if (set.reps != null && set.reps > maxReps) {
-        maxReps = set.reps;
-        maxRepsWorkoutId = set.workout_id;
-        maxRepsAchievedAt = set.completed_at;
-      }
-
-      // volume 集計（weight と reps の両方が必要）
-      if (set.weight != null && set.reps != null) {
-        const current = volumeByWorkout.get(set.workout_id) ?? {
-          volume: 0,
-          completedAt: set.completed_at,
-        };
-        current.volume += set.weight * set.reps;
-        volumeByWorkout.set(set.workout_id, current);
-      }
-    }
-
-    // max_volume を決定
-    let maxVolume = 0;
-    let maxVolumeWorkoutId = '';
-    let maxVolumeAchievedAt = 0;
-
-    for (const [workoutId, data] of volumeByWorkout) {
-      if (data.volume > maxVolume) {
-        maxVolume = data.volume;
-        maxVolumeWorkoutId = workoutId;
-        maxVolumeAchievedAt = data.completedAt;
-      }
-    }
+    // ヘルパー関数で最大値を計算（複雑度をメソッド外に分離）
+    const { maxWeight, maxWeightWorkoutId, maxWeightAchievedAt, maxReps, maxRepsWorkoutId, maxRepsAchievedAt } =
+      findMaxWeightAndReps(sets);
+    const { maxVolume, maxVolumeWorkoutId, maxVolumeAchievedAt } = findMaxVolume(sets);
 
     // PRをINSERT（値が0より大きい場合のみ）
-    const prsToInsert: Array<{
-      exerciseId: string;
-      prType: PRType;
-      value: number;
-      workoutId: string;
-      achievedAt: number;
-    }> = [];
-
-    if (maxWeight > 0) {
-      prsToInsert.push({
-        exerciseId,
-        prType: 'max_weight',
-        value: maxWeight,
-        workoutId: maxWeightWorkoutId,
-        achievedAt: maxWeightAchievedAt,
-      });
-    }
-
-    if (maxReps > 0) {
-      prsToInsert.push({
-        exerciseId,
-        prType: 'max_reps',
-        value: maxReps,
-        workoutId: maxRepsWorkoutId,
-        achievedAt: maxRepsAchievedAt,
-      });
-    }
-
-    if (maxVolume > 0) {
-      prsToInsert.push({
-        exerciseId,
-        prType: 'max_volume',
-        value: maxVolume,
-        workoutId: maxVolumeWorkoutId,
-        achievedAt: maxVolumeAchievedAt,
-      });
-    }
+    const prsToInsert: Array<{ exerciseId: string; prType: PRType; value: number; workoutId: string; achievedAt: number }> = [];
+    if (maxWeight > 0) prsToInsert.push({ exerciseId, prType: 'max_weight', value: maxWeight, workoutId: maxWeightWorkoutId, achievedAt: maxWeightAchievedAt });
+    if (maxReps > 0) prsToInsert.push({ exerciseId, prType: 'max_reps', value: maxReps, workoutId: maxRepsWorkoutId, achievedAt: maxRepsAchievedAt });
+    if (maxVolume > 0) prsToInsert.push({ exerciseId, prType: 'max_volume', value: maxVolume, workoutId: maxVolumeWorkoutId, achievedAt: maxVolumeAchievedAt });
 
     // recalculate時はupsertの大小比較ではなく直接INSERT（既存は上で削除済み）
     for (const pr of prsToInsert) {

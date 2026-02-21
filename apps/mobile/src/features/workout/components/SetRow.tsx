@@ -16,6 +16,18 @@ export type PreviousSetData = {
   reps: number | null;
 };
 
+/** 推定1RMを計算する純粋関数（nullの場合はnullを返す） */
+function computeEstimated1RM(weight: number | null, reps: number | null): number | null {
+  if (weight == null || reps == null || weight <= 0 || reps <= 0) return null;
+  return Math.round(calculate1RM(weight, reps));
+}
+
+/** 前回記録の表示ラベルを生成する純粋関数 */
+function computePreviousLabel(previousSet: PreviousSetData | undefined): string | null {
+  if (!previousSet || previousSet.weight == null || previousSet.reps == null) return null;
+  return `前回: ${previousSet.weight}kg \u00D7 ${previousSet.reps}`;
+}
+
 export type SetRowProps = {
   /** セットデータ */
   set: WorkoutSet;
@@ -55,17 +67,11 @@ export const SetRow: React.FC<SetRowProps> = ({
     [set.id, onRepsChange]
   );
 
-  /** 推定1RM の計算 */
-  const estimated1rm =
-    set.weight != null && set.reps != null && set.weight > 0 && set.reps > 0
-      ? Math.round(calculate1RM(set.weight, set.reps))
-      : null;
+  /** 推定1RM（モジュールレベル関数で計算） */
+  const estimated1rm = computeEstimated1RM(set.weight, set.reps);
 
-  /** 前回記録のフォーマット */
-  const previousLabel =
-    previousSet && previousSet.weight != null && previousSet.reps != null
-      ? `前回: ${previousSet.weight}kg \u00D7 ${previousSet.reps}`
-      : null;
+  /** 前回記録の表示ラベル（モジュールレベル関数で生成） */
+  const previousLabel = computePreviousLabel(previousSet);
 
   return (
     <View>

@@ -63,20 +63,43 @@ export type PRForStats = {
   workout_id: string;
 };
 
-/**
- * セットデータからExerciseStats（統計サマリー）を計算する純粋関数
- * useExerciseHistoryのfetchData内で使用。テスト容易性のためエクスポート。
- */
-export function calculateStats(
-  sets: SetWithWorkout[],
-  prs: PRForStats[]
-): ExerciseStats {
+/** セットの基本集計値（単一セット視点）を計算するヘルパー */
+function computeBasicSetStats(sets: SetWithWorkout[]): {
+  maxWeight: number;
+  maxReps: number;
+  totalVolume: number;
+  averageWeight: number;
+} {
   let maxWeight = 0;
   let maxReps = 0;
   let totalVolume = 0;
   let weightSum = 0;
   let weightCount = 0;
 
+  for (const set of sets) {
+    if (set.weight != null && set.weight > maxWeight) maxWeight = set.weight;
+    if (set.reps != null && set.reps > maxReps) maxReps = set.reps;
+    if (set.weight != null && set.reps != null) {
+      totalVolume += set.weight * set.reps;
+      weightSum += set.weight;
+      weightCount++;
+    }
+  }
+
+  return {
+    maxWeight,
+    maxReps,
+    totalVolume,
+    averageWeight: weightCount > 0 ? Math.round(weightSum / weightCount) : 0,
+  };
+}
+
+/** セットをワークアウト単位に集約するマップを構築するヘルパー */
+function buildWorkoutSessionMap(sets: SetWithWorkout[]): Map<string, {
+  completedAt: number;
+  sets: Array<{ setNumber: number; weight: number | null; reps: number | null }>;
+  sessionVolume: number;
+}> {
   const workoutMap = new Map<string, {
     completedAt: number;
     sets: Array<{ setNumber: number; weight: number | null; reps: number | null }>;
@@ -84,23 +107,9 @@ export function calculateStats(
   }>();
 
   for (const set of sets) {
-    if (set.weight != null && set.weight > maxWeight) {
-      maxWeight = set.weight;
-    }
-    if (set.reps != null && set.reps > maxReps) {
-      maxReps = set.reps;
-    }
-    if (set.weight != null && set.reps != null) {
-      const vol = set.weight * set.reps;
-      totalVolume += vol;
-      weightSum += set.weight;
-      weightCount++;
-    }
-
-    const existing = workoutMap.get(set.workout_id);
     const setData = { setNumber: set.set_number, weight: set.weight, reps: set.reps };
-    const setVolume = (set.weight ?? 0) * (set.reps ?? 0);
-
+    const setVolume = (set.weight != null && set.reps != null) ? set.weight * set.reps : 0;
+    const existing = workoutMap.get(set.workout_id);
     if (existing) {
       existing.sets.push(setData);
       existing.sessionVolume += setVolume;
@@ -113,11 +122,24 @@ export function calculateStats(
     }
   }
 
+  return workoutMap;
+}
+
+/**
+ * セットデータからExerciseStats（統計サマリー）を計算する純粋関数
+ * useExerciseHistoryのfetchData内で使用。テスト容易性のためエクスポート。
+ */
+export function calculateStats(
+  sets: SetWithWorkout[],
+  prs: PRForStats[]
+): ExerciseStats {
+  const { maxWeight, maxReps, totalVolume, averageWeight } = computeBasicSetStats(sets);
+  const workoutMap = buildWorkoutSessionMap(sets);
+
+  // セッション単位の最大ボリュームを算出
   let maxVolume = 0;
   for (const [, data] of workoutMap) {
-    if (data.sessionVolume > maxVolume) {
-      maxVolume = data.sessionVolume;
-    }
+    if (data.sessionVolume > maxVolume) maxVolume = data.sessionVolume;
   }
 
   const lastPRDate = prs.length > 0
@@ -130,7 +152,7 @@ export function calculateStats(
     maxReps,
     totalSessions: workoutMap.size,
     totalVolume,
-    averageWeight: weightCount > 0 ? Math.round(weightSum / weightCount) : 0,
+    averageWeight,
     lastPRDate,
   };
 }
