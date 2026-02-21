@@ -17,6 +17,34 @@ import type { WorkoutExercise, WorkoutSet } from '@/types';
 import { calculate1RM, calculateVolume } from '../utils/calculate1RM';
 
 /**
+ * 単一PR種別のチェック・保存を担うヘルパー
+ * 既存PRより大きい値の場合のみupsertし、PRCheckResultを返す（小さければnull）
+ */
+async function checkAndSaveSinglePR(
+  existing: Awaited<ReturnType<typeof PersonalRecordRepository.findByExerciseId>>,
+  prType: PRCheckResult['prType'],
+  value: number,
+  exerciseId: string,
+  workoutId: string,
+  now: number,
+  formatLabel: (v: number) => string,
+): Promise<PRCheckResult | null> {
+  if (value <= 0) return null;
+  const current = existing.find((p) => p.prType === prType);
+  if (!current || value > current.value) {
+    await PersonalRecordRepository.upsert({
+      exerciseId,
+      prType,
+      value,
+      workoutId,
+      achievedAt: now,
+    });
+    return { exerciseId, exerciseName: '', prType, value, label: formatLabel(value) };
+  }
+  return null;
+}
+
+/**
  * 1種目分のPRチェックを行い、更新があれば保存してPRCheckResultを返す
  * completeWorkout からPRロジックを分離して複雑度を下げるモジュールレベルヘルパー
  */
@@ -24,47 +52,50 @@ async function checkAndSavePRForExercise(
   exerciseId: string,
   sets: WorkoutSet[],
   workoutId: string,
-  now: number
+  now: number,
 ): Promise<PRCheckResult[]> {
-  const newPRs: PRCheckResult[] = [];
   const exerciseSets = sets.filter((s) => s.weight != null && s.reps != null);
-  if (exerciseSets.length === 0) return newPRs;
+  if (exerciseSets.length === 0) return [];
 
   const existing = await PersonalRecordRepository.findByExerciseId(exerciseId);
+  const newPRs: PRCheckResult[] = [];
 
-  // max_weight
   const maxWeightSet = exerciseSets.reduce((max, s) =>
-    (s.weight ?? 0) > (max.weight ?? 0) ? s : max
+    (s.weight ?? 0) > (max.weight ?? 0) ? s : max,
   );
-  if (maxWeightSet.weight != null && maxWeightSet.weight > 0) {
-    const current = existing.find((p) => p.pr_type === 'max_weight');
-    if (!current || maxWeightSet.weight > current.value) {
-      await PersonalRecordRepository.upsert({ exercise_id: exerciseId, pr_type: 'max_weight', value: maxWeightSet.weight, workout_id: workoutId, achieved_at: now });
-      newPRs.push({ exerciseId, exerciseName: '', prType: 'max_weight', value: maxWeightSet.weight, label: `${maxWeightSet.weight}kg` });
-    }
-  }
-
-  // max_reps
-  const maxRepsSet = exerciseSets.reduce((max, s) =>
-    (s.reps ?? 0) > (max.reps ?? 0) ? s : max
+  const weightPR = await checkAndSaveSinglePR(
+    existing,
+    'max_weight',
+    maxWeightSet.weight ?? 0,
+    exerciseId,
+    workoutId,
+    now,
+    (v) => `${v}kg`,
   );
-  if (maxRepsSet.reps != null && maxRepsSet.reps > 0) {
-    const current = existing.find((p) => p.pr_type === 'max_reps');
-    if (!current || maxRepsSet.reps > current.value) {
-      await PersonalRecordRepository.upsert({ exercise_id: exerciseId, pr_type: 'max_reps', value: maxRepsSet.reps, workout_id: workoutId, achieved_at: now });
-      newPRs.push({ exerciseId, exerciseName: '', prType: 'max_reps', value: maxRepsSet.reps, label: `${maxRepsSet.reps} reps` });
-    }
-  }
+  if (weightPR) newPRs.push(weightPR);
 
-  // max_volume（種目単位の合計）
-  const exerciseVolume = calculateVolume(exerciseSets);
-  if (exerciseVolume > 0) {
-    const current = existing.find((p) => p.pr_type === 'max_volume');
-    if (!current || exerciseVolume > current.value) {
-      await PersonalRecordRepository.upsert({ exercise_id: exerciseId, pr_type: 'max_volume', value: exerciseVolume, workout_id: workoutId, achieved_at: now });
-      newPRs.push({ exerciseId, exerciseName: '', prType: 'max_volume', value: exerciseVolume, label: `${exerciseVolume}kg` });
-    }
-  }
+  const maxRepsSet = exerciseSets.reduce((max, s) => ((s.reps ?? 0) > (max.reps ?? 0) ? s : max));
+  const repsPR = await checkAndSaveSinglePR(
+    existing,
+    'max_reps',
+    maxRepsSet.reps ?? 0,
+    exerciseId,
+    workoutId,
+    now,
+    (v) => `${v} reps`,
+  );
+  if (repsPR) newPRs.push(repsPR);
+
+  const volumePR = await checkAndSaveSinglePR(
+    existing,
+    'max_volume',
+    calculateVolume(exerciseSets),
+    exerciseId,
+    workoutId,
+    now,
+    (v) => `${v}kg`,
+  );
+  if (volumePR) newPRs.push(volumePR);
 
   return newPRs;
 }
@@ -101,7 +132,7 @@ export type UseWorkoutSessionReturn = {
   updateSet: (
     setId: string,
     workoutExerciseId: string,
-    params: { weight?: number | null; reps?: number | null }
+    params: { weight?: number | null; reps?: number | null },
   ) => Promise<void>;
   /** セットを削除する */
   deleteSet: (setId: string, workoutExerciseId: string) => Promise<void>;
@@ -128,80 +159,79 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
   /** セッションを開始する */
   const startSession = useCallback(async () => {
     try {
-    // 既存の recording セッションがあるか確認
-    const existing = await WorkoutRepository.findRecording();
-    if (existing) {
-      // 既存セッションを復元
-      store.setCurrentWorkout({
-        id: existing.id,
-        status: existing.status,
-        createdAt: existing.created_at,
-        startedAt: existing.started_at,
-        completedAt: existing.completed_at,
-        timerStatus: existing.timer_status,
-        elapsedSeconds: existing.elapsed_seconds,
-        timerStartedAt: existing.timer_started_at,
-        memo: existing.memo,
-      });
-      store.setTimerStatus(existing.timer_status);
-      store.setElapsedSeconds(existing.elapsed_seconds);
-      store.setTimerStartedAt(existing.timer_started_at);
+      // 既存の recording セッションがあるか確認
+      const existing = await WorkoutRepository.findRecording();
+      if (existing) {
+        // 既存セッションを復元
+        store.setCurrentWorkout({
+          id: existing.id,
+          status: existing.status,
+          createdAt: existing.created_at,
+          startedAt: existing.started_at,
+          completedAt: existing.completed_at,
+          timerStatus: existing.timer_status,
+          elapsedSeconds: existing.elapsed_seconds,
+          timerStartedAt: existing.timer_started_at,
+          memo: existing.memo,
+        });
+        store.setTimerStatus(existing.timer_status);
+        store.setElapsedSeconds(existing.elapsed_seconds);
+        store.setTimerStartedAt(existing.timer_started_at);
 
-      // 関連する種目とセットも復元
-      const db = await getDatabase();
-      const exercises = await db.getAllAsync<{
-        id: string;
-        workout_id: string;
-        exercise_id: string;
-        display_order: number;
-        memo: string | null;
-        created_at: number;
-      }>(
-        'SELECT * FROM workout_exercises WHERE workout_id = ? ORDER BY display_order',
-        [existing.id]
-      );
+        // 関連する種目とセットも復元
+        const db = await getDatabase();
+        const exercises = await db.getAllAsync<{
+          id: string;
+          workout_id: string;
+          exercise_id: string;
+          display_order: number;
+          memo: string | null;
+          created_at: number;
+        }>('SELECT * FROM workout_exercises WHERE workout_id = ? ORDER BY display_order', [
+          existing.id,
+        ]);
 
-      for (const ex of exercises) {
-        const workoutExercise: WorkoutExercise = {
-          id: ex.id,
-          workoutId: ex.workout_id,
-          exerciseId: ex.exercise_id,
-          displayOrder: ex.display_order,
-          memo: ex.memo,
-          createdAt: ex.created_at,
-        };
-        store.addExercise(workoutExercise);
+        for (const ex of exercises) {
+          const workoutExercise: WorkoutExercise = {
+            id: ex.id,
+            workoutId: ex.workout_id,
+            exerciseId: ex.exercise_id,
+            displayOrder: ex.display_order,
+            memo: ex.memo,
+            createdAt: ex.created_at,
+          };
+          store.addExercise(workoutExercise);
 
-        const setRows = await SetRepository.findByWorkoutExerciseId(ex.id);
-        const sets: WorkoutSet[] = setRows.map((s) => ({
-          id: s.id,
-          workoutExerciseId: s.workout_exercise_id,
-          setNumber: s.set_number,
-          weight: s.weight,
-          reps: s.reps,
-          estimated1rm: s.estimated_1rm,
-          createdAt: s.created_at,
-          updatedAt: s.updated_at,
-        }));
-        store.setSetsForExercise(ex.id, sets);
+          const setRows = await SetRepository.findByWorkoutExerciseId(ex.id);
+          const sets: WorkoutSet[] = setRows.map((s) => ({
+            id: s.id,
+            workoutExerciseId: s.workout_exercise_id,
+            setNumber: s.set_number,
+            weight: s.weight,
+            reps: s.reps,
+            estimated1rm: s.estimated_1rm,
+            createdAt: s.created_at,
+            updatedAt: s.updated_at,
+          }));
+          store.setSetsForExercise(ex.id, sets);
+        }
+
+        return;
       }
 
-      return;
-    }
-
-    // 新規セッション作成
-    const workout = await WorkoutRepository.create();
-    store.setCurrentWorkout({
-      id: workout.id,
-      status: workout.status,
-      createdAt: workout.created_at,
-      startedAt: workout.started_at,
-      completedAt: workout.completed_at,
-      timerStatus: workout.timer_status,
-      elapsedSeconds: workout.elapsed_seconds,
-      timerStartedAt: workout.timer_started_at,
-      memo: workout.memo,
-    });
+      // 新規セッション作成
+      const workout = await WorkoutRepository.create();
+      store.setCurrentWorkout({
+        id: workout.id,
+        status: workout.status,
+        createdAt: workout.created_at,
+        startedAt: workout.started_at,
+        completedAt: workout.completed_at,
+        timerStatus: workout.timer_status,
+        elapsedSeconds: workout.elapsed_seconds,
+        timerStartedAt: workout.timer_started_at,
+        memo: workout.memo,
+      });
     } catch (error) {
       showErrorToast('セッションの開始に失敗しました');
       throw error;
@@ -221,7 +251,7 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
       await db.runAsync(
         `INSERT INTO workout_exercises (id, workout_id, exercise_id, display_order, memo, created_at)
          VALUES (?, ?, ?, ?, NULL, ?)`,
-        [id, store.currentWorkout.id, exerciseId, displayOrder, now]
+        [id, store.currentWorkout.id, exerciseId, displayOrder, now],
       );
 
       const workoutExercise: WorkoutExercise = {
@@ -252,7 +282,7 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
         },
       ]);
     },
-    [store]
+    [store],
   );
 
   /** 種目を削除する */
@@ -263,7 +293,7 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
       await db.runAsync('DELETE FROM workout_exercises WHERE id = ?', [workoutExerciseId]);
       store.removeExercise(workoutExerciseId);
     },
-    [store]
+    [store],
   );
 
   /** セットを追加する */
@@ -291,7 +321,7 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
       store.setSetsForExercise(workoutExerciseId, [...currentSets, newSet]);
       return newSet;
     },
-    [store]
+    [store],
   );
 
   /** セットを更新する */
@@ -299,7 +329,7 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
     async (
       setId: string,
       workoutExerciseId: string,
-      params: { weight?: number | null; reps?: number | null }
+      params: { weight?: number | null; reps?: number | null },
     ) => {
       const updatePayload: Partial<Pick<WorkoutSet, 'weight' | 'reps'>> = {};
       if (params.weight !== undefined) updatePayload.weight = params.weight;
@@ -326,7 +356,7 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
       });
       store.setSetsForExercise(workoutExerciseId, updatedSets);
     },
-    [store]
+    [store],
   );
 
   /** セットを削除する */
@@ -341,7 +371,7 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
         .map((s, i) => ({ ...s, setNumber: i + 1 }));
       store.setSetsForExercise(workoutExerciseId, remaining);
     },
-    [store]
+    [store],
   );
 
   /** ワークアウトを完了する */
@@ -379,82 +409,14 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
         totalSetCount += exerciseSets.length;
         totalVolume += calculateVolume(exerciseSets);
 
-        // PR チェック: 各種目のmax_weight, max_volume, max_reps
-        if (exerciseSets.length > 0) {
-          // max_weight
-          const maxWeightSet = exerciseSets.reduce((max, s) =>
-            (s.weight ?? 0) > (max.weight ?? 0) ? s : max
-          );
-          if (maxWeightSet.weight != null && maxWeightSet.weight > 0) {
-            const existing = await PersonalRecordRepository.findByExerciseId(exercise.exerciseId);
-            const currentMaxWeight = existing.find((p) => p.pr_type === 'max_weight');
-            if (!currentMaxWeight || maxWeightSet.weight > currentMaxWeight.value) {
-              await PersonalRecordRepository.upsert({
-                exercise_id: exercise.exerciseId,
-                pr_type: 'max_weight',
-                value: maxWeightSet.weight,
-                workout_id: store.currentWorkout.id,
-                achieved_at: now,
-              });
-              // 種目名はUI側で解決するためexerciseIdのみ返す
-              newPRs.push({
-                exerciseId: exercise.exerciseId,
-                exerciseName: '',
-                prType: 'max_weight',
-                value: maxWeightSet.weight,
-                label: `${maxWeightSet.weight}kg`,
-              });
-            }
-          }
-
-          // max_reps
-          const maxRepsSet = exerciseSets.reduce((max, s) =>
-            (s.reps ?? 0) > (max.reps ?? 0) ? s : max
-          );
-          if (maxRepsSet.reps != null && maxRepsSet.reps > 0) {
-            const existing = await PersonalRecordRepository.findByExerciseId(exercise.exerciseId);
-            const currentMaxReps = existing.find((p) => p.pr_type === 'max_reps');
-            if (!currentMaxReps || maxRepsSet.reps > currentMaxReps.value) {
-              await PersonalRecordRepository.upsert({
-                exercise_id: exercise.exerciseId,
-                pr_type: 'max_reps',
-                value: maxRepsSet.reps,
-                workout_id: store.currentWorkout.id,
-                achieved_at: now,
-              });
-              newPRs.push({
-                exerciseId: exercise.exerciseId,
-                exerciseName: '',
-                prType: 'max_reps',
-                value: maxRepsSet.reps,
-                label: `${maxRepsSet.reps} reps`,
-              });
-            }
-          }
-
-          // max_volume（種目単位の合計）
-          const exerciseVolume = calculateVolume(exerciseSets);
-          if (exerciseVolume > 0) {
-            const existing = await PersonalRecordRepository.findByExerciseId(exercise.exerciseId);
-            const currentMaxVolume = existing.find((p) => p.pr_type === 'max_volume');
-            if (!currentMaxVolume || exerciseVolume > currentMaxVolume.value) {
-              await PersonalRecordRepository.upsert({
-                exercise_id: exercise.exerciseId,
-                pr_type: 'max_volume',
-                value: exerciseVolume,
-                workout_id: store.currentWorkout.id,
-                achieved_at: now,
-              });
-              newPRs.push({
-                exerciseId: exercise.exerciseId,
-                exerciseName: '',
-                prType: 'max_volume',
-                value: exerciseVolume,
-                label: `${exerciseVolume}kg`,
-              });
-            }
-          }
-        }
+        // PR チェック（ヘルパー関数に委譲して複雑度を削減）
+        const prs = await checkAndSavePRForExercise(
+          exercise.exerciseId,
+          sets,
+          store.currentWorkout.id,
+          now,
+        );
+        newPRs.push(...prs);
       }
 
       const summaryData: WorkoutSummaryData = {
@@ -485,16 +447,13 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
   /**
    * T041: 種目メモを更新する
    */
-  const updateExerciseMemo = useCallback(
-    async (workoutExerciseId: string, memo: string) => {
-      const db = await getDatabase();
-      await db.runAsync(
-        'UPDATE workout_exercises SET memo = ? WHERE id = ?',
-        [memo || null, workoutExerciseId]
-      );
-    },
-    []
-  );
+  const updateExerciseMemo = useCallback(async (workoutExerciseId: string, memo: string) => {
+    const db = await getDatabase();
+    await db.runAsync('UPDATE workout_exercises SET memo = ? WHERE id = ?', [
+      memo || null,
+      workoutExerciseId,
+    ]);
+  }, []);
 
   /**
    * T041: ワークアウトメモを更新する
@@ -506,7 +465,7 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
         memo: memo || null,
       });
     },
-    [store]
+    [store],
   );
 
   /**
@@ -537,18 +496,15 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
 
   useEffect(() => {
-    const subscription = AppState.addEventListener(
-      'change',
-      (nextAppState: AppStateStatus) => {
-        if (
-          appStateRef.current === 'active' &&
-          (nextAppState === 'background' || nextAppState === 'inactive')
-        ) {
-          saveDraft();
-        }
-        appStateRef.current = nextAppState;
-      },
-    );
+    const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
+      if (
+        appStateRef.current === 'active' &&
+        (nextAppState === 'background' || nextAppState === 'inactive')
+      ) {
+        saveDraft();
+      }
+      appStateRef.current = nextAppState;
+    });
     return () => subscription.remove();
   }, [saveDraft]);
 
@@ -561,7 +517,7 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
     // 対象ワークアウトの全種目のexercise_idを取得
     const weRows = await db.getAllAsync<{ exercise_id: string }>(
       'SELECT exercise_id FROM workout_exercises WHERE workout_id = ?',
-      [workoutId]
+      [workoutId],
     );
     const exerciseIds = new Set(weRows.map((row) => row.exercise_id));
 

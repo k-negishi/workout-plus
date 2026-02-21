@@ -72,11 +72,10 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>((set) => ({
 
   removeExercise: (workoutExerciseId) =>
     set((state) => {
-      const { [workoutExerciseId]: _, ...remainingSets } = state.currentSets;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { [workoutExerciseId]: _removed, ...remainingSets } = state.currentSets;
       return {
-        currentExercises: state.currentExercises.filter(
-          (e) => e.id !== workoutExerciseId,
-        ),
+        currentExercises: state.currentExercises.filter((e) => e.id !== workoutExerciseId),
         currentSets: remainingSets,
       };
     }),
@@ -90,8 +89,8 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>((set) => ({
     set((state) => ({
       currentSets: {
         ...state.currentSets,
-        [workoutExerciseId]: (state.currentSets[workoutExerciseId] ?? []).map(
-          (s) => (s.id === setId ? { ...s, ...updates } : s),
+        [workoutExerciseId]: (state.currentSets[workoutExerciseId] ?? []).map((s) =>
+          s.id === setId ? { ...s, ...updates } : s,
         ),
       },
     })),

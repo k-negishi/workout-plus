@@ -5,7 +5,7 @@
  * single/multi モードに対応
  */
 import React, { useCallback } from 'react';
-import { type ViewStyle, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View, type ViewStyle } from 'react-native';
 
 import { borderRadius } from '@/shared/constants/borderRadius';
 import { colors } from '@/shared/constants/colors';
@@ -31,6 +31,16 @@ const EQUIPMENT_LABELS: Record<string, string> = {
   cable: 'ケーブル',
   bodyweight: '自重',
 };
+
+/** 部位ラベルを返すヘルパー（コンポーネント内の ?? 演算子を削減） */
+function getMuscleLabel(key: string): string {
+  return MUSCLE_GROUP_LABELS[key] ?? key;
+}
+
+/** 器具ラベルを返すヘルパー（コンポーネント内の ?? 演算子を削減） */
+function getEquipLabel(key: string): string {
+  return EQUIPMENT_LABELS[key] ?? key;
+}
 
 /** リストアイテムのベーススタイルを計算する純粋関数（複雑な条件分岐をコンポーネント外に分離） */
 function getListItemStyle(isSelected: boolean, pressed: boolean): ViewStyle {
@@ -77,10 +87,7 @@ export function ExerciseListItem({
   }, [exercise.id, onToggleFavorite]);
 
   return (
-    <Pressable
-      onPress={handlePress}
-      style={({ pressed }) => getListItemStyle(isSelected, pressed)}
-    >
+    <Pressable onPress={handlePress} style={({ pressed }) => getListItemStyle(isSelected, pressed)}>
       {/* multi モード時のチェックボックス */}
       {mode === 'multi' && (
         <View
@@ -134,7 +141,7 @@ export function ExerciseListItem({
                 color: colors.primaryDark,
               }}
             >
-              {MUSCLE_GROUP_LABELS[exercise.muscleGroup] ?? exercise.muscleGroup}
+              {getMuscleLabel(exercise.muscleGroup)}
             </Text>
           </View>
           {/* 器具バッジ */}
@@ -153,7 +160,7 @@ export function ExerciseListItem({
                 color: colors.textSecondary,
               }}
             >
-              {EQUIPMENT_LABELS[exercise.equipment] ?? exercise.equipment}
+              {getEquipLabel(exercise.equipment)}
             </Text>
           </View>
         </View>
