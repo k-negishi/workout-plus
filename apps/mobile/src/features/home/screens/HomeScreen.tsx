@@ -1,31 +1,36 @@
 /**
  * HomeScreen - ホームダッシュボード画面
  * ワイヤーフレーム: home-header + home-main セクション準拠
- * 時間帯別挨拶、StreakCard、最近のワークアウト3件、QuickStatsWidget
+ * StreakCard、最近のワークアウト3件、QuickStatsWidget
  */
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { endOfMonth, endOfWeek, isWithinInterval, startOfMonth, startOfWeek } from 'date-fns';
+import {
+  endOfMonth,
+  endOfWeek,
+  isWithinInterval,
+  startOfMonth,
+  startOfWeek,
+  subWeeks,
+} from 'date-fns';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getDatabase } from '@/database/client';
-import type { SetRow, WorkoutExerciseRow, WorkoutRow } from '@/database/types';
-import type { HomeStackParamList } from '@/types';
+import type { ExerciseRow, SetRow, WorkoutExerciseRow, WorkoutRow } from '@/database/types';
+import { colors } from '@/shared/constants/colors';
+import type { HomeStackParamList, TimerStatus } from '@/types';
 
 import { QuickStatsWidget } from '../components/QuickStatsWidget';
 import { RecentWorkoutCard } from '../components/RecentWorkoutCard';
 import { StreakCard } from '../components/StreakCard';
+import { WeeklyGoalsWidget } from '../components/WeeklyGoalsWidget';
 
 type HomeNavigation = NativeStackNavigationProp<HomeStackParamList, 'Home'>;
 
-/** 時間帯別の挨拶を返す */
-function getGreeting(): string {
-  const hour = new Date().getHours();
-  if (hour < 12) return 'おはよう';
-  if (hour < 18) return 'こんにちは';
-  return 'こんばんは';
-}
+/** getDatabase が返す DB インスタンスの型エイリアス（パラメータ型として使用） */
+type AppDatabase = Awaited<ReturnType<typeof getDatabase>>;
 
 /** ワークアウトの詳細情報（表示用） */
 type WorkoutSummary = {
@@ -34,7 +39,10 @@ type WorkoutSummary = {
   exerciseCount: number;
   setCount: number;
   totalVolume: number;
-  durationSeconds: number;
+  durationSeconds: number | null;
+  timerStatus: TimerStatus;
+  /** 最初の種目の部位（カードアイコンの背景色に使用） */
+  primaryMuscleGroup?: string;
 };
 
 /** 最長連続トレーニング日数を計算する */
@@ -72,8 +80,60 @@ function calculateLongestStreak(dates: Date[]): number {
   return maxStreak;
 }
 
+/**
+ * ワークアウト1件のサマリーを構築する。
+ * fetchData の Cognitive Complexity を下げるためモジュールレベルに分離。
+ */
+async function buildWorkoutSummary(db: AppDatabase, workout: WorkoutRow): Promise<WorkoutSummary> {
+  // 種目を取得
+  const exercises = await db.getAllAsync<WorkoutExerciseRow>(
+    'SELECT * FROM workout_exercises WHERE workout_id = ?',
+    [workout.id],
+  );
+
+  // 最初の種目の部位を取得（カードアイコン背景色用）
+  let primaryMuscleGroup: string | undefined;
+  if (exercises.length > 0) {
+    const firstExercise = await db.getFirstAsync<ExerciseRow>(
+      'SELECT * FROM exercises WHERE id = ?',
+      [exercises[0]!.exercise_id],
+    );
+    primaryMuscleGroup = firstExercise?.muscle_group;
+  }
+
+  // 全セットを取得してボリュームを集計
+  let totalSets = 0;
+  let totalVolume = 0;
+
+  for (const exercise of exercises) {
+    const sets = await db.getAllAsync<SetRow>('SELECT * FROM sets WHERE workout_exercise_id = ?', [
+      exercise.id,
+    ]);
+    totalSets += sets.length;
+    for (const set of sets) {
+      if (set.weight != null && set.reps != null) {
+        totalVolume += set.weight * set.reps;
+      }
+    }
+  }
+
+  return {
+    id: workout.id,
+    completedAt: workout.completed_at ?? workout.created_at,
+    exerciseCount: exercises.length,
+    setCount: totalSets,
+    totalVolume: Math.round(totalVolume),
+    durationSeconds: workout.elapsed_seconds,
+    timerStatus: workout.timer_status,
+    // primaryMuscleGroup が undefined の場合は省略（exactOptionalPropertyTypes 対応）
+    ...(primaryMuscleGroup != null ? { primaryMuscleGroup } : {}),
+  };
+}
+
 export function HomeScreen() {
   const navigation = useNavigation<HomeNavigation>();
+  // SafeArea 対応: デバイスのノッチ・ダイナミックアイランドに合わせた動的パディング
+  const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [workoutSummaries, setWorkoutSummaries] = useState<WorkoutSummary[]>([]);
   const [trainingDates, setTrainingDates] = useState<Date[]>([]);
@@ -101,43 +161,9 @@ export function HomeScreen() {
         .map((w) => new Date(w.completed_at!));
       setTrainingDates(dates);
 
-      // 各ワークアウトの詳細を取得（最新3件分）
+      // 各ワークアウトの詳細を取得（最新3件分）— helper で複雑度を分散
       const recentWorkouts = workouts.slice(0, 3);
-      const summaries: WorkoutSummary[] = [];
-
-      for (const workout of recentWorkouts) {
-        // 種目を取得
-        const exercises = await db.getAllAsync<WorkoutExerciseRow>(
-          'SELECT * FROM workout_exercises WHERE workout_id = ?',
-          [workout.id],
-        );
-
-        // 全セットを取得
-        let totalSets = 0;
-        let totalVolume = 0;
-
-        for (const exercise of exercises) {
-          const sets = await db.getAllAsync<SetRow>(
-            'SELECT * FROM sets WHERE workout_exercise_id = ?',
-            [exercise.id],
-          );
-          totalSets += sets.length;
-          for (const set of sets) {
-            if (set.weight != null && set.reps != null) {
-              totalVolume += set.weight * set.reps;
-            }
-          }
-        }
-
-        summaries.push({
-          id: workout.id,
-          completedAt: workout.completed_at ?? workout.created_at,
-          exerciseCount: exercises.length,
-          setCount: totalSets,
-          totalVolume: Math.round(totalVolume),
-          durationSeconds: workout.elapsed_seconds,
-        });
-      }
+      const summaries = await Promise.all(recentWorkouts.map((w) => buildWorkoutSummary(db, w)));
 
       setWorkoutSummaries(summaries);
     } catch (error) {
@@ -151,16 +177,28 @@ export function HomeScreen() {
     fetchData();
   }, [fetchData]);
 
-  // 今月/今週のワークアウト回数
-  const { monthlyWorkouts, weeklyWorkouts, monthlyVolume, longestStreak } = useMemo(() => {
+  // 今月/今週のワークアウト回数・前週比・ボリューム
+  const {
+    monthlyWorkouts,
+    weeklyWorkouts,
+    monthlyVolume,
+    longestStreak,
+    lastWeekWorkouts,
+    weeklyVolume,
+  } = useMemo(() => {
     const now = new Date();
     const monthStart = startOfMonth(now);
     const monthEnd = endOfMonth(now);
     const weekStart = startOfWeek(now, { weekStartsOn: 1 });
     const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
 
+    // 前週の範囲
+    const lastWeekStart = startOfWeek(subWeeks(now, 1), { weekStartsOn: 1 });
+    const lastWeekEnd = endOfWeek(subWeeks(now, 1), { weekStartsOn: 1 });
+
     let monthly = 0;
     let weekly = 0;
+    let lastWeekly = 0;
 
     for (const date of trainingDates) {
       if (isWithinInterval(date, { start: monthStart, end: monthEnd })) {
@@ -168,6 +206,9 @@ export function HomeScreen() {
       }
       if (isWithinInterval(date, { start: weekStart, end: weekEnd })) {
         weekly++;
+      }
+      if (isWithinInterval(date, { start: lastWeekStart, end: lastWeekEnd })) {
+        lastWeekly++;
       }
     }
 
@@ -179,11 +220,21 @@ export function HomeScreen() {
       })
       .reduce((sum, ws) => sum + ws.totalVolume, 0);
 
+    // 今週のボリューム
+    const weeklyVol = workoutSummaries
+      .filter((ws) => {
+        const d = new Date(ws.completedAt);
+        return isWithinInterval(d, { start: weekStart, end: weekEnd });
+      })
+      .reduce((sum, ws) => sum + ws.totalVolume, 0);
+
     return {
       monthlyWorkouts: monthly,
       weeklyWorkouts: weekly,
       monthlyVolume: monthlyVol,
       longestStreak: calculateLongestStreak(trainingDates),
+      lastWeekWorkouts: lastWeekly,
+      weeklyVolume: weeklyVol,
     };
   }, [trainingDates, workoutSummaries]);
 
@@ -197,78 +248,67 @@ export function HomeScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator size="large" color="#4D94FF" />
-      </View>
-    );
-  }
-
-  // EmptyState: ワークアウトが0件
-  if (workoutSummaries.length === 0) {
-    return (
-      <View className="flex-1 bg-background">
-        {/* ヘッダー */}
-        <View
-          className="bg-white px-5 pt-10 pb-5"
-          style={{ borderBottomWidth: 1, borderBottomColor: '#e2e8f0' }}
-        >
-          <View className="flex-row justify-between items-center mb-4">
-            <Text
-              className="text-xl font-semibold"
-              style={{ color: '#334155', letterSpacing: -0.3 }}
-            >
-              {getGreeting()}、トレーニー
-            </Text>
-            <View
-              className="w-8 h-8 rounded-full items-center justify-center"
-              style={{ backgroundColor: '#E6F2FF', borderWidth: 1, borderColor: '#e2e8f0' }}
-            >
-              <Text className="font-semibold text-[13px] text-primary">T</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* EmptyState */}
-        <View className="flex-1 items-center justify-center px-8">
-          <Text className="text-[48px] mb-4">💪</Text>
-          <Text className="text-base font-semibold text-text-primary mb-2">
-            まだワークアウトがありません
-          </Text>
-          <Text className="text-sm text-text-secondary text-center">
-            +ボタンで最初のワークアウトを記録しよう
-          </Text>
-        </View>
+      <View
+        style={{
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: colors.background,
+        }}
+      >
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-background">
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* ヘッダー */}
+      {/* NativeWind の className はレイアウト系が効かないため inline style に統一 */}
       <View
-        className="bg-white px-5 pt-10 pb-5"
-        style={{ borderBottomWidth: 1, borderBottomColor: '#e2e8f0' }}
+        style={{
+          backgroundColor: colors.white,
+          paddingHorizontal: 20,
+          paddingBottom: 20,
+          paddingTop: insets.top + 16,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+        }}
       >
-        <View className="flex-row justify-between items-center mb-4">
-          <Text className="text-xl font-semibold" style={{ color: '#334155', letterSpacing: -0.3 }}>
-            {getGreeting()}、トレーニー
-          </Text>
-          <View
-            className="w-8 h-8 rounded-full items-center justify-center"
-            style={{ backgroundColor: '#E6F2FF', borderWidth: 1, borderColor: '#e2e8f0' }}
-          >
-            <Text className="font-semibold text-[13px] text-primary">T</Text>
-          </View>
-        </View>
         <StreakCard trainingDates={trainingDates} />
       </View>
 
       {/* メインコンテンツ */}
-      <ScrollView className="flex-1 px-5 pt-5" showsVerticalScrollIndicator={false}>
+      {/* contentContainerStyle でコンテンツにパディングを付与（style だと viewport に適用されてしまう） */}
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 20 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* 今週の目標（WF L2953-2988: home-main 最上部） */}
+        {workoutSummaries.length > 0 && (
+          <WeeklyGoalsWidget
+            thisWeekWorkouts={weeklyWorkouts}
+            thisWeekVolume={weeklyVolume}
+            lastWeekWorkouts={lastWeekWorkouts}
+          />
+        )}
+
         {/* 最近のトレーニング */}
-        <View className="flex-row justify-between items-center mb-4">
-          <Text className="text-sm font-bold text-text-primary">最近のトレーニング</Text>
-          <Text className="text-xs text-text-secondary">{workoutSummaries.length}件</Text>
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 16,
+          }}
+        >
+          <Text style={{ fontSize: 14, fontWeight: '700', color: colors.textPrimary }}>
+            最近のトレーニング
+          </Text>
+          <Text style={{ fontSize: 12, color: colors.textSecondary }}>
+            {workoutSummaries.length}件
+          </Text>
         </View>
 
         {workoutSummaries.map((ws) => (
@@ -279,13 +319,28 @@ export function HomeScreen() {
             setCount={ws.setCount}
             totalVolume={ws.totalVolume}
             durationSeconds={ws.durationSeconds}
+            timerStatus={ws.timerStatus}
             onPress={() => handleWorkoutPress(ws.id)}
+            // exactOptionalPropertyTypes 対応: undefined を直接渡さない
+            {...(ws.primaryMuscleGroup != null
+              ? { primaryMuscleGroup: ws.primaryMuscleGroup }
+              : {})}
           />
         ))}
 
         {/* ダッシュボードウィジェット */}
-        <View className="flex-row justify-between items-center mt-6 mb-4">
-          <Text className="text-sm font-bold text-text-primary">ダッシュボード</Text>
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginTop: 24,
+            marginBottom: 16,
+          }}
+        >
+          <Text style={{ fontSize: 14, fontWeight: '700', color: colors.textPrimary }}>
+            ダッシュボード
+          </Text>
         </View>
 
         <QuickStatsWidget
@@ -295,8 +350,8 @@ export function HomeScreen() {
           longestStreak={longestStreak}
         />
 
-        {/* タブバーのスペーサー */}
-        <View style={{ height: 84 }} />
+        {/* タブバーのスペーサー（カスタムタブバー高さ + SafeArea を考慮して余裕を持たせる） */}
+        <View style={{ height: 120 }} />
       </ScrollView>
     </View>
   );

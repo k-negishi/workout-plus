@@ -1,6 +1,6 @@
 /**
  * ワークアウトタイマーフック
- * notStarted → running → paused → running の状態遷移を管理
+ * notStarted → running → paused → running / discarded の状態遷移を管理
  * バックグラウンド復帰時も正確な経過時間を算出する
  */
 import { useCallback, useEffect, useRef } from 'react';
@@ -24,6 +24,8 @@ export type UseTimerReturn = {
   resumeTimer: () => void;
   /** タイマーをリセットする */
   resetTimer: () => void;
+  /** タイマー計測を破棄する（ワークアウトは継続） */
+  stopTimer: () => void;
 };
 
 /**
@@ -115,6 +117,15 @@ export function useTimer(): UseTimerReturn {
     void persistTimerState('notStarted', 0, null);
   }, [clearTimerInterval, setTimerStatus, setElapsedSeconds, setTimerStartedAt, persistTimerState]);
 
+  /** タイマー計測を停止して破棄する（running/paused/notStarted → discarded） */
+  const stopTimer = useCallback(() => {
+    clearTimerInterval();
+    setTimerStatus('discarded');
+    setElapsedSeconds(0);
+    setTimerStartedAt(null);
+    void persistTimerState('discarded', 0, null);
+  }, [clearTimerInterval, setTimerStatus, setElapsedSeconds, setTimerStartedAt, persistTimerState]);
+
   // running 時に 1秒ごとの更新インターバルを管理
   useEffect(() => {
     clearTimerInterval();
@@ -160,5 +171,6 @@ export function useTimer(): UseTimerReturn {
     pauseTimer,
     resumeTimer,
     resetTimer,
+    stopTimer,
   };
 }

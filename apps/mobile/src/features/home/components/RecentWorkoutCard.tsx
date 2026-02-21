@@ -1,39 +1,21 @@
 /**
  * RecentWorkoutCard - 最近のワークアウトカード
- * ワイヤーフレーム: task-card セクション準拠
- * 日時・種目数/セット数・総ボリューム・所要時間を表示
+ * ワイヤーフレーム: task-card セクション準拠（WF L646-711）
+ * task-header（アイコン+バッジ）、task-info、task-tags 構造
  */
 import { format } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import { useMemo } from 'react';
-import { Pressable, Text, View } from 'react-native';
-import { Circle, Path, Svg } from 'react-native-svg';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-/** 時計アイコン */
-function ClockIcon() {
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth={2}>
-      <Circle cx={12} cy={12} r={10} />
-      <Path d="M12 6v6l4 2" strokeLinecap="round" strokeLinejoin="round" />
-    </Svg>
-  );
-}
+import { colors } from '@/shared/constants/colors';
+import type { TimerStatus } from '@/types';
 
-/** ダンベルアイコン */
-function DumbbellIcon() {
-  return (
-    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth={2}>
-      <Path
-        d="M6 7v10M18 7v10M2 9v6M22 9v6M6 12h12M2 12h4M18 12h4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </Svg>
-  );
-}
-
-/** 秒数を「Xh Xm」形式に変換する */
-function formatDuration(seconds: number): string {
+/** 秒数を「X時間X分」形式に変換する */
+function formatDuration(seconds: number | null, timerStatus?: TimerStatus): string {
+  if (timerStatus === 'discarded' || seconds == null) {
+    return '―';
+  }
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   if (hours > 0) {
@@ -50,6 +32,20 @@ function formatWeight(kg: number): string {
   return `${kg.toLocaleString()}kg`;
 }
 
+/** 部位別アイコン背景色（WF L673-675） */
+function getIconBackgroundColor(muscleGroup?: string): string {
+  switch (muscleGroup) {
+    case 'chest':
+      return colors.primaryBg;
+    case 'back':
+      return colors.primaryBgMedium;
+    case 'legs':
+      return colors.primaryBgStrong;
+    default:
+      return colors.neutralBg;
+  }
+}
+
 type RecentWorkoutCardProps = {
   /** ワークアウト完了日時（タイムスタンプ） */
   completedAt: number;
@@ -60,7 +56,11 @@ type RecentWorkoutCardProps = {
   /** 総ボリューム（kg） */
   totalVolume: number;
   /** 所要時間（秒） */
-  durationSeconds: number;
+  durationSeconds: number | null;
+  /** タイマー状態（discarded なら時間なし表示） */
+  timerStatus?: TimerStatus;
+  /** 主要部位（アイコン背景色の決定に使用） */
+  primaryMuscleGroup?: string;
   /** タップ時のコールバック */
   onPress: () => void;
 };
@@ -71,6 +71,8 @@ export function RecentWorkoutCard({
   setCount,
   totalVolume,
   durationSeconds,
+  timerStatus,
+  primaryMuscleGroup,
   onPress,
 }: RecentWorkoutCardProps) {
   // 日付フォーマット: 「2/21 土曜日」
@@ -80,46 +82,119 @@ export function RecentWorkoutCard({
   }, [completedAt]);
 
   return (
-    <Pressable
-      className="bg-white rounded-lg p-4 mb-3"
-      style={{ borderWidth: 1, borderColor: '#e2e8f0' }}
-      onPress={onPress}
-    >
-      {/* 日付 */}
-      <Text className="text-[15px] font-semibold mb-3" style={{ color: '#334155' }}>
-        {dateLabel}
-      </Text>
+    <Pressable style={styles.card} onPress={onPress}>
+      {/* task-header: アイコン + info + バッジ（WF L655-660） */}
+      <View style={styles.header}>
+        {/* task-icon（WF L662-675） */}
+        <View
+          testID="task-icon"
+          style={[styles.icon, { backgroundColor: getIconBackgroundColor(primaryMuscleGroup) }]}
+        >
+          <Text style={styles.iconEmoji}>💪</Text>
+        </View>
 
-      {/* タグ行 */}
-      <View className="flex-row mb-2" style={{ gap: 6 }}>
-        <View className="px-2 py-1 rounded-sm" style={{ backgroundColor: '#fef3c7' }}>
-          <Text style={{ fontSize: 11, fontWeight: '600', color: '#92400e' }}>
-            {setCount}セット
-          </Text>
+        {/* task-info（WF L677-692） */}
+        <View style={styles.info}>
+          <Text style={styles.title}>{dateLabel}</Text>
+          <Text style={styles.subtitle}>{exerciseCount}種目</Text>
         </View>
-        <View className="px-2 py-1 rounded-sm" style={{ backgroundColor: '#dbeafe' }}>
-          <Text style={{ fontSize: 11, fontWeight: '600', color: '#1e40af' }}>
-            {formatWeight(totalVolume)}
-          </Text>
-        </View>
-        <View className="px-2 py-1 rounded-sm" style={{ backgroundColor: '#f3e8ff' }}>
-          <Text style={{ fontSize: 11, fontWeight: '600', color: '#6b21a8' }}>
-            {formatDuration(durationSeconds)}
-          </Text>
+
+        {/* 完了バッジ（WF L551-560, L567-570） */}
+        <View testID="status-badge" style={styles.badge}>
+          <Text style={styles.badgeText}>完了</Text>
         </View>
       </View>
 
-      {/* フッター: 統計 */}
-      <View className="flex-row items-center" style={{ gap: 12 }}>
-        <View className="flex-row items-center" style={{ gap: 4 }}>
-          <DumbbellIcon />
-          <Text className="text-xs text-text-secondary">{exerciseCount}種目</Text>
+      {/* task-tags 行（WF L694-711） */}
+      <View style={styles.tags}>
+        <View style={[styles.tag, { backgroundColor: colors.tagYellowBg }]}>
+          <Text style={[styles.tagText, { color: colors.tagYellowText }]}>{setCount}セット</Text>
         </View>
-        <View className="flex-row items-center" style={{ gap: 4 }}>
-          <ClockIcon />
-          <Text className="text-xs text-text-secondary">{formatDuration(durationSeconds)}</Text>
+        <View style={[styles.tag, { backgroundColor: colors.tagBlueBg }]}>
+          <Text style={[styles.tagText, { color: colors.tagBlueText }]}>
+            {formatWeight(totalVolume)}
+          </Text>
+        </View>
+        <View style={[styles.tag, { backgroundColor: colors.tagPurpleBg }]}>
+          <Text style={[styles.tagText, { color: colors.tagPurpleText }]}>
+            {formatDuration(durationSeconds, timerStatus)}
+          </Text>
         </View>
       </View>
     </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  // カードコンテナ（WF L646-653 .task-card）
+  card: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  // task-header（WF L655-660）
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 12,
+  },
+  // task-icon（WF L662-675）
+  icon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  iconEmoji: {
+    fontSize: 18,
+  },
+  // task-info（WF L677-692）
+  info: {
+    flex: 1,
+  },
+  title: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: colors.textPrimary,
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 13,
+    color: colors.textSecondary,
+  },
+  // 完了バッジ（WF L551-560, L567-570）
+  badge: {
+    backgroundColor: '#cce5ff',
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 4,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  // task-tags 行（WF L694-711）
+  tags: {
+    flexDirection: 'row',
+    gap: 6,
+    flexWrap: 'wrap',
+    marginBottom: 8,
+  },
+  // タグ共通（WF L701-707）
+  tag: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 4,
+  },
+  tagText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+});

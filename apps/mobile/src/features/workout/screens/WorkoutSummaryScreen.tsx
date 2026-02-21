@@ -6,10 +6,12 @@ import { type RouteProp, useNavigation, useRoute } from '@react-navigation/nativ
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getDatabase } from '@/database/client';
 import { PersonalRecordRepository } from '@/database/repositories/pr';
-import type { RecordStackParamList, RootStackParamList } from '@/types';
+import { colors } from '@/shared/constants/colors';
+import type { RecordStackParamList, RootStackParamList, TimerStatus } from '@/types';
 
 import { calculateVolume } from '../utils/calculate1RM';
 
@@ -45,11 +47,14 @@ export const WorkoutSummaryScreen: React.FC = () => {
   const navigation = useNavigation<SummaryNavProp>();
   const route = useRoute<SummaryRouteProp>();
   const { workoutId } = route.params;
+  // SafeArea 対応: ノッチ・ダイナミックアイランド対応
+  const insets = useSafeAreaInsets();
 
   const [totalVolume, setTotalVolume] = useState(0);
   const [exerciseCount, setExerciseCount] = useState(0);
   const [setCount, setSetCount] = useState(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [timerStatus, setTimerStatus] = useState<TimerStatus>('notStarted');
   const [exerciseSummaries, setExerciseSummaries] = useState<ExerciseSummary[]>([]);
   const [prItems, setPrItems] = useState<PRItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -65,12 +70,15 @@ export const WorkoutSummaryScreen: React.FC = () => {
           created_at: number;
           completed_at: number | null;
           elapsed_seconds: number;
-        }>('SELECT created_at, completed_at, elapsed_seconds FROM workouts WHERE id = ?', [
-          workoutId,
-        ]);
+          timer_status: TimerStatus;
+        }>(
+          'SELECT created_at, completed_at, elapsed_seconds, timer_status FROM workouts WHERE id = ?',
+          [workoutId],
+        );
 
         if (!workout) return;
         setElapsedSeconds(workout.elapsed_seconds);
+        setTimerStatus(workout.timer_status);
 
         // ワークアウト内の種目を取得
         const exercises = await db.getAllAsync<{
@@ -121,10 +129,10 @@ export const WorkoutSummaryScreen: React.FC = () => {
         const prs: PRItem[] = [];
         for (const ex of exercises) {
           const records = await PersonalRecordRepository.findByExerciseId(ex.exercise_id);
-          const newPrs = records.filter((r) => r.workout_id === workoutId);
+          const newPrs = records.filter((r) => r.workoutId === workoutId);
           for (const pr of newPrs) {
             let label = '';
-            switch (pr.pr_type) {
+            switch (pr.prType) {
               case 'max_weight':
                 label = `最大重量: ${pr.value}kg`;
                 break;
@@ -157,73 +165,127 @@ export const WorkoutSummaryScreen: React.FC = () => {
 
   if (isLoading) {
     return (
-      <View className="flex-1 bg-[#f9fafb] items-center justify-center">
-        <Text className="text-[14px] text-[#64748b]">読み込み中...</Text>
+      <View
+        className="flex-1 items-center justify-center"
+        style={{ backgroundColor: colors.background }}
+      >
+        <Text className="text-[14px]" style={{ color: colors.textSecondary }}>
+          読み込み中...
+        </Text>
       </View>
     );
   }
 
   return (
     <ScrollView
-      className="flex-1 bg-[#f9fafb]"
+      className="flex-1"
+      style={{ backgroundColor: colors.background }}
       contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
     >
       {/* ヘッダー */}
-      <View className="items-center mb-6 pt-4">
-        <View className="w-12 h-12 rounded-full bg-[#F0FDF4] items-center justify-center mb-3">
-          <Text className="text-[24px] text-[#10B981]">{'\u2713'}</Text>
+      <View className="items-center mb-6" style={{ paddingTop: insets.top + 16 }}>
+        <View
+          className="w-12 h-12 rounded-full items-center justify-center mb-3"
+          style={{ backgroundColor: colors.successBg }}
+        >
+          <Text className="text-[24px]" style={{ color: colors.success }}>
+            {'\u2713'}
+          </Text>
         </View>
-        <Text className="text-[24px] font-bold text-[#334155]">ワークアウト完了</Text>
+        <Text className="text-[24px] font-bold" style={{ color: colors.textPrimary }}>
+          ワークアウト完了
+        </Text>
       </View>
 
       {/* メインカード */}
-      <View className="bg-white border border-[#e2e8f0] rounded-xl p-5 mb-4 items-center">
-        <Text className="text-[14px] text-[#64748b] mb-2">所要時間</Text>
-        <Text className="text-[16px] font-semibold text-[#475569]">
-          {formatDuration(elapsedSeconds)}
+      <View
+        className="bg-white rounded-xl p-5 mb-4 items-center"
+        style={{ borderWidth: 1, borderColor: colors.border }}
+      >
+        <Text className="text-[14px] mb-2" style={{ color: colors.textSecondary }}>
+          所要時間
+        </Text>
+        <Text className="text-[16px] font-semibold" style={{ color: colors.textPrimary }}>
+          {timerStatus === 'discarded' ? '―' : formatDuration(elapsedSeconds)}
         </Text>
       </View>
 
       {/* 統計グリッド */}
       <View className="flex-row flex-wrap gap-3 mb-4">
-        <View className="flex-1 min-w-[45%] bg-white border border-[#e2e8f0] rounded-lg p-4 items-center">
-          <Text className="text-[20px] font-bold text-[#334155]">
+        <View
+          className="flex-1 min-w-[45%] bg-white rounded-lg p-4 items-center"
+          style={{ borderWidth: 1, borderColor: colors.border }}
+        >
+          <Text className="text-[20px] font-bold" style={{ color: colors.textPrimary }}>
             {totalVolume.toLocaleString()}
-            <Text className="text-[12px] font-normal text-[#64748b]"> kg</Text>
+            <Text className="text-[12px] font-normal" style={{ color: colors.textSecondary }}>
+              {' '}
+              kg
+            </Text>
           </Text>
-          <Text className="text-[12px] text-[#64748b] mt-1">総ボリューム</Text>
+          <Text className="text-[12px] mt-1" style={{ color: colors.textSecondary }}>
+            総ボリューム
+          </Text>
         </View>
-        <View className="flex-1 min-w-[45%] bg-white border border-[#e2e8f0] rounded-lg p-4 items-center">
-          <Text className="text-[20px] font-bold text-[#334155]">
+        <View
+          className="flex-1 min-w-[45%] bg-white rounded-lg p-4 items-center"
+          style={{ borderWidth: 1, borderColor: colors.border }}
+        >
+          <Text className="text-[20px] font-bold" style={{ color: colors.textPrimary }}>
             {exerciseCount}
-            <Text className="text-[12px] font-normal text-[#64748b]"> 種目</Text>
+            <Text className="text-[12px] font-normal" style={{ color: colors.textSecondary }}>
+              {' '}
+              種目
+            </Text>
           </Text>
-          <Text className="text-[12px] text-[#64748b] mt-1">種目数</Text>
+          <Text className="text-[12px] mt-1" style={{ color: colors.textSecondary }}>
+            種目数
+          </Text>
         </View>
-        <View className="flex-1 min-w-[45%] bg-white border border-[#e2e8f0] rounded-lg p-4 items-center">
-          <Text className="text-[20px] font-bold text-[#334155]">
+        <View
+          className="flex-1 min-w-[45%] bg-white rounded-lg p-4 items-center"
+          style={{ borderWidth: 1, borderColor: colors.border }}
+        >
+          <Text className="text-[20px] font-bold" style={{ color: colors.textPrimary }}>
             {setCount}
-            <Text className="text-[12px] font-normal text-[#64748b]"> セット</Text>
+            <Text className="text-[12px] font-normal" style={{ color: colors.textSecondary }}>
+              {' '}
+              セット
+            </Text>
           </Text>
-          <Text className="text-[12px] text-[#64748b] mt-1">セット数</Text>
+          <Text className="text-[12px] mt-1" style={{ color: colors.textSecondary }}>
+            セット数
+          </Text>
         </View>
       </View>
 
       {/* PR セクション */}
       {prItems.length > 0 && (
         <View className="mb-4">
-          <Text className="text-[14px] font-semibold text-[#334155] mb-2">新記録達成</Text>
+          <Text className="text-[14px] font-semibold mb-2" style={{ color: colors.textPrimary }}>
+            新記録達成
+          </Text>
           {prItems.map((pr, index) => (
             <View
               key={`pr-${index}`}
-              className="flex-row justify-between items-center bg-white border border-[#e2e8f0] rounded-lg px-4 py-3 mb-2"
+              className="flex-row justify-between items-center bg-white rounded-lg px-4 py-3 mb-2"
+              style={{ borderWidth: 1, borderColor: colors.border }}
             >
               <View>
-                <Text className="text-[14px] font-semibold text-[#334155]">{pr.exerciseName}</Text>
-                <Text className="text-[12px] text-[#64748b]">{pr.label}</Text>
+                <Text className="text-[14px] font-semibold" style={{ color: colors.textPrimary }}>
+                  {pr.exerciseName}
+                </Text>
+                <Text className="text-[12px]" style={{ color: colors.textSecondary }}>
+                  {pr.label}
+                </Text>
               </View>
-              <View className="px-2 py-[2px] rounded-lg bg-[#FBBF24]">
-                <Text className="text-[11px] font-bold text-[#D97706]">NEW</Text>
+              <View
+                className="px-2 py-[2px] rounded-lg"
+                style={{ backgroundColor: colors.tagYellowBg }}
+              >
+                <Text className="text-[11px] font-bold" style={{ color: colors.tagYellowText }}>
+                  NEW
+                </Text>
               </View>
             </View>
           ))}
@@ -232,20 +294,34 @@ export const WorkoutSummaryScreen: React.FC = () => {
 
       {/* 種目別サマリー */}
       <View className="mb-6">
-        <Text className="text-[14px] font-semibold text-[#334155] mb-2">種目別サマリー</Text>
-        <View className="bg-white border border-[#e2e8f0] rounded-lg overflow-hidden">
+        <Text className="text-[14px] font-semibold mb-2" style={{ color: colors.textPrimary }}>
+          種目別サマリー
+        </Text>
+        <View
+          className="bg-white rounded-lg overflow-hidden"
+          style={{ borderWidth: 1, borderColor: colors.border }}
+        >
           {exerciseSummaries.map((summary, index) => (
             <View
               key={summary.exerciseId}
-              className={`flex-row justify-between items-center px-4 py-3 ${
-                index < exerciseSummaries.length - 1 ? 'border-b border-[#F1F3F5]' : ''
-              }`}
+              className="flex-row justify-between items-center px-4 py-3"
+              style={
+                index < exerciseSummaries.length - 1
+                  ? { borderBottomWidth: 1, borderBottomColor: colors.neutralBg }
+                  : undefined
+              }
             >
-              <Text className="text-[14px] font-semibold text-[#334155]">{summary.name}</Text>
+              <Text className="text-[14px] font-semibold" style={{ color: colors.textPrimary }}>
+                {summary.name}
+              </Text>
               <View className="flex-row items-center gap-2">
-                <Text className="text-[14px] text-[#64748b]">{summary.setCount}セット</Text>
-                <Text className="text-[14px] text-[#64748b]">{'\u2022'}</Text>
-                <Text className="text-[14px] font-semibold text-[#475569]">
+                <Text className="text-[14px]" style={{ color: colors.textSecondary }}>
+                  {summary.setCount}セット
+                </Text>
+                <Text className="text-[14px]" style={{ color: colors.textSecondary }}>
+                  {'\u2022'}
+                </Text>
+                <Text className="text-[14px] font-semibold" style={{ color: colors.textPrimary }}>
                   {summary.volume.toLocaleString()}kg
                 </Text>
               </View>
@@ -257,7 +333,8 @@ export const WorkoutSummaryScreen: React.FC = () => {
       {/* ホームに戻るボタン */}
       <TouchableOpacity
         onPress={handleGoHome}
-        className="bg-[#4D94FF] rounded-lg py-4 items-center mt-6"
+        className="rounded-lg py-4 items-center mt-6"
+        style={{ backgroundColor: colors.primary }}
         accessibilityLabel="ホームに戻る"
       >
         <Text className="text-[16px] font-semibold text-white">ホームに戻る</Text>

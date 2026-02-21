@@ -122,4 +122,40 @@ describe('useTimer - 状態遷移テスト', () => {
       expect(state.timerStartedAt).toBeNull();
     });
   });
+
+  describe('discarded 状態への遷移', () => {
+    it('running から discarded へ遷移し、elapsed=0 / timerStartedAt=null になる', () => {
+      const store = useWorkoutSessionStore.getState();
+      store.setTimerStatus('running');
+      store.setElapsedSeconds(123);
+      store.setTimerStartedAt(Date.now() - 5000);
+
+      // stopTimer() の期待動作
+      store.setTimerStatus('discarded');
+      store.setElapsedSeconds(0);
+      store.setTimerStartedAt(null);
+
+      const state = useWorkoutSessionStore.getState();
+      expect(state.timerStatus).toBe('discarded');
+      expect(state.elapsedSeconds).toBe(0);
+      expect(state.timerStartedAt).toBeNull();
+    });
+
+    it('paused から discarded へ遷移し、elapsed=0 / timerStartedAt=null になる', () => {
+      const store = useWorkoutSessionStore.getState();
+      store.setTimerStatus('paused');
+      store.setElapsedSeconds(45);
+      store.setTimerStartedAt(null);
+
+      // stopTimer() の期待動作
+      store.setTimerStatus('discarded');
+      store.setElapsedSeconds(0);
+      store.setTimerStartedAt(null);
+
+      const state = useWorkoutSessionStore.getState();
+      expect(state.timerStatus).toBe('discarded');
+      expect(state.elapsedSeconds).toBe(0);
+      expect(state.timerStartedAt).toBeNull();
+    });
+  });
 });

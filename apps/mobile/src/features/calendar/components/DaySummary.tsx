@@ -2,6 +2,8 @@
  * DaySummary - 選択日のワークアウトサマリー表示
  * ワイヤーフレーム: cal-detail-section 準拠
  * 所要時間・総ボリューム・種目数・セット数、種目別セット詳細
+ *
+ * NativeWind レイアウト className は効かないため、全て inline style で記述する
  */
 import { format, parseISO } from 'date-fns';
 import { ja } from 'date-fns/locale';
@@ -31,7 +33,10 @@ function ChevronRight() {
 }
 
 /** 秒数を表示用にフォーマット */
-function formatDuration(seconds: number): string {
+function formatDuration(seconds: number | null, timerStatus?: string): string {
+  if (timerStatus === 'discarded' || seconds == null) {
+    return '―';
+  }
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   if (hours > 0) {
@@ -160,7 +165,7 @@ export function DaySummary({ dateString, onNavigateToDetail }: DaySummaryProps) 
 
   if (loading) {
     return (
-      <View className="mt-5 items-center py-8">
+      <View style={{ marginTop: 20, alignItems: 'center', paddingVertical: 32 }}>
         <ActivityIndicator size="small" color="#4D94FF" />
       </View>
     );
@@ -169,63 +174,71 @@ export function DaySummary({ dateString, onNavigateToDetail }: DaySummaryProps) 
   // ワークアウトなし
   if (!workout) {
     return (
-      <View className="mt-5">
-        <View className="py-3 mb-3">
-          <Text className="text-sm font-semibold" style={{ color: '#334155' }}>
-            {dateLabel}
-          </Text>
+      <View style={{ marginTop: 20 }}>
+        <View style={{ paddingVertical: 12, marginBottom: 12 }}>
+          <Text style={{ fontSize: 14, fontWeight: '600', color: '#334155' }}>{dateLabel}</Text>
         </View>
-        <View className="items-center py-8">
-          <Text className="text-sm text-text-secondary">この日はトレーニングなし</Text>
+        <View style={{ alignItems: 'center', paddingVertical: 32 }}>
+          <Text style={{ fontSize: 14, color: '#64748b' }}>この日はトレーニングなし</Text>
         </View>
       </View>
     );
   }
 
   return (
-    <View className="mt-5">
-      {/* 日付ヘッダー */}
+    <View style={{ marginTop: 20 }}>
+      {/* 日付ヘッダー（タップでワークアウト詳細へ） */}
       <Pressable
-        className="py-3 mb-3 flex-row justify-between items-center"
+        style={{
+          paddingVertical: 12,
+          marginBottom: 12,
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
         onPress={() => onNavigateToDetail?.(workout.id)}
       >
-        <Text className="text-sm font-semibold" style={{ color: '#334155' }}>
-          {dateLabel}
-        </Text>
+        <Text style={{ fontSize: 14, fontWeight: '600', color: '#334155' }}>{dateLabel}</Text>
         <ChevronRight />
       </Pressable>
 
       {/* サマリーカード */}
       <View
-        className="bg-white rounded-sm p-3 flex-row items-center mb-3"
-        style={{ borderWidth: 1, borderColor: '#e2e8f0' }}
+        style={{
+          backgroundColor: '#FFFFFF',
+          borderRadius: 4,
+          padding: 12,
+          flexDirection: 'row',
+          alignItems: 'center',
+          marginBottom: 12,
+          borderWidth: 1,
+          borderColor: '#e2e8f0',
+        }}
       >
-        <View className="flex-1 items-center" style={{ gap: 4 }}>
+        <View style={{ flex: 1, alignItems: 'center', gap: 4 }}>
           <Text style={{ fontSize: 11, color: '#64748b' }}>所要時間</Text>
-          <Text className="text-sm font-semibold" style={{ color: '#334155' }}>
-            {formatDuration(workout.elapsed_seconds)}
+          <Text style={{ fontSize: 14, fontWeight: '600', color: '#334155' }}>
+            {formatDuration(workout.elapsed_seconds, workout.timer_status)}
           </Text>
         </View>
         <View style={{ width: 1, height: 28, backgroundColor: '#e2e8f0' }} />
-        <View className="flex-1 items-center" style={{ gap: 4 }}>
+        <View style={{ flex: 1, alignItems: 'center', gap: 4 }}>
           <Text style={{ fontSize: 11, color: '#64748b' }}>総ボリューム</Text>
-          <Text className="text-sm font-semibold" style={{ color: '#334155' }}>
+          <Text style={{ fontSize: 14, fontWeight: '600', color: '#334155' }}>
             {totalVolume.toLocaleString()}kg
           </Text>
         </View>
         <View style={{ width: 1, height: 28, backgroundColor: '#e2e8f0' }} />
-        <View className="flex-1 items-center" style={{ gap: 4 }}>
+        <View style={{ flex: 1, alignItems: 'center', gap: 4 }}>
           <Text style={{ fontSize: 11, color: '#64748b' }}>種目数</Text>
-          <Text className="text-sm font-semibold" style={{ color: '#334155' }}>
+          <Text style={{ fontSize: 14, fontWeight: '600', color: '#334155' }}>
             {exerciseSets.length}
           </Text>
         </View>
         <View style={{ width: 1, height: 28, backgroundColor: '#e2e8f0' }} />
-        <View className="flex-1 items-center" style={{ gap: 4 }}>
+        <View style={{ flex: 1, alignItems: 'center', gap: 4 }}>
           <Text style={{ fontSize: 11, color: '#64748b' }}>セット数</Text>
-          <Text className="text-sm font-semibold" style={{ color: '#334155' }}>
-            {totalSets}
-          </Text>
+          <Text style={{ fontSize: 14, fontWeight: '600', color: '#334155' }}>{totalSets}</Text>
         </View>
       </View>
 
@@ -234,22 +247,34 @@ export function DaySummary({ dateString, onNavigateToDetail }: DaySummaryProps) 
         {exerciseSets.map((ex, idx) => (
           <View
             key={idx}
-            className="bg-white rounded-sm p-3"
-            style={{ borderWidth: 1, borderColor: '#e2e8f0' }}
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: 4,
+              padding: 12,
+              borderWidth: 1,
+              borderColor: '#e2e8f0',
+            }}
           >
-            <Text className="text-[15px] font-semibold text-primary mb-2">{ex.exerciseName}</Text>
+            <Text style={{ fontSize: 15, fontWeight: '600', color: '#4D94FF', marginBottom: 8 }}>
+              {ex.exerciseName}
+            </Text>
             <View style={{ gap: 6 }}>
               {ex.sets.map((set) => (
                 <View
                   key={set.setNumber}
-                  className="flex-row items-center rounded-sm px-2 py-1.5"
-                  style={{ backgroundColor: '#f0fdf4', gap: 8 }}
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    borderRadius: 4,
+                    paddingHorizontal: 8,
+                    paddingVertical: 6,
+                    backgroundColor: '#f0fdf4',
+                    gap: 8,
+                  }}
                 >
                   <CheckIcon />
-                  <Text className="text-[13px] text-text-secondary" style={{ width: 14 }}>
-                    {set.setNumber}
-                  </Text>
-                  <Text className="text-sm font-semibold flex-1" style={{ color: '#334155' }}>
+                  <Text style={{ fontSize: 13, color: '#64748b', width: 14 }}>{set.setNumber}</Text>
+                  <Text style={{ fontSize: 14, fontWeight: '600', flex: 1, color: '#334155' }}>
                     {set.weight ?? '-'}kg × {set.reps ?? '-'}
                   </Text>
                   {set.estimated1rm != null ? (

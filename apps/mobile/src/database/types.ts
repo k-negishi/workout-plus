@@ -8,7 +8,7 @@
 export type WorkoutStatus = 'recording' | 'completed';
 
 /** タイマーの状態 */
-export type TimerStatus = 'notStarted' | 'running' | 'paused';
+export type TimerStatus = 'notStarted' | 'running' | 'paused' | 'discarded';
 
 /** 部位カテゴリ */
 export type MuscleGroup = 'chest' | 'back' | 'legs' | 'shoulders' | 'biceps' | 'triceps' | 'abs';

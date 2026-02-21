@@ -1,6 +1,7 @@
 /**
  * タイマーバーコンポーネント
  * 経過時間表示、開始/停止、中止ボタンを含む上部固定バー
+ * SafeArea 対応済み（T019 確認）— 親の RecordScreen が insets.top を適用するため本コンポーネントでは不要
  */
 import React, { useCallback } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
@@ -29,7 +30,7 @@ export type TimerBarProps = {
   onStart: () => void;
   onPause: () => void;
   onResume: () => void;
-  onDiscard: () => void;
+  onStopTimer: () => void;
   onComplete: () => void;
   /** 完了ボタンの無効化（種目0件時） */
   isCompleteDisabled?: boolean;
@@ -41,7 +42,7 @@ export const TimerBar: React.FC<TimerBarProps> = ({
   onStart,
   onPause,
   onResume,
-  onDiscard,
+  onStopTimer,
   onComplete,
   isCompleteDisabled = false,
 }) => {
@@ -57,58 +58,107 @@ export const TimerBar: React.FC<TimerBarProps> = ({
       case 'paused':
         onResume();
         break;
+      case 'discarded':
+        break;
     }
   }, [timerStatus, onStart, onPause, onResume]);
 
   /** 再生/一時停止ボタンのラベル */
+  const isTimerDiscarded = timerStatus === 'discarded';
   const toggleLabel = timerStatus === 'running' ? '||' : '\u25B6';
+  const elapsedLabel = isTimerDiscarded ? '時間なし' : formatTime(elapsedSeconds);
+  const elapsedLabelColor = isTimerDiscarded ? '#94a3b8' : '#334155';
 
   return (
-    <View className="flex-row items-center px-5 py-2 bg-white border-b border-[#e2e8f0]">
+    <View
+      style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingVertical: 8,
+        backgroundColor: '#FFFFFF',
+        borderBottomWidth: 1,
+        borderBottomColor: '#e2e8f0',
+      }}
+    >
       {/* 経過時間ラベル */}
-      <Text className="text-[13px] text-[#64748b] font-normal mr-2">経過時間</Text>
+      <Text style={{ fontSize: 13, color: '#64748b', fontWeight: '400', marginRight: 8 }}>
+        経過時間
+      </Text>
 
       {/* 再生/一時停止ボタン */}
       <TouchableOpacity
         onPress={handleToggle}
-        className="w-6 h-6 rounded-full border-[1.5px] border-[#4D94FF] items-center justify-center"
+        disabled={isTimerDiscarded}
+        style={{
+          width: 24,
+          height: 24,
+          borderRadius: 12,
+          borderWidth: 1.5,
+          borderColor: '#4D94FF',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
         accessibilityLabel={timerStatus === 'running' ? '一時停止' : '開始'}
       >
-        <Text className="text-[10px] text-[#4D94FF] leading-[10px]">{toggleLabel}</Text>
+        <Text
+          style={{ fontSize: 10, color: isTimerDiscarded ? '#94a3b8' : '#4D94FF', lineHeight: 10 }}
+        >
+          {toggleLabel}
+        </Text>
       </TouchableOpacity>
 
       {/* 一時停止中ラベル */}
       {timerStatus === 'paused' && (
-        <Text className="text-[11px] text-[#64748b] font-normal ml-2">一時停止中</Text>
+        <Text style={{ fontSize: 11, color: '#64748b', fontWeight: '400', marginLeft: 8 }}>
+          一時停止中
+        </Text>
       )}
 
       {/* 経過時間表示 */}
       <Text
-        className="ml-auto text-[16px] font-bold text-[#334155]"
-        style={{ fontVariant: ['tabular-nums'] }}
+        style={{
+          marginLeft: 'auto',
+          fontSize: 16,
+          fontWeight: '700',
+          color: elapsedLabelColor,
+          fontVariant: ['tabular-nums'],
+        }}
       >
-        {formatTime(elapsedSeconds)}
+        {elapsedLabel}
       </Text>
 
       {/* 中止ボタン */}
-      <TouchableOpacity
-        onPress={onDiscard}
-        className="ml-2 w-6 h-6 items-center justify-center"
-        accessibilityLabel="ワークアウトを中止"
-      >
-        <Text className="text-[14px] text-[#64748b]">{'\u00D7'}</Text>
-      </TouchableOpacity>
+      {!isTimerDiscarded && (
+        <TouchableOpacity
+          onPress={onStopTimer}
+          style={{
+            marginLeft: 8,
+            width: 24,
+            height: 24,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          accessibilityLabel="時間計測を停止"
+        >
+          <Text style={{ fontSize: 14, color: '#64748b' }}>{'\u00D7'}</Text>
+        </TouchableOpacity>
+      )}
 
       {/* 完了ボタン */}
       <TouchableOpacity
         onPress={onComplete}
         disabled={isCompleteDisabled}
-        className={`ml-3 px-5 py-2 rounded-lg ${
-          isCompleteDisabled ? 'bg-[#d1d5db]' : 'bg-[#10B981]'
-        }`}
+        style={{
+          marginLeft: 12,
+          paddingHorizontal: 20,
+          paddingVertical: 8,
+          borderRadius: 8,
+          backgroundColor: isCompleteDisabled ? '#d1d5db' : '#10B981',
+        }}
         accessibilityLabel="ワークアウトを完了"
       >
-        <Text className="text-[14px] font-semibold text-white">完了</Text>
+        <Text style={{ fontSize: 14, fontWeight: '600', color: '#FFFFFF' }}>完了</Text>
       </TouchableOpacity>
     </View>
   );

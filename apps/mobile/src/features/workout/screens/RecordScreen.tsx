@@ -7,8 +7,10 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getDatabase } from '@/database/client';
+import { EmptyState } from '@/shared/components/EmptyState';
 import { showSuccessToast } from '@/shared/components/Toast';
 import { useWorkoutSessionStore } from '@/stores/workoutSessionStore';
 import type { Exercise, RecordStackParamList, WorkoutSet } from '@/types';
@@ -81,6 +83,7 @@ const ExerciseBlockWithPrevious: React.FC<{
 };
 
 export const RecordScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation<RecordScreenNavProp>();
   const store = useWorkoutSessionStore();
   const timer = useTimer();
@@ -146,20 +149,21 @@ export const RecordScreen: React.FC = () => {
     }
   }, [session, store.currentWorkout, store.currentExercises.length, navigation]);
 
-  /** ワークアウト中止 */
-  const handleDiscard = useCallback(() => {
-    Alert.alert('ワークアウトを中止', 'この記録は保存されません。中止しますか？', [
-      { text: 'キャンセル', style: 'cancel' },
-      {
-        text: '中止',
-        style: 'destructive',
-        onPress: async () => {
-          await session.discardWorkout();
-          navigation.getParent()?.goBack();
+  /** タイマー計測停止（ワークアウトは継続） */
+  const handleStopTimer = useCallback(() => {
+    Alert.alert(
+      '計測を停止しますか？',
+      'タイマーの時間は記録されません。ワークアウトは継続できます。',
+      [
+        { text: 'キャンセル', style: 'cancel' },
+        {
+          text: '停止する',
+          style: 'destructive',
+          onPress: () => timer.stopTimer(),
         },
-      },
-    ]);
-  }, [session, navigation]);
+      ],
+    );
+  }, [timer]);
 
   /** セット重量変更 */
   const handleWeightChange = useCallback(
@@ -248,7 +252,10 @@ export const RecordScreen: React.FC = () => {
   const hasExercises = store.currentExercises.length > 0;
 
   return (
-    <View className="flex-1 bg-[#f9fafb]">
+    <View
+      testID="record-screen-container"
+      style={{ flex: 1, backgroundColor: '#f9fafb', paddingTop: insets.top }}
+    >
       {/* タイマーバー（上部固定） */}
       <TimerBar
         timerStatus={timer.timerStatus}
@@ -256,13 +263,28 @@ export const RecordScreen: React.FC = () => {
         onStart={timer.startTimer}
         onPause={timer.pauseTimer}
         onResume={timer.resumeTimer}
-        onDiscard={handleDiscard}
+        onStopTimer={handleStopTimer}
         onComplete={handleComplete}
         isCompleteDisabled={!hasExercises}
       />
 
       {/* スクロール領域 */}
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 120 }}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={
+          hasExercises ? { paddingBottom: 120 } : { paddingBottom: 120, flexGrow: 1 }
+        }
+      >
+        {/* 種目未追加時の空状態表示 */}
+        {!hasExercises && (
+          <EmptyState
+            icon="barbell-outline"
+            title="種目を追加してワークアウトを開始しましょう"
+            actionLabel="+ 種目を追加"
+            onAction={handleAddExercise}
+          />
+        )}
+
         {/* 種目ブロック一覧 */}
         {store.currentExercises.map((exercise) => (
           <ExerciseBlockWithPrevious
@@ -287,17 +309,38 @@ export const RecordScreen: React.FC = () => {
         {/* 種目追加ボタン */}
         <TouchableOpacity
           onPress={handleAddExercise}
-          className="flex-row items-center justify-center gap-2 mx-5 mt-4 py-[14px] border border-dashed border-[#4D94FF] rounded-lg"
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            marginHorizontal: 20,
+            marginTop: 16,
+            paddingVertical: 14,
+            borderWidth: 1,
+            borderStyle: 'dashed',
+            borderColor: '#4D94FF',
+            borderRadius: 8,
+          }}
           accessibilityLabel="種目を追加"
         >
-          <Text className="text-[14px] font-semibold text-[#4D94FF]">+ 種目を追加</Text>
+          <Text style={{ fontSize: 14, fontWeight: '600', color: '#4D94FF' }}>+ 種目を追加</Text>
         </TouchableOpacity>
 
         {/* T041: ワークアウトメモ */}
-        <View className="mx-5 mt-4">
-          <Text className="text-[12px] text-[#64748b] mb-1">ワークアウトメモ</Text>
+        <View style={{ marginHorizontal: 20, marginTop: 16 }}>
+          <Text style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>ワークアウトメモ</Text>
           <TextInput
-            className="bg-white border border-[#e2e8f0] rounded-lg p-3 text-[14px] text-[#475569] min-h-[60px]"
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderWidth: 1,
+              borderColor: '#e2e8f0',
+              borderRadius: 8,
+              padding: 12,
+              fontSize: 14,
+              color: '#475569',
+              minHeight: 60,
+            }}
             placeholder="今日の体調、感想など"
             placeholderTextColor="#94a3b8"
             multiline
