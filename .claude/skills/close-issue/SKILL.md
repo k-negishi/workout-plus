@@ -113,7 +113,8 @@ ls specs/
 - 仕様書: `specs/[feature]/spec.md`
 - 実装計画: `specs/[feature]/plan.md`
 
-🤖 Generated with Claude Code
+そのため、通常はspecs のcommitは実装のcommitと別になる。
+
 ```
 
 ### ステップ3: Issueの更新
@@ -300,38 +301,3 @@ git push
 - [ ] git push が完了している
 - [ ] Issue番号を把握している
 
-## トラブルシューティング
-
-### 問題: コメントが追加されない
-
-**原因**: ghコマンドの認証が切れている可能性
-
-**解決策**:
-```bash
-gh auth status
-gh auth login
-```
-
-### 問題: Issueがクローズされない
-
-**原因**: リポジトリの権限が不足している可能性
-
-**解決策**: リポジトリのオーナーまたは管理者に権限を確認
-
-### 問題: コメント内容が正しくない
-
-**原因**: 最新のコミット情報が取得できていない
-
-**解決策**:
-```bash
-git log -1
-git diff --stat HEAD~1 HEAD
-```
-で手動確認し、必要に応じてコメントを手動編集
-
-## 参考資料
-
-- [GitHub CLI Manual](https://cli.github.com/manual/)
-- [GitHub CLI - Issues](https://cli.github.com/manual/gh_issue)
-- プロジェクトの `CLAUDE.md` - 開発ワークフロー
-- `specs/` - 機能仕様書
