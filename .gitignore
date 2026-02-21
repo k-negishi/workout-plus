@@ -62,3 +62,7 @@ yarn-error.log*
 .vscode/
 *.swp
 *.swo
+
+# Python cache
+__pycache__/
+*.pyc
