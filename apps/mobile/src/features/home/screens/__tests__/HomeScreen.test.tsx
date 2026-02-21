@@ -7,8 +7,9 @@
  *
  * DB アクセスやナビゲーションはモックで置き換え、レンダリングのみ確認する。
  */
-import { render, waitFor } from '@testing-library/react-native';
+import { render, waitFor, within } from '@testing-library/react-native';
 import React from 'react';
+import { ScrollView } from 'react-native';
 
 import { HomeScreen } from '../HomeScreen';
 
@@ -90,6 +91,17 @@ describe('HomeScreen SafeArea', () => {
 });
 
 describe('HomeScreen EmptyState 廃止', () => {
+  it('StreakCard が ScrollView 内に配置される', async () => {
+    const { queryByText, UNSAFE_getByType } = render(<HomeScreen />);
+
+    await waitFor(() => {
+      expect(queryByText('今月のトレーニング')).not.toBeNull();
+    });
+
+    const scrollView = UNSAFE_getByType(ScrollView);
+    expect(within(scrollView).queryByText('今月のトレーニング')).not.toBeNull();
+  });
+
   it('ワークアウト 0 件でも StreakCard が render される', async () => {
     const { queryByText } = render(<HomeScreen />);
 

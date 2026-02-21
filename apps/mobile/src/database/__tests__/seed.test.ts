@@ -44,6 +44,11 @@ describe('generateDevWorkoutSeedSQL', () => {
   });
 
   afterAll(() => {
+    if (originalDev === undefined) {
+      delete globalWithDev.__DEV__;
+      return;
+    }
+
     globalWithDev.__DEV__ = originalDev;
   });
 
@@ -59,7 +64,11 @@ describe('generateDevWorkoutSeedSQL', () => {
       if (!match) {
         return null;
       }
-      const exerciseName = match[1].replace(/''/g, "'");
+      const rawExerciseName = match[1];
+      if (rawExerciseName == null) {
+        return null;
+      }
+      const exerciseName = rawExerciseName.replace(/''/g, "'");
       const exerciseId = EXERCISE_ID_BY_NAME[exerciseName];
       return exerciseId ? { id: exerciseId } : null;
     });
