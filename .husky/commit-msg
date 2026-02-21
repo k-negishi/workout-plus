@@ -1,0 +1,1 @@
+pnpm --package=@commitlint/cli dlx commitlint --edit "$1"
