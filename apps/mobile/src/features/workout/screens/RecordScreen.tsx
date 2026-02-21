@@ -6,14 +6,7 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  Alert,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { getDatabase } from '@/database/client';
 import { showSuccessToast } from '@/shared/components/Toast';
@@ -155,21 +148,17 @@ export const RecordScreen: React.FC = () => {
 
   /** ワークアウト中止 */
   const handleDiscard = useCallback(() => {
-    Alert.alert(
-      'ワークアウトを中止',
-      'この記録は保存されません。中止しますか？',
-      [
-        { text: 'キャンセル', style: 'cancel' },
-        {
-          text: '中止',
-          style: 'destructive',
-          onPress: async () => {
-            await session.discardWorkout();
-            navigation.getParent()?.goBack();
-          },
+    Alert.alert('ワークアウトを中止', 'この記録は保存されません。中止しますか？', [
+      { text: 'キャンセル', style: 'cancel' },
+      {
+        text: '中止',
+        style: 'destructive',
+        onPress: async () => {
+          await session.discardWorkout();
+          navigation.getParent()?.goBack();
         },
-      ]
-    );
+      },
+    ]);
   }, [session, navigation]);
 
   /** セット重量変更 */
@@ -183,7 +172,7 @@ export const RecordScreen: React.FC = () => {
         void session.updateSet(setId, exercise.id, { weight });
       }
     },
-    [session, store.currentExercises, store.currentSets]
+    [session, store.currentExercises, store.currentSets],
   );
 
   /** セットレップ数変更 */
@@ -197,7 +186,7 @@ export const RecordScreen: React.FC = () => {
         void session.updateSet(setId, exercise.id, { reps });
       }
     },
-    [session, store.currentExercises, store.currentSets]
+    [session, store.currentExercises, store.currentSets],
   );
 
   /** 前回記録を1セットにコピー */
@@ -214,23 +203,20 @@ export const RecordScreen: React.FC = () => {
         });
       }
     },
-    [session, store.currentExercises, store.currentSets]
+    [session, store.currentExercises, store.currentSets],
   );
 
   /** 前回記録を全セットにコピー（stub: 個別コピーで対応） */
-  const handleCopyAllPrevious = useCallback(
-    (_workoutExerciseId: string, _exerciseId: string) => {
-      // 前回記録の全セットコピーは各セットのコピーボタンで対応
-    },
-    []
-  );
+  const handleCopyAllPrevious = useCallback((_workoutExerciseId: string, _exerciseId: string) => {
+    // 前回記録の全セットコピーは各セットのコピーボタンで対応
+  }, []);
 
   /** セット削除 */
   const handleDeleteSet = useCallback(
     (setId: string, workoutExerciseId: string) => {
       void session.deleteSet(setId, workoutExerciseId);
     },
-    [session]
+    [session],
   );
 
   /** セット追加 */
@@ -238,7 +224,7 @@ export const RecordScreen: React.FC = () => {
     (workoutExerciseId: string) => {
       void session.addSet(workoutExerciseId);
     },
-    [session]
+    [session],
   );
 
   /** 種目名タップ（種目履歴へ） */
@@ -247,20 +233,17 @@ export const RecordScreen: React.FC = () => {
       const name = exerciseMap[exerciseId]?.name ?? '';
       navigation.navigate('ExerciseHistory', { exerciseId, exerciseName: name });
     },
-    [navigation]
+    [navigation],
   );
 
   /** 種目メモ変更 */
-  const handleMemoChange = useCallback(
-    async (workoutExerciseId: string, memo: string) => {
-      const db = await getDatabase();
-      await db.runAsync(
-        'UPDATE workout_exercises SET memo = ? WHERE id = ?',
-        [memo, workoutExerciseId]
-      );
-    },
-    []
-  );
+  const handleMemoChange = useCallback(async (workoutExerciseId: string, memo: string) => {
+    const db = await getDatabase();
+    await db.runAsync('UPDATE workout_exercises SET memo = ? WHERE id = ?', [
+      memo,
+      workoutExerciseId,
+    ]);
+  }, []);
 
   const hasExercises = store.currentExercises.length > 0;
 
@@ -307,9 +290,7 @@ export const RecordScreen: React.FC = () => {
           className="flex-row items-center justify-center gap-2 mx-5 mt-4 py-[14px] border border-dashed border-[#4D94FF] rounded-lg"
           accessibilityLabel="種目を追加"
         >
-          <Text className="text-[14px] font-semibold text-[#4D94FF]">
-            + 種目を追加
-          </Text>
+          <Text className="text-[14px] font-semibold text-[#4D94FF]">+ 種目を追加</Text>
         </TouchableOpacity>
 
         {/* T041: ワークアウトメモ */}

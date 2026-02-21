@@ -2,11 +2,11 @@
  * StreakCard - 今月のトレーニング日数と週間カレンダー
  * ワイヤーフレーム: streak-card セクション準拠
  */
-import { eachDayOfInterval, endOfWeek, format, isSameDay, isToday,startOfWeek } from 'date-fns';
+import { eachDayOfInterval, endOfWeek, format, isSameDay, isToday, startOfWeek } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import { useMemo } from 'react';
-import { Text,View } from 'react-native';
-import { Path,Svg } from 'react-native-svg';
+import { Text, View } from 'react-native';
+import { Path, Svg } from 'react-native-svg';
 
 /** チェックマークアイコン */
 function CheckIcon() {
@@ -20,7 +20,15 @@ function CheckIcon() {
 /** 炎アイコン（ストリーク用） */
 function FireIcon() {
   return (
-    <Svg width={28} height={28} viewBox="0 0 24 24" fill="none" stroke="#4D94FF" strokeWidth={1.5} opacity={0.7}>
+    <Svg
+      width={28}
+      height={28}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="#4D94FF"
+      strokeWidth={1.5}
+      opacity={0.7}
+    >
       <Path
         d="M12 22c4.97 0 8-3.58 8-8 0-3.5-2-6.5-4-8.5-1 2-2.5 3-4 3-1.5-2.5-1-5.5 1-8C9.5 2 5 6.5 4 10c-.5 2-.5 4 0 5 .5 1.5 1.5 3 3 4.5S10 22 12 22z"
         strokeLinecap="round"
@@ -101,23 +109,14 @@ export function StreakCard({ trainingDates }: StreakCardProps) {
             <View
               className="w-7 h-7 rounded-full items-center justify-center"
               style={{
-                backgroundColor: day.isDone
-                  ? '#4D94FF'
-                  : 'rgba(77, 148, 255, 0.10)',
-                ...(day.isToday && !day.isDone
-                  ? { borderWidth: 2, borderColor: '#4D94FF' }
-                  : {}),
+                backgroundColor: day.isDone ? '#4D94FF' : 'rgba(77, 148, 255, 0.10)',
+                ...(day.isToday && !day.isDone ? { borderWidth: 2, borderColor: '#4D94FF' } : {}),
               }}
             >
-              {day.isDone ? (
-                <CheckIcon />
-              ) : null}
+              {day.isDone ? <CheckIcon /> : null}
             </View>
             {/* 曜日ラベル */}
-            <Text
-              className="text-primary"
-              style={{ fontSize: 10, opacity: 0.7 }}
-            >
+            <Text className="text-primary" style={{ fontSize: 10, opacity: 0.7 }}>
               {DAY_LABELS[index]}
             </Text>
           </View>

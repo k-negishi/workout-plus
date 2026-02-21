@@ -81,8 +81,7 @@ describe('下書き保存条件（T042）', () => {
     // saveDraftのロジックを直接シミュレート
     // （フックはrenderHookが必要だが、ここではストア状態+条件分岐のロジックをテスト）
     const state = useWorkoutSessionStore.getState();
-    const shouldSave =
-      state.currentWorkout !== null && state.currentExercises.length > 0;
+    const shouldSave = state.currentWorkout !== null && state.currentExercises.length > 0;
 
     expect(shouldSave).toBe(true);
 
@@ -111,8 +110,7 @@ describe('下書き保存条件（T042）', () => {
     store.setElapsedSeconds(60);
 
     const state = useWorkoutSessionStore.getState();
-    const shouldSave =
-      state.currentWorkout !== null && state.currentExercises.length > 0;
+    const shouldSave = state.currentWorkout !== null && state.currentExercises.length > 0;
 
     // 種目0件なので保存しない
     expect(shouldSave).toBe(false);
@@ -121,8 +119,7 @@ describe('下書き保存条件（T042）', () => {
 
   it('currentWorkoutがnullの場合は下書き保存しない', () => {
     const state = useWorkoutSessionStore.getState();
-    const shouldSave =
-      state.currentWorkout !== null && state.currentExercises.length > 0;
+    const shouldSave = state.currentWorkout !== null && state.currentExercises.length > 0;
 
     expect(shouldSave).toBe(false);
     expect(state.currentWorkout).toBeNull();
@@ -139,10 +136,12 @@ describe('PR再計算ロジック（T047）', () => {
   it('saveEdit時に対象ワークアウトの全種目のPRが再計算される', async () => {
     // DBモックの設定
     const mockDb = {
-      getAllAsync: jest.fn().mockResolvedValue([
-        { exercise_id: 'exercise-chest-1' },
-        { exercise_id: 'exercise-back-1' },
-      ]),
+      getAllAsync: jest
+        .fn()
+        .mockResolvedValue([
+          { exercise_id: 'exercise-chest-1' },
+          { exercise_id: 'exercise-back-1' },
+        ]),
     };
     mockGetDatabase.mockResolvedValue(mockDb as never);
 
@@ -151,12 +150,12 @@ describe('PR再計算ロジック（T047）', () => {
     const db = await getDatabase();
     const weRows = await (db as { getAllAsync: jest.Mock }).getAllAsync(
       'SELECT exercise_id FROM workout_exercises WHERE workout_id = ?',
-      [workoutId]
+      [workoutId],
     );
     const exerciseIds = new Set(
       (weRows as Array<{ exercise_id: string }>).map(
-        (row: { exercise_id: string }) => row.exercise_id
-      )
+        (row: { exercise_id: string }) => row.exercise_id,
+      ),
     );
 
     for (const exerciseId of exerciseIds) {
@@ -183,12 +182,12 @@ describe('PR再計算ロジック（T047）', () => {
     const db = await getDatabase();
     const weRows = await (db as { getAllAsync: jest.Mock }).getAllAsync(
       'SELECT exercise_id FROM workout_exercises WHERE workout_id = ?',
-      ['workout-1']
+      ['workout-1'],
     );
     const exerciseIds = new Set(
       (weRows as Array<{ exercise_id: string }>).map(
-        (row: { exercise_id: string }) => row.exercise_id
-      )
+        (row: { exercise_id: string }) => row.exercise_id,
+      ),
     );
 
     for (const exerciseId of exerciseIds) {
@@ -208,12 +207,12 @@ describe('PR再計算ロジック（T047）', () => {
     const db = await getDatabase();
     const weRows = await (db as { getAllAsync: jest.Mock }).getAllAsync(
       'SELECT exercise_id FROM workout_exercises WHERE workout_id = ?',
-      ['workout-1']
+      ['workout-1'],
     );
     const exerciseIds = new Set(
       (weRows as Array<{ exercise_id: string }>).map(
-        (row: { exercise_id: string }) => row.exercise_id
-      )
+        (row: { exercise_id: string }) => row.exercise_id,
+      ),
     );
 
     for (const exerciseId of exerciseIds) {

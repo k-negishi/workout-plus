@@ -15,17 +15,13 @@ type CreateExerciseParams = {
 };
 
 /** 種目更新パラメータ */
-type UpdateExerciseParams = Partial<
-  Pick<ExerciseRow, 'name' | 'muscle_group' | 'equipment'>
->;
+type UpdateExerciseParams = Partial<Pick<ExerciseRow, 'name' | 'muscle_group' | 'equipment'>>;
 
 export const ExerciseRepository = {
   /** 全種目を取得する（名前順） */
   async findAll(): Promise<ExerciseRow[]> {
     const db = await getDatabase();
-    return db.getAllAsync<ExerciseRow>(
-      'SELECT * FROM exercises ORDER BY muscle_group, name'
-    );
+    return db.getAllAsync<ExerciseRow>('SELECT * FROM exercises ORDER BY muscle_group, name');
   },
 
   /** 部位カテゴリで種目を検索する */
@@ -33,7 +29,7 @@ export const ExerciseRepository = {
     const db = await getDatabase();
     return db.getAllAsync<ExerciseRow>(
       'SELECT * FROM exercises WHERE muscle_group = ? ORDER BY name',
-      [muscleGroup]
+      [muscleGroup],
     );
   },
 
@@ -41,25 +37,22 @@ export const ExerciseRepository = {
   async findFavorites(): Promise<ExerciseRow[]> {
     const db = await getDatabase();
     return db.getAllAsync<ExerciseRow>(
-      'SELECT * FROM exercises WHERE is_favorite = 1 ORDER BY name'
+      'SELECT * FROM exercises WHERE is_favorite = 1 ORDER BY name',
     );
   },
 
   /** カスタム種目を取得する */
   async findCustom(): Promise<ExerciseRow[]> {
     const db = await getDatabase();
-    return db.getAllAsync<ExerciseRow>(
-      'SELECT * FROM exercises WHERE is_custom = 1 ORDER BY name'
-    );
+    return db.getAllAsync<ExerciseRow>('SELECT * FROM exercises WHERE is_custom = 1 ORDER BY name');
   },
 
   /** 名前で種目を検索する（部分一致） */
   async search(query: string): Promise<ExerciseRow[]> {
     const db = await getDatabase();
-    return db.getAllAsync<ExerciseRow>(
-      'SELECT * FROM exercises WHERE name LIKE ? ORDER BY name',
-      [`%${query}%`]
-    );
+    return db.getAllAsync<ExerciseRow>('SELECT * FROM exercises WHERE name LIKE ? ORDER BY name', [
+      `%${query}%`,
+    ]);
   },
 
   /** カスタム種目を作成する */
@@ -71,13 +64,10 @@ export const ExerciseRepository = {
     await db.runAsync(
       `INSERT INTO exercises (id, name, muscle_group, equipment, is_custom, is_favorite, created_at, updated_at)
        VALUES (?, ?, ?, ?, 1, 0, ?, ?)`,
-      [id, params.name, params.muscle_group, params.equipment, now, now]
+      [id, params.name, params.muscle_group, params.equipment, now, now],
     );
 
-    const row = await db.getFirstAsync<ExerciseRow>(
-      'SELECT * FROM exercises WHERE id = ?',
-      [id]
-    );
+    const row = await db.getFirstAsync<ExerciseRow>('SELECT * FROM exercises WHERE id = ?', [id]);
 
     if (!row) {
       throw new Error('種目の作成に失敗しました');
@@ -108,10 +98,7 @@ export const ExerciseRepository = {
     values.push(Date.now());
 
     values.push(id);
-    await db.runAsync(
-      `UPDATE exercises SET ${fields.join(', ')} WHERE id = ?`,
-      values
-    );
+    await db.runAsync(`UPDATE exercises SET ${fields.join(', ')} WHERE id = ?`, values);
   },
 
   /** お気に入りをトグルする */
@@ -119,7 +106,7 @@ export const ExerciseRepository = {
     const db = await getDatabase();
     await db.runAsync(
       `UPDATE exercises SET is_favorite = CASE WHEN is_favorite = 0 THEN 1 ELSE 0 END, updated_at = ? WHERE id = ?`,
-      [Date.now(), id]
+      [Date.now(), id],
     );
   },
 };

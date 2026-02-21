@@ -87,7 +87,7 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
         });
       }
     },
-    [previousRecord, sets, onCopyPreviousSet]
+    [previousRecord, sets, onCopyPreviousSet],
   );
 
   /** 各セットに対応する前回データを取得 */
@@ -101,7 +101,7 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
         reps: prevSet.reps,
       };
     },
-    [previousRecord]
+    [previousRecord],
   );
 
   const muscleLabel = MUSCLE_GROUP_LABELS[exercise.muscleGroup] ?? exercise.muscleGroup;
@@ -111,12 +111,8 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
       {/* 種目ヘッダー */}
       <View className="flex-row justify-between items-start mb-1">
         <TouchableOpacity onPress={() => onExerciseNamePress(exercise.id)}>
-          <Text className="text-[16px] font-semibold text-[#4D94FF]">
-            {exercise.name}
-          </Text>
-          <Text className="text-[12px] text-[#64748b] mt-[2px]">
-            {muscleLabel}
-          </Text>
+          <Text className="text-[16px] font-semibold text-[#4D94FF]">{exercise.name}</Text>
+          <Text className="text-[12px] text-[#64748b] mt-[2px]">{muscleLabel}</Text>
         </TouchableOpacity>
 
         {/* 前回記録バッジ + 一括コピー */}
@@ -126,9 +122,7 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
             className="flex-row items-center gap-1 px-2 py-1 rounded-lg bg-[#F1F3F5]"
             accessibilityLabel="前回の全セットをコピー"
           >
-            <Text className="text-[11px] text-[#64748b]">
-              {previousBadgeText}
-            </Text>
+            <Text className="text-[11px] text-[#64748b]">{previousBadgeText}</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -158,9 +152,7 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
         className="w-full mt-2 py-[10px] border border-dashed border-[#4D94FF] rounded-lg bg-[#E6F2FF] items-center"
         accessibilityLabel="セットを追加"
       >
-        <Text className="text-[13px] font-semibold text-[#4D94FF]">
-          + セットを追加
-        </Text>
+        <Text className="text-[13px] font-semibold text-[#4D94FF]">+ セットを追加</Text>
       </TouchableOpacity>
 
       {/* 種目メモ */}

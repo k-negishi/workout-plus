@@ -56,7 +56,7 @@ export const SetRow: React.FC<SetRowProps> = ({
     (value: number | null) => {
       onWeightChange(set.id, value);
     },
-    [set.id, onWeightChange]
+    [set.id, onWeightChange],
   );
 
   /** レップ数変更ハンドラー */
@@ -64,7 +64,7 @@ export const SetRow: React.FC<SetRowProps> = ({
     (value: number | null) => {
       onRepsChange(set.id, value);
     },
-    [set.id, onRepsChange]
+    [set.id, onRepsChange],
   );
 
   /** 推定1RM（モジュールレベル関数で計算） */
@@ -83,9 +83,7 @@ export const SetRow: React.FC<SetRowProps> = ({
             className="flex-row items-center gap-1"
             accessibilityLabel={`${previousLabel}をコピー`}
           >
-            <Text className="text-[11px] text-[#64748b] font-normal">
-              {previousLabel}
-            </Text>
+            <Text className="text-[11px] text-[#64748b] font-normal">{previousLabel}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -94,9 +92,7 @@ export const SetRow: React.FC<SetRowProps> = ({
       <View className="flex-row items-center gap-2 px-3 py-2 bg-white border border-[#e2e8f0] rounded-lg">
         {/* セット番号 */}
         <View className="w-6 h-6 rounded-full bg-[#F1F3F5] items-center justify-center">
-          <Text className="text-[12px] font-semibold text-[#64748b]">
-            {set.setNumber}
-          </Text>
+          <Text className="text-[12px] font-semibold text-[#64748b]">{set.setNumber}</Text>
         </View>
 
         {/* 入力エリア */}
@@ -127,9 +123,7 @@ export const SetRow: React.FC<SetRowProps> = ({
 
         {/* 推定1RM表示 */}
         {estimated1rm != null && (
-          <Text className="text-[11px] text-[#64748b] whitespace-nowrap">
-            1RM {estimated1rm}
-          </Text>
+          <Text className="text-[11px] text-[#64748b] whitespace-nowrap">1RM {estimated1rm}</Text>
         )}
 
         {/* 削除ボタン */}

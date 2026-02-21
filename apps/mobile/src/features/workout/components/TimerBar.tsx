@@ -66,9 +66,7 @@ export const TimerBar: React.FC<TimerBarProps> = ({
   return (
     <View className="flex-row items-center px-5 py-2 bg-white border-b border-[#e2e8f0]">
       {/* 経過時間ラベル */}
-      <Text className="text-[13px] text-[#64748b] font-normal mr-2">
-        経過時間
-      </Text>
+      <Text className="text-[13px] text-[#64748b] font-normal mr-2">経過時間</Text>
 
       {/* 再生/一時停止ボタン */}
       <TouchableOpacity
@@ -76,20 +74,19 @@ export const TimerBar: React.FC<TimerBarProps> = ({
         className="w-6 h-6 rounded-full border-[1.5px] border-[#4D94FF] items-center justify-center"
         accessibilityLabel={timerStatus === 'running' ? '一時停止' : '開始'}
       >
-        <Text className="text-[10px] text-[#4D94FF] leading-[10px]">
-          {toggleLabel}
-        </Text>
+        <Text className="text-[10px] text-[#4D94FF] leading-[10px]">{toggleLabel}</Text>
       </TouchableOpacity>
 
       {/* 一時停止中ラベル */}
       {timerStatus === 'paused' && (
-        <Text className="text-[11px] text-[#64748b] font-normal ml-2">
-          一時停止中
-        </Text>
+        <Text className="text-[11px] text-[#64748b] font-normal ml-2">一時停止中</Text>
       )}
 
       {/* 経過時間表示 */}
-      <Text className="ml-auto text-[16px] font-bold text-[#334155]" style={{ fontVariant: ['tabular-nums'] }}>
+      <Text
+        className="ml-auto text-[16px] font-bold text-[#334155]"
+        style={{ fontVariant: ['tabular-nums'] }}
+      >
         {formatTime(elapsedSeconds)}
       </Text>
 

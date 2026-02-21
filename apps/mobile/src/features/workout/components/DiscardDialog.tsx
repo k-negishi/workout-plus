@@ -16,11 +16,7 @@ type DiscardDialogProps = {
   onCancel: () => void;
 };
 
-export function DiscardDialog({
-  visible,
-  onDiscard,
-  onCancel,
-}: DiscardDialogProps) {
+export function DiscardDialog({ visible, onDiscard, onCancel }: DiscardDialogProps) {
   return (
     <ConfirmDialog
       visible={visible}

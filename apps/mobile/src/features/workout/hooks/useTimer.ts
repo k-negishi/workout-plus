@@ -69,7 +69,7 @@ export function useTimer(): UseTimerReturn {
         timer_started_at: startedAt,
       });
     },
-    [currentWorkout]
+    [currentWorkout],
   );
 
   /** タイマーを開始する（notStarted → running） */
@@ -151,9 +151,7 @@ export function useTimer(): UseTimerReturn {
 
   // 表示用の経過秒数: running中は timerStartedAt からの差分を加算
   const displayElapsed =
-    timerStatus === 'running' && timerStartedAt != null
-      ? elapsedSeconds
-      : elapsedSeconds;
+    timerStatus === 'running' && timerStartedAt != null ? elapsedSeconds : elapsedSeconds;
 
   return {
     timerStatus,

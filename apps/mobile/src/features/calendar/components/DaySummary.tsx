@@ -5,12 +5,12 @@
  */
 import { format, parseISO } from 'date-fns';
 import { ja } from 'date-fns/locale';
-import { useCallback,useEffect, useState } from 'react';
-import { ActivityIndicator,Pressable, Text, View } from 'react-native';
-import { Path, Polyline,Svg } from 'react-native-svg';
+import { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
+import { Path, Polyline, Svg } from 'react-native-svg';
 
 import { getDatabase } from '@/database/client';
-import type { ExerciseRow,SetRow, WorkoutExerciseRow, WorkoutRow } from '@/database/types';
+import type { ExerciseRow, SetRow, WorkoutExerciseRow, WorkoutRow } from '@/database/types';
 
 /** チェックアイコン */
 function CheckIcon() {
@@ -86,7 +86,7 @@ export function DaySummary({ dateString, onNavigateToDetail }: DaySummaryProps) 
       // その日に完了したワークアウトを取得
       const workouts = await db.getAllAsync<WorkoutRow>(
         "SELECT * FROM workouts WHERE status = 'completed' AND completed_at >= ? AND completed_at < ? ORDER BY completed_at DESC LIMIT 1",
-        [dayStart, dayEnd]
+        [dayStart, dayEnd],
       );
 
       if (workouts.length === 0) {
@@ -104,7 +104,7 @@ export function DaySummary({ dateString, onNavigateToDetail }: DaySummaryProps) 
       // 種目一覧を取得
       const exercises = await db.getAllAsync<WorkoutExerciseRow>(
         'SELECT * FROM workout_exercises WHERE workout_id = ? ORDER BY display_order',
-        [w.id]
+        [w.id],
       );
 
       let setsTotal = 0;
@@ -115,13 +115,13 @@ export function DaySummary({ dateString, onNavigateToDetail }: DaySummaryProps) 
         // 種目名を取得
         const exercise = await db.getFirstAsync<ExerciseRow>(
           'SELECT * FROM exercises WHERE id = ?',
-          [we.exercise_id]
+          [we.exercise_id],
         );
 
         // セットを取得
         const sets = await db.getAllAsync<SetRow>(
           'SELECT * FROM sets WHERE workout_exercise_id = ? ORDER BY set_number',
-          [we.id]
+          [we.id],
         );
 
         setsTotal += sets.length;
@@ -237,9 +237,7 @@ export function DaySummary({ dateString, onNavigateToDetail }: DaySummaryProps) 
             className="bg-white rounded-sm p-3"
             style={{ borderWidth: 1, borderColor: '#e2e8f0' }}
           >
-            <Text className="text-[15px] font-semibold text-primary mb-2">
-              {ex.exerciseName}
-            </Text>
+            <Text className="text-[15px] font-semibold text-primary mb-2">{ex.exerciseName}</Text>
             <View style={{ gap: 6 }}>
               {ex.sets.map((set) => (
                 <View

@@ -4,27 +4,16 @@
  * セット値変更、セット追加/削除、種目追加/削除
  * 保存時にPR再計算（T047）、変更ありキャンセル時にDiscard確認（T048）
  */
-import { type RouteProp,useNavigation, useRoute } from '@react-navigation/native';
+import { type RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { getDatabase } from '@/database/client';
 import { PersonalRecordRepository } from '@/database/repositories/pr';
 import { SetRepository } from '@/database/repositories/set';
 import { showErrorToast, showSuccessToast } from '@/shared/components/Toast';
-import type {
-  Exercise,
-  HomeStackParamList,
-  WorkoutExercise,
-  WorkoutSet,
-} from '@/types';
+import type { Exercise, HomeStackParamList, WorkoutExercise, WorkoutSet } from '@/types';
 
 import { DiscardDialog } from '../components/DiscardDialog';
 import { calculate1RM } from '../utils/calculate1RM';
@@ -61,10 +50,9 @@ export const WorkoutEditScreen: React.FC = () => {
         display_order: number;
         memo: string | null;
         created_at: number;
-      }>(
-        'SELECT * FROM workout_exercises WHERE workout_id = ? ORDER BY display_order',
-        [workoutId]
-      );
+      }>('SELECT * FROM workout_exercises WHERE workout_id = ? ORDER BY display_order', [
+        workoutId,
+      ]);
 
       const blocks: EditExerciseBlock[] = [];
       for (const we of weRows) {
@@ -101,10 +89,7 @@ export const WorkoutEditScreen: React.FC = () => {
           estimated_1rm: number | null;
           created_at: number;
           updated_at: number;
-        }>(
-          'SELECT * FROM sets WHERE workout_exercise_id = ? ORDER BY set_number',
-          [we.id]
-        );
+        }>('SELECT * FROM sets WHERE workout_exercise_id = ? ORDER BY set_number', [we.id]);
 
         blocks.push({
           workoutExercise: {
@@ -135,52 +120,46 @@ export const WorkoutEditScreen: React.FC = () => {
   }, [workoutId]);
 
   /** セットの重量を変更する */
-  const handleWeightChange = useCallback(
-    (blockIdx: number, setIdx: number, text: string) => {
-      const weight = text ? parseFloat(text) : null;
-      setExerciseBlocks((prev) => {
-        const next = [...prev];
-        const block = { ...next[blockIdx]! };
-        const sets = [...block.sets];
-        const s = { ...sets[setIdx]! };
-        s.weight = weight;
-        s.estimated1rm =
-          weight != null && s.reps != null && weight > 0 && s.reps > 0
-            ? calculate1RM(weight, s.reps)
-            : null;
-        sets[setIdx] = s;
-        block.sets = sets;
-        next[blockIdx] = block;
-        return next;
-      });
-      setHasChanges(true);
-    },
-    []
-  );
+  const handleWeightChange = useCallback((blockIdx: number, setIdx: number, text: string) => {
+    const weight = text ? parseFloat(text) : null;
+    setExerciseBlocks((prev) => {
+      const next = [...prev];
+      const block = { ...next[blockIdx]! };
+      const sets = [...block.sets];
+      const s = { ...sets[setIdx]! };
+      s.weight = weight;
+      s.estimated1rm =
+        weight != null && s.reps != null && weight > 0 && s.reps > 0
+          ? calculate1RM(weight, s.reps)
+          : null;
+      sets[setIdx] = s;
+      block.sets = sets;
+      next[blockIdx] = block;
+      return next;
+    });
+    setHasChanges(true);
+  }, []);
 
   /** セットのレップ数を変更する */
-  const handleRepsChange = useCallback(
-    (blockIdx: number, setIdx: number, text: string) => {
-      const reps = text ? parseInt(text, 10) : null;
-      setExerciseBlocks((prev) => {
-        const next = [...prev];
-        const block = { ...next[blockIdx]! };
-        const sets = [...block.sets];
-        const s = { ...sets[setIdx]! };
-        s.reps = reps;
-        s.estimated1rm =
-          s.weight != null && reps != null && s.weight > 0 && reps > 0
-            ? calculate1RM(s.weight, reps)
-            : null;
-        sets[setIdx] = s;
-        block.sets = sets;
-        next[blockIdx] = block;
-        return next;
-      });
-      setHasChanges(true);
-    },
-    []
-  );
+  const handleRepsChange = useCallback((blockIdx: number, setIdx: number, text: string) => {
+    const reps = text ? parseInt(text, 10) : null;
+    setExerciseBlocks((prev) => {
+      const next = [...prev];
+      const block = { ...next[blockIdx]! };
+      const sets = [...block.sets];
+      const s = { ...sets[setIdx]! };
+      s.reps = reps;
+      s.estimated1rm =
+        s.weight != null && reps != null && s.weight > 0 && reps > 0
+          ? calculate1RM(s.weight, reps)
+          : null;
+      sets[setIdx] = s;
+      block.sets = sets;
+      next[blockIdx] = block;
+      return next;
+    });
+    setHasChanges(true);
+  }, []);
 
   /** セットを追加する */
   const handleAddSet = useCallback(
@@ -213,7 +192,7 @@ export const WorkoutEditScreen: React.FC = () => {
       });
       setHasChanges(true);
     },
-    [exerciseBlocks]
+    [exerciseBlocks],
   );
 
   /** セットを削除する */
@@ -229,15 +208,13 @@ export const WorkoutEditScreen: React.FC = () => {
       setExerciseBlocks((prev) => {
         const next = [...prev];
         const b = { ...next[blockIdx]! };
-        b.sets = b.sets
-          .filter((_, i) => i !== setIdx)
-          .map((s, i) => ({ ...s, setNumber: i + 1 }));
+        b.sets = b.sets.filter((_, i) => i !== setIdx).map((s, i) => ({ ...s, setNumber: i + 1 }));
         next[blockIdx] = b;
         return next;
       });
       setHasChanges(true);
     },
-    [exerciseBlocks]
+    [exerciseBlocks],
   );
 
   /** 種目を削除する */
@@ -247,14 +224,12 @@ export const WorkoutEditScreen: React.FC = () => {
       if (!block) return;
 
       const db = await getDatabase();
-      await db.runAsync('DELETE FROM workout_exercises WHERE id = ?', [
-        block.workoutExercise.id,
-      ]);
+      await db.runAsync('DELETE FROM workout_exercises WHERE id = ?', [block.workoutExercise.id]);
 
       setExerciseBlocks((prev) => prev.filter((_, i) => i !== blockIdx));
       setHasChanges(true);
     },
-    [exerciseBlocks]
+    [exerciseBlocks],
   );
 
   /** T047: 保存＋PR再計算 */
@@ -273,9 +248,7 @@ export const WorkoutEditScreen: React.FC = () => {
       }
 
       // PR再計算
-      const exerciseIds = new Set(
-        exerciseBlocks.map((b) => b.workoutExercise.exerciseId)
-      );
+      const exerciseIds = new Set(exerciseBlocks.map((b) => b.workoutExercise.exerciseId));
       for (const exerciseId of exerciseIds) {
         await PersonalRecordRepository.recalculateForExercise(exerciseId);
       }
@@ -311,9 +284,7 @@ export const WorkoutEditScreen: React.FC = () => {
         <TouchableOpacity onPress={handleCancel}>
           <Text className="text-[15px] text-[#475569]">キャンセル</Text>
         </TouchableOpacity>
-        <Text className="flex-1 text-center text-[16px] font-semibold text-[#334155]">
-          編集
-        </Text>
+        <Text className="flex-1 text-center text-[16px] font-semibold text-[#334155]">編集</Text>
         <TouchableOpacity
           onPress={() => void handleSave()}
           disabled={isSaving}
@@ -348,9 +319,7 @@ export const WorkoutEditScreen: React.FC = () => {
 
               {/* セットテーブルヘッダー */}
               <View className="flex-row gap-2 px-2 pb-2">
-                <Text className="w-8 text-[11px] font-semibold text-[#64748b] text-left">
-                  Set
-                </Text>
+                <Text className="w-8 text-[11px] font-semibold text-[#64748b] text-left">Set</Text>
                 <Text className="flex-1 text-[11px] font-semibold text-[#64748b] text-center">
                   kg
                 </Text>
@@ -407,25 +376,16 @@ export const WorkoutEditScreen: React.FC = () => {
               </View>
 
               {/* セット追加ボタン */}
-              <TouchableOpacity
-                onPress={() => void handleAddSet(blockIdx)}
-                className="mt-2 py-2"
-              >
-                <Text className="text-[14px] font-semibold text-[#4D94FF]">
-                  + セットを追加
-                </Text>
+              <TouchableOpacity onPress={() => void handleAddSet(blockIdx)} className="mt-2 py-2">
+                <Text className="text-[14px] font-semibold text-[#4D94FF]">+ セットを追加</Text>
               </TouchableOpacity>
             </View>
           ))}
         </View>
 
         {/* 種目追加ボタン */}
-        <TouchableOpacity
-          className="mx-4 py-4 bg-white border border-[#e2e8f0] rounded-lg items-center"
-        >
-          <Text className="text-[15px] font-semibold text-[#4D94FF]">
-            + 種目を追加
-          </Text>
+        <TouchableOpacity className="mx-4 py-4 bg-white border border-[#e2e8f0] rounded-lg items-center">
+          <Text className="text-[15px] font-semibold text-[#4D94FF]">+ 種目を追加</Text>
         </TouchableOpacity>
       </ScrollView>
 

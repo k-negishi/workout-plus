@@ -30,7 +30,7 @@ export type UsePreviousRecordReturn = {
  */
 export function usePreviousRecord(
   exerciseId: string,
-  currentWorkoutId: string | null
+  currentWorkoutId: string | null,
 ): UsePreviousRecordReturn {
   const [previousRecord, setPreviousRecord] = useState<PreviousRecord | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -46,9 +46,7 @@ export function usePreviousRecord(
       const db = await getDatabase();
 
       // 現在のワークアウトを除外して、直近の完了済みワークアウトを検索
-      const excludeClause = currentWorkoutId
-        ? 'AND w.id != ?'
-        : '';
+      const excludeClause = currentWorkoutId ? 'AND w.id != ?' : '';
       const params: (string | number)[] = [exerciseId];
       if (currentWorkoutId) {
         params.push(currentWorkoutId);
@@ -64,7 +62,7 @@ export function usePreviousRecord(
          WHERE we.exercise_id = ? AND w.status = 'completed' ${excludeClause}
          ORDER BY w.created_at DESC
          LIMIT 1`,
-        params
+        params,
       );
 
       if (!row) {
@@ -83,10 +81,9 @@ export function usePreviousRecord(
         estimated_1rm: number | null;
         created_at: number;
         updated_at: number;
-      }>(
-        'SELECT * FROM sets WHERE workout_exercise_id = ? ORDER BY set_number',
-        [row.workout_exercise_id]
-      );
+      }>('SELECT * FROM sets WHERE workout_exercise_id = ? ORDER BY set_number', [
+        row.workout_exercise_id,
+      ]);
 
       const sets: WorkoutSet[] = setRows.map((s) => ({
         id: s.id,

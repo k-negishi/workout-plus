@@ -27,7 +27,7 @@ export function calculate1RM(weight: number, reps: number): number {
  * ボリューム = Sigma(weight * reps) で、weight/repsがnullのセットは無視
  */
 export function calculateVolume(
-  sets: Array<{ weight: number | null; reps: number | null }>
+  sets: Array<{ weight: number | null; reps: number | null }>,
 ): number {
   return sets.reduce((total, set) => {
     if (set.weight != null && set.reps != null && set.weight > 0 && set.reps > 0) {

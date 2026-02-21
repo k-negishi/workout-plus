@@ -39,14 +39,11 @@ export const WorkoutRepository = {
     await db.runAsync(
       `INSERT INTO workouts (id, status, created_at, started_at, completed_at, timer_status, elapsed_seconds, timer_started_at, memo)
        VALUES (?, 'recording', ?, NULL, NULL, 'notStarted', 0, NULL, ?)`,
-      [id, now, params?.memo ?? null]
+      [id, now, params?.memo ?? null],
     );
 
     // 作成した行を返す
-    const row = await db.getFirstAsync<WorkoutRow>(
-      'SELECT * FROM workouts WHERE id = ?',
-      [id]
-    );
+    const row = await db.getFirstAsync<WorkoutRow>('SELECT * FROM workouts WHERE id = ?', [id]);
 
     if (!row) {
       throw new Error('ワークアウトの作成に失敗しました');
@@ -58,10 +55,7 @@ export const WorkoutRepository = {
   /** IDでワークアウトを取得する */
   async findById(id: string): Promise<WorkoutRow | null> {
     const db = await getDatabase();
-    return db.getFirstAsync<WorkoutRow>(
-      'SELECT * FROM workouts WHERE id = ?',
-      [id]
-    );
+    return db.getFirstAsync<WorkoutRow>('SELECT * FROM workouts WHERE id = ?', [id]);
   },
 
   /** ステータスでワークアウトを検索する */
@@ -69,7 +63,7 @@ export const WorkoutRepository = {
     const db = await getDatabase();
     return db.getAllAsync<WorkoutRow>(
       'SELECT * FROM workouts WHERE status = ? ORDER BY created_at DESC',
-      [status]
+      [status],
     );
   },
 
@@ -77,7 +71,7 @@ export const WorkoutRepository = {
   async findRecording(): Promise<WorkoutRow | null> {
     const db = await getDatabase();
     return db.getFirstAsync<WorkoutRow>(
-      "SELECT * FROM workouts WHERE status = 'recording' LIMIT 1"
+      "SELECT * FROM workouts WHERE status = 'recording' LIMIT 1",
     );
   },
 
@@ -85,7 +79,7 @@ export const WorkoutRepository = {
   async findAllCompleted(): Promise<WorkoutRow[]> {
     const db = await getDatabase();
     return db.getAllAsync<WorkoutRow>(
-      "SELECT * FROM workouts WHERE status = 'completed' ORDER BY created_at DESC"
+      "SELECT * FROM workouts WHERE status = 'completed' ORDER BY created_at DESC",
     );
   },
 
@@ -108,10 +102,7 @@ export const WorkoutRepository = {
     }
 
     values.push(id);
-    await db.runAsync(
-      `UPDATE workouts SET ${fields.join(', ')} WHERE id = ?`,
-      values
-    );
+    await db.runAsync(`UPDATE workouts SET ${fields.join(', ')} WHERE id = ?`, values);
   },
 
   /** ワークアウトを削除する（CASCADE で関連レコードも削除） */

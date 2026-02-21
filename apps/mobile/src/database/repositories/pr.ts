@@ -4,7 +4,7 @@
  */
 import { ulid } from 'ulid';
 
-import type { PersonalRecord,PRType } from '@/types/pr';
+import type { PersonalRecord, PRType } from '@/types/pr';
 
 import { getDatabase } from '../client';
 import type { PRRow } from '../types';
@@ -22,12 +22,14 @@ function rowToPR(row: PRRow): PersonalRecord {
 }
 
 /** セットの配列からmax_weight / max_repsと、それぞれのワークアウト情報を抽出するヘルパー */
-function findMaxWeightAndReps(sets: Array<{
-  weight: number | null;
-  reps: number | null;
-  workout_id: string;
-  completed_at: number;
-}>): {
+function findMaxWeightAndReps(
+  sets: Array<{
+    weight: number | null;
+    reps: number | null;
+    workout_id: string;
+    completed_at: number;
+  }>,
+): {
   maxWeight: number;
   maxWeightWorkoutId: string;
   maxWeightAchievedAt: number;
@@ -55,16 +57,25 @@ function findMaxWeightAndReps(sets: Array<{
     }
   }
 
-  return { maxWeight, maxWeightWorkoutId, maxWeightAchievedAt, maxReps, maxRepsWorkoutId, maxRepsAchievedAt };
+  return {
+    maxWeight,
+    maxWeightWorkoutId,
+    maxWeightAchievedAt,
+    maxReps,
+    maxRepsWorkoutId,
+    maxRepsAchievedAt,
+  };
 }
 
 /** セットの配列からセッション単位のmax_volumeを計算するヘルパー */
-function findMaxVolume(sets: Array<{
-  weight: number | null;
-  reps: number | null;
-  workout_id: string;
-  completed_at: number;
-}>): {
+function findMaxVolume(
+  sets: Array<{
+    weight: number | null;
+    reps: number | null;
+    workout_id: string;
+    completed_at: number;
+  }>,
+): {
   maxVolume: number;
   maxVolumeWorkoutId: string;
   maxVolumeAchievedAt: number;
@@ -118,7 +129,7 @@ export const PersonalRecordRepository = {
     // 既存のPRを取得
     const existing = await db.getFirstAsync<PRRow>(
       'SELECT * FROM personal_records WHERE exercise_id = ? AND pr_type = ?',
-      [params.exerciseId, params.prType]
+      [params.exerciseId, params.prType],
     );
 
     if (!existing) {
@@ -127,13 +138,12 @@ export const PersonalRecordRepository = {
       await db.runAsync(
         `INSERT INTO personal_records (id, exercise_id, pr_type, value, workout_id, achieved_at)
          VALUES (?, ?, ?, ?, ?, ?)`,
-        [id, params.exerciseId, params.prType, params.value, params.workoutId, params.achievedAt]
+        [id, params.exerciseId, params.prType, params.value, params.workoutId, params.achievedAt],
       );
 
-      const row = await db.getFirstAsync<PRRow>(
-        'SELECT * FROM personal_records WHERE id = ?',
-        [id]
-      );
+      const row = await db.getFirstAsync<PRRow>('SELECT * FROM personal_records WHERE id = ?', [
+        id,
+      ]);
 
       if (!row) {
         throw new Error('PRの作成に失敗しました');
@@ -146,15 +156,14 @@ export const PersonalRecordRepository = {
       // 既存より大きい値の場合のみ更新
       await db.runAsync(
         `UPDATE personal_records SET value = ?, workout_id = ?, achieved_at = ? WHERE id = ?`,
-        [params.value, params.workoutId, params.achievedAt, existing.id]
+        [params.value, params.workoutId, params.achievedAt, existing.id],
       );
     }
 
     // 更新後（または更新不要時）の現在値を返す
-    const current = await db.getFirstAsync<PRRow>(
-      'SELECT * FROM personal_records WHERE id = ?',
-      [existing.id]
-    );
+    const current = await db.getFirstAsync<PRRow>('SELECT * FROM personal_records WHERE id = ?', [
+      existing.id,
+    ]);
 
     if (!current) {
       throw new Error('PRの取得に失敗しました');
@@ -168,7 +177,7 @@ export const PersonalRecordRepository = {
     const db = await getDatabase();
     const rows = await db.getAllAsync<PRRow>(
       'SELECT * FROM personal_records WHERE exercise_id = ?',
-      [exerciseId]
+      [exerciseId],
     );
     return rows.map(rowToPR);
   },
@@ -184,10 +193,7 @@ export const PersonalRecordRepository = {
     const db = await getDatabase();
 
     // 既存PRを削除してから再計算
-    await db.runAsync(
-      'DELETE FROM personal_records WHERE exercise_id = ?',
-      [exerciseId]
-    );
+    await db.runAsync('DELETE FROM personal_records WHERE exercise_id = ?', [exerciseId]);
 
     // completedワークアウトに紐づく該当種目の全セットを取得
     const sets = await db.getAllAsync<{
@@ -202,21 +208,54 @@ export const PersonalRecordRepository = {
        JOIN workouts w ON we.workout_id = w.id
        WHERE we.exercise_id = ? AND w.status = 'completed'
        ORDER BY w.completed_at`,
-      [exerciseId]
+      [exerciseId],
     );
 
     if (sets.length === 0) return;
 
     // ヘルパー関数で最大値を計算（複雑度をメソッド外に分離）
-    const { maxWeight, maxWeightWorkoutId, maxWeightAchievedAt, maxReps, maxRepsWorkoutId, maxRepsAchievedAt } =
-      findMaxWeightAndReps(sets);
+    const {
+      maxWeight,
+      maxWeightWorkoutId,
+      maxWeightAchievedAt,
+      maxReps,
+      maxRepsWorkoutId,
+      maxRepsAchievedAt,
+    } = findMaxWeightAndReps(sets);
     const { maxVolume, maxVolumeWorkoutId, maxVolumeAchievedAt } = findMaxVolume(sets);
 
     // PRをINSERT（値が0より大きい場合のみ）
-    const prsToInsert: Array<{ exerciseId: string; prType: PRType; value: number; workoutId: string; achievedAt: number }> = [];
-    if (maxWeight > 0) prsToInsert.push({ exerciseId, prType: 'max_weight', value: maxWeight, workoutId: maxWeightWorkoutId, achievedAt: maxWeightAchievedAt });
-    if (maxReps > 0) prsToInsert.push({ exerciseId, prType: 'max_reps', value: maxReps, workoutId: maxRepsWorkoutId, achievedAt: maxRepsAchievedAt });
-    if (maxVolume > 0) prsToInsert.push({ exerciseId, prType: 'max_volume', value: maxVolume, workoutId: maxVolumeWorkoutId, achievedAt: maxVolumeAchievedAt });
+    const prsToInsert: Array<{
+      exerciseId: string;
+      prType: PRType;
+      value: number;
+      workoutId: string;
+      achievedAt: number;
+    }> = [];
+    if (maxWeight > 0)
+      prsToInsert.push({
+        exerciseId,
+        prType: 'max_weight',
+        value: maxWeight,
+        workoutId: maxWeightWorkoutId,
+        achievedAt: maxWeightAchievedAt,
+      });
+    if (maxReps > 0)
+      prsToInsert.push({
+        exerciseId,
+        prType: 'max_reps',
+        value: maxReps,
+        workoutId: maxRepsWorkoutId,
+        achievedAt: maxRepsAchievedAt,
+      });
+    if (maxVolume > 0)
+      prsToInsert.push({
+        exerciseId,
+        prType: 'max_volume',
+        value: maxVolume,
+        workoutId: maxVolumeWorkoutId,
+        achievedAt: maxVolumeAchievedAt,
+      });
 
     // recalculate時はupsertの大小比較ではなく直接INSERT（既存は上で削除済み）
     for (const pr of prsToInsert) {
@@ -224,7 +263,7 @@ export const PersonalRecordRepository = {
       await db.runAsync(
         `INSERT INTO personal_records (id, exercise_id, pr_type, value, workout_id, achieved_at)
          VALUES (?, ?, ?, ?, ?, ?)`,
-        [id, pr.exerciseId, pr.prType, pr.value, pr.workoutId, pr.achievedAt]
+        [id, pr.exerciseId, pr.prType, pr.value, pr.workoutId, pr.achievedAt],
       );
     }
   },

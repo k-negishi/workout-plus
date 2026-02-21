@@ -19,7 +19,7 @@ function countMonthlyTraining(trainingDates: Date[], now: Date): number {
 /** 今週の各日にトレーニングがあったかを判定する */
 function getWeekStatus(
   weekDays: Date[],
-  trainingDates: Date[]
+  trainingDates: Date[],
 ): Array<{ isDone: boolean; isToday: boolean }> {
   const today = new Date();
   return weekDays.map((day) => ({
@@ -27,7 +27,7 @@ function getWeekStatus(
       (d) =>
         d.getFullYear() === day.getFullYear() &&
         d.getMonth() === day.getMonth() &&
-        d.getDate() === day.getDate()
+        d.getDate() === day.getDate(),
     ),
     isToday:
       day.getFullYear() === today.getFullYear() &&
@@ -111,11 +111,7 @@ describe('StreakCard ロジック', () => {
         new Date(2026, 1, 21), // 土
         new Date(2026, 1, 22), // 日
       ];
-      const trainingDates = [
-        new Date(2026, 1, 16),
-        new Date(2026, 1, 18),
-        new Date(2026, 1, 20),
-      ];
+      const trainingDates = [new Date(2026, 1, 16), new Date(2026, 1, 18), new Date(2026, 1, 20)];
 
       const status = getWeekStatus(weekDays, trainingDates);
 
@@ -129,10 +125,7 @@ describe('StreakCard ロジック', () => {
     });
 
     it('トレーニング日がない場合はすべてisDoneがfalse', () => {
-      const weekDays = [
-        new Date(2026, 1, 16),
-        new Date(2026, 1, 17),
-      ];
+      const weekDays = [new Date(2026, 1, 16), new Date(2026, 1, 17)];
       const status = getWeekStatus(weekDays, []);
       expect(status.every((s) => !s.isDone)).toBe(true);
     });

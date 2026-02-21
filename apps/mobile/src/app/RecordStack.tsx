@@ -22,14 +22,8 @@ export function RecordStack() {
         component={ExercisePickerScreen}
         options={{ presentation: 'modal' }}
       />
-      <Stack.Screen
-        name="ExerciseHistory"
-        component={ExerciseHistoryFullScreen}
-      />
-      <Stack.Screen
-        name="WorkoutSummary"
-        component={WorkoutSummaryScreen}
-      />
+      <Stack.Screen name="ExerciseHistory" component={ExerciseHistoryFullScreen} />
+      <Stack.Screen name="WorkoutSummary" component={WorkoutSummaryScreen} />
     </Stack.Navigator>
   );
 }

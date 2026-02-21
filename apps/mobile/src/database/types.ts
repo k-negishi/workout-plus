@@ -11,22 +11,10 @@ export type WorkoutStatus = 'recording' | 'completed';
 export type TimerStatus = 'notStarted' | 'running' | 'paused';
 
 /** 部位カテゴリ */
-export type MuscleGroup =
-  | 'chest'
-  | 'back'
-  | 'legs'
-  | 'shoulders'
-  | 'biceps'
-  | 'triceps'
-  | 'abs';
+export type MuscleGroup = 'chest' | 'back' | 'legs' | 'shoulders' | 'biceps' | 'triceps' | 'abs';
 
 /** 器具タイプ */
-export type Equipment =
-  | 'barbell'
-  | 'dumbbell'
-  | 'machine'
-  | 'cable'
-  | 'bodyweight';
+export type Equipment = 'barbell' | 'dumbbell' | 'machine' | 'cable' | 'bodyweight';
 
 /** PR種別 */
 export type PRType = 'max_weight' | 'max_volume' | 'max_reps';

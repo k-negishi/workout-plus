@@ -3,8 +3,8 @@
  * ワイヤーフレーム: widgets-grid セクション準拠
  * 4カード: 今月のワークアウト回数 / 今週の回数 / 月間総ボリューム / 最長ストリーク
  */
-import { Text,View } from 'react-native';
-import { Circle, Line, Path, Polyline,Svg } from 'react-native-svg';
+import { Text, View } from 'react-native';
+import { Circle, Line, Path, Polyline, Svg } from 'react-native-svg';
 
 /** ターゲットアイコン（今月のワークアウト） */
 function TargetIcon() {
@@ -33,7 +33,11 @@ function CalendarIcon() {
 function TrophyIcon() {
   return (
     <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#4D94FF" strokeWidth={2}>
-      <Path d="M6 9H4a2 2 0 01-2-2V5a2 2 0 012-2h2M18 9h2a2 2 0 002-2V5a2 2 0 00-2-2h-2M6 3h12v6a6 6 0 11-12 0V3zM9 21h6M12 15v6" strokeLinecap="round" strokeLinejoin="round" />
+      <Path
+        d="M6 9H4a2 2 0 01-2-2V5a2 2 0 012-2h2M18 9h2a2 2 0 002-2V5a2 2 0 00-2-2h-2M6 3h12v6a6 6 0 11-12 0V3zM9 21h6M12 15v6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </Svg>
   );
 }
@@ -42,7 +46,11 @@ function TrophyIcon() {
 function ChartIcon() {
   return (
     <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#4D94FF" strokeWidth={2}>
-      <Polyline points="22 12 18 12 15 21 9 3 6 12 2 12" strokeLinecap="round" strokeLinejoin="round" />
+      <Polyline
+        points="22 12 18 12 15 21 9 3 6 12 2 12"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </Svg>
   );
 }
@@ -89,10 +97,7 @@ function WidgetCard({
   subtitle?: string;
 }) {
   return (
-    <View
-      className="bg-white rounded-lg p-4"
-      style={{ borderWidth: 1, borderColor: '#e2e8f0' }}
-    >
+    <View className="bg-white rounded-lg p-4" style={{ borderWidth: 1, borderColor: '#e2e8f0' }}>
       {/* ヘッダー: アイコン + タイトル */}
       <View className="flex-row items-center mb-3" style={{ gap: 8 }}>
         <View
@@ -110,9 +115,7 @@ function WidgetCard({
       </Text>
 
       {/* サブタイトル */}
-      {subtitle ? (
-        <Text className="text-xs text-text-secondary">{subtitle}</Text>
-      ) : null}
+      {subtitle ? <Text className="text-xs text-text-secondary">{subtitle}</Text> : null}
     </View>
   );
 }

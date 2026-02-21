@@ -7,11 +7,11 @@
  * T060: PR履歴 + 全履歴リスト
  */
 import type { RouteProp } from '@react-navigation/native';
-import { useNavigation,useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { format } from 'date-fns';
 import { ja } from 'date-fns/locale';
-import { ActivityIndicator,Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { BarChart } from 'react-native-gifted-charts';
 import { Path, Svg } from 'react-native-svg';
 
@@ -78,8 +78,7 @@ export function ExerciseHistoryFullScreen() {
   const { exerciseId, exerciseName } = route.params;
 
   // 種目履歴データ
-  const { stats, weeklyData, prHistory, allHistory, loading } =
-    useExerciseHistory(exerciseId);
+  const { stats, weeklyData, prHistory, allHistory, loading } = useExerciseHistory(exerciseId);
 
   // チャートデータ変換
   const chartData = weeklyData.map((w) => ({
@@ -120,16 +119,18 @@ export function ExerciseHistoryFullScreen() {
           {/* === T058: 統計サマリー (6項目グリッド) === */}
           <View className="flex-row flex-wrap" style={{ gap: 8 }}>
             <StatCard label="最大重量" value={`${stats.maxWeight}`} unit="kg" />
-            <StatCard label="最大ボリューム" value={`${stats.maxVolume.toLocaleString()}`} unit="kg" />
+            <StatCard
+              label="最大ボリューム"
+              value={`${stats.maxVolume.toLocaleString()}`}
+              unit="kg"
+            />
             <StatCard label="平均重量" value={`${stats.averageWeight}`} unit="kg" />
             <StatCard label="総トレ回数" value={`${stats.totalSessions}`} unit="回" />
             <StatCard label="総ボリューム" value={formatVolume(stats.totalVolume)} />
             <StatCard
               label="最終PR"
               value={
-                stats.lastPRDate
-                  ? format(new Date(stats.lastPRDate), 'M/d', { locale: ja })
-                  : '-'
+                stats.lastPRDate ? format(new Date(stats.lastPRDate), 'M/d', { locale: ja }) : '-'
               }
             />
           </View>
@@ -157,11 +158,7 @@ export function ExerciseHistoryFullScreen() {
                   yAxisTextStyle={{ fontSize: 10, color: '#64748b' }}
                   xAxisLabelTextStyle={{ fontSize: 9, color: '#64748b' }}
                   noOfSections={5}
-                  maxValue={
-                    Math.ceil(
-                      Math.max(...chartData.map((d) => d.value), 1) * 1.2
-                    )
-                  }
+                  maxValue={Math.ceil(Math.max(...chartData.map((d) => d.value), 1) * 1.2)}
                   isAnimated
                 />
               </View>
@@ -171,9 +168,7 @@ export function ExerciseHistoryFullScreen() {
           {/* === T060: PR履歴 === */}
           {prHistory.length > 0 ? (
             <View className="mt-6">
-              <Text className="text-sm font-bold text-text-primary mb-3">
-                PR (自己ベスト) 履歴
-              </Text>
+              <Text className="text-sm font-bold text-text-primary mb-3">PR (自己ベスト) 履歴</Text>
               {prHistory.map((pr, idx) => (
                 <View
                   key={idx}
@@ -242,15 +237,7 @@ export function ExerciseHistoryFullScreen() {
 }
 
 /** 統計サマリー個別カード */
-function StatCard({
-  label,
-  value,
-  unit,
-}: {
-  label: string;
-  value: string;
-  unit?: string;
-}) {
+function StatCard({ label, value, unit }: { label: string; value: string; unit?: string }) {
   return (
     <View
       className="bg-white rounded-sm p-3"

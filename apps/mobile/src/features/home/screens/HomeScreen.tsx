@@ -5,18 +5,12 @@
  */
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import {
-  endOfMonth,
-  endOfWeek,
-  isWithinInterval,
-  startOfMonth,
-  startOfWeek,
-} from 'date-fns';
-import { useCallback, useEffect, useMemo,useState } from 'react';
-import { ActivityIndicator,ScrollView, Text, View } from 'react-native';
+import { endOfMonth, endOfWeek, isWithinInterval, startOfMonth, startOfWeek } from 'date-fns';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 
 import { getDatabase } from '@/database/client';
-import type { SetRow,WorkoutExerciseRow, WorkoutRow } from '@/database/types';
+import type { SetRow, WorkoutExerciseRow, WorkoutRow } from '@/database/types';
 import type { HomeStackParamList } from '@/types';
 
 import { QuickStatsWidget } from '../components/QuickStatsWidget';
@@ -55,9 +49,7 @@ function calculateLongestStreak(dates: Date[]): number {
       uniqueDays.set(key, d);
     }
   }
-  const sorted = Array.from(uniqueDays.values()).sort(
-    (a, b) => a.getTime() - b.getTime()
-  );
+  const sorted = Array.from(uniqueDays.values()).sort((a, b) => a.getTime() - b.getTime());
 
   let maxStreak = 1;
   let currentStreak = 1;
@@ -65,9 +57,7 @@ function calculateLongestStreak(dates: Date[]): number {
   for (let i = 1; i < sorted.length; i++) {
     const prev = sorted[i - 1]!;
     const curr = sorted[i]!;
-    const diffDays = Math.round(
-      (curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24)
-    );
+    const diffDays = Math.round((curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24));
 
     if (diffDays === 1) {
       currentStreak++;
@@ -95,7 +85,7 @@ export function HomeScreen() {
 
       // 完了済みワークアウトを全件取得
       const workouts = await db.getAllAsync<WorkoutRow>(
-        "SELECT * FROM workouts WHERE status = 'completed' ORDER BY completed_at DESC"
+        "SELECT * FROM workouts WHERE status = 'completed' ORDER BY completed_at DESC",
       );
 
       if (workouts.length === 0) {
@@ -119,7 +109,7 @@ export function HomeScreen() {
         // 種目を取得
         const exercises = await db.getAllAsync<WorkoutExerciseRow>(
           'SELECT * FROM workout_exercises WHERE workout_id = ?',
-          [workout.id]
+          [workout.id],
         );
 
         // 全セットを取得
@@ -129,7 +119,7 @@ export function HomeScreen() {
         for (const exercise of exercises) {
           const sets = await db.getAllAsync<SetRow>(
             'SELECT * FROM sets WHERE workout_exercise_id = ?',
-            [exercise.id]
+            [exercise.id],
           );
           totalSets += sets.length;
           for (const set of sets) {
@@ -162,48 +152,47 @@ export function HomeScreen() {
   }, [fetchData]);
 
   // 今月/今週のワークアウト回数
-  const { monthlyWorkouts, weeklyWorkouts, monthlyVolume, longestStreak } =
-    useMemo(() => {
-      const now = new Date();
-      const monthStart = startOfMonth(now);
-      const monthEnd = endOfMonth(now);
-      const weekStart = startOfWeek(now, { weekStartsOn: 1 });
-      const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
+  const { monthlyWorkouts, weeklyWorkouts, monthlyVolume, longestStreak } = useMemo(() => {
+    const now = new Date();
+    const monthStart = startOfMonth(now);
+    const monthEnd = endOfMonth(now);
+    const weekStart = startOfWeek(now, { weekStartsOn: 1 });
+    const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
 
-      let monthly = 0;
-      let weekly = 0;
+    let monthly = 0;
+    let weekly = 0;
 
-      for (const date of trainingDates) {
-        if (isWithinInterval(date, { start: monthStart, end: monthEnd })) {
-          monthly++;
-        }
-        if (isWithinInterval(date, { start: weekStart, end: weekEnd })) {
-          weekly++;
-        }
+    for (const date of trainingDates) {
+      if (isWithinInterval(date, { start: monthStart, end: monthEnd })) {
+        monthly++;
       }
+      if (isWithinInterval(date, { start: weekStart, end: weekEnd })) {
+        weekly++;
+      }
+    }
 
-      // 月間ボリュームは、今月のサマリーの合計
-      const monthlyVol = workoutSummaries
-        .filter((ws) => {
-          const d = new Date(ws.completedAt);
-          return isWithinInterval(d, { start: monthStart, end: monthEnd });
-        })
-        .reduce((sum, ws) => sum + ws.totalVolume, 0);
+    // 月間ボリュームは、今月のサマリーの合計
+    const monthlyVol = workoutSummaries
+      .filter((ws) => {
+        const d = new Date(ws.completedAt);
+        return isWithinInterval(d, { start: monthStart, end: monthEnd });
+      })
+      .reduce((sum, ws) => sum + ws.totalVolume, 0);
 
-      return {
-        monthlyWorkouts: monthly,
-        weeklyWorkouts: weekly,
-        monthlyVolume: monthlyVol,
-        longestStreak: calculateLongestStreak(trainingDates),
-      };
-    }, [trainingDates, workoutSummaries]);
+    return {
+      monthlyWorkouts: monthly,
+      weeklyWorkouts: weekly,
+      monthlyVolume: monthlyVol,
+      longestStreak: calculateLongestStreak(trainingDates),
+    };
+  }, [trainingDates, workoutSummaries]);
 
   // ワークアウト詳細への遷移
   const handleWorkoutPress = useCallback(
     (workoutId: string) => {
       navigation.navigate('WorkoutDetail', { workoutId });
     },
-    [navigation]
+    [navigation],
   );
 
   if (loading) {
@@ -224,7 +213,10 @@ export function HomeScreen() {
           style={{ borderBottomWidth: 1, borderBottomColor: '#e2e8f0' }}
         >
           <View className="flex-row justify-between items-center mb-4">
-            <Text className="text-xl font-semibold" style={{ color: '#334155', letterSpacing: -0.3 }}>
+            <Text
+              className="text-xl font-semibold"
+              style={{ color: '#334155', letterSpacing: -0.3 }}
+            >
               {getGreeting()}、トレーニー
             </Text>
             <View
@@ -275,12 +267,8 @@ export function HomeScreen() {
       <ScrollView className="flex-1 px-5 pt-5" showsVerticalScrollIndicator={false}>
         {/* 最近のトレーニング */}
         <View className="flex-row justify-between items-center mb-4">
-          <Text className="text-sm font-bold text-text-primary">
-            最近のトレーニング
-          </Text>
-          <Text className="text-xs text-text-secondary">
-            {workoutSummaries.length}件
-          </Text>
+          <Text className="text-sm font-bold text-text-primary">最近のトレーニング</Text>
+          <Text className="text-xs text-text-secondary">{workoutSummaries.length}件</Text>
         </View>
 
         {workoutSummaries.map((ws) => (
@@ -297,9 +285,7 @@ export function HomeScreen() {
 
         {/* ダッシュボードウィジェット */}
         <View className="flex-row justify-between items-center mt-6 mb-4">
-          <Text className="text-sm font-bold text-text-primary">
-            ダッシュボード
-          </Text>
+          <Text className="text-sm font-bold text-text-primary">ダッシュボード</Text>
         </View>
 
         <QuickStatsWidget

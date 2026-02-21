@@ -41,7 +41,7 @@ export const WorkoutExerciseRepository = {
     const db = await getDatabase();
     const rows = await db.getAllAsync<WorkoutExerciseRow>(
       'SELECT * FROM workout_exercises WHERE workout_id = ? ORDER BY display_order',
-      [workoutId]
+      [workoutId],
     );
     return rows.map(rowToWorkoutExercise);
   },
@@ -55,12 +55,12 @@ export const WorkoutExerciseRepository = {
     await db.runAsync(
       `INSERT INTO workout_exercises (id, workout_id, exercise_id, display_order, memo, created_at)
        VALUES (?, ?, ?, ?, ?, ?)`,
-      [id, params.workoutId, params.exerciseId, params.displayOrder, params.memo ?? null, now]
+      [id, params.workoutId, params.exerciseId, params.displayOrder, params.memo ?? null, now],
     );
 
     const row = await db.getFirstAsync<WorkoutExerciseRow>(
       'SELECT * FROM workout_exercises WHERE id = ?',
-      [id]
+      [id],
     );
 
     if (!row) {
@@ -97,10 +97,7 @@ export const WorkoutExerciseRepository = {
     }
 
     values.push(id);
-    await db.runAsync(
-      `UPDATE workout_exercises SET ${fields.join(', ')} WHERE id = ?`,
-      values
-    );
+    await db.runAsync(`UPDATE workout_exercises SET ${fields.join(', ')} WHERE id = ?`, values);
   },
 
   /** ワークアウト内の種目を削除する（CASCADE でセットも削除される） */
@@ -114,7 +111,7 @@ export const WorkoutExerciseRepository = {
     const db = await getDatabase();
     const result = await db.getFirstAsync<{ max_order: number | null }>(
       'SELECT MAX(display_order) as max_order FROM workout_exercises WHERE workout_id = ?',
-      [workoutId]
+      [workoutId],
     );
     return (result?.max_order ?? -1) + 1;
   },
@@ -124,14 +121,11 @@ export const WorkoutExerciseRepository = {
     const db = await getDatabase();
     const rows = await db.getAllAsync<Pick<WorkoutExerciseRow, 'id'>>(
       'SELECT id FROM workout_exercises WHERE workout_id = ? ORDER BY display_order',
-      [workoutId]
+      [workoutId],
     );
 
     for (const [i, row] of rows.entries()) {
-      await db.runAsync(
-        'UPDATE workout_exercises SET display_order = ? WHERE id = ?',
-        [i, row.id]
-      );
+      await db.runAsync('UPDATE workout_exercises SET display_order = ? WHERE id = ?', [i, row.id]);
     }
   },
 };

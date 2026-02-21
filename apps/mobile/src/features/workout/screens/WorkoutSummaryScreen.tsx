@@ -2,7 +2,7 @@
  * ワークアウトサマリー画面（WorkoutSummaryScreen）
  * 完了後の統計情報、PR、種目別サマリーを表示する
  */
-import { type RouteProp,useNavigation, useRoute } from '@react-navigation/native';
+import { type RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
@@ -83,7 +83,7 @@ export const WorkoutSummaryScreen: React.FC = () => {
            JOIN exercises e ON we.exercise_id = e.id
            WHERE we.workout_id = ?
            ORDER BY we.display_order`,
-          [workoutId]
+          [workoutId],
         );
 
         setExerciseCount(exercises.length);
@@ -96,10 +96,9 @@ export const WorkoutSummaryScreen: React.FC = () => {
           const sets = await db.getAllAsync<{
             weight: number | null;
             reps: number | null;
-          }>(
-            'SELECT weight, reps FROM sets WHERE workout_exercise_id = ? ORDER BY set_number',
-            [ex.we_id]
-          );
+          }>('SELECT weight, reps FROM sets WHERE workout_exercise_id = ? ORDER BY set_number', [
+            ex.we_id,
+          ]);
 
           const validSets = sets.filter((s) => s.weight != null && s.reps != null);
           const vol = calculateVolume(sets);
@@ -165,22 +164,21 @@ export const WorkoutSummaryScreen: React.FC = () => {
   }
 
   return (
-    <ScrollView className="flex-1 bg-[#f9fafb]" contentContainerStyle={{ padding: 20, paddingBottom: 120 }}>
+    <ScrollView
+      className="flex-1 bg-[#f9fafb]"
+      contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
+    >
       {/* ヘッダー */}
       <View className="items-center mb-6 pt-4">
         <View className="w-12 h-12 rounded-full bg-[#F0FDF4] items-center justify-center mb-3">
           <Text className="text-[24px] text-[#10B981]">{'\u2713'}</Text>
         </View>
-        <Text className="text-[24px] font-bold text-[#334155]">
-          ワークアウト完了
-        </Text>
+        <Text className="text-[24px] font-bold text-[#334155]">ワークアウト完了</Text>
       </View>
 
       {/* メインカード */}
       <View className="bg-white border border-[#e2e8f0] rounded-xl p-5 mb-4 items-center">
-        <Text className="text-[14px] text-[#64748b] mb-2">
-          所要時間
-        </Text>
+        <Text className="text-[14px] text-[#64748b] mb-2">所要時間</Text>
         <Text className="text-[16px] font-semibold text-[#475569]">
           {formatDuration(elapsedSeconds)}
         </Text>
@@ -214,18 +212,14 @@ export const WorkoutSummaryScreen: React.FC = () => {
       {/* PR セクション */}
       {prItems.length > 0 && (
         <View className="mb-4">
-          <Text className="text-[14px] font-semibold text-[#334155] mb-2">
-            新記録達成
-          </Text>
+          <Text className="text-[14px] font-semibold text-[#334155] mb-2">新記録達成</Text>
           {prItems.map((pr, index) => (
             <View
               key={`pr-${index}`}
               className="flex-row justify-between items-center bg-white border border-[#e2e8f0] rounded-lg px-4 py-3 mb-2"
             >
               <View>
-                <Text className="text-[14px] font-semibold text-[#334155]">
-                  {pr.exerciseName}
-                </Text>
+                <Text className="text-[14px] font-semibold text-[#334155]">{pr.exerciseName}</Text>
                 <Text className="text-[12px] text-[#64748b]">{pr.label}</Text>
               </View>
               <View className="px-2 py-[2px] rounded-lg bg-[#FBBF24]">
@@ -238,9 +232,7 @@ export const WorkoutSummaryScreen: React.FC = () => {
 
       {/* 種目別サマリー */}
       <View className="mb-6">
-        <Text className="text-[14px] font-semibold text-[#334155] mb-2">
-          種目別サマリー
-        </Text>
+        <Text className="text-[14px] font-semibold text-[#334155] mb-2">種目別サマリー</Text>
         <View className="bg-white border border-[#e2e8f0] rounded-lg overflow-hidden">
           {exerciseSummaries.map((summary, index) => (
             <View
@@ -249,13 +241,9 @@ export const WorkoutSummaryScreen: React.FC = () => {
                 index < exerciseSummaries.length - 1 ? 'border-b border-[#F1F3F5]' : ''
               }`}
             >
-              <Text className="text-[14px] font-semibold text-[#334155]">
-                {summary.name}
-              </Text>
+              <Text className="text-[14px] font-semibold text-[#334155]">{summary.name}</Text>
               <View className="flex-row items-center gap-2">
-                <Text className="text-[14px] text-[#64748b]">
-                  {summary.setCount}セット
-                </Text>
+                <Text className="text-[14px] text-[#64748b]">{summary.setCount}セット</Text>
                 <Text className="text-[14px] text-[#64748b]">{'\u2022'}</Text>
                 <Text className="text-[14px] font-semibold text-[#475569]">
                   {summary.volume.toLocaleString()}kg
@@ -272,9 +260,7 @@ export const WorkoutSummaryScreen: React.FC = () => {
         className="bg-[#4D94FF] rounded-lg py-4 items-center mt-6"
         accessibilityLabel="ホームに戻る"
       >
-        <Text className="text-[16px] font-semibold text-white">
-          ホームに戻る
-        </Text>
+        <Text className="text-[16px] font-semibold text-white">ホームに戻る</Text>
       </TouchableOpacity>
     </ScrollView>
   );

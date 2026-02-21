@@ -46,7 +46,7 @@ type UpdateSetParams = Partial<{
  */
 function calculateEstimated1RM(
   weight: number | null | undefined,
-  reps: number | null | undefined
+  reps: number | null | undefined,
 ): number | null {
   if (weight == null || reps == null) {
     return null;
@@ -62,15 +62,12 @@ async function resolveWeightAndReps(
   db: Awaited<ReturnType<typeof getDatabase>>,
   id: string,
   paramsWeight: number | null | undefined,
-  paramsReps: number | null | undefined
+  paramsReps: number | null | undefined,
 ): Promise<{ weight: number | null | undefined; reps: number | null | undefined }> {
   if (paramsWeight !== undefined && paramsReps !== undefined) {
     return { weight: paramsWeight, reps: paramsReps };
   }
-  const current = await db.getFirstAsync<SetRow>(
-    'SELECT * FROM sets WHERE id = ?',
-    [id]
-  );
+  const current = await db.getFirstAsync<SetRow>('SELECT * FROM sets WHERE id = ?', [id]);
   if (!current) {
     throw new Error('更新対象のセットが見つかりません');
   }
@@ -82,13 +79,11 @@ async function resolveWeightAndReps(
 
 export const SetRepository = {
   /** workout_exercise_id に紐づくセットを set_number 順で取得する */
-  async findByWorkoutExerciseId(
-    workoutExerciseId: string
-  ): Promise<WorkoutSet[]> {
+  async findByWorkoutExerciseId(workoutExerciseId: string): Promise<WorkoutSet[]> {
     const db = await getDatabase();
     const rows = await db.getAllAsync<SetRow>(
       'SELECT * FROM sets WHERE workout_exercise_id = ? ORDER BY set_number',
-      [workoutExerciseId]
+      [workoutExerciseId],
     );
     return rows.map(rowToSet);
   },
@@ -105,13 +100,10 @@ export const SetRepository = {
     await db.runAsync(
       `INSERT INTO sets (id, workout_exercise_id, set_number, weight, reps, estimated_1rm, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, params.workoutExerciseId, params.setNumber, weight, reps, estimated1rm, now, now]
+      [id, params.workoutExerciseId, params.setNumber, weight, reps, estimated1rm, now, now],
     );
 
-    const row = await db.getFirstAsync<SetRow>(
-      'SELECT * FROM sets WHERE id = ?',
-      [id]
-    );
+    const row = await db.getFirstAsync<SetRow>('SELECT * FROM sets WHERE id = ?', [id]);
 
     if (!row) {
       throw new Error('セットの作成に失敗しました');
@@ -125,7 +117,10 @@ export const SetRepository = {
     const db = await getDatabase();
     // 現在値の解決（省略されたフィールドはDBから補完）
     const { weight: newWeight, reps: newReps } = await resolveWeightAndReps(
-      db, id, params.weight, params.reps
+      db,
+      id,
+      params.weight,
+      params.reps,
     );
 
     // camelCase → snake_case マッピング
@@ -153,10 +148,7 @@ export const SetRepository = {
     values.push(calculateEstimated1RM(newWeight, newReps), Date.now());
 
     values.push(id);
-    await db.runAsync(
-      `UPDATE sets SET ${fields.join(', ')} WHERE id = ?`,
-      values
-    );
+    await db.runAsync(`UPDATE sets SET ${fields.join(', ')} WHERE id = ?`, values);
   },
 
   /** セットを1件削除する */
@@ -166,14 +158,9 @@ export const SetRepository = {
   },
 
   /** workout_exercise_id に紐づく全セットを一括削除する */
-  async deleteByWorkoutExerciseId(
-    workoutExerciseId: string
-  ): Promise<void> {
+  async deleteByWorkoutExerciseId(workoutExerciseId: string): Promise<void> {
     const db = await getDatabase();
-    await db.runAsync(
-      'DELETE FROM sets WHERE workout_exercise_id = ?',
-      [workoutExerciseId]
-    );
+    await db.runAsync('DELETE FROM sets WHERE workout_exercise_id = ?', [workoutExerciseId]);
   },
 
   /** set_number を 1 から連番で振り直す */
@@ -181,14 +168,11 @@ export const SetRepository = {
     const db = await getDatabase();
     const rows = await db.getAllAsync<Pick<SetRow, 'id'>>(
       'SELECT id FROM sets WHERE workout_exercise_id = ? ORDER BY set_number',
-      [workoutExerciseId]
+      [workoutExerciseId],
     );
 
     for (const [i, row] of rows.entries()) {
-      await db.runAsync('UPDATE sets SET set_number = ? WHERE id = ?', [
-        i + 1,
-        row.id,
-      ]);
+      await db.runAsync('UPDATE sets SET set_number = ? WHERE id = ?', [i + 1, row.id]);
     }
   },
 };

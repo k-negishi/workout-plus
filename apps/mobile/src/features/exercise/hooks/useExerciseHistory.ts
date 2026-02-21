@@ -3,7 +3,7 @@
  * 統計情報、週ごとの重量推移、PR履歴、セッション全履歴を提供する
  */
 import { format, startOfWeek, subMonths } from 'date-fns';
-import { useCallback, useEffect, useMemo,useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getDatabase } from '@/database/client';
 import type { PRRow } from '@/database/types';
@@ -95,20 +95,26 @@ function computeBasicSetStats(sets: SetWithWorkout[]): {
 }
 
 /** セットをワークアウト単位に集約するマップを構築するヘルパー */
-function buildWorkoutSessionMap(sets: SetWithWorkout[]): Map<string, {
-  completedAt: number;
-  sets: Array<{ setNumber: number; weight: number | null; reps: number | null }>;
-  sessionVolume: number;
-}> {
-  const workoutMap = new Map<string, {
+function buildWorkoutSessionMap(sets: SetWithWorkout[]): Map<
+  string,
+  {
     completedAt: number;
     sets: Array<{ setNumber: number; weight: number | null; reps: number | null }>;
     sessionVolume: number;
-  }>();
+  }
+> {
+  const workoutMap = new Map<
+    string,
+    {
+      completedAt: number;
+      sets: Array<{ setNumber: number; weight: number | null; reps: number | null }>;
+      sessionVolume: number;
+    }
+  >();
 
   for (const set of sets) {
     const setData = { setNumber: set.set_number, weight: set.weight, reps: set.reps };
-    const setVolume = (set.weight != null && set.reps != null) ? set.weight * set.reps : 0;
+    const setVolume = set.weight != null && set.reps != null ? set.weight * set.reps : 0;
     const existing = workoutMap.get(set.workout_id);
     if (existing) {
       existing.sets.push(setData);
@@ -129,10 +135,7 @@ function buildWorkoutSessionMap(sets: SetWithWorkout[]): Map<string, {
  * セットデータからExerciseStats（統計サマリー）を計算する純粋関数
  * useExerciseHistoryのfetchData内で使用。テスト容易性のためエクスポート。
  */
-export function calculateStats(
-  sets: SetWithWorkout[],
-  prs: PRForStats[]
-): ExerciseStats {
+export function calculateStats(sets: SetWithWorkout[], prs: PRForStats[]): ExerciseStats {
   const { maxWeight, maxReps, totalVolume, averageWeight } = computeBasicSetStats(sets);
   const workoutMap = buildWorkoutSessionMap(sets);
 
@@ -142,9 +145,7 @@ export function calculateStats(
     if (data.sessionVolume > maxVolume) maxVolume = data.sessionVolume;
   }
 
-  const lastPRDate = prs.length > 0
-    ? Math.max(...prs.map((pr) => pr.achieved_at))
-    : null;
+  const lastPRDate = prs.length > 0 ? Math.max(...prs.map((pr) => pr.achieved_at)) : null;
 
   return {
     maxWeight,
@@ -163,12 +164,15 @@ export function calculateStats(
  */
 export function buildHistory(
   sets: SetWithWorkout[],
-  prWorkoutIds: Set<string>
+  prWorkoutIds: Set<string>,
 ): SessionHistoryItem[] {
-  const workoutMap = new Map<string, {
-    completedAt: number;
-    sets: Array<{ setNumber: number; weight: number | null; reps: number | null }>;
-  }>();
+  const workoutMap = new Map<
+    string,
+    {
+      completedAt: number;
+      sets: Array<{ setNumber: number; weight: number | null; reps: number | null }>;
+    }
+  >();
 
   for (const set of sets) {
     const existing = workoutMap.get(set.workout_id);
@@ -222,13 +226,13 @@ export function useExerciseHistory(exerciseId: string) {
          JOIN workouts w ON we.workout_id = w.id
          WHERE we.exercise_id = ? AND w.status = 'completed'
          ORDER BY w.completed_at DESC, s.set_number ASC`,
-        [exerciseId]
+        [exerciseId],
       );
 
       // PR履歴を取得
       const prs = await db.getAllAsync<PRRow>(
         'SELECT * FROM personal_records WHERE exercise_id = ?',
-        [exerciseId]
+        [exerciseId],
       );
 
       // === 統計集計（エクスポートされた純粋関数を使用） ===
@@ -240,7 +244,7 @@ export function useExerciseHistory(exerciseId: string) {
           prType: pr.pr_type,
           value: pr.value,
           achievedAt: pr.achieved_at,
-        }))
+        })),
       );
 
       // === 全履歴（日付降順） ===
@@ -252,11 +256,7 @@ export function useExerciseHistory(exerciseId: string) {
       const weekMap = new Map<string, { totalWeight: number; count: number; weekStart: Date }>();
 
       for (const set of sets) {
-        if (
-          set.completed_at >= threeMonthsAgo &&
-          set.weight != null &&
-          set.weight > 0
-        ) {
+        if (set.completed_at >= threeMonthsAgo && set.weight != null && set.weight > 0) {
           const weekStart = startOfWeek(new Date(set.completed_at), { weekStartsOn: 1 });
           const key = weekStart.toISOString();
           const existing = weekMap.get(key);
@@ -291,6 +291,6 @@ export function useExerciseHistory(exerciseId: string) {
 
   return useMemo(
     () => ({ stats, weeklyData, prHistory, allHistory, loading, refetch: fetchData }),
-    [stats, weeklyData, prHistory, allHistory, loading, fetchData]
+    [stats, weeklyData, prHistory, allHistory, loading, fetchData],
   );
 }

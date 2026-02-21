@@ -21,7 +21,7 @@ type MarkedDateEntry = {
 function generateMarkedDates(
   trainingDates: Date[],
   selectedDate: string | null,
-  today: string
+  today: string,
 ): Record<string, MarkedDateEntry> {
   const marks: Record<string, MarkedDateEntry> = {};
 
@@ -59,9 +59,7 @@ function generateMarkedDates(
 /** 未来日判定ロジック */
 function isFutureDate(dateString: string, todayDate: Date): boolean {
   const selected = new Date(dateString);
-  const endOfToday = new Date(
-    startOfDay(todayDate).getTime() + 86400000
-  );
+  const endOfToday = new Date(startOfDay(todayDate).getTime() + 86400000);
   return !isBefore(selected, endOfToday);
 }
 
@@ -70,11 +68,7 @@ describe('MonthCalendar ロジック', () => {
     const today = '2026-02-21';
 
     it('トレーニング日のマーカーが正しく設定される', () => {
-      const trainingDates = [
-        new Date(2026, 1, 1),
-        new Date(2026, 1, 5),
-        new Date(2026, 1, 10),
-      ];
+      const trainingDates = [new Date(2026, 1, 1), new Date(2026, 1, 5), new Date(2026, 1, 10)];
 
       const marks = generateMarkedDates(trainingDates, null, today);
 

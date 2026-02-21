@@ -4,27 +4,16 @@
  * 日時、所要時間、総ボリューム、種目/セット一覧
  * 「編集」→ WorkoutEditScreen、「削除」→ 削除確認ダイアログ
  */
-import { type RouteProp,useNavigation, useRoute } from '@react-navigation/native';
+import { type RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useState } from 'react';
-import {
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 
 import { getDatabase } from '@/database/client';
 import { WorkoutRepository } from '@/database/repositories/workout';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { showErrorToast, showSuccessToast } from '@/shared/components/Toast';
-import type {
-  Exercise,
-  HomeStackParamList,
-  Workout,
-  WorkoutExercise,
-  WorkoutSet,
-} from '@/types';
+import type { Exercise, HomeStackParamList, Workout, WorkoutExercise, WorkoutSet } from '@/types';
 
 import { calculateVolume } from '../utils/calculate1RM';
 
@@ -95,10 +84,9 @@ export const WorkoutDetailScreen: React.FC = () => {
         display_order: number;
         memo: string | null;
         created_at: number;
-      }>(
-        'SELECT * FROM workout_exercises WHERE workout_id = ? ORDER BY display_order',
-        [workoutId]
-      );
+      }>('SELECT * FROM workout_exercises WHERE workout_id = ? ORDER BY display_order', [
+        workoutId,
+      ]);
 
       const blocks: ExerciseBlockData[] = [];
       for (const we of weRows) {
@@ -137,10 +125,7 @@ export const WorkoutDetailScreen: React.FC = () => {
           estimated_1rm: number | null;
           created_at: number;
           updated_at: number;
-        }>(
-          'SELECT * FROM sets WHERE workout_exercise_id = ? ORDER BY set_number',
-          [we.id]
-        );
+        }>('SELECT * FROM sets WHERE workout_exercise_id = ? ORDER BY set_number', [we.id]);
 
         blocks.push({
           workoutExercise: {
@@ -246,9 +231,7 @@ export const WorkoutDetailScreen: React.FC = () => {
           <View className="w-px h-8 bg-[#e2e8f0]" />
           <View className="flex-1 items-center gap-1">
             <Text className="text-[12px] text-[#64748b]">セット数</Text>
-            <Text className="text-[16px] font-semibold text-[#334155]">
-              {totalSets}
-            </Text>
+            <Text className="text-[16px] font-semibold text-[#334155]">{totalSets}</Text>
           </View>
         </View>
 
@@ -274,9 +257,7 @@ export const WorkoutDetailScreen: React.FC = () => {
                     {/* チェックアイコン */}
                     <Text className="text-[14px] text-[#10B981]">{'✓'}</Text>
                     {/* セット番号 */}
-                    <Text className="text-[14px] text-[#64748b] w-4">
-                      {set.setNumber}
-                    </Text>
+                    <Text className="text-[14px] text-[#64748b] w-4">{set.setNumber}</Text>
                     {/* 値 */}
                     <Text className="text-[15px] font-semibold text-[#334155] flex-1">
                       {set.weight ?? '-'}kg x {set.reps ?? '-'}

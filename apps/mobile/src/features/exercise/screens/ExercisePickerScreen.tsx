@@ -4,17 +4,10 @@
  * single モード: タップで即選択、multi モード: チェックボックス選択 + 一括追加
  * T039: カスタム種目編集フォーム内蔵
  */
-import { type RouteProp,useNavigation, useRoute } from '@react-navigation/native';
+import { type RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useState } from 'react';
-import {
-  FlatList,
-  SectionList,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import { FlatList, SectionList, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { ExerciseRepository } from '@/database/repositories/exercise';
 import { EmptyState } from '@/shared/components/EmptyState';
@@ -22,10 +15,7 @@ import { showErrorToast } from '@/shared/components/Toast';
 import type { Equipment, Exercise, MuscleGroup, RecordStackParamList } from '@/types';
 
 import { useWorkoutSession } from '../../workout/hooks/useWorkoutSession';
-import {
-  MUSCLE_GROUP_LABELS,
-  useExerciseSearch,
-} from '../hooks/useExerciseSearch';
+import { MUSCLE_GROUP_LABELS, useExerciseSearch } from '../hooks/useExerciseSearch';
 
 type PickerNavProp = NativeStackNavigationProp<RecordStackParamList, 'ExercisePicker'>;
 type PickerRouteProp = RouteProp<RecordStackParamList, 'ExercisePicker'>;
@@ -85,13 +75,7 @@ export const ExercisePickerScreen: React.FC = () => {
   const navigation = useNavigation<PickerNavProp>();
   const route = useRoute<PickerRouteProp>();
   const session = useWorkoutSession();
-  const {
-    query,
-    setQuery,
-    selectedCategory,
-    setSelectedCategory,
-    sections,
-  } = useExerciseSearch();
+  const { query, setQuery, selectedCategory, setSelectedCategory, sections } = useExerciseSearch();
 
   // T038: mode パラメータ（デフォルト: single）
   const mode = (route.params as { mode?: 'single' | 'multi' } | undefined)?.mode ?? 'single';
@@ -131,7 +115,7 @@ export const ExercisePickerScreen: React.FC = () => {
         navigation.goBack();
       }
     },
-    [mode, session, navigation]
+    [mode, session, navigation],
   );
 
   /** multi モード: 選択した種目を一括追加 */
@@ -143,12 +127,9 @@ export const ExercisePickerScreen: React.FC = () => {
   }, [selectedIds, session, navigation]);
 
   /** お気に入りトグル */
-  const handleToggleFavorite = useCallback(
-    async (exerciseId: string) => {
-      await ExerciseRepository.toggleFavorite(exerciseId);
-    },
-    []
-  );
+  const handleToggleFavorite = useCallback(async (exerciseId: string) => {
+    await ExerciseRepository.toggleFavorite(exerciseId);
+  }, []);
 
   /** T039: カスタム種目を作成する */
   const handleCreateCustom = useCallback(async () => {
@@ -213,9 +194,7 @@ export const ExercisePickerScreen: React.FC = () => {
         <TouchableOpacity onPress={handleClose} className="w-8 h-8 items-center justify-center">
           <Text className="text-[20px] text-[#475569]">{'\u00D7'}</Text>
         </TouchableOpacity>
-        <Text className="flex-1 text-center text-[16px] font-bold text-[#334155]">
-          種目を選択
-        </Text>
+        <Text className="flex-1 text-center text-[16px] font-bold text-[#334155]">種目を選択</Text>
         {/* T038: モード切替トグル（ヘッダー右） */}
         <View className="w-8" />
       </View>
@@ -253,9 +232,7 @@ export const ExercisePickerScreen: React.FC = () => {
             >
               <Text
                 className={`text-[13px] ${
-                  selectedCategory === item.key
-                    ? 'text-white font-semibold'
-                    : 'text-[#64748b]'
+                  selectedCategory === item.key ? 'text-white font-semibold' : 'text-[#64748b]'
                 }`}
               >
                 {item.label}
@@ -284,12 +261,8 @@ export const ExercisePickerScreen: React.FC = () => {
         }
         renderSectionHeader={({ section }) => (
           <View className="flex-row justify-between items-center px-5 pt-3 pb-2">
-            <Text className="text-[13px] font-semibold text-[#334155]">
-              {section.title}
-            </Text>
-            <Text className="text-[12px] text-[#64748b]">
-              {section.data.length}件
-            </Text>
+            <Text className="text-[13px] font-semibold text-[#334155]">{section.title}</Text>
+            <Text className="text-[12px] text-[#64748b]">{section.data.length}件</Text>
           </View>
         )}
         renderItem={({ item }) => {
@@ -308,22 +281,16 @@ export const ExercisePickerScreen: React.FC = () => {
                 {mode === 'multi' && (
                   <View
                     className={`w-[22px] h-[22px] rounded-lg border-2 mr-3 items-center justify-center ${
-                      isSelected
-                        ? 'bg-[#4D94FF] border-[#4D94FF]'
-                        : 'bg-white border-[#e2e8f0]'
+                      isSelected ? 'bg-[#4D94FF] border-[#4D94FF]' : 'bg-white border-[#e2e8f0]'
                     }`}
                   >
-                    {isSelected && (
-                      <Text className="text-white text-[12px] font-bold">{'✓'}</Text>
-                    )}
+                    {isSelected && <Text className="text-white text-[12px] font-bold">{'✓'}</Text>}
                   </View>
                 )}
 
                 {/* 種目情報 */}
                 <View className="flex-1">
-                  <Text className="text-[14px] font-semibold text-[#334155]">
-                    {item.name}
-                  </Text>
+                  <Text className="text-[14px] font-semibold text-[#334155]">{item.name}</Text>
                   <View className="flex-row gap-1.5 mt-1">
                     <View className="px-2 py-[2px] rounded-lg bg-[#E6F2FF]">
                       <Text className="text-[11px] font-semibold text-[#3385FF]">
@@ -536,9 +503,7 @@ export const ExercisePickerScreen: React.FC = () => {
                 onPress={() => setIsCreating(true)}
                 className="flex-row items-center justify-center py-3 border border-dashed border-[#e2e8f0] rounded-lg"
               >
-                <Text className="text-[13px] text-[#64748b]">
-                  + カスタム種目を追加
-                </Text>
+                <Text className="text-[13px] text-[#64748b]">+ カスタム種目を追加</Text>
               </TouchableOpacity>
             )}
           </View>

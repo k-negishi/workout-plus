@@ -15,19 +15,14 @@ const LATEST_VERSION = 1;
  * 現在のスキーマバージョンを取得する
  */
 async function getSchemaVersion(db: SQLiteDatabase): Promise<number> {
-  const result = await db.getFirstAsync<{ user_version: number }>(
-    'PRAGMA user_version'
-  );
+  const result = await db.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
   return result?.user_version ?? 0;
 }
 
 /**
  * スキーマバージョンを設定する
  */
-async function setSchemaVersion(
-  db: SQLiteDatabase,
-  version: number
-): Promise<void> {
+async function setSchemaVersion(db: SQLiteDatabase, version: number): Promise<void> {
   await db.execAsync(`PRAGMA user_version = ${version}`);
 }
 

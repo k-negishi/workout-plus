@@ -6,8 +6,8 @@
 import { format } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import { useMemo } from 'react';
-import { Pressable,Text, View } from 'react-native';
-import { Circle, Path,Svg } from 'react-native-svg';
+import { Pressable, Text, View } from 'react-native';
+import { Circle, Path, Svg } from 'react-native-svg';
 
 /** 時計アイコン */
 function ClockIcon() {
@@ -23,7 +23,11 @@ function ClockIcon() {
 function DumbbellIcon() {
   return (
     <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth={2}>
-      <Path d="M6 7v10M18 7v10M2 9v6M22 9v6M6 12h12M2 12h4M18 12h4" strokeLinecap="round" strokeLinejoin="round" />
+      <Path
+        d="M6 7v10M18 7v10M2 9v6M22 9v6M6 12h12M2 12h4M18 12h4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </Svg>
   );
 }

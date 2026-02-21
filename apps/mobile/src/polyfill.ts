@@ -13,11 +13,7 @@ if (typeof global.crypto?.getRandomValues !== 'function') {
   global.crypto = {
     ...(typeof global.crypto === 'object' ? global.crypto : {}),
     getRandomValues: <T extends ArrayBufferView>(buffer: T): T => {
-      const uint8 = new Uint8Array(
-        buffer.buffer,
-        buffer.byteOffset,
-        buffer.byteLength,
-      );
+      const uint8 = new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
       for (let i = 0; i < uint8.length; i++) {
         // Math.random を 0-255 の整数にマッピング
         uint8[i] = Math.floor(Math.random() * 256);

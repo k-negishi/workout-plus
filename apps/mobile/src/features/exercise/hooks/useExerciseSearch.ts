@@ -83,7 +83,7 @@ const CATEGORY_ORDER: MuscleGroup[] = [
 export function computeSections(
   allExercises: Exercise[],
   query: string,
-  selectedCategory: MuscleGroup | null
+  selectedCategory: MuscleGroup | null,
 ): ExerciseSection[] {
   // テキスト検索でフィルタ
   let filtered = allExercises;
@@ -168,7 +168,7 @@ export function useExerciseSearch(): UseExerciseSearchReturn {
   /** フィルタリング結果をセクション分けする（純粋関数 computeSections に委譲） */
   const sections = useMemo(
     () => computeSections(allExercises, query, selectedCategory),
-    [allExercises, query, selectedCategory]
+    [allExercises, query, selectedCategory],
   );
 
   return {

@@ -4,13 +4,7 @@
  * サイズ: sm / md / lg
  */
 import React from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  type StyleProp,
-  Text,
-  type ViewStyle,
-} from 'react-native';
+import { ActivityIndicator, Pressable, type StyleProp, Text, type ViewStyle } from 'react-native';
 
 import { borderRadius } from '@/shared/constants/borderRadius';
 import { colors } from '@/shared/constants/colors';

@@ -101,9 +101,7 @@ describe('useTimer - 状態遷移テスト', () => {
 
       // バックグラウンド復帰時の計算ロジック:
       // totalElapsed = elapsedSeconds + floor((now - timerStartedAt) / 1000)
-      const additionalSeconds = Math.floor(
-        (Date.now() - state.timerStartedAt!) / 1000
-      );
+      const additionalSeconds = Math.floor((Date.now() - state.timerStartedAt!) / 1000);
       const totalElapsed = state.elapsedSeconds + additionalSeconds;
 
       // 約70秒（60 + 10）になるはず（タイミングによって±1秒の誤差を許容）

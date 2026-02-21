@@ -6,8 +6,8 @@
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { format } from 'date-fns';
-import { useCallback,useEffect, useState } from 'react';
-import { ActivityIndicator,ScrollView, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { ActivityIndicator, ScrollView, View } from 'react-native';
 
 import { getDatabase } from '@/database/client';
 import type { WorkoutRow } from '@/database/types';
@@ -22,16 +22,14 @@ export function CalendarScreen() {
   const navigation = useNavigation<CalendarNavigation>();
   const [loading, setLoading] = useState(true);
   const [trainingDates, setTrainingDates] = useState<Date[]>([]);
-  const [selectedDate, setSelectedDate] = useState<string>(
-    format(new Date(), 'yyyy-MM-dd')
-  );
+  const [selectedDate, setSelectedDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
 
   // トレーニング日のデータ取得
   const fetchTrainingDates = useCallback(async () => {
     try {
       const db = await getDatabase();
       const workouts = await db.getAllAsync<WorkoutRow>(
-        "SELECT * FROM workouts WHERE status = 'completed' AND completed_at IS NOT NULL"
+        "SELECT * FROM workouts WHERE status = 'completed' AND completed_at IS NOT NULL",
       );
 
       const dates = workouts.map((w) => new Date(w.completed_at!));
@@ -57,7 +55,7 @@ export function CalendarScreen() {
     (workoutId: string) => {
       navigation.navigate('WorkoutDetail', { workoutId });
     },
-    [navigation]
+    [navigation],
   );
 
   if (loading) {
@@ -69,10 +67,7 @@ export function CalendarScreen() {
   }
 
   return (
-    <ScrollView
-      className="flex-1 bg-background px-5 pt-4"
-      showsVerticalScrollIndicator={false}
-    >
+    <ScrollView className="flex-1 bg-background px-5 pt-4" showsVerticalScrollIndicator={false}>
       {/* カレンダー */}
       <MonthCalendar
         trainingDates={trainingDates}
@@ -81,10 +76,7 @@ export function CalendarScreen() {
       />
 
       {/* 選択日のサマリー */}
-      <DaySummary
-        dateString={selectedDate}
-        onNavigateToDetail={handleNavigateToDetail}
-      />
+      <DaySummary dateString={selectedDate} onNavigateToDetail={handleNavigateToDetail} />
 
       {/* タブバーのスペーサー */}
       <View style={{ height: 100 }} />

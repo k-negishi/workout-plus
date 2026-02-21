@@ -38,9 +38,7 @@ export const useExerciseStore = create<ExerciseStoreState>((set) => ({
 
   updateExercise: (id, updates) =>
     set((state) => ({
-      exercises: state.exercises.map((e) =>
-        e.id === id ? { ...e, ...updates } : e,
-      ),
+      exercises: state.exercises.map((e) => (e.id === id ? { ...e, ...updates } : e)),
     })),
 
   toggleFavoriteLocal: (id) =>

@@ -25,13 +25,7 @@ type EmptyStateProps = {
   onAction?: () => void;
 };
 
-export function EmptyState({
-  icon,
-  title,
-  description,
-  actionLabel,
-  onAction,
-}: EmptyStateProps) {
+export function EmptyState({ icon, title, description, actionLabel, onAction }: EmptyStateProps) {
   return (
     <View
       style={{

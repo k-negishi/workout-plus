@@ -27,8 +27,7 @@ function StatsScreen() {
 
 /** 中央の記録開始ボタン（カスタムタブボタン） */
 function RecordTabButton() {
-  const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   return (
     <Pressable

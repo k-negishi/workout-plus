@@ -4,13 +4,7 @@
  * value は number | null で管理し、文字列変換は内部で行う
  */
 import React, { useCallback, useState } from 'react';
-import {
-  type StyleProp,
-  Text,
-  TextInput,
-  View,
-  type ViewStyle,
-} from 'react-native';
+import { type StyleProp, Text, TextInput, View, type ViewStyle } from 'react-native';
 
 import { borderRadius } from '@/shared/constants/borderRadius';
 import { colors } from '@/shared/constants/colors';
@@ -46,9 +40,7 @@ export function NumericInput({
   style,
 }: NumericInputProps) {
   /** 内部的に文字列として管理（入力途中の "5." 等を保持するため） */
-  const [textValue, setTextValue] = useState<string>(
-    value != null ? String(value) : '',
-  );
+  const [textValue, setTextValue] = useState<string>(value != null ? String(value) : '');
 
   /** 不正な文字を除去して値を反映 */
   const handleChangeText = useCallback(

@@ -12,7 +12,9 @@ import type { Exercise, MuscleGroup } from '@/types';
 import { computeSections, toExercise } from '../useExerciseSearch';
 
 /** テスト用の種目データ生成ヘルパー */
-function makeExercise(overrides: Partial<Exercise> & { id: string; name: string; muscleGroup: MuscleGroup }): Exercise {
+function makeExercise(
+  overrides: Partial<Exercise> & { id: string; name: string; muscleGroup: MuscleGroup },
+): Exercise {
   const now = Date.now();
   return {
     equipment: 'barbell',
@@ -27,7 +29,12 @@ function makeExercise(overrides: Partial<Exercise> & { id: string; name: string;
 /** テスト用のデータセット */
 const testExercises: Exercise[] = [
   makeExercise({ id: 'ex-1', name: 'ベンチプレス', muscleGroup: 'chest', isFavorite: true }),
-  makeExercise({ id: 'ex-2', name: 'インクラインダンベルプレス', muscleGroup: 'chest', equipment: 'dumbbell' }),
+  makeExercise({
+    id: 'ex-2',
+    name: 'インクラインダンベルプレス',
+    muscleGroup: 'chest',
+    equipment: 'dumbbell',
+  }),
   makeExercise({ id: 'ex-3', name: 'デッドリフト', muscleGroup: 'back' }),
   makeExercise({ id: 'ex-4', name: 'ラットプルダウン', muscleGroup: 'back', equipment: 'cable' }),
   makeExercise({ id: 'ex-5', name: 'スクワット', muscleGroup: 'legs', isFavorite: true }),
@@ -53,7 +60,7 @@ describe('toExercise: DBの行からExerciseへの変換', () => {
     expect(exercise.name).toBe('ベンチプレス');
     expect(exercise.muscleGroup).toBe('chest');
     expect(exercise.equipment).toBe('barbell');
-    expect(exercise.isCustom).toBe(false);  // is_custom === 0 → false
+    expect(exercise.isCustom).toBe(false); // is_custom === 0 → false
     expect(exercise.isFavorite).toBe(true); // is_favorite === 1 → true
     expect(exercise.createdAt).toBe(now);
   });
@@ -197,7 +204,7 @@ describe('useExerciseSearch セクション計算ロジック', () => {
       // (shoulders=カスタム種目→マイ種目、legs=スクワット→お気に入り のためカテゴリセクションに出ない)
       const sections = computeSections(testExercises, '', null);
       const categorySections = sections.filter(
-        (s) => s.title !== 'お気に入り' && s.title !== 'マイ種目'
+        (s) => s.title !== 'お気に入り' && s.title !== 'マイ種目',
       );
       const chestIdx = categorySections.findIndex((s) => s.title === '胸の種目');
       const backIdx = categorySections.findIndex((s) => s.title === '背中の種目');

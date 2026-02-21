@@ -47,12 +47,7 @@ export function ConfirmDialog({
   const isDestructive = destructive || confirmStyle === 'destructive';
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      statusBarTranslucent
-    >
+    <Modal visible={visible} transparent animationType="fade" statusBarTranslucent>
       {/* オーバーレイ背景 */}
       <Pressable
         onPress={onCancel}

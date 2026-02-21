@@ -47,9 +47,21 @@ export type HomeScreenProps = NativeStackScreenProps<HomeStackParamList, 'Home'>
 export type WorkoutDetailScreenProps = NativeStackScreenProps<HomeStackParamList, 'WorkoutDetail'>;
 export type WorkoutEditScreenProps = NativeStackScreenProps<HomeStackParamList, 'WorkoutEdit'>;
 export type CalendarScreenProps = NativeStackScreenProps<CalendarStackParamList, 'Calendar'>;
-export type CalendarWorkoutDetailScreenProps = NativeStackScreenProps<CalendarStackParamList, 'WorkoutDetail'>;
+export type CalendarWorkoutDetailScreenProps = NativeStackScreenProps<
+  CalendarStackParamList,
+  'WorkoutDetail'
+>;
 export type RecordScreenProps = NativeStackScreenProps<RecordStackParamList, 'Record'>;
-export type ExercisePickerScreenProps = NativeStackScreenProps<RecordStackParamList, 'ExercisePicker'>;
-export type ExerciseHistoryScreenProps = NativeStackScreenProps<RecordStackParamList, 'ExerciseHistory'>;
-export type WorkoutSummaryScreenProps = NativeStackScreenProps<RecordStackParamList, 'WorkoutSummary'>;
+export type ExercisePickerScreenProps = NativeStackScreenProps<
+  RecordStackParamList,
+  'ExercisePicker'
+>;
+export type ExerciseHistoryScreenProps = NativeStackScreenProps<
+  RecordStackParamList,
+  'ExerciseHistory'
+>;
+export type WorkoutSummaryScreenProps = NativeStackScreenProps<
+  RecordStackParamList,
+  'WorkoutSummary'
+>;
 export type MainTabScreenProps = BottomTabScreenProps<MainTabParamList>;
