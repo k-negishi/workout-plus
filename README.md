@@ -10,14 +10,14 @@
 specify → clarify → plan → tasks → [taskstoissues] → implement
 ```
 
-| ステップ | コマンド | 内容 |
-|---|---|---|
-| 1. 仕様書作成 | `/speckit.specify` | `specs/<feature>/` ディレクトリと仕様書を生成 |
-| 2. 仕様の明確化 | `/speckit.clarify` | 未定義領域を最大5問で質問・仕様に反映 |
-| 3. 実装計画 | `/speckit.plan` | `plan.md` を生成（アーキテクチャ・依存関係） |
-| 4. タスク生成 | `/speckit.tasks` | `tasks.md` を生成（依存関係順・並列可否付き） |
-| 5. Issue化 | `/speckit.taskstoissues` | tasks.md を GitHub Issues に変換 |
-| 6. 実装 | `/speckit.implement` | tasks.md の全タスクを順次・並列実行 |
+| ステップ | コマンド | 内容 | 成果物 |
+|---|---|---|---|
+| 1. 仕様書作成 | `/speckit.specify` | 未定義領域を洗い出し仕様書を生成 | `specs/<feature>/spec.md` |
+| 2. 仕様の明確化 | `/speckit.clarify` | 未定義領域を最大5問で質問・仕様に反映 | `specs/<feature>/spec.md`（更新） |
+| 3. 実装計画 | `/speckit.plan` | アーキテクチャ・依存関係を設計 | `specs/<feature>/plan.md` |
+| 4. タスク生成 | `/speckit.tasks` | 依存関係順・並列可否付きのタスクを生成 | `specs/<feature>/tasks.md` |
+| 5. Issue化 | `/speckit.taskstoissues` | tasks.md を GitHub Issues に変換 | GitHub Issues |
+| 6. 実装 | `/speckit.implement` | tasks.md の全タスクを順次・並列実行 | 実装コード・テスト |
 
 ### 品質チェック
 
@@ -25,10 +25,10 @@ specify → clarify → plan → tasks → [taskstoissues] → implement
 analyze → checklist
 ```
 
-| コマンド | 内容 |
-|---|---|
-| `/speckit.analyze` | spec・plan・tasks の横断的な整合性チェック（非破壊） |
-| `/speckit.checklist` | 機能に合わせたカスタムチェックリストを生成 |
+| コマンド | 内容 | 成果物 |
+|---|---|---|
+| `/speckit.analyze` | spec・plan・tasks の横断的な整合性チェック（非破壊） | コンソール出力（ファイル変更なし） |
+| `/speckit.checklist` | 機能に合わせたカスタムチェックリストを生成 | `specs/<feature>/checklists/requirements.md` |
 
 ---
 
