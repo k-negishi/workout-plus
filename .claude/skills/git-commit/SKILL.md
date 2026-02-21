@@ -112,6 +112,19 @@ git commit -m "<prefix>: <summary>" -m "<detail>\n- <file path>"
 - 速度改善が主目的なら `perf`
 - どれにも当てはまらない保守作業は `chore`
 
+## subject の書き方
+
+- **小文字始まり**（commitlint の `subject-case` ルールに従う）
+- 英語の固有名詞（GitHub, TypeScript 等）を subject の先頭に置かない
+
+```text
+// NG: PascalCase 始まりで commitlint に弾かれる
+ci: GitHub Actions CI をセットアップ
+
+// OK: 小文字始まり
+ci: github actions ci をセットアップ
+```
+
 ## NG例
 
 - `update`, `misc`, `changes` のような曖昧なsummary
