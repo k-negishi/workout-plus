@@ -17,66 +17,65 @@ Google Style Guide をベースに React Native / TypeScript のベストプラ�
 
 ### 基本方針
 
-- **文字列リテラルの代わりに Enum を使う**
-- マジックナンバー・マジック文字列を排除する
-- React Native では `const enum` を避ける（Metro bundler との相性問題）
-- 代わりに **通常の `enum`** または **`as const` オブジェクト** を使う
+- **`enum` キーワードは使わない**（バンドルサイズ増加・逆マッピング副作用・`const enum` の erase 問題）
+- **`as const` パターンで統一する**
+- Single Source of Truth（SSOT）: 全 Union Type は `src/types/` で定義
+- `database/types.ts` は Row 型のみを保持し、Union Type は `src/types/` から re-export する
+
+### as const パターン（標準）
+
+```typescript
+// ✅ 正しい書き方
+export const WorkoutStatus = {
+  RECORDING: 'recording',   // シンボル名: UPPER_SNAKE_CASE
+  COMPLETED: 'completed',   // DB格納値: lowercase_snake_case
+} as const;
+export type WorkoutStatus = (typeof WorkoutStatus)[keyof typeof WorkoutStatus];
+
+// 参照時
+if (status === WorkoutStatus.RECORDING) { ... }   // シンボルで参照（推奨）
+if (status === 'recording') { ... }               // 文字列リテラルも型安全（後方互換）
+
+// 全値列挙（バリデーション・UI選択肢に使用）
+const allStatuses = Object.values(WorkoutStatus); // ['recording', 'completed']
+```
+
+```typescript
+// ❌ 使わない
+enum WorkoutStatus { Recording = 'recording' }      // enum キーワード禁止
+const enum WorkoutStatus { Recording = 'recording' } // const enum も禁止
+```
 
 ### 命名規則
 
-```typescript
-// Enum 名: PascalCase（単数形）
-// メンバー名: PascalCase
+| 対象 | 規則 | 例 |
+|------|------|-----|
+| const オブジェクト名 | PascalCase（型名と同じ） | `WorkoutStatus` |
+| メンバー名（キー） | UPPER_SNAKE_CASE | `WorkoutStatus.NOT_STARTED` |
+| DB格納値（value） | lowercase_snake_case | `'not_started'` |
+| 型エイリアス名 | PascalCase | `type WorkoutStatus = ...` |
 
-// NG: 文字列リテラルの直接使用
-if (status === 'completed') { ... }
-
-// OK: Enum を使用
-enum WorkoutStatus {
-  InProgress = 'in_progress',
-  Completed  = 'completed',
-  Cancelled  = 'cancelled',
-}
-
-if (status === WorkoutStatus.Completed) { ... }
-```
-
-### ユースケース別の使い分け
-
-```typescript
-// ① enum（通常）: React Native / Metro で安全に使える
-enum MuscleGroup {
-  Chest     = 'chest',
-  Back      = 'back',
-  Legs      = 'legs',
-  Shoulders = 'shoulders',
-  Arms      = 'arms',
-  Core      = 'core',
-}
-
-// ② as const: 外部 API・DB の値と一致させる場合、または Union 型が欲しい場合
-const SetType = {
-  Normal:     'normal',
-  WarmUp:     'warm_up',
-  DropSet:    'drop_set',
-  FailureSet: 'failure_set',
-} as const;
-
-type SetType = (typeof SetType)[keyof typeof SetType];
-
-// ③ 一覧が必要な場合（画面上の選択肢など）
-const MUSCLE_GROUP_OPTIONS = Object.values(MuscleGroup);
-```
-
-### Enum の配置ルール
+### 配置ルール（SSOT）
 
 ```
 src/
-  constants/
-    enums.ts        # アプリ全体で使う Enum
-  features/
-    workout/
-      types.ts      # workout ドメイン固有の Enum・型
+  types/            ← Union Type の Single Source of Truth
+    workout.ts      # WorkoutStatus, TimerStatus, MuscleGroup, Equipment
+    pr.ts           # PRType
+    exercise.ts     # Exercise型（MuscleGroup/Equipment は workout.ts から import）
+    index.ts        # 全型の公開 API（value export + type export を分けて管理）
+  database/
+    types.ts        # Row型のみ。Union Type は ../types/ から re-export
+```
+
+### import スタイル
+
+```typescript
+// コンポーネント・フック: as const の値が必要なため value import
+import { TimerStatus } from '@/types/workout';
+
+// DB層（Row型のみ使用）: type import で十分
+import type { MuscleGroup } from '../types/workout';
 ```
 
 ---
@@ -248,3 +247,50 @@ import { calculateVolume } from './utils';
 // 5. 型インポート（type キーワードを付ける）
 import type { WorkoutSession } from '@/types';
 ```
+
+---
+
+## 6. Repository パターン — 戻り値は常にcamelCase
+
+`*Repository` の全メソッドは**内部で snake_case → camelCase 変換済み**の TypeScript 型を返す。
+呼び出し側で snake_case フィールド名を使うのは誤り。
+
+```typescript
+// NG: Repository の戻り値に snake_case でアクセスする
+const newSet = await SetRepository.create({
+  workout_exercise_id: workoutExerciseId,  // ERROR: CreateSetParams は camelCase
+  set_number: nextNum,
+});
+const id = newSet.workout_exercise_id;  // ERROR: WorkoutSet は camelCase
+
+// OK: 引数も戻り値も camelCase で一貫する
+const newSet = await SetRepository.create({
+  workoutExerciseId,   // CreateSetParams の正しいフィールド名
+  setNumber: nextNum,
+});
+const id = newSet.workoutExerciseId;  // WorkoutSet の正しいフィールド名
+```
+
+**理由:** Repository 層が DB の snake_case と TypeScript の camelCase の橋渡しをしている。
+呼び出し側は DB の存在を意識しなくてよい。型エラーに頼るだけでなく、意識的に守ること。
+
+---
+
+## 7. CI lint — コミット前に `simple-import-sort` を確認する
+
+新しい import を追加した場合（特に既存行の間に挿入した場合）、
+`simple-import-sort` ルールで CI が失敗することがある。
+
+**コミット前に必ず確認:**
+
+```bash
+# 変更したファイルを対象に lint を実行（エラーがあれば自動修正）
+npx eslint --fix <変更したファイルのパス>
+
+# または変更ファイル全体にかける
+pnpm lint
+```
+
+**よくある違反パターン:**
+- `@react-navigation/native` のインポートを追加したとき（`useFocusEffect` など）
+- 外部ライブラリと内部モジュールの順番が混在したとき
