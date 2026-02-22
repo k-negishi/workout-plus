@@ -3,9 +3,9 @@
  * ワークアウト記録のメイン画面
  * TimerBar（上部固定） + ExerciseBlockのScrollView + 種目追加・完了ボタン
  */
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -89,19 +89,40 @@ export const RecordScreen: React.FC = () => {
   const timer = useTimer();
   const session = useWorkoutSession();
 
-  /** 継続モード: pendingContinuationWorkoutId を読み取りクリアする */
-  const pendingContinuationWorkoutId = store.pendingContinuationWorkoutId;
-
   /** 種目マスタのキャッシュ */
   const [exerciseMap, setExerciseMap] = useState<Record<string, Exercise>>({});
 
-  /** セッション開始 */
-  useEffect(() => {
-    // 継続モードの場合は pendingContinuationWorkoutId を渡してクリア
-    store.setPendingContinuationWorkoutId(null);
-    void session.startSession(pendingContinuationWorkoutId ?? undefined);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  /**
+   * 初回フォーカス済みフラグ。
+   * useFocusEffect は画面表示のたびに呼ばれるため、
+   * pendingId がない通常の再フォーカスでは startSession を呼ばないよう制御する。
+   */
+  const sessionInitializedRef = useRef(false);
+
+  /**
+   * 画面フォーカス時にセッションを開始する。
+   * useEffect([], []) の代わりに useFocusEffect を使う理由:
+   * WorkoutDetailScreen から RecordTab に遷移する場合、RecordScreen がすでに
+   * マウントされていると useEffect は再実行されない。useFocusEffect なら
+   * 画面がフォーカスを得るたびに実行される。
+   */
+  useFocusEffect(
+    useCallback(() => {
+      // Zustand store の最新値を直接取得（クロージャの陳腐化を防ぐ）
+      const storeState = useWorkoutSessionStore.getState();
+      const pendingId = storeState.pendingContinuationWorkoutId;
+
+      if (pendingId !== null) {
+        // 継続モード: pendingId をクリアしてからセッションを開始する
+        storeState.setPendingContinuationWorkoutId(null);
+        void session.startSession(pendingId);
+      } else if (!sessionInitializedRef.current) {
+        // 初回フォーカス時のみ新規セッションを開始する（再フォーカスでは起動しない）
+        sessionInitializedRef.current = true;
+        void session.startSession();
+      }
+    }, [session]),
+  );
 
   /** 種目マスタを読み込む */
   useEffect(() => {

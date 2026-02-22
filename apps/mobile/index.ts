@@ -1,5 +1,7 @@
 // HermesエンジンのcryptoポリフィルをULID等が使用する前に必ず先頭でimport
 import './src/polyfill';
+// NativeWind v4: CSS をバンドルに明示的に含める（withNativeWind だけでは layout 系が効かないため）
+import './src/global.css';
 
 import { registerRootComponent } from 'expo';
 

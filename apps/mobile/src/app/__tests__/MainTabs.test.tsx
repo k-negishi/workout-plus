@@ -4,7 +4,7 @@
  * - 各タブのラベルを検証
  */
 import { NavigationContainer } from '@react-navigation/native';
-import { fireEvent, render } from '@testing-library/react-native';
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import React from 'react';
 
 import { colors } from '@/shared/constants/colors';
@@ -35,6 +35,21 @@ jest.mock('@react-navigation/native', () => ({
 // gifted-charts は ESM のみ配布のため jest-expo 環境でパースエラーになる
 jest.mock('react-native-gifted-charts', () => ({
   BarChart: 'BarChart',
+}));
+
+// handlePress が非同期で DB を参照するため WorkoutRepository をモックする
+jest.mock('@/database/repositories/workout', () => ({
+  WorkoutRepository: {
+    findRecording: jest.fn().mockResolvedValue(null),
+    findTodayCompleted: jest.fn().mockResolvedValue(null),
+  },
+}));
+
+// setPendingContinuationWorkoutId が必要なため store をモックする
+jest.mock('@/stores/workoutSessionStore', () => ({
+  useWorkoutSessionStore: jest.fn(() => ({
+    setPendingContinuationWorkoutId: jest.fn(),
+  })),
 }));
 
 // RecordStack の依存（SQLite/Zustand等）を排除し、遷移検証に必要な最小コンポーネントで代替する
@@ -114,11 +129,13 @@ describe('MainTabs', () => {
     });
   });
 
-  it('+ボタン押下で RecordTab に遷移する（RecordStack が描画される）', () => {
+  it('+ボタン押下で RecordTab に遷移する（RecordStack が描画される）', async () => {
     const { getByTestId } = renderWithNav();
     const button = getByTestId(RECORD_BUTTON_TEST_ID);
     fireEvent.press(button);
-    // 実際にタブが切り替わり RecordStack（モック）が描画されることを検証
-    expect(getByTestId('record-stack-screen')).toBeTruthy();
+    // handlePress は非同期（DB 確認後にナビゲート）なので waitFor で待機する
+    await waitFor(() => {
+      expect(getByTestId('record-stack-screen')).toBeTruthy();
+    });
   });
 });

@@ -15,7 +15,9 @@ import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { WorkoutRepository } from '@/database/repositories/workout';
 import { colors } from '@/shared/constants/colors';
+import { useWorkoutSessionStore } from '@/stores/workoutSessionStore';
 import type { MainTabParamList } from '@/types';
 
 import { CalendarStack } from './CalendarStack';
@@ -40,10 +42,27 @@ function StatsScreen() {
  * を prop で渡すことで正しく遷移できる。
  */
 function FloatingRecordButton({ navigation }: Pick<BottomTabBarProps, 'navigation'>) {
+  const store = useWorkoutSessionStore();
+
+  /** 当日ワークアウトの存在を確認してから記録画面へ遷移する */
+  const handlePress = async () => {
+    // 1. recording 中のセッションを優先（既存の復帰ロジック）
+    const recording = await WorkoutRepository.findRecording();
+    if (!recording) {
+      // 2. 当日の完了済みワークアウトを確認
+      const todayWorkout = await WorkoutRepository.findTodayCompleted();
+      if (todayWorkout) {
+        // 継続モード: workoutId を store 経由で RecordScreen に渡す
+        store.setPendingContinuationWorkoutId(todayWorkout.id);
+      }
+    }
+    navigation.navigate('RecordTab' as never);
+  };
+
   return (
     <Pressable
       testID="record-tab-button"
-      onPress={() => navigation.navigate('RecordTab' as never)}
+      onPress={() => void handlePress()}
       style={{
         // WF L344-346: width: 56px, height: 56px, border-radius: 50%
         width: 56,

@@ -15,8 +15,26 @@ import { RootNavigator } from '@/app/RootNavigator';
 // getDatabase() が内部で runMigrations() を呼ぶ（client.ts参照）
 import { getDatabase } from '@/database/client';
 import { WorkoutRepository } from '@/database/repositories/workout';
+import { generateDevWorkoutSeedSQL } from '@/database/seed';
+import type { WorkoutRow } from '@/database/types';
 import { colors } from '@/shared/constants/colors';
 import { useWorkoutSessionStore } from '@/stores/workoutSessionStore';
+import type { Workout } from '@/types/workout';
+
+/** DB の WorkoutRow（snake_case）をストアの Workout（camelCase）に変換する */
+function rowToWorkout(row: WorkoutRow): Workout {
+  return {
+    id: row.id,
+    status: row.status,
+    createdAt: row.created_at,
+    startedAt: row.started_at,
+    completedAt: row.completed_at,
+    timerStatus: row.timer_status,
+    elapsedSeconds: row.elapsed_seconds,
+    timerStartedAt: row.timer_started_at,
+    memo: row.memo,
+  };
+}
 
 export default function App() {
   // DB初期化が完了するまでスプラッシュを表示
@@ -28,13 +46,16 @@ export default function App() {
       try {
         // DBスキーマ初期化 + マイグレーション
         // getDatabase() が openDatabaseAsync → WAL設定 → runMigrations を一括実行する
-        await getDatabase();
+        const db = await getDatabase();
+
+        // 開発環境のみ、UI確認用のダミーデータを投入（冪等）
+        await generateDevWorkoutSeedSQL(db);
 
         // T044: recording 状態のワークアウトがあればストアに復元
-        // WorkoutRepository はプレーンオブジェクトのため new 不要
-        const recordingWorkout = await WorkoutRepository.findRecording();
-        if (recordingWorkout) {
-          setCurrentWorkout(recordingWorkout);
+        // WorkoutRepository は WorkoutRow（snake_case）を返すため Workout（camelCase）にマッピング
+        const recordingRow = await WorkoutRepository.findRecording();
+        if (recordingRow) {
+          setCurrentWorkout(rowToWorkout(recordingRow));
         }
       } catch (error) {
         // 初期化エラーは握りつぶさず警告ログ（console.error は許可）

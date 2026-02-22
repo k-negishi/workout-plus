@@ -33,6 +33,8 @@ jest.mock('@react-navigation/native', () => ({
     replace: mockReplace,
     getParent: () => ({ goBack: mockGoBack }),
   }),
+  // useFocusEffect はテスト環境では no-op にする（実際の遷移コンテキストが不要なため）
+  useFocusEffect: jest.fn(),
 }));
 
 jest.mock('@/stores/workoutSessionStore', () => ({
