@@ -215,6 +215,7 @@ export function DaySummary({ dateString, onNavigateToDetail }: DaySummaryProps) 
           borderColor: '#e2e8f0',
         }}
       >
+        {/* 所要時間（1番目） */}
         <View style={{ flex: 1, alignItems: 'center', gap: 4 }}>
           <Text style={{ fontSize: 11, color: '#64748b' }}>所要時間</Text>
           <Text style={{ fontSize: 14, fontWeight: '600', color: '#334155' }}>
@@ -222,13 +223,7 @@ export function DaySummary({ dateString, onNavigateToDetail }: DaySummaryProps) 
           </Text>
         </View>
         <View style={{ width: 1, height: 28, backgroundColor: '#e2e8f0' }} />
-        <View style={{ flex: 1, alignItems: 'center', gap: 4 }}>
-          <Text style={{ fontSize: 11, color: '#64748b' }}>総ボリューム</Text>
-          <Text style={{ fontSize: 14, fontWeight: '600', color: '#334155' }}>
-            {totalVolume.toLocaleString()}kg
-          </Text>
-        </View>
-        <View style={{ width: 1, height: 28, backgroundColor: '#e2e8f0' }} />
+        {/* 種目数（2番目）: 総ボリュームより先に表示する方がユーザーが直感的に把握しやすいため */}
         <View style={{ flex: 1, alignItems: 'center', gap: 4 }}>
           <Text style={{ fontSize: 11, color: '#64748b' }}>種目数</Text>
           <Text style={{ fontSize: 14, fontWeight: '600', color: '#334155' }}>
@@ -236,9 +231,18 @@ export function DaySummary({ dateString, onNavigateToDetail }: DaySummaryProps) 
           </Text>
         </View>
         <View style={{ width: 1, height: 28, backgroundColor: '#e2e8f0' }} />
+        {/* セット数（3番目） */}
         <View style={{ flex: 1, alignItems: 'center', gap: 4 }}>
           <Text style={{ fontSize: 11, color: '#64748b' }}>セット数</Text>
           <Text style={{ fontSize: 14, fontWeight: '600', color: '#334155' }}>{totalSets}</Text>
+        </View>
+        <View style={{ width: 1, height: 28, backgroundColor: '#e2e8f0' }} />
+        {/* 総ボリューム（4番目・最後）: 派生指標のため末尾に配置 */}
+        <View style={{ flex: 1, alignItems: 'center', gap: 4 }}>
+          <Text style={{ fontSize: 11, color: '#64748b' }}>総ボリューム</Text>
+          <Text style={{ fontSize: 14, fontWeight: '600', color: '#334155' }}>
+            {totalVolume.toLocaleString()}kg
+          </Text>
         </View>
       </View>
 

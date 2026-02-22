@@ -17,6 +17,10 @@ export type ExerciseStats = {
   totalVolume: number;
   averageWeight: number;
   lastPRDate: number | null;
+  /** 全セット数（全ワークアウト合算、weight/reps null 含む） */
+  totalSets: number;
+  /** 全セット中の最高推定1RM（Epley式: weight * (1 + reps/30)）、データなしは0 */
+  maxEstimated1RM: number;
 };
 
 /** 週ごとの平均重量データ（チャート用） */
@@ -147,6 +151,24 @@ export function calculateStats(sets: SetWithWorkout[], prs: PRForStats[]): Exerc
 
   const lastPRDate = prs.length > 0 ? Math.max(...prs.map((pr) => pr.achieved_at)) : null;
 
+  // 全セット数: weight/reps の null に関わらずすべてカウント
+  const totalSets = sets.length;
+
+  // 最高推定1RM: Epley式 weight * (1 + reps/30)
+  // weight と reps の両方が null でない場合のみ計算対象
+  // 循環依存を避けるため calculate1RM.ts への import はせずインライン計算する
+  let maxEstimated1RM = 0;
+  for (const set of sets) {
+    if (set.weight != null && set.weight > 0 && set.reps != null && set.reps > 0) {
+      // reps=1 のとき Epley 式は weight*1 = weight 自体が1RM
+      const estimated1rm =
+        set.reps === 1
+          ? set.weight
+          : Math.round(set.weight * (1 + set.reps / 30) * 100) / 100;
+      if (estimated1rm > maxEstimated1RM) maxEstimated1RM = estimated1rm;
+    }
+  }
+
   return {
     maxWeight,
     maxVolume,
@@ -155,6 +177,8 @@ export function calculateStats(sets: SetWithWorkout[], prs: PRForStats[]): Exerc
     totalVolume,
     averageWeight,
     lastPRDate,
+    totalSets,
+    maxEstimated1RM,
   };
 }
 
@@ -207,6 +231,8 @@ export function useExerciseHistory(exerciseId: string) {
     totalVolume: 0,
     averageWeight: 0,
     lastPRDate: null,
+    totalSets: 0,
+    maxEstimated1RM: 0,
   });
   const [weeklyData, setWeeklyData] = useState<WeeklyData[]>([]);
   const [prHistory, setPRHistory] = useState<PRHistoryItem[]>([]);

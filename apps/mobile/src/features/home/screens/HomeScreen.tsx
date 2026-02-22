@@ -46,41 +46,6 @@ type WorkoutSummary = {
   primaryMuscleGroup?: string;
 };
 
-/** 最長連続トレーニング日数を計算する */
-function calculateLongestStreak(dates: Date[]): number {
-  if (dates.length === 0) return 0;
-
-  // ユニークな日付を取得してソート
-  const uniqueDays = new Map<string, Date>();
-  for (const d of dates) {
-    const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-    if (!uniqueDays.has(key)) {
-      uniqueDays.set(key, d);
-    }
-  }
-  const sorted = Array.from(uniqueDays.values()).sort((a, b) => a.getTime() - b.getTime());
-
-  let maxStreak = 1;
-  let currentStreak = 1;
-
-  for (let i = 1; i < sorted.length; i++) {
-    const prev = sorted[i - 1]!;
-    const curr = sorted[i]!;
-    const diffDays = Math.round((curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 1) {
-      currentStreak++;
-      if (currentStreak > maxStreak) {
-        maxStreak = currentStreak;
-      }
-    } else {
-      currentStreak = 1;
-    }
-  }
-
-  return maxStreak;
-}
-
 /**
  * ワークアウト1件のサマリーを構築する。
  * fetchData の Cognitive Complexity を下げるためモジュールレベルに分離。
@@ -178,14 +143,14 @@ export function HomeScreen() {
     fetchData();
   }, [fetchData]);
 
-  // 今月/今週のワークアウト回数・前週比・ボリューム
+  // 今月/今週のワークアウト回数・前週比・ボリューム・セット数
   const {
     monthlyWorkouts,
     weeklyWorkouts,
     monthlyVolume,
-    longestStreak,
     lastWeekWorkouts,
-    weeklyVolume,
+    weeklySetCount,
+    monthlySetCount,
   } = useMemo(() => {
     const now = new Date();
     const monthStart = startOfMonth(now);
@@ -221,21 +186,29 @@ export function HomeScreen() {
       })
       .reduce((sum, ws) => sum + ws.totalVolume, 0);
 
-    // 今週のボリューム
-    const weeklyVol = workoutSummaries
+    // 今週の総セット数（総負荷量より実際の実施量が直感的に分かるため採用）
+    const weeklySets = workoutSummaries
       .filter((ws) => {
         const d = new Date(ws.completedAt);
         return isWithinInterval(d, { start: weekStart, end: weekEnd });
       })
-      .reduce((sum, ws) => sum + ws.totalVolume, 0);
+      .reduce((sum, ws) => sum + ws.setCount, 0);
+
+    // 月間総セット数
+    const monthlySets = workoutSummaries
+      .filter((ws) => {
+        const d = new Date(ws.completedAt);
+        return isWithinInterval(d, { start: monthStart, end: monthEnd });
+      })
+      .reduce((sum, ws) => sum + ws.setCount, 0);
 
     return {
       monthlyWorkouts: monthly,
       weeklyWorkouts: weekly,
       monthlyVolume: monthlyVol,
-      longestStreak: calculateLongestStreak(trainingDates),
       lastWeekWorkouts: lastWeekly,
-      weeklyVolume: weeklyVol,
+      weeklySetCount: weeklySets,
+      monthlySetCount: monthlySets,
     };
   }, [trainingDates, workoutSummaries]);
 
@@ -312,7 +285,7 @@ export function HomeScreen() {
           {workoutSummaries.length > 0 && (
             <WeeklyGoalsWidget
               thisWeekWorkouts={weeklyWorkouts}
-              thisWeekVolume={weeklyVolume}
+              thisWeekSets={weeklySetCount}
               lastWeekWorkouts={lastWeekWorkouts}
             />
           )}
@@ -370,7 +343,7 @@ export function HomeScreen() {
             monthlyWorkouts={monthlyWorkouts}
             weeklyWorkouts={weeklyWorkouts}
             monthlyVolume={monthlyVolume}
-            longestStreak={longestStreak}
+            monthlySetCount={monthlySetCount}
           />
         </View>
       </ScrollView>

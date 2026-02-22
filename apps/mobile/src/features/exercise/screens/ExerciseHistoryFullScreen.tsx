@@ -137,14 +137,19 @@ export function ExerciseHistoryFullScreen() {
               unit="kg"
             />
             <StatCard label="平均重量" value={`${stats.averageWeight}`} unit="kg" />
-            <StatCard label="総トレ回数" value={`${stats.totalSessions}`} unit="回" />
+            {/* 「総トレ回数」→「総セット数」に変更 (#113) */}
+            <StatCard label="総セット数" value={`${stats.totalSets}`} unit="セット" />
             <StatCard label="総ボリューム" value={formatVolume(stats.totalVolume)} />
-            <StatCard
-              label="最終PR"
-              value={
-                stats.lastPRDate ? format(new Date(stats.lastPRDate), 'M/d', { locale: ja }) : '-'
-              }
-            />
+            {/* 「最終PR」→「最高RM」に変更: Epley式による推定1RMを表示 (#114) */}
+            {stats.maxEstimated1RM > 0 ? (
+              <StatCard
+                label="最高RM"
+                value={`${Math.round(stats.maxEstimated1RM)}`}
+                unit="kg"
+              />
+            ) : (
+              <StatCard label="最高RM" value="-" />
+            )}
           </View>
 
           {/* === T059: 重量推移チャート === */}

@@ -1,7 +1,7 @@
 /**
  * QuickStatsWidget - 2x2グリッドのダッシュボードウィジェット
  * ワイヤーフレーム: widgets-grid セクション準拠
- * 4カード: 今月のワークアウト回数 / 今週の回数 / 月間総ボリューム / 最長ストリーク
+ * 4カード: 今月のワークアウト回数 / 今週の回数 / 月間セット数 / 月間ボリューム
  */
 import { Text, View } from 'react-native';
 import { Circle, Line, Path, Polyline, Svg } from 'react-native-svg';
@@ -80,8 +80,8 @@ type QuickStatsWidgetProps = {
   weeklyWorkouts: number;
   /** 月間総ボリューム（kg） */
   monthlyVolume: number;
-  /** 最長ストリーク（連続日数） */
-  longestStreak: number;
+  /** 月間総セット数（最長ストリークより実施量の把握に有用なため変更） */
+  monthlySetCount: number;
 };
 
 /** 個別ウィジェットカード */
@@ -126,7 +126,7 @@ export function QuickStatsWidget({
   monthlyWorkouts,
   weeklyWorkouts,
   monthlyVolume,
-  longestStreak,
+  monthlySetCount,
 }: QuickStatsWidgetProps) {
   return (
     <View>
@@ -152,21 +152,23 @@ export function QuickStatsWidget({
         </View>
       </View>
       <View style={{ flexDirection: 'row', marginTop: 12, gap: 12 }}>
+        {/* 左: 月間セット数（最長ストリークより実施量を直接示すため差し替え） */}
+        <View style={{ flex: 1 }}>
+          <WidgetCard
+            icon={<TrophyIcon />}
+            iconBg={ICON_BG_COLORS.trophy}
+            title="月間セット数"
+            value={`${monthlySetCount}`}
+            subtitle="セット"
+          />
+        </View>
+        {/* 右: 月間ボリューム */}
         <View style={{ flex: 1 }}>
           <WidgetCard
             icon={<ChartIcon />}
             iconBg={ICON_BG_COLORS.chart}
             title="月間ボリューム"
             value={formatVolume(monthlyVolume)}
-          />
-        </View>
-        <View style={{ flex: 1 }}>
-          <WidgetCard
-            icon={<TrophyIcon />}
-            iconBg={ICON_BG_COLORS.trophy}
-            title="最長ストリーク"
-            value={`${longestStreak}`}
-            subtitle="日連続"
           />
         </View>
       </View>

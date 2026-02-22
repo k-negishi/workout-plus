@@ -1,21 +1,20 @@
 /**
  * T045: WorkoutDetailScreen（読み取り専用）
  * 過去のワークアウト詳細を表示する
- * 日時、所要時間、総ボリューム、種目/セット一覧
+ * 日時、所要時間、総種目数、種目/セット一覧
  * 「編集」→ WorkoutEditScreen、「削除」→ 削除確認ダイアログ
  */
 import { type RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Pressable, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getDatabase } from '@/database/client';
 import { WorkoutRepository } from '@/database/repositories/workout';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { showErrorToast, showSuccessToast } from '@/shared/components/Toast';
 import type { Exercise, HomeStackParamList, Workout, WorkoutExercise, WorkoutSet } from '@/types';
-
-import { calculateVolume } from '../utils/calculate1RM';
 
 type DetailNavProp = NativeStackNavigationProp<HomeStackParamList, 'WorkoutDetail'>;
 type DetailRouteProp = RouteProp<HomeStackParamList, 'WorkoutDetail'>;
@@ -51,6 +50,8 @@ export const WorkoutDetailScreen: React.FC = () => {
   const navigation = useNavigation<DetailNavProp>();
   const route = useRoute<DetailRouteProp>();
   const { workoutId } = route.params;
+  // SafeArea 対応: ノッチ・ダイナミックアイランド対応
+  const insets = useSafeAreaInsets();
 
   const [workout, setWorkout] = useState<Workout | null>(null);
   const [exerciseBlocks, setExerciseBlocks] = useState<ExerciseBlockData[]>([]);
@@ -179,92 +180,118 @@ export const WorkoutDetailScreen: React.FC = () => {
 
   if (!workout) {
     return (
-      <View className="flex-1 bg-[#f9fafb] items-center justify-center">
-        <Text className="text-[14px] text-[#64748b]">読み込み中...</Text>
+      <View style={{ flex: 1, backgroundColor: '#f9fafb', alignItems: 'center', justifyContent: 'center' }}>
+        <Text style={{ fontSize: 14, color: '#64748b' }}>読み込み中...</Text>
       </View>
     );
   }
 
   // 集計
   const allSets = exerciseBlocks.flatMap((b) => b.sets);
-  const totalVolume = calculateVolume(allSets);
+  // 完了セット数（重量・レップ数が両方入力済みのセットのみカウント）
   const totalSets = allSets.filter((s) => s.weight != null && s.reps != null).length;
   const duration = workout.elapsedSeconds;
 
   return (
-    <View className="flex-1 bg-[#f9fafb]">
+    <View style={{ flex: 1, backgroundColor: '#f9fafb' }}>
       {/* ヘッダー（ワイヤーフレーム: wd-header） */}
-      <View className="flex-row items-center gap-3 px-4 py-4 bg-white border-b border-[#e2e8f0]">
-        <TouchableOpacity onPress={handleBack} className="w-6 h-6 items-center justify-center">
-          <Text className="text-[18px] text-[#475569]">{'←'}</Text>
+      <View
+        testID="workout-detail-header"
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          gap: 12,
+          paddingHorizontal: 16,
+          paddingBottom: 16,
+          backgroundColor: '#FFFFFF',
+          borderBottomWidth: 1,
+          borderBottomColor: '#e2e8f0',
+          paddingTop: insets.top + 16,
+        }}
+      >
+        <TouchableOpacity onPress={handleBack} style={{ width: 24, height: 24, alignItems: 'center', justifyContent: 'center' }}>
+          <Text style={{ fontSize: 18, color: '#475569' }}>{'←'}</Text>
         </TouchableOpacity>
-        <View className="flex-1">
-          <Text className="text-[18px] font-semibold text-[#334155]">ワークアウト詳細</Text>
-          <Text className="text-[13px] text-[#64748b] mt-1">
+        <View style={{ flex: 1 }}>
+          <Text style={{ fontSize: 18, fontWeight: '600', color: '#334155' }}>ワークアウト詳細</Text>
+          <Text style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
             {formatDateTime(workout.createdAt)}
           </Text>
         </View>
         <TouchableOpacity
           onPress={handleEdit}
-          className="px-3.5 py-1.5 border border-[#4D94FF] rounded-lg"
+          style={{ paddingHorizontal: 14, paddingVertical: 6, borderWidth: 1, borderColor: '#4D94FF', borderRadius: 8 }}
         >
-          <Text className="text-[13px] font-semibold text-[#4D94FF]">編集</Text>
+          <Text style={{ fontSize: 13, fontWeight: '600', color: '#4D94FF' }}>編集</Text>
         </TouchableOpacity>
       </View>
 
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 40 }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 40 }}>
         {/* サマリーカード */}
-        <View className="mx-4 mt-2 p-4 bg-white border border-[#e2e8f0] rounded-lg flex-row items-center">
-          <View className="flex-1 items-center gap-1">
-            <Text className="text-[12px] text-[#64748b]">所要時間</Text>
-            <Text className="text-[16px] font-semibold text-[#334155]">
+        <View style={{ marginHorizontal: 16, marginTop: 8, padding: 16, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, flexDirection: 'row', alignItems: 'center' }}>
+          <View style={{ flex: 1, alignItems: 'center', gap: 4 }}>
+            <Text style={{ fontSize: 12, color: '#64748b' }}>所要時間</Text>
+            <Text style={{ fontSize: 16, fontWeight: '600', color: '#334155' }}>
               {formatDuration(duration)}
             </Text>
           </View>
-          <View className="w-px h-8 bg-[#e2e8f0]" />
-          <View className="flex-1 items-center gap-1">
-            <Text className="text-[12px] text-[#64748b]">総ボリューム</Text>
-            <Text className="text-[16px] font-semibold text-[#334155]">
-              {totalVolume.toLocaleString()}kg
+          <View style={{ width: 1, height: 32, backgroundColor: '#e2e8f0' }} />
+          <View style={{ flex: 1, alignItems: 'center', gap: 4 }}>
+            {/* 総種目数: exerciseBlocks の配列長をそのまま表示 */}
+            <Text style={{ fontSize: 12, color: '#64748b' }}>総種目数</Text>
+            <Text style={{ fontSize: 16, fontWeight: '600', color: '#334155' }}>
+              {exerciseBlocks.length}
             </Text>
           </View>
-          <View className="w-px h-8 bg-[#e2e8f0]" />
-          <View className="flex-1 items-center gap-1">
-            <Text className="text-[12px] text-[#64748b]">セット数</Text>
-            <Text className="text-[16px] font-semibold text-[#334155]">{totalSets}</Text>
+          <View style={{ width: 1, height: 32, backgroundColor: '#e2e8f0' }} />
+          <View style={{ flex: 1, alignItems: 'center', gap: 4 }}>
+            <Text style={{ fontSize: 12, color: '#64748b' }}>セット数</Text>
+            <Text style={{ fontSize: 16, fontWeight: '600', color: '#334155' }}>{totalSets}</Text>
           </View>
         </View>
 
         {/* 種目一覧 */}
-        <View className="px-4 pt-2 pb-4">
+        <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 16 }}>
           {exerciseBlocks.map((block) => (
             <View
               key={block.workoutExercise.id}
-              className="bg-white border border-[#e2e8f0] rounded-lg p-4 mb-3"
+              style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, padding: 16, marginBottom: 12 }}
             >
-              {/* 種目名 */}
-              <Text className="text-[16px] font-semibold text-[#4D94FF] mb-3">
-                {block.exercise?.name ?? '不明な種目'}
-              </Text>
+              {/* 種目名（タップで種目別履歴へ遷移） */}
+              <Pressable
+                testID={`exerciseName-${block.workoutExercise.exerciseId}`}
+                onPress={() => {
+                  if (block.exercise) {
+                    navigation.navigate('ExerciseHistory', {
+                      exerciseId: block.exercise.id,
+                      exerciseName: block.exercise.name,
+                    });
+                  }
+                }}
+              >
+                <Text style={{ fontSize: 16, fontWeight: '600', color: '#4D94FF', marginBottom: 12 }}>
+                  {block.exercise?.name ?? '不明な種目'}
+                </Text>
+              </Pressable>
 
               {/* セット一覧 */}
-              <View className="gap-2">
+              <View style={{ gap: 8 }}>
                 {block.sets.map((set) => (
                   <View
                     key={set.id}
-                    className="flex-row items-center gap-3 px-3 py-2 rounded-lg bg-[#F0FDF4]"
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, backgroundColor: '#F0FDF4' }}
                   >
                     {/* チェックアイコン */}
-                    <Text className="text-[14px] text-[#10B981]">{'✓'}</Text>
+                    <Text style={{ fontSize: 14, color: '#10B981' }}>{'✓'}</Text>
                     {/* セット番号 */}
-                    <Text className="text-[14px] text-[#64748b] w-4">{set.setNumber}</Text>
+                    <Text style={{ fontSize: 14, color: '#64748b', width: 16 }}>{set.setNumber}</Text>
                     {/* 値 */}
-                    <Text className="text-[15px] font-semibold text-[#334155] flex-1">
+                    <Text style={{ fontSize: 15, fontWeight: '600', color: '#334155', flex: 1 }}>
                       {set.weight ?? '-'}kg x {set.reps ?? '-'}
                     </Text>
                     {/* 推定1RM */}
                     {set.estimated1rm != null && (
-                      <Text className="text-[12px] text-[#64748b]">
+                      <Text style={{ fontSize: 12, color: '#64748b' }}>
                         1RM {Math.round(set.estimated1rm)}kg
                       </Text>
                     )}
@@ -274,7 +301,7 @@ export const WorkoutDetailScreen: React.FC = () => {
 
               {/* 種目メモ */}
               {block.workoutExercise.memo && (
-                <Text className="text-[12px] text-[#64748b] mt-2">
+                <Text style={{ fontSize: 12, color: '#64748b', marginTop: 8 }}>
                   {block.workoutExercise.memo}
                 </Text>
               )}
@@ -284,16 +311,16 @@ export const WorkoutDetailScreen: React.FC = () => {
 
         {/* ワークアウトメモ */}
         {workout.memo && (
-          <View className="px-4 pb-4">
-            <Text className="text-[12px] font-semibold text-[#64748b] mb-1">メモ</Text>
-            <Text className="text-[14px] text-[#475569]">{workout.memo}</Text>
+          <View style={{ paddingHorizontal: 16, paddingBottom: 16 }}>
+            <Text style={{ fontSize: 12, fontWeight: '600', color: '#64748b', marginBottom: 4 }}>メモ</Text>
+            <Text style={{ fontSize: 14, color: '#475569' }}>{workout.memo}</Text>
           </View>
         )}
 
         {/* T049: 削除ボタン */}
-        <View className="items-center py-4">
+        <View style={{ alignItems: 'center', paddingVertical: 16 }}>
           <TouchableOpacity onPress={() => setShowDeleteDialog(true)}>
-            <Text className="text-[14px] text-[#EF4444]">ワークアウトを削除</Text>
+            <Text style={{ fontSize: 14, color: '#EF4444' }}>ワークアウトを削除</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
