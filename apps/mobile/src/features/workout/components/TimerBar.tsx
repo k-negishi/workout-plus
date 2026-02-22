@@ -24,6 +24,17 @@ function formatTime(totalSeconds: number): string {
   return `${mm}:${ss}`;
 }
 
+/**
+ * タイマー状態に応じた再生ボタンのスタイルを返す。
+ * TimerBar の cyclomatic complexity を下げるため外部ヘルパーに分離。
+ */
+function resolvePlayButtonStyle(isDiscarded: boolean): { borderColor: string; textColor: string } {
+  if (isDiscarded) {
+    return { borderColor: '#94a3b8', textColor: '#94a3b8' };
+  }
+  return { borderColor: '#4D94FF', textColor: '#4D94FF' };
+}
+
 export type TimerBarProps = {
   timerStatus: TimerStatus;
   elapsedSeconds: number;
@@ -68,6 +79,8 @@ export const TimerBar: React.FC<TimerBarProps> = ({
   const toggleLabel = timerStatus === 'running' ? '||' : '\u25B6';
   const elapsedLabel = isTimerDiscarded ? '時間なし' : formatTime(elapsedSeconds);
   const elapsedLabelColor = isTimerDiscarded ? '#94a3b8' : '#334155';
+  // isTimerDiscarded の条件分岐を外部ヘルパーに委譲してcomplexityを抑制
+  const playButtonStyle = resolvePlayButtonStyle(isTimerDiscarded);
 
   return (
     <View
@@ -95,14 +108,14 @@ export const TimerBar: React.FC<TimerBarProps> = ({
           height: 24,
           borderRadius: 12,
           borderWidth: 1.5,
-          borderColor: isTimerDiscarded ? '#94a3b8' : '#4D94FF',
+          borderColor: playButtonStyle.borderColor,
           alignItems: 'center',
           justifyContent: 'center',
         }}
         accessibilityLabel={timerStatus === 'running' ? '一時停止' : '開始'}
       >
         <Text
-          style={{ fontSize: 10, color: isTimerDiscarded ? '#94a3b8' : '#4D94FF', lineHeight: 10 }}
+          style={{ fontSize: 10, color: playButtonStyle.textColor, lineHeight: 10 }}
         >
           {toggleLabel}
         </Text>
