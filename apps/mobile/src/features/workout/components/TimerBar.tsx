@@ -6,7 +6,7 @@
 import React, { useCallback } from 'react';
 import { Text, TouchableOpacity, View } from 'react-native';
 
-import type { TimerStatus } from '@/types';
+import { TimerStatus } from '@/types';
 
 /** 秒数をフォーマットする（MM:SS または HH:MM:SS） */
 function formatTime(totalSeconds: number): string {
@@ -60,7 +60,7 @@ export const TimerBar: React.FC<TimerBarProps> = ({
   /** 再生/一時停止ボタンのハンドラー */
   const handleToggle = useCallback(() => {
     switch (timerStatus) {
-      case 'notStarted':
+      case TimerStatus.NOT_STARTED:
         onStart();
         break;
       case 'running':
@@ -95,7 +95,7 @@ export const TimerBar: React.FC<TimerBarProps> = ({
       }}
     >
       {/* 経過時間ラベル */}
-      <Text style={{ fontSize: 13, color: '#64748b', fontWeight: '400', marginRight: 8 }}>
+      <Text style={{ fontSize: 15, color: '#64748b', fontWeight: '400', marginRight: 8 }}>
         経過時間
       </Text>
 
@@ -114,14 +114,14 @@ export const TimerBar: React.FC<TimerBarProps> = ({
         }}
         accessibilityLabel={timerStatus === 'running' ? '一時停止' : '開始'}
       >
-        <Text style={{ fontSize: 10, color: playButtonStyle.textColor, lineHeight: 10 }}>
+        <Text style={{ fontSize: 12, color: playButtonStyle.textColor, lineHeight: 12 }}>
           {toggleLabel}
         </Text>
       </TouchableOpacity>
 
       {/* 一時停止中ラベル */}
       {timerStatus === 'paused' && (
-        <Text style={{ fontSize: 11, color: '#64748b', fontWeight: '400', marginLeft: 8 }}>
+        <Text style={{ fontSize: 13, color: '#64748b', fontWeight: '400', marginLeft: 8 }}>
           一時停止中
         </Text>
       )}
@@ -130,7 +130,7 @@ export const TimerBar: React.FC<TimerBarProps> = ({
       <Text
         style={{
           marginLeft: 'auto',
-          fontSize: 16,
+          fontSize: 18,
           fontWeight: '700',
           color: elapsedLabelColor,
           fontVariant: ['tabular-nums'],
@@ -152,7 +152,7 @@ export const TimerBar: React.FC<TimerBarProps> = ({
           }}
           accessibilityLabel="時間計測を停止"
         >
-          <Text style={{ fontSize: 14, color: '#64748b' }}>{'\u00D7'}</Text>
+          <Text style={{ fontSize: 16, color: '#64748b' }}>{'\u00D7'}</Text>
         </TouchableOpacity>
       )}
 
@@ -169,7 +169,7 @@ export const TimerBar: React.FC<TimerBarProps> = ({
         }}
         accessibilityLabel="ワークアウトを完了"
       >
-        <Text style={{ fontSize: 14, fontWeight: '600', color: '#FFFFFF' }}>完了</Text>
+        <Text style={{ fontSize: 16, fontWeight: '600', color: '#FFFFFF' }}>完了</Text>
       </TouchableOpacity>
     </View>
   );

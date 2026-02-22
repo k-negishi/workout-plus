@@ -68,7 +68,7 @@ export const SetRow: React.FC<SetRowProps> = ({
   );
 
   /** 推定1RM（モジュールレベル関数で計算） */
-  const estimated1rm = computeEstimated1RM(set.weight, set.reps);
+  const estimated1RM = computeEstimated1RM(set.weight, set.reps);
 
   /** 前回記録の表示ラベル（モジュールレベル関数で生成） */
   const previousLabel = computePreviousLabel(previousSet);
@@ -83,7 +83,7 @@ export const SetRow: React.FC<SetRowProps> = ({
             className="flex-row items-center gap-1"
             accessibilityLabel={`${previousLabel}をコピー`}
           >
-            <Text className="text-[11px] text-[#64748b] font-normal">{previousLabel}</Text>
+            <Text className="text-[13px] text-[#64748b] font-normal">{previousLabel}</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -92,7 +92,7 @@ export const SetRow: React.FC<SetRowProps> = ({
       <View className="flex-row items-center gap-2 px-3 py-2 bg-white border border-[#e2e8f0] rounded-lg">
         {/* セット番号 */}
         <View className="w-6 h-6 rounded-full bg-[#F1F3F5] items-center justify-center">
-          <Text className="text-[12px] font-semibold text-[#64748b]">{set.setNumber}</Text>
+          <Text className="text-[14px] font-semibold text-[#64748b]">{set.setNumber}</Text>
         </View>
 
         {/* 入力エリア */}
@@ -108,7 +108,7 @@ export const SetRow: React.FC<SetRowProps> = ({
           />
 
           {/* 区切り */}
-          <Text className="text-[14px] text-[#64748b] mx-[2px]">{'\u00D7'}</Text>
+          <Text className="text-[16px] text-[#64748b] mx-[2px]">{'\u00D7'}</Text>
 
           {/* レップ数入力（NumericInput: integer） */}
           <NumericInput
@@ -122,8 +122,8 @@ export const SetRow: React.FC<SetRowProps> = ({
         </View>
 
         {/* 推定1RM表示 */}
-        {estimated1rm != null && (
-          <Text className="text-[11px] text-[#64748b] whitespace-nowrap">1RM {estimated1rm}</Text>
+        {estimated1RM != null && (
+          <Text className="text-[13px] text-[#64748b] whitespace-nowrap">1RM {estimated1RM}</Text>
         )}
 
         {/* 削除ボタン */}
@@ -132,7 +132,7 @@ export const SetRow: React.FC<SetRowProps> = ({
           className="w-5 h-5 items-center justify-center ml-auto opacity-40"
           accessibilityLabel={`セット${set.setNumber}を削除`}
         >
-          <Text className="text-[14px] text-[#64748b]">{'\u00D7'}</Text>
+          <Text className="text-[16px] text-[#64748b]">{'\u00D7'}</Text>
         </TouchableOpacity>
       </View>
     </View>

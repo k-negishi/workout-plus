@@ -89,12 +89,18 @@ export const RecordScreen: React.FC = () => {
   const timer = useTimer();
   const session = useWorkoutSession();
 
+  /** 継続モード: pendingContinuationWorkoutId を読み取りクリアする */
+  const pendingContinuationWorkoutId = store.pendingContinuationWorkoutId;
+
   /** 種目マスタのキャッシュ */
   const [exerciseMap, setExerciseMap] = useState<Record<string, Exercise>>({});
 
   /** セッション開始 */
   useEffect(() => {
-    void session.startSession();
+    // 継続モードの場合は pendingContinuationWorkoutId を渡してクリア
+    store.setPendingContinuationWorkoutId(null);
+    void session.startSession(pendingContinuationWorkoutId ?? undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /** 種目マスタを読み込む */
@@ -324,12 +330,12 @@ export const RecordScreen: React.FC = () => {
           }}
           accessibilityLabel="種目を追加"
         >
-          <Text style={{ fontSize: 14, fontWeight: '600', color: '#4D94FF' }}>+ 種目を追加</Text>
+          <Text style={{ fontSize: 16, fontWeight: '600', color: '#4D94FF' }}>+ 種目を追加</Text>
         </TouchableOpacity>
 
         {/* T041: ワークアウトメモ */}
         <View style={{ marginHorizontal: 20, marginTop: 16 }}>
-          <Text style={{ fontSize: 12, color: '#64748b', marginBottom: 4 }}>ワークアウトメモ</Text>
+          <Text style={{ fontSize: 14, color: '#64748b', marginBottom: 4 }}>ワークアウトメモ</Text>
           <TextInput
             style={{
               backgroundColor: '#FFFFFF',
@@ -337,7 +343,7 @@ export const RecordScreen: React.FC = () => {
               borderColor: '#e2e8f0',
               borderRadius: 8,
               padding: 12,
-              fontSize: 14,
+              fontSize: 16,
               color: '#475569',
               minHeight: 60,
             }}

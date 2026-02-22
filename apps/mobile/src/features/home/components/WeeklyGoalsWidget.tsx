@@ -63,7 +63,7 @@ export function WeeklyGoalsWidget({
       >
         <Text
           style={{
-            fontSize: 16,
+            fontSize: 18,
             fontWeight: '600',
             color: colors.textPrimary,
           }}
@@ -80,7 +80,7 @@ export function WeeklyGoalsWidget({
         >
           <Text
             style={{
-              fontSize: 12,
+              fontSize: 14,
               fontWeight: '600',
               color: colors.primary,
             }}
@@ -103,7 +103,7 @@ export function WeeklyGoalsWidget({
         <View style={{ flex: 1, alignItems: 'center' }}>
           <Text
             style={{
-              fontSize: 24,
+              fontSize: 26,
               fontWeight: '700',
               color: colors.textPrimary,
               marginBottom: 4,
@@ -113,7 +113,7 @@ export function WeeklyGoalsWidget({
           </Text>
           <Text
             style={{
-              fontSize: 12,
+              fontSize: 14,
               color: colors.textSecondary,
               fontWeight: '400',
             }}
@@ -123,7 +123,7 @@ export function WeeklyGoalsWidget({
           {/* 前週比 */}
           <Text
             style={{
-              fontSize: 12,
+              fontSize: 14,
               fontWeight: '600',
               marginTop: 2,
               color: workoutDiff >= 0 ? colors.success : colors.error,
@@ -137,7 +137,7 @@ export function WeeklyGoalsWidget({
         <View style={{ flex: 1, alignItems: 'center' }}>
           <Text
             style={{
-              fontSize: 24,
+              fontSize: 26,
               fontWeight: '700',
               color: colors.textPrimary,
               marginBottom: 4,
@@ -147,7 +147,7 @@ export function WeeklyGoalsWidget({
           </Text>
           <Text
             style={{
-              fontSize: 12,
+              fontSize: 14,
               color: colors.textSecondary,
               fontWeight: '400',
             }}
@@ -160,7 +160,7 @@ export function WeeklyGoalsWidget({
         <View style={{ flex: 1, alignItems: 'center' }}>
           <Text
             style={{
-              fontSize: 24,
+              fontSize: 26,
               fontWeight: '700',
               color: colors.textPrimary,
               marginBottom: 4,
@@ -170,7 +170,7 @@ export function WeeklyGoalsWidget({
           </Text>
           <Text
             style={{
-              fontSize: 12,
+              fontSize: 14,
               color: colors.textSecondary,
               fontWeight: '400',
             }}
@@ -192,7 +192,7 @@ export function WeeklyGoalsWidget({
         >
           <Text
             style={{
-              fontSize: 13,
+              fontSize: 15,
               color: colors.textSecondary,
             }}
           >
@@ -200,7 +200,7 @@ export function WeeklyGoalsWidget({
           </Text>
           <Text
             style={{
-              fontSize: 13,
+              fontSize: 15,
               fontWeight: '700',
               color: colors.primary,
             }}

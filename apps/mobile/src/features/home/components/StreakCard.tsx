@@ -92,7 +92,7 @@ export function StreakCard({ trainingDates }: StreakCardProps) {
             今月のトレーニング
           </Text>
           <View className="flex-row items-end mt-1">
-            <Text className="text-[32px] font-bold leading-none" style={{ color: '#3385FF' }}>
+            <Text className="text-[34px] font-bold leading-none" style={{ color: '#3385FF' }}>
               {monthlyCount}
             </Text>
             <Text className="text-sm text-primary ml-0.5">日</Text>
@@ -116,7 +116,7 @@ export function StreakCard({ trainingDates }: StreakCardProps) {
               {day.isDone ? <CheckIcon /> : null}
             </View>
             {/* 曜日ラベル */}
-            <Text className="text-primary" style={{ fontSize: 10, opacity: 0.7 }}>
+            <Text className="text-primary" style={{ fontSize: 12, opacity: 0.7 }}>
               {DAY_LABELS[index]}
             </Text>
           </View>

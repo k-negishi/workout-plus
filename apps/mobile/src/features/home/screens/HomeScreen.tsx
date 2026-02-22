@@ -262,7 +262,7 @@ export function HomeScreen() {
               marginBottom: 16,
             }}
           >
-            <Text style={{ fontSize: 20, fontWeight: '700', color: colors.primary }}>Workout+</Text>
+            <Text style={{ fontSize: 22, fontWeight: '700', color: colors.primary }}>Workout+</Text>
             {/* 設定ボタン: タップ時アクションは将来対応 */}
             <TouchableOpacity
               testID="settings-button"
@@ -297,10 +297,10 @@ export function HomeScreen() {
               marginBottom: 16,
             }}
           >
-            <Text style={{ fontSize: 14, fontWeight: '700', color: colors.textPrimary }}>
+            <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary }}>
               最近のトレーニング
             </Text>
-            <Text style={{ fontSize: 12, color: colors.textSecondary }}>
+            <Text style={{ fontSize: 14, color: colors.textSecondary }}>
               {workoutSummaries.length}件
             </Text>
           </View>
@@ -332,7 +332,7 @@ export function HomeScreen() {
               marginBottom: 16,
             }}
           >
-            <Text style={{ fontSize: 14, fontWeight: '700', color: colors.textPrimary }}>
+            <Text style={{ fontSize: 16, fontWeight: '700', color: colors.textPrimary }}>
               ダッシュボード
             </Text>
           </View>

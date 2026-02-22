@@ -52,7 +52,7 @@ type ExerciseSetData = {
     setNumber: number;
     weight: number | null;
     reps: number | null;
-    estimated1rm: number | null;
+    estimated1RM: number | null;
   }>;
 };
 
@@ -139,7 +139,7 @@ export function DaySummary({ dateString, onNavigateToDetail }: DaySummaryProps) 
             setNumber: s.set_number,
             weight: s.weight,
             reps: s.reps,
-            estimated1rm: s.estimated_1rm,
+            estimated1RM: s.estimated_1rm,
           };
         });
 
@@ -176,10 +176,10 @@ export function DaySummary({ dateString, onNavigateToDetail }: DaySummaryProps) 
     return (
       <View style={{ marginTop: 20 }}>
         <View style={{ paddingVertical: 12, marginBottom: 12 }}>
-          <Text style={{ fontSize: 14, fontWeight: '600', color: '#334155' }}>{dateLabel}</Text>
+          <Text style={{ fontSize: 16, fontWeight: '600', color: '#334155' }}>{dateLabel}</Text>
         </View>
         <View style={{ alignItems: 'center', paddingVertical: 32 }}>
-          <Text style={{ fontSize: 14, color: '#64748b' }}>この日はトレーニングなし</Text>
+          <Text style={{ fontSize: 16, color: '#64748b' }}>この日はトレーニングなし</Text>
         </View>
       </View>
     );
@@ -198,7 +198,7 @@ export function DaySummary({ dateString, onNavigateToDetail }: DaySummaryProps) 
         }}
         onPress={() => onNavigateToDetail?.(workout.id)}
       >
-        <Text style={{ fontSize: 14, fontWeight: '600', color: '#334155' }}>{dateLabel}</Text>
+        <Text style={{ fontSize: 16, fontWeight: '600', color: '#334155' }}>{dateLabel}</Text>
         <ChevronRight />
       </Pressable>
 
@@ -217,30 +217,30 @@ export function DaySummary({ dateString, onNavigateToDetail }: DaySummaryProps) 
       >
         {/* 所要時間（1番目） */}
         <View style={{ flex: 1, alignItems: 'center', gap: 4 }}>
-          <Text style={{ fontSize: 11, color: '#64748b' }}>所要時間</Text>
-          <Text style={{ fontSize: 14, fontWeight: '600', color: '#334155' }}>
+          <Text style={{ fontSize: 13, color: '#64748b' }}>所要時間</Text>
+          <Text style={{ fontSize: 16, fontWeight: '600', color: '#334155' }}>
             {formatDuration(workout.elapsed_seconds, workout.timer_status)}
           </Text>
         </View>
         <View style={{ width: 1, height: 28, backgroundColor: '#e2e8f0' }} />
         {/* 種目数（2番目）: 総ボリュームより先に表示する方がユーザーが直感的に把握しやすいため */}
         <View style={{ flex: 1, alignItems: 'center', gap: 4 }}>
-          <Text style={{ fontSize: 11, color: '#64748b' }}>種目数</Text>
-          <Text style={{ fontSize: 14, fontWeight: '600', color: '#334155' }}>
+          <Text style={{ fontSize: 13, color: '#64748b' }}>種目数</Text>
+          <Text style={{ fontSize: 16, fontWeight: '600', color: '#334155' }}>
             {exerciseSets.length}
           </Text>
         </View>
         <View style={{ width: 1, height: 28, backgroundColor: '#e2e8f0' }} />
         {/* セット数（3番目） */}
         <View style={{ flex: 1, alignItems: 'center', gap: 4 }}>
-          <Text style={{ fontSize: 11, color: '#64748b' }}>セット数</Text>
-          <Text style={{ fontSize: 14, fontWeight: '600', color: '#334155' }}>{totalSets}</Text>
+          <Text style={{ fontSize: 13, color: '#64748b' }}>セット数</Text>
+          <Text style={{ fontSize: 16, fontWeight: '600', color: '#334155' }}>{totalSets}</Text>
         </View>
         <View style={{ width: 1, height: 28, backgroundColor: '#e2e8f0' }} />
         {/* 総ボリューム（4番目・最後）: 派生指標のため末尾に配置 */}
         <View style={{ flex: 1, alignItems: 'center', gap: 4 }}>
-          <Text style={{ fontSize: 11, color: '#64748b' }}>総ボリューム</Text>
-          <Text style={{ fontSize: 14, fontWeight: '600', color: '#334155' }}>
+          <Text style={{ fontSize: 13, color: '#64748b' }}>総ボリューム</Text>
+          <Text style={{ fontSize: 16, fontWeight: '600', color: '#334155' }}>
             {totalVolume.toLocaleString()}kg
           </Text>
         </View>
@@ -259,7 +259,7 @@ export function DaySummary({ dateString, onNavigateToDetail }: DaySummaryProps) 
               borderColor: '#e2e8f0',
             }}
           >
-            <Text style={{ fontSize: 15, fontWeight: '600', color: '#4D94FF', marginBottom: 8 }}>
+            <Text style={{ fontSize: 17, fontWeight: '600', color: '#4D94FF', marginBottom: 8 }}>
               {ex.exerciseName}
             </Text>
             <View style={{ gap: 6 }}>
@@ -277,13 +277,13 @@ export function DaySummary({ dateString, onNavigateToDetail }: DaySummaryProps) 
                   }}
                 >
                   <CheckIcon />
-                  <Text style={{ fontSize: 13, color: '#64748b', width: 14 }}>{set.setNumber}</Text>
-                  <Text style={{ fontSize: 14, fontWeight: '600', flex: 1, color: '#334155' }}>
+                  <Text style={{ fontSize: 15, color: '#64748b', width: 14 }}>{set.setNumber}</Text>
+                  <Text style={{ fontSize: 16, fontWeight: '600', flex: 1, color: '#334155' }}>
                     {set.weight ?? '-'}kg × {set.reps ?? '-'}
                   </Text>
-                  {set.estimated1rm != null ? (
-                    <Text style={{ fontSize: 11, color: '#64748b' }}>
-                      1RM: {Math.round(set.estimated1rm)}kg
+                  {set.estimated1RM != null ? (
+                    <Text style={{ fontSize: 13, color: '#64748b' }}>
+                      1RM: {Math.round(set.estimated1RM)}kg
                     </Text>
                   ) : null}
                 </View>

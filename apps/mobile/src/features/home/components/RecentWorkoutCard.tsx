@@ -152,20 +152,20 @@ const styles = StyleSheet.create({
     flexShrink: 0,
   },
   iconEmoji: {
-    fontSize: 18,
+    fontSize: 20,
   },
   // task-info（WF L677-692）
   info: {
     flex: 1,
   },
   title: {
-    fontSize: 15,
+    fontSize: 17,
     fontWeight: '600',
     color: colors.textPrimary,
     marginBottom: 4,
   },
   subtitle: {
-    fontSize: 13,
+    fontSize: 15,
     color: colors.textSecondary,
   },
   // 完了バッジ（WF L551-560, L567-570）
@@ -176,7 +176,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   badgeText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '600',
     color: colors.primary,
   },
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   tagText: {
-    fontSize: 11,
+    fontSize: 13,
     fontWeight: '600',
   },
 });

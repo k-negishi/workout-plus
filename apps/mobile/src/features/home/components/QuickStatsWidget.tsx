@@ -152,17 +152,17 @@ function WidgetCard({
         >
           {icon}
         </View>
-        <Text style={{ fontSize: 13, color: colors.textSecondary }}>{title}</Text>
+        <Text style={{ fontSize: 15, color: colors.textSecondary }}>{title}</Text>
       </View>
 
       {/* 値 */}
-      <Text style={{ fontSize: 28, fontWeight: '700', marginBottom: 4, color: colors.textPrimary }}>
+      <Text style={{ fontSize: 30, fontWeight: '700', marginBottom: 4, color: colors.textPrimary }}>
         {value}
       </Text>
 
       {/* サブタイトル */}
       {subtitle ? (
-        <Text style={{ fontSize: 12, color: colors.textSecondary }}>{subtitle}</Text>
+        <Text style={{ fontSize: 14, color: colors.textSecondary }}>{subtitle}</Text>
       ) : null}
     </View>
   );
