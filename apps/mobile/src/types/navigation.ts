@@ -8,7 +8,6 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 /** ルートスタック（モーダル含む） */
 export type RootStackParamList = {
   MainTabs: undefined;
-  RecordStack: undefined;
   DiscardDialog: undefined;
 };
 
@@ -16,8 +15,8 @@ export type RootStackParamList = {
 export type MainTabParamList = {
   HomeTab: undefined;
   CalendarTab: undefined;
-  /** 記録開始ボタン（ダミー: タブとして描画はしない） */
-  RecordButton: undefined;
+  /** 記録スタック（中央の+ボタンで遷移） */
+  RecordTab: undefined;
   StatsTab: undefined;
   AITab: undefined;
 };

@@ -9,19 +9,19 @@
  * コンテナ高さに含めることで overflow 不要とする。
  */
 import { Ionicons } from '@expo/vector-icons';
-import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import type { BottomTabBarProps, BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors } from '@/shared/constants/colors';
-import type { MainTabParamList, RootStackParamList } from '@/types';
+import type { MainTabParamList } from '@/types';
 
 import { CalendarStack } from './CalendarStack';
 import { HomeStack } from './HomeStack';
+import { RecordStack } from './RecordStack';
 import { AIScreen } from './screens/AIScreen';
 import { PlaceholderScreen } from './screens/PlaceholderScreen';
 
@@ -32,22 +32,17 @@ function StatsScreen() {
   return <PlaceholderScreen name="統計" />;
 }
 
-/** ダミーコンポーネント（RecordButtonタブ用。実際には表示されない） */
-function EmptyComponent() {
-  return null;
-}
-
 /**
  * 中央の記録開始ボタン（フローティング）
- * navigation は useNavigation で取得（tabBar の外部コンテキストでも動作）
+ * RecordTab はメインタブの1つなので BottomTabNavigationProp で navigate する
  */
 function FloatingRecordButton() {
-  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const navigation = useNavigation<BottomTabNavigationProp<MainTabParamList>>();
 
   return (
     <Pressable
       testID="record-tab-button"
-      onPress={() => navigation.navigate('RecordStack')}
+      onPress={() => navigation.navigate('RecordTab')}
       style={{
         // WF L344-346: width: 56px, height: 56px, border-radius: 50%
         width: 56,
@@ -133,7 +128,7 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
       >
         {state.routes.map((route, index) => {
           // 中央スロット: FloatingRecordButton のスペースとして空けておく
-          if (route.name === 'RecordButton') {
+          if (route.name === 'RecordTab') {
             return <View key={route.key} style={{ flex: 1 }} />;
           }
 
@@ -233,8 +228,8 @@ export function MainTabs() {
         }}
       />
       <Tab.Screen
-        name="RecordButton"
-        component={EmptyComponent}
+        name="RecordTab"
+        component={RecordStack}
         options={{
           // 中央スロットはアイコン・ラベルなし（FloatingRecordButton がオーバーレイ）
           tabBarLabel: '',
