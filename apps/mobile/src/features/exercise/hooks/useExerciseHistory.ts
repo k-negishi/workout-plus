@@ -145,9 +145,9 @@ function computeMaxEstimated1RM(sets: SetWithWorkout[]): number {
   let maxEstimated1RM = 0;
   for (const set of sets) {
     if (set.weight != null && set.weight > 0 && set.reps != null && set.reps > 0) {
-      const estimated1rm =
+      const estimated1RM =
         set.reps === 1 ? set.weight : Math.round(set.weight * (1 + set.reps / 30) * 100) / 100;
-      if (estimated1rm > maxEstimated1RM) maxEstimated1RM = estimated1rm;
+      if (estimated1RM > maxEstimated1RM) maxEstimated1RM = estimated1RM;
     }
   }
   return maxEstimated1RM;

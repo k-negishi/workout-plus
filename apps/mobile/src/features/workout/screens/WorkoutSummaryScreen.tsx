@@ -11,7 +11,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getDatabase } from '@/database/client';
 import { PersonalRecordRepository } from '@/database/repositories/pr';
 import { colors } from '@/shared/constants/colors';
-import type { RecordStackParamList, TimerStatus } from '@/types';
+import { TimerStatus } from '@/types';
+import type { RecordStackParamList } from '@/types';
 
 import { calculateVolume } from '../utils/calculate1RM';
 
@@ -55,7 +56,7 @@ export const WorkoutSummaryScreen: React.FC = () => {
   const [exerciseCount, setExerciseCount] = useState(0);
   const [setCount, setSetCount] = useState(0);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
-  const [timerStatus, setTimerStatus] = useState<TimerStatus>('notStarted');
+  const [timerStatus, setTimerStatus] = useState<TimerStatus>(TimerStatus.NOT_STARTED);
   const [exerciseSummaries, setExerciseSummaries] = useState<ExerciseSummary[]>([]);
   const [prItems, setPrItems] = useState<PRItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -189,7 +190,7 @@ export const WorkoutSummaryScreen: React.FC = () => {
       <View className="items-center mb-6" style={{ paddingTop: insets.top + 16 }}>
         <View
           className="w-12 h-12 rounded-full items-center justify-center mb-3"
-          style={{ backgroundColor: colors.successBg }}
+          style={{ backgroundColor: '#D1FAE5' }}
         >
           <Text className="text-[24px]" style={{ color: colors.success }}>
             {'\u2713'}
@@ -282,11 +283,8 @@ export const WorkoutSummaryScreen: React.FC = () => {
                   {pr.label}
                 </Text>
               </View>
-              <View
-                className="px-2 py-[2px] rounded-lg"
-                style={{ backgroundColor: colors.tagYellowBg }}
-              >
-                <Text className="text-[11px] font-bold" style={{ color: colors.tagYellowText }}>
+              <View className="px-2 py-[2px] rounded-lg" style={{ backgroundColor: '#FEF3C7' }}>
+                <Text className="text-[11px] font-bold" style={{ color: colors.warning }}>
                   NEW
                 </Text>
               </View>
@@ -310,7 +308,7 @@ export const WorkoutSummaryScreen: React.FC = () => {
               className="flex-row justify-between items-center px-4 py-3"
               style={
                 index < exerciseSummaries.length - 1
-                  ? { borderBottomWidth: 1, borderBottomColor: colors.neutralBg }
+                  ? { borderBottomWidth: 1, borderBottomColor: colors.border }
                   : undefined
               }
             >

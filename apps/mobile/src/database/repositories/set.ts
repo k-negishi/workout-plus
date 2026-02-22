@@ -17,7 +17,7 @@ function rowToSet(row: SetRow): WorkoutSet {
     setNumber: row.set_number,
     weight: row.weight,
     reps: row.reps,
-    estimated1rm: row.estimated_1rm,
+    estimated1RM: row.estimated_1rm,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -35,7 +35,7 @@ type CreateSetParams = {
 type UpdateSetParams = Partial<{
   weight: number | null;
   reps: number | null;
-  estimated1rm: number | null;
+  estimated1RM: number | null;
   setNumber: number;
 }>;
 
@@ -95,12 +95,12 @@ export const SetRepository = {
     const id = ulid();
     const weight = params.weight ?? null;
     const reps = params.reps ?? null;
-    const estimated1rm = calculateEstimated1RM(weight, reps);
+    const estimated1RM = calculateEstimated1RM(weight, reps);
 
     await db.runAsync(
       `INSERT INTO sets (id, workout_exercise_id, set_number, weight, reps, estimated_1rm, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, params.workoutExerciseId, params.setNumber, weight, reps, estimated1rm, now, now],
+      [id, params.workoutExerciseId, params.setNumber, weight, reps, estimated1RM, now, now],
     );
 
     const row = await db.getFirstAsync<SetRow>('SELECT * FROM sets WHERE id = ?', [id]);
@@ -127,14 +127,14 @@ export const SetRepository = {
     const keyMap: Record<string, string> = {
       weight: 'weight',
       reps: 'reps',
-      estimated1rm: 'estimated_1rm',
+      estimated1RM: 'estimated_1rm',
       setNumber: 'set_number',
     };
 
     const fields: string[] = [];
     const values: (string | number | null)[] = [];
     for (const [key, value] of Object.entries(params)) {
-      if (value !== undefined && key !== 'estimated1rm') {
+      if (value !== undefined && key !== 'estimated1RM') {
         const column = keyMap[key];
         if (column) {
           fields.push(`${column} = ?`);

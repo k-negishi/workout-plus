@@ -29,7 +29,7 @@ type UpdateWorkoutParams = Partial<
 export const WorkoutRepository = {
   /**
    * 新規ワークアウトを作成する
-   * status='recording', timer_status='notStarted' で初期化
+   * status='recording', timer_status='not_started' で初期化
    */
   async create(params?: CreateWorkoutParams): Promise<WorkoutRow> {
     const db = await getDatabase();
@@ -38,7 +38,7 @@ export const WorkoutRepository = {
 
     await db.runAsync(
       `INSERT INTO workouts (id, status, created_at, started_at, completed_at, timer_status, elapsed_seconds, timer_started_at, memo)
-       VALUES (?, 'recording', ?, NULL, NULL, 'notStarted', 0, NULL, ?)`,
+       VALUES (?, 'recording', ?, NULL, NULL, 'not_started', 0, NULL, ?)`,
       [id, now, params?.memo ?? null],
     );
 
@@ -80,6 +80,21 @@ export const WorkoutRepository = {
     const db = await getDatabase();
     return db.getAllAsync<WorkoutRow>(
       "SELECT * FROM workouts WHERE status = 'completed' ORDER BY created_at DESC",
+    );
+  },
+
+  /**
+   * 当日の完了済みワークアウトを取得する（最新1件）
+   * 端末のローカル時刻で当日0:00〜翌日0:00の範囲を計算する
+   */
+  async findTodayCompleted(): Promise<WorkoutRow | null> {
+    const db = await getDatabase();
+    const today = new Date();
+    const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+    const dayEnd = dayStart + 86400000; // 翌日0:00
+    return db.getFirstAsync<WorkoutRow>(
+      "SELECT * FROM workouts WHERE status = 'completed' AND completed_at >= ? AND completed_at < ? ORDER BY completed_at DESC LIMIT 1",
+      [dayStart, dayEnd],
     );
   },
 

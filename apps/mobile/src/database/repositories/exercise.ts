@@ -7,10 +7,10 @@ import { ulid } from 'ulid';
 import { getDatabase } from '../client';
 import type { Equipment, ExerciseRow, MuscleGroup } from '../types';
 
-/** 種目作成パラメータ（カスタム種目用） */
+/** 種目作成パラメータ（カスタム種目用）。アプリ層に合わせて camelCase で統一 */
 type CreateExerciseParams = {
   name: string;
-  muscle_group: MuscleGroup;
+  muscleGroup: MuscleGroup;
   equipment: Equipment;
 };
 
@@ -64,7 +64,8 @@ export const ExerciseRepository = {
     await db.runAsync(
       `INSERT INTO exercises (id, name, muscle_group, equipment, is_custom, is_favorite, created_at, updated_at)
        VALUES (?, ?, ?, ?, 1, 0, ?, ?)`,
-      [id, params.name, params.muscle_group, params.equipment, now, now],
+      // DBカラム名は snake_case のまま。params は camelCase で受け取る
+      [id, params.name, params.muscleGroup, params.equipment, now, now],
     );
 
     const row = await db.getFirstAsync<ExerciseRow>('SELECT * FROM exercises WHERE id = ?', [id]);

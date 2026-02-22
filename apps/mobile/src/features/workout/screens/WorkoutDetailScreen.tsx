@@ -7,13 +7,14 @@
 import { type RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Pressable, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Pressable, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getDatabase } from '@/database/client';
 import { WorkoutRepository } from '@/database/repositories/workout';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { showErrorToast, showSuccessToast } from '@/shared/components/Toast';
+import { useWorkoutSessionStore } from '@/stores/workoutSessionStore';
 import type { Exercise, HomeStackParamList, Workout, WorkoutExercise, WorkoutSet } from '@/types';
 
 type DetailNavProp = NativeStackNavigationProp<HomeStackParamList, 'WorkoutDetail'>;
@@ -52,6 +53,8 @@ export const WorkoutDetailScreen: React.FC = () => {
   const { workoutId } = route.params;
   // SafeArea 対応: ノッチ・ダイナミックアイランド対応
   const insets = useSafeAreaInsets();
+
+  const continuationStore = useWorkoutSessionStore();
 
   const [workout, setWorkout] = useState<Workout | null>(null);
   const [exerciseBlocks, setExerciseBlocks] = useState<ExerciseBlockData[]>([]);
@@ -144,7 +147,7 @@ export const WorkoutDetailScreen: React.FC = () => {
             setNumber: s.set_number,
             weight: s.weight,
             reps: s.reps,
-            estimated1rm: s.estimated_1rm,
+            estimated1RM: s.estimated_1rm,
             createdAt: s.created_at,
             updatedAt: s.updated_at,
           })),
@@ -177,6 +180,35 @@ export const WorkoutDetailScreen: React.FC = () => {
   const handleBack = useCallback(() => {
     navigation.goBack();
   }, [navigation]);
+
+  /**
+   * 当日のワークアウトかどうかを判定する
+   * completedAt が今日の範囲内（0:00〜翌日0:00）かチェック
+   */
+  const isTodayWorkout = useCallback((): boolean => {
+    if (!workout?.completedAt) return false;
+    const today = new Date();
+    const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+    const dayEnd = dayStart + 86400000;
+    return workout.completedAt >= dayStart && workout.completedAt < dayEnd;
+  }, [workout]);
+
+  /** 続きを記録ボタンのハンドラー */
+  const handleContinueWorkout = useCallback(async () => {
+    const recording = await WorkoutRepository.findRecording();
+    if (recording) {
+      // すでに記録中のセッションがある場合はユーザーに通知する（サイレントリターンは混乱を招く）
+      Alert.alert(
+        '記録中のセッションがあります',
+        '記録中のセッションを先に完了または破棄してから続きを記録してください。',
+        [{ text: 'OK' }],
+      );
+      return;
+    }
+    continuationStore.setPendingContinuationWorkoutId(workoutId);
+    // React Navigation の navigate は親ナビゲーターまで遡って RecordTab を探してくれる
+    navigation.navigate('RecordTab' as never);
+  }, [workoutId, continuationStore, navigation]);
 
   if (!workout) {
     return (
@@ -339,9 +371,9 @@ export const WorkoutDetailScreen: React.FC = () => {
                       {set.weight ?? '-'}kg x {set.reps ?? '-'}
                     </Text>
                     {/* 推定1RM */}
-                    {set.estimated1rm != null && (
+                    {set.estimated1RM != null && (
                       <Text style={{ fontSize: 12, color: '#64748b' }}>
-                        1RM {Math.round(set.estimated1rm)}kg
+                        1RM {Math.round(set.estimated1RM)}kg
                       </Text>
                     )}
                   </View>
@@ -365,6 +397,24 @@ export const WorkoutDetailScreen: React.FC = () => {
               メモ
             </Text>
             <Text style={{ fontSize: 14, color: '#475569' }}>{workout.memo}</Text>
+          </View>
+        )}
+
+        {/* 当日のワークアウトのみ「続きを記録」ボタンを表示 */}
+        {isTodayWorkout() && (
+          <View style={{ paddingHorizontal: 16, paddingBottom: 12 }}>
+            <TouchableOpacity
+              testID="continue-workout-button"
+              onPress={() => void handleContinueWorkout()}
+              style={{
+                backgroundColor: '#4D94FF',
+                borderRadius: 8,
+                paddingVertical: 14,
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ fontSize: 15, fontWeight: '600', color: '#FFFFFF' }}>続きを記録</Text>
+            </TouchableOpacity>
           </View>
         )}
 

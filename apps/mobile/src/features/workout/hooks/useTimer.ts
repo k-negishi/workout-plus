@@ -1,6 +1,6 @@
 /**
  * ワークアウトタイマーフック
- * notStarted → running → paused → running / discarded の状態遷移を管理
+ * not_started → running → paused → running / discarded の状態遷移を管理
  * バックグラウンド復帰時も正確な経過時間を算出する
  */
 import { useCallback, useEffect, useRef } from 'react';
@@ -8,7 +8,7 @@ import { AppState, type AppStateStatus } from 'react-native';
 
 import { WorkoutRepository } from '@/database/repositories/workout';
 import { useWorkoutSessionStore } from '@/stores/workoutSessionStore';
-import type { TimerStatus } from '@/types';
+import { TimerStatus } from '@/types';
 
 /** タイマーフックの戻り値型 */
 export type UseTimerReturn = {
@@ -74,7 +74,7 @@ export function useTimer(): UseTimerReturn {
     [currentWorkout],
   );
 
-  /** タイマーを開始する（notStarted → running） */
+  /** タイマーを開始する（not_started → running） */
   const startTimer = useCallback(() => {
     const now = Date.now();
     setTimerStatus('running');
@@ -111,13 +111,13 @@ export function useTimer(): UseTimerReturn {
   /** タイマーをリセットする */
   const resetTimer = useCallback(() => {
     clearTimerInterval();
-    setTimerStatus('notStarted');
+    setTimerStatus(TimerStatus.NOT_STARTED);
     setElapsedSeconds(0);
     setTimerStartedAt(null);
-    void persistTimerState('notStarted', 0, null);
+    void persistTimerState(TimerStatus.NOT_STARTED, 0, null);
   }, [clearTimerInterval, setTimerStatus, setElapsedSeconds, setTimerStartedAt, persistTimerState]);
 
-  /** タイマー計測を停止して破棄する（running/paused/notStarted → discarded） */
+  /** タイマー計測を停止して破棄する（running/paused/not_started → discarded） */
   const stopTimer = useCallback(() => {
     clearTimerInterval();
     setTimerStatus('discarded');

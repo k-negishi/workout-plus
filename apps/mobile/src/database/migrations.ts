@@ -9,7 +9,7 @@ import { ALL_CREATE_TABLES, CREATE_INDEXES } from './schema';
 import { generateDevWorkoutSeedSQL, generateSeedSQL } from './seed';
 
 /** 現在の最新スキーマバージョン */
-const LATEST_VERSION = 3;
+const LATEST_VERSION = 4;
 
 /**
  * 現在のスキーマバージョンを取得する
@@ -82,6 +82,18 @@ async function migrateV2ToV3(db: SQLiteDatabase): Promise<void> {
   );
 }
 
+/**
+ * バージョン 3 → 4: timer_status の値を snake_case に統一
+ *
+ * 'notStarted' は camelCase であり、他の値（'running' 等）と命名規則が異なる。
+ * DB格納値の snake_case 統一のため 'not_started' に移行する。
+ */
+async function migrateV3ToV4(db: SQLiteDatabase): Promise<void> {
+  await db.execAsync(
+    `UPDATE workouts SET timer_status = 'not_started' WHERE timer_status = 'notStarted'`,
+  );
+}
+
 /** マイグレーション関数の型 */
 type Migration = (db: SQLiteDatabase) => Promise<void>;
 
@@ -90,6 +102,7 @@ const MIGRATIONS: Record<number, Migration> = {
   1: migrateV0ToV1,
   2: migrateV1ToV2,
   3: migrateV2ToV3,
+  4: migrateV3ToV4,
 };
 
 /**

@@ -40,8 +40,13 @@ jest.mock('@/stores/workoutSessionStore', () => ({
     currentWorkout: { id: 'w1', memo: '' },
     currentExercises: [],
     currentSets: {},
-    timerStatus: 'notStarted' as const,
+    timerStatus: 'not_started' as const,
     elapsedSeconds: 0,
+    // 継続モード用フィールド
+    pendingContinuationWorkoutId: null,
+    continuationBaseExerciseIds: null,
+    setPendingContinuationWorkoutId: jest.fn(),
+    setContinuationBaseExerciseIds: jest.fn(),
   })),
 }));
 
@@ -62,7 +67,7 @@ const mockResetTimer = jest.fn();
 const mockStopTimer = jest.fn();
 jest.mock('../../hooks/useTimer', () => ({
   useTimer: () => ({
-    timerStatus: 'notStarted' as const,
+    timerStatus: 'not_started' as const,
     elapsedSeconds: 0,
     startTimer: mockStartTimer,
     pauseTimer: mockPauseTimer,
@@ -158,8 +163,12 @@ describe('RecordScreen', () => {
           { id: 'we1', exerciseId: 'e1', workoutId: 'w1', sortOrder: 0, memo: null },
         ],
         currentSets: { we1: [] },
-        timerStatus: 'notStarted' as const,
+        timerStatus: 'not_started' as const,
         elapsedSeconds: 0,
+        pendingContinuationWorkoutId: null,
+        continuationBaseExerciseIds: null,
+        setPendingContinuationWorkoutId: jest.fn(),
+        setContinuationBaseExerciseIds: jest.fn(),
       } as ReturnType<typeof useWorkoutSessionStore>);
       const { queryByText } = render(<RecordScreen />);
       expect(queryByText('種目を追加してワークアウトを開始しましょう')).toBeNull();
@@ -196,14 +205,18 @@ describe('RecordScreen', () => {
               setNumber: 1,
               weight: null,
               reps: null,
-              estimated1rm: null,
+              estimated1RM: null,
               createdAt: 1000,
               updatedAt: 1000,
             },
           ],
         },
-        timerStatus: 'notStarted' as const,
+        timerStatus: 'not_started' as const,
         elapsedSeconds: 0,
+        pendingContinuationWorkoutId: null,
+        continuationBaseExerciseIds: null,
+        setPendingContinuationWorkoutId: jest.fn(),
+        setContinuationBaseExerciseIds: jest.fn(),
       } as ReturnType<typeof useWorkoutSessionStore>);
 
       const { getByText } = render(<RecordScreen />);

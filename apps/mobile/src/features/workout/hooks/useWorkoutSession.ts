@@ -158,134 +158,139 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
   const store = useWorkoutSessionStore();
 
   /** セッションを開始する（workoutId指定時は継続モード） */
-  const startSession = useCallback(async (workoutId?: string) => {
-    try {
-      // 継続モード: workoutId が指定されている場合（当日ワークアウトへの追記）
-      if (workoutId) {
-        const targetWorkout = await WorkoutRepository.findById(workoutId);
-        if (!targetWorkout) {
-          showErrorToast('継続対象のワークアウトが見つかりません');
+  const startSession = useCallback(
+    async (workoutId?: string) => {
+      try {
+        // 継続モード: workoutId が指定されている場合（当日ワークアウトへの追記）
+        if (workoutId) {
+          const targetWorkout = await WorkoutRepository.findById(workoutId);
+          if (!targetWorkout) {
+            showErrorToast('継続対象のワークアウトが見つかりません');
+            return;
+          }
+          // completed → recording に再オープン
+          await WorkoutRepository.update(workoutId, { status: 'recording' });
+          store.setCurrentWorkout({
+            id: targetWorkout.id,
+            status: 'recording',
+            createdAt: targetWorkout.created_at,
+            startedAt: targetWorkout.started_at,
+            completedAt: targetWorkout.completed_at,
+            timerStatus: TimerStatus.NOT_STARTED,
+            elapsedSeconds: 0,
+            timerStartedAt: null,
+            memo: targetWorkout.memo,
+          });
+          store.setTimerStatus(TimerStatus.NOT_STARTED);
+          store.setElapsedSeconds(0);
+          store.setTimerStartedAt(null);
+
+          // 既存の種目・セットを復元
+          const db = await getDatabase();
+          const exercises = await db.getAllAsync<{
+            id: string;
+            workout_id: string;
+            exercise_id: string;
+            display_order: number;
+            memo: string | null;
+            created_at: number;
+          }>('SELECT * FROM workout_exercises WHERE workout_id = ? ORDER BY display_order', [
+            workoutId,
+          ]);
+
+          const baseExerciseIds: string[] = [];
+          for (const ex of exercises) {
+            const workoutExercise: WorkoutExercise = {
+              id: ex.id,
+              workoutId: ex.workout_id,
+              exerciseId: ex.exercise_id,
+              displayOrder: ex.display_order,
+              memo: ex.memo,
+              createdAt: ex.created_at,
+            };
+            store.addExercise(workoutExercise);
+            baseExerciseIds.push(ex.id);
+
+            // findByWorkoutExerciseId は WorkoutSet[]（camelCase 変換済み）を返す
+            const sets = await SetRepository.findByWorkoutExerciseId(ex.id);
+            store.setSetsForExercise(ex.id, sets);
+          }
+          // 継続モードの基準種目IDリストを記録
+          store.setContinuationBaseExerciseIds(baseExerciseIds);
           return;
         }
-        // completed → recording に再オープン
-        await WorkoutRepository.update(workoutId, { status: 'recording' });
-        store.setCurrentWorkout({
-          id: targetWorkout.id,
-          status: 'recording',
-          createdAt: targetWorkout.created_at,
-          startedAt: targetWorkout.started_at,
-          completedAt: targetWorkout.completed_at,
-          timerStatus: TimerStatus.NOT_STARTED,
-          elapsedSeconds: 0,
-          timerStartedAt: null,
-          memo: targetWorkout.memo,
-        });
-        store.setTimerStatus(TimerStatus.NOT_STARTED);
-        store.setElapsedSeconds(0);
-        store.setTimerStartedAt(null);
 
-        // 既存の種目・セットを復元
-        const db = await getDatabase();
-        const exercises = await db.getAllAsync<{
-          id: string;
-          workout_id: string;
-          exercise_id: string;
-          display_order: number;
-          memo: string | null;
-          created_at: number;
-        }>('SELECT * FROM workout_exercises WHERE workout_id = ? ORDER BY display_order', [workoutId]);
+        // 既存の recording セッションがあるか確認
+        const existing = await WorkoutRepository.findRecording();
+        if (existing) {
+          // 既存セッションを復元
+          store.setCurrentWorkout({
+            id: existing.id,
+            status: existing.status,
+            createdAt: existing.created_at,
+            startedAt: existing.started_at,
+            completedAt: existing.completed_at,
+            timerStatus: existing.timer_status,
+            elapsedSeconds: existing.elapsed_seconds,
+            timerStartedAt: existing.timer_started_at,
+            memo: existing.memo,
+          });
+          store.setTimerStatus(existing.timer_status);
+          store.setElapsedSeconds(existing.elapsed_seconds);
+          store.setTimerStartedAt(existing.timer_started_at);
 
-        const baseExerciseIds: string[] = [];
-        for (const ex of exercises) {
-          const workoutExercise: WorkoutExercise = {
-            id: ex.id,
-            workoutId: ex.workout_id,
-            exerciseId: ex.exercise_id,
-            displayOrder: ex.display_order,
-            memo: ex.memo,
-            createdAt: ex.created_at,
-          };
-          store.addExercise(workoutExercise);
-          baseExerciseIds.push(ex.id);
+          // 関連する種目とセットも復元
+          const db = await getDatabase();
+          const exercises = await db.getAllAsync<{
+            id: string;
+            workout_id: string;
+            exercise_id: string;
+            display_order: number;
+            memo: string | null;
+            created_at: number;
+          }>('SELECT * FROM workout_exercises WHERE workout_id = ? ORDER BY display_order', [
+            existing.id,
+          ]);
 
-          // findByWorkoutExerciseId は WorkoutSet[]（camelCase 変換済み）を返す
-          const sets = await SetRepository.findByWorkoutExerciseId(ex.id);
-          store.setSetsForExercise(ex.id, sets);
-        }
-        // 継続モードの基準種目IDリストを記録
-        store.setContinuationBaseExerciseIds(baseExerciseIds);
-        return;
-      }
+          for (const ex of exercises) {
+            const workoutExercise: WorkoutExercise = {
+              id: ex.id,
+              workoutId: ex.workout_id,
+              exerciseId: ex.exercise_id,
+              displayOrder: ex.display_order,
+              memo: ex.memo,
+              createdAt: ex.created_at,
+            };
+            store.addExercise(workoutExercise);
 
-      // 既存の recording セッションがあるか確認
-      const existing = await WorkoutRepository.findRecording();
-      if (existing) {
-        // 既存セッションを復元
-        store.setCurrentWorkout({
-          id: existing.id,
-          status: existing.status,
-          createdAt: existing.created_at,
-          startedAt: existing.started_at,
-          completedAt: existing.completed_at,
-          timerStatus: existing.timer_status,
-          elapsedSeconds: existing.elapsed_seconds,
-          timerStartedAt: existing.timer_started_at,
-          memo: existing.memo,
-        });
-        store.setTimerStatus(existing.timer_status);
-        store.setElapsedSeconds(existing.elapsed_seconds);
-        store.setTimerStartedAt(existing.timer_started_at);
+            // findByWorkoutExerciseId は WorkoutSet[]（camelCase 変換済み）を返す
+            const sets = await SetRepository.findByWorkoutExerciseId(ex.id);
+            store.setSetsForExercise(ex.id, sets);
+          }
 
-        // 関連する種目とセットも復元
-        const db = await getDatabase();
-        const exercises = await db.getAllAsync<{
-          id: string;
-          workout_id: string;
-          exercise_id: string;
-          display_order: number;
-          memo: string | null;
-          created_at: number;
-        }>('SELECT * FROM workout_exercises WHERE workout_id = ? ORDER BY display_order', [
-          existing.id,
-        ]);
-
-        for (const ex of exercises) {
-          const workoutExercise: WorkoutExercise = {
-            id: ex.id,
-            workoutId: ex.workout_id,
-            exerciseId: ex.exercise_id,
-            displayOrder: ex.display_order,
-            memo: ex.memo,
-            createdAt: ex.created_at,
-          };
-          store.addExercise(workoutExercise);
-
-          // findByWorkoutExerciseId は WorkoutSet[]（camelCase 変換済み）を返す
-          const sets = await SetRepository.findByWorkoutExerciseId(ex.id);
-          store.setSetsForExercise(ex.id, sets);
+          return;
         }
 
-        return;
+        // 新規セッション作成
+        const workout = await WorkoutRepository.create();
+        store.setCurrentWorkout({
+          id: workout.id,
+          status: workout.status,
+          createdAt: workout.created_at,
+          startedAt: workout.started_at,
+          completedAt: workout.completed_at,
+          timerStatus: workout.timer_status,
+          elapsedSeconds: workout.elapsed_seconds,
+          timerStartedAt: workout.timer_started_at,
+          memo: workout.memo,
+        });
+      } catch (error) {
+        showErrorToast('セッションの開始に失敗しました');
+        throw error;
       }
-
-      // 新規セッション作成
-      const workout = await WorkoutRepository.create();
-      store.setCurrentWorkout({
-        id: workout.id,
-        status: workout.status,
-        createdAt: workout.created_at,
-        startedAt: workout.started_at,
-        completedAt: workout.completed_at,
-        timerStatus: workout.timer_status,
-        elapsedSeconds: workout.elapsed_seconds,
-        timerStartedAt: workout.timer_started_at,
-        memo: workout.memo,
-      });
-    } catch (error) {
-      showErrorToast('セッションの開始に失敗しました');
-      throw error;
-    }
-  }, [store]);
+    },
+    [store],
+  );
 
   /** 種目を追加する */
   const addExercise = useCallback(

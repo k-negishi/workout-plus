@@ -14,14 +14,14 @@ describe('useTimer - 状態遷移テスト', () => {
     useWorkoutSessionStore.getState().reset();
   });
 
-  it('初期状態は notStarted で elapsed=0', () => {
+  it('初期状態は not_started で elapsed=0', () => {
     const state = useWorkoutSessionStore.getState();
-    expect(state.timerStatus).toBe('notStarted');
+    expect(state.timerStatus).toBe('not_started');
     expect(state.elapsedSeconds).toBe(0);
     expect(state.timerStartedAt).toBeNull();
   });
 
-  it('notStarted → running 遷移', () => {
+  it('not_started → running 遷移', () => {
     const store = useWorkoutSessionStore.getState();
     const now = Date.now();
 
@@ -82,7 +82,7 @@ describe('useTimer - 状態遷移テスト', () => {
     store.reset();
 
     const state = useWorkoutSessionStore.getState();
-    expect(state.timerStatus).toBe('notStarted');
+    expect(state.timerStatus).toBe('not_started');
     expect(state.elapsedSeconds).toBe(0);
     expect(state.timerStartedAt).toBeNull();
   });

@@ -3,7 +3,12 @@
  */
 
 /** PR種別 */
-export type PRType = 'max_weight' | 'max_volume' | 'max_reps';
+export const PRType = {
+  MAX_WEIGHT: 'max_weight',
+  MAX_VOLUME: 'max_volume',
+  MAX_REPS: 'max_reps',
+} as const;
+export type PRType = (typeof PRType)[keyof typeof PRType];
 
 /** パーソナルレコード */
 export type PersonalRecord = {

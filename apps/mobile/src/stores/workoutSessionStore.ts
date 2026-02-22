@@ -5,7 +5,8 @@
  */
 import { create } from 'zustand';
 
-import type { TimerStatus, Workout, WorkoutExercise, WorkoutSet } from '@/types';
+import { TimerStatus } from '@/types';
+import type { Workout, WorkoutExercise, WorkoutSet } from '@/types';
 
 type WorkoutSessionState = {
   /** 進行中のワークアウト */
@@ -22,6 +23,10 @@ type WorkoutSessionState = {
   timerStartedAt: number | null;
   /** UI再描画トリガー用カウンター */
   invalidationCounter: number;
+  /** 継続モード時の基準種目IDリスト（null = 通常モード） */
+  continuationBaseExerciseIds: string[] | null;
+  /** 継続対象のワークアウトID（+ボタン → RecordScreen 連携用） */
+  pendingContinuationWorkoutId: string | null;
 
   // === アクション ===
   /** 進行中ワークアウトをセット */
@@ -44,6 +49,10 @@ type WorkoutSessionState = {
   setTimerStartedAt: (timestamp: number | null) => void;
   /** invalidationカウンターをインクリメント */
   incrementInvalidation: () => void;
+  /** 継続モードの基準種目IDリストをセット */
+  setContinuationBaseExerciseIds: (ids: string[] | null) => void;
+  /** 継続対象のワークアウトIDをセット */
+  setPendingContinuationWorkoutId: (id: string | null) => void;
   /** ストアを初期状態にリセット */
   reset: () => void;
 };
@@ -52,10 +61,12 @@ const initialState = {
   currentWorkout: null,
   currentExercises: [],
   currentSets: {},
-  timerStatus: 'notStarted' as TimerStatus,
+  timerStatus: TimerStatus.NOT_STARTED,
   elapsedSeconds: 0,
   timerStartedAt: null,
   invalidationCounter: 0,
+  continuationBaseExerciseIds: null as string[] | null,
+  pendingContinuationWorkoutId: null as string | null,
 };
 
 export const useWorkoutSessionStore = create<WorkoutSessionState>((set) => ({
@@ -105,6 +116,10 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>((set) => ({
     set((state) => ({
       invalidationCounter: state.invalidationCounter + 1,
     })),
+
+  setContinuationBaseExerciseIds: (ids) => set({ continuationBaseExerciseIds: ids }),
+
+  setPendingContinuationWorkoutId: (id) => set({ pendingContinuationWorkoutId: id }),
 
   reset: () => set(initialState),
 }));

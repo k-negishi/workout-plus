@@ -18,7 +18,7 @@ describe('usePreviousRecord - 型とインターフェーステスト', () => {
         setNumber: 1,
         weight: 80,
         reps: 10,
-        estimated1rm: 107,
+        estimated1RM: 107,
         createdAt: Date.now(),
         updatedAt: Date.now(),
       },
@@ -28,7 +28,7 @@ describe('usePreviousRecord - 型とインターフェーステスト', () => {
         setNumber: 2,
         weight: 85,
         reps: 8,
-        estimated1rm: 105,
+        estimated1RM: 105,
         createdAt: Date.now(),
         updatedAt: Date.now(),
       },
@@ -70,7 +70,7 @@ describe('usePreviousRecord - 型とインターフェーステスト', () => {
         setNumber: 1,
         weight: null,
         reps: null,
-        estimated1rm: null,
+        estimated1RM: null,
         createdAt: Date.now(),
         updatedAt: Date.now(),
       },
@@ -83,6 +83,6 @@ describe('usePreviousRecord - 型とインターフェーステスト', () => {
 
     expect(record.sets[0]!.weight).toBeNull();
     expect(record.sets[0]!.reps).toBeNull();
-    expect(record.sets[0]!.estimated1rm).toBeNull();
+    expect(record.sets[0]!.estimated1RM).toBeNull();
   });
 });

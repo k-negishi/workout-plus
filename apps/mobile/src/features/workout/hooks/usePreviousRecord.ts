@@ -91,7 +91,7 @@ export function usePreviousRecord(
         setNumber: s.set_number,
         weight: s.weight,
         reps: s.reps,
-        estimated1rm: s.estimated_1rm,
+        estimated1RM: s.estimated_1rm,
         createdAt: s.created_at,
         updatedAt: s.updated_at,
       }));

@@ -2,22 +2,19 @@
  * DB層の行型定義
  * SQLiteのカラム名（snake_case）に対応する型
  * アプリ層（camelCase）への変換はRepository層で行う
+ *
+ * ## Single Source of Truth（SSOT）
+ *   Union Type（WorkoutStatus, TimerStatus, MuscleGroup, Equipment, PRType）の定義は
+ *   アプリ層（src/types/）が Single Source of Truth。
+ *   このファイルは Row型のみを保持し、Union Type は types/ から re-export する。
  */
 
-/** ワークアウトの状態 */
-export type WorkoutStatus = 'recording' | 'completed';
+import type { Equipment, MuscleGroup, TimerStatus, WorkoutStatus } from '../types/workout';
+import type { PRType } from '../types/pr';
 
-/** タイマーの状態 */
-export type TimerStatus = 'notStarted' | 'running' | 'paused' | 'discarded';
-
-/** 部位カテゴリ */
-export type MuscleGroup = 'chest' | 'back' | 'legs' | 'shoulders' | 'biceps' | 'triceps' | 'abs';
-
-/** 器具タイプ */
-export type Equipment = 'barbell' | 'dumbbell' | 'machine' | 'cable' | 'bodyweight';
-
-/** PR種別 */
-export type PRType = 'max_weight' | 'max_volume' | 'max_reps';
+// Union Type の SSOT は src/types/。re-export のみ。
+export type { Equipment, MuscleGroup, TimerStatus, WorkoutStatus };
+export type { PRType };
 
 /** workouts テーブル行型 */
 export type WorkoutRow = {
@@ -38,7 +35,9 @@ export type ExerciseRow = {
   name: string;
   muscle_group: MuscleGroup;
   equipment: Equipment;
+  /** 0: プリセット、1: ユーザー作成カスタム */
   is_custom: 0 | 1;
+  /** 0: 通常、1: お気に入り */
   is_favorite: 0 | 1;
   created_at: number;
   updated_at: number;

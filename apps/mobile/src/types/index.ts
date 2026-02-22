@@ -16,13 +16,9 @@ export type {
   WorkoutEditScreenProps,
   WorkoutSummaryScreenProps,
 } from './navigation';
-export type { PersonalRecord, PRAchievement, PRType } from './pr';
-export type {
-  Equipment,
-  MuscleGroup,
-  TimerStatus,
-  Workout,
-  WorkoutExercise,
-  WorkoutSet,
-  WorkoutStatus,
-} from './workout';
+// PRType は as const の値も必要なため value export
+export { PRType } from './pr';
+export type { PersonalRecord, PRAchievement } from './pr';
+// WorkoutStatus/TimerStatus/MuscleGroup/Equipment は as const の値も必要なため value export
+export { Equipment, MuscleGroup, TimerStatus, WorkoutStatus } from './workout';
+export type { Workout, WorkoutExercise, WorkoutSet } from './workout';
