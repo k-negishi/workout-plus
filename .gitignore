@@ -64,3 +64,4 @@ yarn-error.log*
 *.swo
 
 /requirements/archive/
+/.claude.bkbk/

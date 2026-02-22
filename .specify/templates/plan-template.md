@@ -1,7 +1,7 @@
 # Implementation Plan: [FEATURE]
 
-**Branch**: `[###-feature-name]` | **Date**: [DATE] | **Spec**: [link]
-**Input**: Feature specification from `/specs/[###-feature-name]/spec.md`
+**Branch**: `[yyyymmdd-機能名]` | **Date**: [DATE] | **Spec**: [link]
+**Input**: Feature specification from `/specs/[yyyymmdd-機能名]/spec.md`
 
 **Note**: This template is filled in by the `/speckit.plan` command. See `.specify/templates/plan-template.md` for the execution workflow.
 
@@ -38,7 +38,7 @@
 ### Documentation (this feature)
 
 ```text
-specs/[###-feature]/
+specs/[yyyymmdd-機能名]/
 ├── plan.md              # This file (/speckit.plan command output)
 ├── research.md          # Phase 0 output (/speckit.plan command)
 ├── data-model.md        # Phase 1 output (/speckit.plan command)

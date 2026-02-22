@@ -24,46 +24,27 @@ $ARGUMENTS
 
 その機能説明に基づき、以下を実行：
 
-1. **ブランチ用の簡潔なショートネームを生成**（2-4語）：
-   - 機能説明を分析し、最も意味のあるキーワードを抽出
-   - 機能の本質を捉えた2-4語のショートネームを作成
-   - 可能な場合はアクション-名詞形式を使用（例: "add-user-auth", "fix-payment-bug"）
-   - 技術用語やアクロニムを保持（OAuth2, API, JWT 等）
-   - 機能が一目で理解できる程度に簡潔だが説明的に
+1. **機能名を決定**（日本語可）：
+   - specs/ とブランチの命名規則は `yyyymmdd-[機能名]` とする
+   - `[機能名]` は日本語を許可し、スペースはハイフンに変換する
+   - 禁止文字（`/ \ : ? * [ ] ~ ^` など）のみ除去/置換する
    - 例：
-     - "ユーザー認証を追加したい" → "user-auth"
-     - "APIにOAuth2統合を実装" → "oauth2-api-integration"
-     - "アナリティクスダッシュボードを作成" → "analytics-dashboard"
-     - "決済処理のタイムアウトバグを修正" → "fix-payment-timeout"
+     - 20260222-ユーザー認証追加
+     - 20260222-ワークアウト履歴-UI改善
 
-2. **新規作成前に既存ブランチを確認**：
+2. **create-new-feature スクリプトを実行**：
 
-   a. まず全リモートブランチをフェッチして最新情報を取得：
+   - `.specify/scripts/bash/create-new-feature.sh --json --short-name "<機能名>" "<機能説明>"` を実行する
+   - `--short-name` を省略した場合は機能説明から自動生成される（日本語可）
+   - 日付プレフィックスは当日（`date +%Y%m%d`）を使用する
 
-      ```bash
-      git fetch --all --prune
-      ```
-
-   b. ショートネームに対する全ソースの最大フィーチャー番号を検索：
-      - リモートブランチ: `git ls-remote --heads origin | grep -E 'refs/heads/[0-9]+-<short-name>$'`
-      - ローカルブランチ: `git branch | grep -E '^[* ]*[0-9]+-<short-name>$'`
-      - specsディレクトリ: `specs/[0-9]+-<short-name>` にマッチするディレクトリを確認
-
-   c. 次の利用可能な番号を決定：
-      - 3つのソース全てから全ての番号を抽出
-      - 最大番号 N を特定
-      - 新しいブランチ番号に N+1 を使用
-
-   d. 算出した番号とショートネームでスクリプト `.specify/scripts/bash/create-new-feature.sh --json "$ARGUMENTS"` を実行：
-      - `--number N+1` と `--short-name "your-short-name"` を機能説明と共に渡す
-      - Bash例: `.specify/scripts/bash/create-new-feature.sh --json "$ARGUMENTS" --json --number 5 --short-name "user-auth" "Add user authentication"`
-      - PowerShell例: `.specify/scripts/bash/create-new-feature.sh --json "$ARGUMENTS" -Json -Number 5 -ShortName "user-auth" "Add user authentication"`
-
+   Bash例:
+   ```bash
+   .specify/scripts/bash/create-new-feature.sh --json --short-name "ワークアウト履歴-UI改善" "$ARGUMENTS"
+   ```
+    
    **重要**：
-   - 3つのソース全て（リモートブランチ、ローカルブランチ、specsディレクトリ）で最大番号を確認
-   - 正確なショートネームパターンのブランチ/ディレクトリのみマッチ
-   - このショートネームで既存のブランチ/ディレクトリが見つからない場合は番号1から開始
-   - このスクリプトは1つの機能につき1回のみ実行すること
+   - 当面の間、作業は main ブランチで行う 
    - JSONはターミナル出力として提供される — 常に参照して実際のコンテンツを取得すること
    - JSON出力にはBRANCH_NAMEとSPEC_FILEパスが含まれる
    - 引数にシングルクォートを含む場合（例: "I'm Groot"）はエスケープ構文を使用: 例 'I'\''m Groot'（またはダブルクォート: "I'm Groot"）
