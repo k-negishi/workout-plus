@@ -4,7 +4,7 @@
  * - 達成率 100% のときプログレスバーが100%幅になること
  * - thisWeekWorkouts=0 のとき達成率が0%になること
  */
-import { render } from '@testing-library/react-native';
+import { render, screen } from '@testing-library/react-native';
 
 import { WeeklyGoalsWidget } from '../WeeklyGoalsWidget';
 
@@ -18,17 +18,17 @@ describe('WeeklyGoalsWidget', () => {
   };
 
   it('goals-grid 要素が存在する', () => {
-    const { getByTestId } = render(<WeeklyGoalsWidget {...defaultProps} />);
-    expect(getByTestId('goals-grid')).toBeTruthy();
+    render(<WeeklyGoalsWidget {...defaultProps} />);
+    expect(screen.getByTestId('goals-grid')).toBeTruthy();
   });
 
   it('progress-bar 要素が存在する', () => {
-    const { getByTestId } = render(<WeeklyGoalsWidget {...defaultProps} />);
-    expect(getByTestId('progress-bar')).toBeTruthy();
+    render(<WeeklyGoalsWidget {...defaultProps} />);
+    expect(screen.getByTestId('progress-bar')).toBeTruthy();
   });
 
   it('達成率100%のとき progress-fill の幅が100%になる', () => {
-    const { getByTestId } = render(
+    render(
       <WeeklyGoalsWidget
         thisWeekWorkouts={3}
         thisWeekSets={30}
@@ -36,7 +36,7 @@ describe('WeeklyGoalsWidget', () => {
         targetWorkouts={3}
       />,
     );
-    const fill = getByTestId('progress-fill');
+    const fill = screen.getByTestId('progress-fill');
     // StyleSheet の style は配列またはオブジェクトで取得される
     const style = fill.props.style;
     // フラット化して width を取得
@@ -45,7 +45,7 @@ describe('WeeklyGoalsWidget', () => {
   });
 
   it('thisWeekWorkouts=0 のとき達成率が0%になる', () => {
-    const { getByTestId } = render(
+    render(
       <WeeklyGoalsWidget
         thisWeekWorkouts={0}
         thisWeekSets={0}
@@ -53,7 +53,7 @@ describe('WeeklyGoalsWidget', () => {
         targetWorkouts={3}
       />,
     );
-    const fill = getByTestId('progress-fill');
+    const fill = screen.getByTestId('progress-fill');
     const style = fill.props.style;
     const flatStyle = Array.isArray(style) ? Object.assign({}, ...style) : style;
     expect(flatStyle.width).toBe('0%');

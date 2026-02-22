@@ -4,7 +4,7 @@
  * - 追加済み種目をタップしても session.addExercise が呼ばれない
  * - 未追加種目をタップすると session.addExercise が呼ばれる
  */
-import { fireEvent, render } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
 
 // --- モック定義 ---
@@ -121,31 +121,31 @@ describe('ExercisePickerScreen - 追加済み種目の表示と操作（Issue #1
   });
 
   it('追加済み種目（ベンチプレス）に「追加済み」テキストが表示される', () => {
-    const { getByText } = render(<ExercisePickerScreen />);
+    render(<ExercisePickerScreen />);
 
     // 「追加済み」バッジが存在する
-    expect(getByText('追加済み')).toBeTruthy();
+    expect(screen.getByText('追加済み')).toBeTruthy();
   });
 
   it('未追加種目（スクワット）には「追加済み」テキストが表示されない', () => {
-    const { queryAllByText } = render(<ExercisePickerScreen />);
+    render(<ExercisePickerScreen />);
 
     // 「追加済み」バッジは1件だけ（ベンチプレスのみ）
-    expect(queryAllByText('追加済み')).toHaveLength(1);
+    expect(screen.queryAllByText('追加済み')).toHaveLength(1);
   });
 
   it('追加済み種目（ベンチプレス）をタップしても addExercise が呼ばれない', () => {
-    const { getByText } = render(<ExercisePickerScreen />);
+    render(<ExercisePickerScreen />);
 
-    fireEvent.press(getByText('ベンチプレス'));
+    fireEvent.press(screen.getByText('ベンチプレス'));
 
     expect(mockAddExercise).not.toHaveBeenCalled();
   });
 
   it('未追加種目（スクワット）をタップすると addExercise が呼ばれる', async () => {
-    const { getByText } = render(<ExercisePickerScreen />);
+    render(<ExercisePickerScreen />);
 
-    fireEvent.press(getByText('スクワット'));
+    fireEvent.press(screen.getByText('スクワット'));
 
     expect(mockAddExercise).toHaveBeenCalledWith('exercise-squat');
   });

@@ -2,7 +2,7 @@
  * WorkoutSummaryScreen テスト
  * - PR セクションの条件付きレンダリング（T030）
  */
-import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
 
 // --- モック定義 ---
@@ -105,36 +105,30 @@ describe('WorkoutSummaryScreen', () => {
     it('personalRecords が空のとき「新記録達成」セクションが非表示', async () => {
       setupDefaultMocks({ withPRs: false });
 
-      const { queryByText } = render(<WorkoutSummaryScreen />);
+      render(<WorkoutSummaryScreen />);
 
-      // データ読み込み完了を待つ（「ワークアウト完了」が表示される）
-      await waitFor(() => {
-        expect(queryByText('ワークアウト完了')).toBeTruthy();
-      });
+      // データ読み込み完了を待つ（findByText は要素が現れるまで待機する）
+      await screen.findByText('ワークアウト完了');
 
-      // 「新記録達成」テキストが存在しないことを検証
-      expect(queryByText('新記録達成')).toBeNull();
+      // 「新記録達成」テキストが存在しないことを検証（不在チェックには queryBy を使う）
+      expect(screen.queryByText('新記録達成')).toBeNull();
     });
 
     it('personalRecords があるとき「新記録達成」セクションが表示される', async () => {
       setupDefaultMocks({ withPRs: true });
 
-      const { getByText, getAllByText, queryByText } = render(<WorkoutSummaryScreen />);
+      render(<WorkoutSummaryScreen />);
 
       // データ読み込み完了を待つ
-      await waitFor(() => {
-        expect(queryByText('ワークアウト完了')).toBeTruthy();
-      });
+      await screen.findByText('ワークアウト完了');
 
-      // 「新記録達成」テキストが存在することを検証
-      await waitFor(() => {
-        expect(getByText('新記録達成')).toBeTruthy();
-      });
+      // 「新記録達成」テキストが存在することを検証（presence チェックは findBy/getBy を使う）
+      await screen.findByText('新記録達成');
 
       // PR の種目名とラベルが表示されることも検証
       // 「ベンチプレス」は PR セクションと種目別サマリーの両方に表示されるため getAllByText を使用
-      expect(getAllByText('ベンチプレス').length).toBeGreaterThanOrEqual(2);
-      expect(getByText('最大重量: 100kg')).toBeTruthy();
+      expect(screen.getAllByText('ベンチプレス').length).toBeGreaterThanOrEqual(2);
+      expect(screen.getByText('最大重量: 100kg')).toBeTruthy();
     });
   });
 
@@ -142,13 +136,11 @@ describe('WorkoutSummaryScreen', () => {
     it('ボタン押下で RecordStack をリセットして HomeTab に遷移する', async () => {
       setupDefaultMocks({ withPRs: false });
 
-      const { getByText, queryByText } = render(<WorkoutSummaryScreen />);
+      render(<WorkoutSummaryScreen />);
 
-      await waitFor(() => {
-        expect(queryByText('ワークアウト完了')).toBeTruthy();
-      });
+      await screen.findByText('ワークアウト完了');
 
-      fireEvent.press(getByText('ホームに戻る'));
+      fireEvent.press(screen.getByText('ホームに戻る'));
 
       // RecordStack を Record 画面にリセット（WorkoutSummary に戻らないように）
       expect(mockReset).toHaveBeenCalledWith({ index: 0, routes: [{ name: 'Record' }] });
@@ -161,26 +153,23 @@ describe('WorkoutSummaryScreen', () => {
     it('timer_status が discarded のとき「―」を表示する', async () => {
       setupDefaultMocks({ withPRs: false, timerStatus: 'discarded' });
 
-      const { queryByText } = render(<WorkoutSummaryScreen />);
+      render(<WorkoutSummaryScreen />);
 
-      await waitFor(() => {
-        expect(queryByText('ワークアウト完了')).toBeTruthy();
-      });
+      await screen.findByText('ワークアウト完了');
 
-      expect(queryByText('―')).toBeTruthy();
-      expect(queryByText('30分')).toBeNull();
+      // 存在確認は getBy 系、不在確認は queryBy 系
+      expect(screen.getByText('―')).toBeTruthy();
+      expect(screen.queryByText('30分')).toBeNull();
     });
 
     it('timer_status が discarded 以外のとき通常の時間表示をする', async () => {
       setupDefaultMocks({ withPRs: false, timerStatus: 'running' });
 
-      const { queryByText } = render(<WorkoutSummaryScreen />);
+      render(<WorkoutSummaryScreen />);
 
-      await waitFor(() => {
-        expect(queryByText('ワークアウト完了')).toBeTruthy();
-      });
+      await screen.findByText('ワークアウト完了');
 
-      expect(queryByText('30分')).toBeTruthy();
+      expect(screen.getByText('30分')).toBeTruthy();
     });
   });
 });

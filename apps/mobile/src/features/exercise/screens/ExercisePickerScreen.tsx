@@ -260,7 +260,8 @@ export const ExercisePickerScreen: React.FC = () => {
         navigation.goBack();
       }
     },
-    [mode, session, navigation],
+    // addedExerciseIds を deps に含める: Set の変化でコールバックを再生成し stale closure を防ぐ
+    [mode, session, navigation, addedExerciseIds],
   );
 
   /** multi モード: 選択した種目を一括追加 */

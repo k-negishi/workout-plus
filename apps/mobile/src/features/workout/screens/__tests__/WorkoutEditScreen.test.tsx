@@ -3,7 +3,7 @@
  * - SafeArea 対応（Issue #117）
  *   ヘッダーが useSafeAreaInsets の top インセットを正しく適用していることを検証
  */
-import { render, waitFor } from '@testing-library/react-native';
+import { render, screen } from '@testing-library/react-native';
 import React from 'react';
 
 // --- モック定義 ---
@@ -145,9 +145,9 @@ describe('WorkoutEditScreen', () => {
     });
 
     it('ヘッダーの paddingTop に insets.top が適用される', async () => {
-      const { getByTestId } = render(<WorkoutEditScreen />);
-      // ヘッダーが描画されるまで待つ
-      const header = await waitFor(() => getByTestId('workout-edit-header'));
+      render(<WorkoutEditScreen />);
+      // ヘッダーが描画されるまで待つ（findByTestId は要素が表示されるまで待機する）
+      const header = await screen.findByTestId('workout-edit-header');
       // style prop に paddingTop: 44 が設定されている
       expect(header.props.style).toEqual(expect.objectContaining({ paddingTop: 44 }));
     });

@@ -4,7 +4,7 @@
  * - タップ可能検証（agent-9 で追加予定）
  * - navigation.push 検証（agent-10 で追加予定）
  */
-import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
 
 // --- モック定義 ---
@@ -213,9 +213,9 @@ describe('WorkoutDetailScreen', () => {
     });
 
     it('ヘッダーの paddingTop に insets.top + 16 が適用される', async () => {
-      const { getByTestId } = render(<WorkoutDetailScreen />);
-      // データ読み込み完了を待つ
-      const header = await waitFor(() => getByTestId('workout-detail-header'));
+      render(<WorkoutDetailScreen />);
+      // データ読み込み完了を待つ（findByTestId は要素が表示されるまで待機する）
+      const header = await screen.findByTestId('workout-detail-header');
       // style prop に paddingTop が設定されている
       expect(header.props.style).toEqual(expect.objectContaining({ paddingTop: 44 + 16 }));
     });
@@ -224,10 +224,10 @@ describe('WorkoutDetailScreen', () => {
   // --- タップ可能検証（T027） ---
   describe('種目名タップ', () => {
     it('種目名がタップ可能（testID="exerciseName-{exerciseId}"）である', async () => {
-      const { findByTestId } = render(<WorkoutDetailScreen />);
+      render(<WorkoutDetailScreen />);
 
       // testID="exerciseName-ex1" を持つ Pressable が存在することを検証
-      const exerciseName = await findByTestId('exerciseName-ex1');
+      const exerciseName = await screen.findByTestId('exerciseName-ex1');
       expect(exerciseName).toBeTruthy();
     });
   });
@@ -235,10 +235,10 @@ describe('WorkoutDetailScreen', () => {
   // --- ExerciseHistory ナビゲーション検証（T035） ---
   describe('ExerciseHistory ナビゲーション', () => {
     it('種目名タップで navigation.navigate("ExerciseHistory") が呼ばれる', async () => {
-      const { findByTestId } = render(<WorkoutDetailScreen />);
+      render(<WorkoutDetailScreen />);
 
       // 種目名の表示を待つ
-      const exerciseName = await findByTestId('exerciseName-ex1');
+      const exerciseName = await screen.findByTestId('exerciseName-ex1');
 
       // 種目名をタップ
       fireEvent.press(exerciseName);

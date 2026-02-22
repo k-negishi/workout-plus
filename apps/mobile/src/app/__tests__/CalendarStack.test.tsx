@@ -4,7 +4,7 @@
  * - カレンダー → WorkoutEdit への遷移が正常に動作することを検証
  */
 import { NavigationContainer } from '@react-navigation/native';
-import { act, fireEvent, render } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
 
 // SafeAreaContext モック（bottom-tabs が使用）
@@ -116,31 +116,25 @@ const renderCalendarStack = () =>
 
 describe('CalendarStack', () => {
   it('初期表示でカレンダー画面が表示される', () => {
-    const { getByTestId } = renderCalendarStack();
-    expect(getByTestId('calendar-screen')).toBeTruthy();
+    renderCalendarStack();
+    expect(screen.getByTestId('calendar-screen')).toBeTruthy();
   });
 
   it('CalendarStack から WorkoutDetail へ遷移できる', async () => {
-    const { getByTestId } = renderCalendarStack();
-    await act(async () => {
-      fireEvent.press(getByTestId('go-to-detail'));
-    });
-    expect(getByTestId('workout-detail-screen')).toBeTruthy();
+    renderCalendarStack();
+    fireEvent.press(screen.getByTestId('go-to-detail'));
+    expect(await screen.findByTestId('workout-detail-screen')).toBeTruthy();
   });
 
   it('WorkoutDetail の編集ボタンから WorkoutEdit へ遷移できる（カレンダー経由）', async () => {
-    const { getByTestId } = renderCalendarStack();
+    renderCalendarStack();
 
     // Calendar → WorkoutDetail へ遷移
-    await act(async () => {
-      fireEvent.press(getByTestId('go-to-detail'));
-    });
-    expect(getByTestId('workout-detail-screen')).toBeTruthy();
+    fireEvent.press(screen.getByTestId('go-to-detail'));
+    expect(await screen.findByTestId('workout-detail-screen')).toBeTruthy();
 
     // WorkoutDetail → WorkoutEdit へ遷移（これが今回の修正対象）
-    await act(async () => {
-      fireEvent.press(getByTestId('edit-button'));
-    });
-    expect(getByTestId('workout-edit-screen')).toBeTruthy();
+    fireEvent.press(screen.getByTestId('edit-button'));
+    expect(await screen.findByTestId('workout-edit-screen')).toBeTruthy();
   });
 });

@@ -4,7 +4,7 @@
  * - 各タブのラベルを検証
  */
 import { NavigationContainer } from '@react-navigation/native';
-import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import React from 'react';
 
 import { colors } from '@/shared/constants/colors';
@@ -80,28 +80,28 @@ describe('MainTabs', () => {
     );
 
   it('AI タブラベルが表示される', () => {
-    const { getByText } = renderWithNav();
-    expect(getByText('AI')).toBeTruthy();
+    renderWithNav();
+    expect(screen.getByText('AI')).toBeTruthy();
   });
 
   it('ホームタブラベルが表示される', () => {
-    const { getByText } = renderWithNav();
-    expect(getByText('ホーム')).toBeTruthy();
+    renderWithNav();
+    expect(screen.getByText('ホーム')).toBeTruthy();
   });
 
   it('統計タブラベルが表示される', () => {
-    const { getByText } = renderWithNav();
-    expect(getByText('統計')).toBeTruthy();
+    renderWithNav();
+    expect(screen.getByText('統計')).toBeTruthy();
   });
 
   it('record-tab-button が存在する', () => {
-    const { getByTestId } = renderWithNav();
-    expect(getByTestId(RECORD_BUTTON_TEST_ID)).toBeTruthy();
+    renderWithNav();
+    expect(screen.getByTestId(RECORD_BUTTON_TEST_ID)).toBeTruthy();
   });
 
   it('RecordTabButton に shadowColor スタイルが設定されている', () => {
-    const { getByTestId } = renderWithNav();
-    const button = getByTestId(RECORD_BUTTON_TEST_ID);
+    renderWithNav();
+    const button = screen.getByTestId(RECORD_BUTTON_TEST_ID);
     expect(typeof button.props.style).toBe('object');
     const style = button.props.style;
     expect(style).toMatchObject({
@@ -119,8 +119,8 @@ describe('MainTabs', () => {
   });
 
   it('中央ボタンにWF準拠の + 記号が表示される', () => {
-    const { getByText } = renderWithNav();
-    const plus = getByText('+');
+    renderWithNav();
+    const plus = screen.getByText('+');
     expect(plus).toBeTruthy();
     expect(plus.props.style).toMatchObject({
       fontSize: 28,
@@ -130,12 +130,12 @@ describe('MainTabs', () => {
   });
 
   it('+ボタン押下で RecordTab に遷移する（RecordStack が描画される）', async () => {
-    const { getByTestId } = renderWithNav();
-    const button = getByTestId(RECORD_BUTTON_TEST_ID);
+    renderWithNav();
+    const button = screen.getByTestId(RECORD_BUTTON_TEST_ID);
     fireEvent.press(button);
     // handlePress は非同期（DB 確認後にナビゲート）なので waitFor で待機する
     await waitFor(() => {
-      expect(getByTestId('record-stack-screen')).toBeTruthy();
+      expect(screen.getByTestId('record-stack-screen')).toBeTruthy();
     });
   });
 });

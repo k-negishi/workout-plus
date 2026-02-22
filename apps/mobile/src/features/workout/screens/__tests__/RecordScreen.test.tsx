@@ -4,7 +4,7 @@
  * - EmptyState 表示（T023）
  * - ExerciseHistory navigation（T034）
  */
-import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
 import { Alert } from 'react-native';
 
@@ -136,8 +136,8 @@ describe('RecordScreen', () => {
     });
 
     it('insets.top に基づいた paddingTop がヘッダーに適用される', () => {
-      const { getByTestId } = render(<RecordScreen />);
-      const container = getByTestId('record-screen-container');
+      render(<RecordScreen />);
+      const container = screen.getByTestId('record-screen-container');
       // paddingTop は insets.top の値が反映されていること（44 + 追加マージン）
       expect(container.props.style).toEqual(expect.objectContaining({ paddingTop: 44 }));
     });
@@ -146,15 +146,15 @@ describe('RecordScreen', () => {
   describe('EmptyState（種目未追加時）', () => {
     it('exercises が空のとき EmptyState が表示される', () => {
       // デフォルトモックは currentExercises: [] なのでそのまま使用
-      const { getByText } = render(<RecordScreen />);
+      render(<RecordScreen />);
       // EmptyState のタイトルテキストが表示されることを検証
-      expect(getByText('種目を追加してワークアウトを開始しましょう')).toBeTruthy();
+      expect(screen.getByText('種目を追加してワークアウトを開始しましょう')).toBeTruthy();
     });
 
     it('exercises が空のとき「+ 種目を追加」ボタンが表示される', () => {
-      const { getAllByText } = render(<RecordScreen />);
+      render(<RecordScreen />);
       // EmptyState のアクションボタン + 下部の追加ボタンの両方に「+ 種目を追加」が含まれる
-      const addButtons = getAllByText('+ 種目を追加');
+      const addButtons = screen.getAllByText('+ 種目を追加');
       expect(addButtons.length).toBeGreaterThanOrEqual(1);
     });
 
@@ -172,8 +172,9 @@ describe('RecordScreen', () => {
         setPendingContinuationWorkoutId: jest.fn(),
         setContinuationBaseExerciseIds: jest.fn(),
       } as ReturnType<typeof useWorkoutSessionStore>);
-      const { queryByText } = render(<RecordScreen />);
-      expect(queryByText('種目を追加してワークアウトを開始しましょう')).toBeNull();
+      render(<RecordScreen />);
+      // 不在チェックには queryBy を使う
+      expect(screen.queryByText('種目を追加してワークアウトを開始しましょう')).toBeNull();
     });
   });
 
@@ -221,15 +222,13 @@ describe('RecordScreen', () => {
         setContinuationBaseExerciseIds: jest.fn(),
       } as ReturnType<typeof useWorkoutSessionStore>);
 
-      const { getByText } = render(<RecordScreen />);
+      render(<RecordScreen />);
 
-      // 種目マスタの非同期読み込みを待つ
-      await waitFor(() => {
-        expect(getByText('ベンチプレス')).toBeTruthy();
-      });
+      // 種目マスタの非同期読み込みを待つ（findByText は要素が存在するまで待機する）
+      await screen.findByText('ベンチプレス');
 
       // 種目名をタップ
-      fireEvent.press(getByText('ベンチプレス'));
+      fireEvent.press(screen.getByText('ベンチプレス'));
 
       // ExerciseHistory へのナビゲーションが呼ばれることを検証
       expect(mockNavigate).toHaveBeenCalledWith('ExerciseHistory', {
@@ -241,8 +240,8 @@ describe('RecordScreen', () => {
 
   describe('タイマー停止確認モーダル', () => {
     it('×ボタン押下で停止確認モーダルが表示される', () => {
-      const { getByLabelText } = render(<RecordScreen />);
-      fireEvent.press(getByLabelText('時間計測を停止'));
+      render(<RecordScreen />);
+      fireEvent.press(screen.getByLabelText('時間計測を停止'));
 
       expect(Alert.alert).toHaveBeenCalledWith(
         '計測を停止しますか？',
@@ -252,8 +251,8 @@ describe('RecordScreen', () => {
     });
 
     it('キャンセル押下で stopTimer は呼ばれず、discardWorkout も呼ばれない', () => {
-      const { getByLabelText } = render(<RecordScreen />);
-      fireEvent.press(getByLabelText('時間計測を停止'));
+      render(<RecordScreen />);
+      fireEvent.press(screen.getByLabelText('時間計測を停止'));
 
       const [, , buttons] = alertSpy.mock.calls[0] as [
         string,
@@ -271,8 +270,8 @@ describe('RecordScreen', () => {
     });
 
     it('停止する押下で stopTimer が呼ばれ、discardWorkout は呼ばれない', () => {
-      const { getByLabelText } = render(<RecordScreen />);
-      fireEvent.press(getByLabelText('時間計測を停止'));
+      render(<RecordScreen />);
+      fireEvent.press(screen.getByLabelText('時間計測を停止'));
 
       const [, , buttons] = alertSpy.mock.calls[0] as [
         string,

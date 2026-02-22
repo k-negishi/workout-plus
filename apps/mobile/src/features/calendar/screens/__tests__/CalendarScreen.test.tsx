@@ -4,7 +4,7 @@
  * - SafeArea 対応（useSafeAreaInsets）
  * - トレーニング日インジケーター（dot）の検証
  */
-import { render, waitFor } from '@testing-library/react-native';
+import { render, screen, waitFor } from '@testing-library/react-native';
 import React from 'react';
 
 // SafeArea のモック（jest.mock はホイストされるため内部で jest.fn を定義）
@@ -71,9 +71,9 @@ describe('CalendarScreen', () => {
     });
 
     it('insets.top に基づく paddingTop が適用される', async () => {
-      const { findByTestId } = render(<CalendarScreen />);
+      render(<CalendarScreen />);
       // ScrollView の paddingTop が insets.top + 16 になっていることを検証
-      const scrollView = await findByTestId('calendar-scroll-view');
+      const scrollView = await screen.findByTestId('calendar-scroll-view');
       expect(scrollView.props.style).toEqual(expect.objectContaining({ paddingTop: 44 + 16 }));
     });
   });
@@ -101,11 +101,12 @@ describe('CalendarScreen', () => {
 
       render(<CalendarScreen />);
 
+      // waitFor 内は1アサーションにとどめ、後続の検証は外側で行う
       await waitFor(() => {
-        const dates = capturedMonthCalendarProps['trainingDates'] as Date[];
-        expect(dates).toBeDefined();
-        expect(dates).toHaveLength(0);
+        expect(capturedMonthCalendarProps['trainingDates']).toBeDefined();
       });
+      const dates = capturedMonthCalendarProps['trainingDates'] as Date[];
+      expect(dates).toHaveLength(0);
     });
 
     it('completed_at から正しい Date オブジェクトに変換され dot 表示用データとして渡される', async () => {

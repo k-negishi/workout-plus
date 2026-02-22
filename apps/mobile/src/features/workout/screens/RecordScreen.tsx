@@ -264,7 +264,8 @@ export const RecordScreen: React.FC = () => {
       const name = exerciseMap[exerciseId]?.name ?? '';
       navigation.navigate('ExerciseHistory', { exerciseId, exerciseName: name });
     },
-    [navigation],
+    // exerciseMap を deps に含める: マスタデータ更新後のコールバックが古い Map を参照しないよう保証
+    [navigation, exerciseMap],
   );
 
   /** 種目メモ変更 */

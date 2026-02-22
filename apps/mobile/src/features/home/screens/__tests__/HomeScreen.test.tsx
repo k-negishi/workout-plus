@@ -7,7 +7,7 @@
  *
  * DB アクセスやナビゲーションはモックで置き換え、レンダリングのみ確認する。
  */
-import { render, waitFor, within } from '@testing-library/react-native';
+import { render, screen, within } from '@testing-library/react-native';
 import React from 'react';
 import { ScrollView } from 'react-native';
 
@@ -111,47 +111,40 @@ describe('HomeScreen SafeArea', () => {
 
 describe('HomeScreen EmptyState 廃止', () => {
   it('StreakCard が ScrollView 内に配置される', async () => {
-    const { queryByText, UNSAFE_getByType } = render(<HomeScreen />);
+    const { UNSAFE_getByType } = render(<HomeScreen />);
 
-    await waitFor(() => {
-      expect(queryByText('今月のトレーニング')).not.toBeNull();
-    });
+    // getByText は存在することを前提とするため、presence チェックに適切
+    await screen.findByText('今月のトレーニング');
 
     const scrollView = UNSAFE_getByType(ScrollView);
-    expect(within(scrollView).queryByText('今月のトレーニング')).not.toBeNull();
+    expect(within(scrollView).getByText('今月のトレーニング')).toBeTruthy();
   });
 
   it('ワークアウト 0 件でも StreakCard が render される', async () => {
-    const { queryByText } = render(<HomeScreen />);
+    render(<HomeScreen />);
 
-    // 非同期の fetchData が完了するのを待つ
-    await waitFor(() => {
-      // StreakCard 内の「今月のトレーニング」テキストが存在することを確認
-      expect(queryByText('今月のトレーニング')).not.toBeNull();
-    });
+    // 非同期の fetchData が完了するのを待つ（findByText は要素が存在するまで待機する）
+    await screen.findByText('今月のトレーニング');
   });
 
   it('ワークアウト 0 件のとき 💪 絵文字テキストが render されない', async () => {
-    const { queryByText } = render(<HomeScreen />);
+    render(<HomeScreen />);
 
-    await waitFor(() => {
-      // loading が完了するまで待つ（StreakCard が出現 = loading 完了）
-      expect(queryByText('今月のトレーニング')).not.toBeNull();
-    });
+    // loading が完了するまで待つ（StreakCard が出現 = loading 完了）
+    await screen.findByText('今月のトレーニング');
 
-    // 💪 絵文字テキストが存在しないことを確認
-    expect(queryByText('💪')).toBeNull();
+    // 💪 絵文字テキストが存在しないことを確認（不在チェックには queryBy を使う）
+    expect(screen.queryByText('💪')).toBeNull();
   });
 
   it('ヘッダーに挨拶テキストを表示しない', async () => {
-    const { queryByText } = render(<HomeScreen />);
+    render(<HomeScreen />);
 
-    await waitFor(() => {
-      expect(queryByText('今月のトレーニング')).not.toBeNull();
-    });
+    await screen.findByText('今月のトレーニング');
 
-    expect(queryByText(/おはよう|こんにちは|こんばんは/)).toBeNull();
-    expect(queryByText(/トレーニー/)).toBeNull();
+    // 不在チェックには queryBy を使う
+    expect(screen.queryByText(/おはよう|こんにちは|こんばんは/)).toBeNull();
+    expect(screen.queryByText(/トレーニー/)).toBeNull();
   });
 
   it('timer_status=discarded のワークアウトでもクラッシュせず「―」を表示できる', async () => {
@@ -211,41 +204,36 @@ describe('HomeScreen EmptyState 廃止', () => {
       updated_at: 1700000000000,
     });
 
-    const { queryByText } = render(<HomeScreen />);
+    render(<HomeScreen />);
 
-    await waitFor(() => {
-      expect(queryByText('最近のトレーニング')).not.toBeNull();
-    });
+    // 存在確認は getBy 系（findBy は非同期 getBy）を使う
+    await screen.findByText('最近のトレーニング');
 
-    expect(queryByText('―')).not.toBeNull();
+    expect(screen.getByText('―')).toBeTruthy();
   });
 });
 
 describe('HomeScreen タイトルヘッダー', () => {
   it('Workout+ タイトルが ScrollView 内に表示される', async () => {
-    const { queryByText, UNSAFE_getByType } = render(<HomeScreen />);
+    const { UNSAFE_getByType } = render(<HomeScreen />);
 
     // StreakCard 表示を待ちつつ、loading 完了を確認
-    await waitFor(() => {
-      expect(queryByText('今月のトレーニング')).not.toBeNull();
-    });
+    await screen.findByText('今月のトレーニング');
 
-    // タイトルテキストが存在する
-    expect(queryByText('Workout+')).not.toBeNull();
+    // タイトルテキストが存在する（presence チェックは getBy 系）
+    expect(screen.getByText('Workout+')).toBeTruthy();
 
     // タイトルが ScrollView 内に配置されている（スクロールアウトする = 固定でない）
     const scrollView = UNSAFE_getByType(ScrollView);
-    expect(within(scrollView).queryByText('Workout+')).not.toBeNull();
+    expect(within(scrollView).getByText('Workout+')).toBeTruthy();
   });
 
   it('設定アイコンボタンが表示される (testID: settings-button)', async () => {
-    const { getByTestId, queryByText } = render(<HomeScreen />);
+    render(<HomeScreen />);
 
-    await waitFor(() => {
-      expect(queryByText('今月のトレーニング')).not.toBeNull();
-    });
+    await screen.findByText('今月のトレーニング');
 
-    // 設定ボタンが testID で取得できる
-    expect(getByTestId('settings-button')).not.toBeNull();
+    // 設定ボタンが testID で取得できる（presence チェックは getBy 系）
+    expect(screen.getByTestId('settings-button')).toBeTruthy();
   });
 });

@@ -6,7 +6,7 @@
  * - exerciseName の表示
  * - ローディング状態の表示
  */
-import { fireEvent, render } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
 
 // --- モック定義 ---
@@ -88,26 +88,26 @@ describe('ExerciseHistoryFullScreen', () => {
   });
 
   it('exerciseName がヘッダーに表示される', () => {
-    const { getByText } = render(<ExerciseHistoryFullScreen />);
-    expect(getByText('ベンチプレス')).toBeTruthy();
+    render(<ExerciseHistoryFullScreen />);
+    expect(screen.getByText('ベンチプレス')).toBeTruthy();
   });
 
   it('統計カード（最大重量）が表示される', () => {
-    const { getByText } = render(<ExerciseHistoryFullScreen />);
-    expect(getByText('最大重量')).toBeTruthy();
+    render(<ExerciseHistoryFullScreen />);
+    expect(screen.getByText('最大重量')).toBeTruthy();
   });
 
   it('戻るボタンを押すと goBack() が呼ばれる', () => {
-    const { getByText } = render(<ExerciseHistoryFullScreen />);
+    render(<ExerciseHistoryFullScreen />);
     // 「戻る」テキストを持つ Pressable をタップ
-    fireEvent.press(getByText('戻る'));
+    fireEvent.press(screen.getByText('戻る'));
     expect(mockGoBack).toHaveBeenCalledTimes(1);
   });
 
   it('loading=true のとき 統計カードが表示されない（ActivityIndicator のみ）', () => {
     mockLoading = true;
-    const { queryByText } = render(<ExerciseHistoryFullScreen />);
+    render(<ExerciseHistoryFullScreen />);
     // ローディング中は統計カードが表示されないことを検証
-    expect(queryByText('最大重量')).toBeNull();
+    expect(screen.queryByText('最大重量')).toBeNull();
   });
 });
