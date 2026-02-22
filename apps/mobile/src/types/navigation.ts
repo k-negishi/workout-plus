@@ -33,6 +33,8 @@ export type HomeStackParamList = {
 export type CalendarStackParamList = {
   Calendar: undefined;
   WorkoutDetail: { workoutId: string };
+  /** カレンダーから過去ワークアウトを編集するための画面 */
+  WorkoutEdit: { workoutId: string };
   ExerciseHistory: { exerciseId: string; exerciseName: string };
 };
 
