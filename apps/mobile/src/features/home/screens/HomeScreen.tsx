@@ -3,6 +3,7 @@
  * ワイヤーフレーム: home-header + home-main セクション準拠
  * StreakCard、最近のワークアウト3件、QuickStatsWidget
  */
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
@@ -14,7 +15,7 @@ import {
   subWeeks,
 } from 'date-fns';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getDatabase } from '@/database/client';
@@ -279,6 +280,28 @@ export function HomeScreen() {
             borderBottomColor: colors.border,
           }}
         >
+          {/* タイトルヘッダー行: アプリ名 + 設定ボタン（設定機能は将来対応） */}
+          <View
+            style={{
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: 16,
+            }}
+          >
+            <Text style={{ fontSize: 20, fontWeight: '700', color: colors.primary }}>
+              Workout+
+            </Text>
+            {/* 設定ボタン: タップ時アクションは将来対応 */}
+            <TouchableOpacity
+              testID="settings-button"
+              accessibilityLabel="設定"
+              style={{ padding: 8 }}
+              // onPress は将来の設定機能実装時に追加する
+            >
+              <Ionicons name="settings-outline" size={22} color={colors.textSecondary} />
+            </TouchableOpacity>
+          </View>
           <StreakCard trainingDates={trainingDates} />
         </View>
 

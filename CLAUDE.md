@@ -15,6 +15,14 @@ specify → clarify → plan → tasks → [taskstoissues] → implement
 | 5. Issue化 | `/speckit.taskstoissues` | tasks.md を GitHub Issues に変換 |
 | 6. 実装 | `/speckit.implement` | tasks.md の全タスクを順次・並列実行 |
 
+### ワンショット実行
+
+```bash
+/speckit.yolo <機能説明>
+```
+
+`specify → plan → tasks → implement` を確認待ちなしで連続実行（`clarify` と `taskstoissues` は省略）。
+
 ## 品質チェック
 
 | コマンド | 内容 |
@@ -36,7 +44,7 @@ pnpm --filter mobile tsc --noEmit    # 型チェック
 ---
 
 # 基本方針
-- 特に指示がない場合、Agent Team を 5つ立ち上げてください。
+- 特に指示がない場合、Agent Team でエージェントを5つ立ち上げてください。
 - 指示がない限りは sonnet 4.6 を使ってください
 - ソースコードには日本語でコメントを書くこと
 
@@ -56,3 +64,18 @@ pnpm --filter mobile tsc --noEmit    # 型チェック
 - メインカラー: #4D94FF（#0066FFは濃すぎるため廃止）
 - 黒文字は真っ黒を避け #475569（濃いグレー）で
 - 
+
+## Active Technologies
+- TypeScript 5.x / React Native 0.81.5 (Expo SDK 52) + @react-navigation/bottom-tabs v7, NativeWind v4, react-native-calendars, expo-sqlite ~15.2.0, react-native-svg (003-wireframe-ui-fix)
+- SQLite via expo-sqlite（migration pattern で version 管理） (003-wireframe-ui-fix)
+- TypeScript 5.x / React Native 0.81.5 (Expo SDK 52) + expo-sqlite ~15.2.0, React Navigation v7, NativeWind v4, Zustand (workoutSessionStore) (004-timer-stop-confirm)
+- SQLite via expo-sqlite（migration pattern） (004-timer-stop-confirm)
+- TypeScript 5.x / React Native 0.81.5 / React 19.1.0 + Expo SDK 54, React Navigation v7, @testing-library/react-native, Jest 29 (005-fix-plus-button-wf)
+- N/A（UI修正のみ） (005-fix-plus-button-wf)
+- TypeScript 5.x / React Native 0.81.5 (Expo SDK 52) + Zustand, expo-sqlite ~15.2.0, React Navigation v7, NativeWind v4, @testing-library/react-native, Jest 29 (20260222-当日ワークアウト継続登録)
+- SQLite via expo-sqlite（既存スキーマ変更なし、リポジトリメソッド追加のみ） (20260222-当日ワークアウト継続登録)
+- TypeScript 5.x + React Native 0.81.5 (Expo SDK 52), `@expo/vector-icons` (Ionicons, 既存導入済み), `react-native-safe-area-context` (20260222-ホーム画面タイトルヘッダー追加)
+- N/A（UIのみ） (20260222-ホーム画面タイトルヘッダー追加)
+
+## Recent Changes
+- 003-wireframe-ui-fix: Added TypeScript 5.x / React Native 0.81.5 (Expo SDK 52) + @react-navigation/bottom-tabs v7, NativeWind v4, react-native-calendars, expo-sqlite ~15.2.0, react-native-svg

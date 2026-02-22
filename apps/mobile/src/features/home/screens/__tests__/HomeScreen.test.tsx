@@ -50,6 +50,22 @@ jest.mock('@/database/client', () => ({
   }),
 }));
 
+// @expo/vector-icons モック（Ionicons 等をシンプルなコンポーネントに差し替え）
+jest.mock('@expo/vector-icons', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const RN = require('react');
+  const mockIcon = (name: string) => {
+    const C = (props: Record<string, unknown>) =>
+      RN.createElement(name, { testID: props['testID'], accessibilityLabel: props['accessibilityLabel'] });
+    C.displayName = name;
+    return C;
+  };
+  return {
+    __esModule: true,
+    Ionicons: mockIcon('Ionicons'),
+  };
+});
+
 // SVG モック（StreakCard + QuickStatsWidget 内で使用）
 jest.mock('react-native-svg', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -199,5 +215,34 @@ describe('HomeScreen EmptyState 廃止', () => {
     });
 
     expect(queryByText('―')).not.toBeNull();
+  });
+});
+
+describe('HomeScreen タイトルヘッダー', () => {
+  it('Workout+ タイトルが ScrollView 内に表示される', async () => {
+    const { queryByText, UNSAFE_getByType } = render(<HomeScreen />);
+
+    // StreakCard 表示を待ちつつ、loading 完了を確認
+    await waitFor(() => {
+      expect(queryByText('今月のトレーニング')).not.toBeNull();
+    });
+
+    // タイトルテキストが存在する
+    expect(queryByText('Workout+')).not.toBeNull();
+
+    // タイトルが ScrollView 内に配置されている（スクロールアウトする = 固定でない）
+    const scrollView = UNSAFE_getByType(ScrollView);
+    expect(within(scrollView).queryByText('Workout+')).not.toBeNull();
+  });
+
+  it('設定アイコンボタンが表示される (testID: settings-button)', async () => {
+    const { getByTestId, queryByText } = render(<HomeScreen />);
+
+    await waitFor(() => {
+      expect(queryByText('今月のトレーニング')).not.toBeNull();
+    });
+
+    // 設定ボタンが testID で取得できる
+    expect(getByTestId('settings-button')).not.toBeNull();
   });
 });
