@@ -68,13 +68,14 @@ export function MonthCalendar({
   const markedDates: MarkedDates = useMemo(() => {
     const marks: MarkedDates = {};
 
-    // トレーニング日にドットマーカーを追加
+    // トレーニング日に薄いブルー背景を設定（ドットより視認しやすい）
     for (const date of trainingDates) {
       const dateStr = format(date, 'yyyy-MM-dd');
       marks[dateStr] = {
         ...(marks[dateStr] ?? {}),
-        marked: true,
-        dotColor: '#4D94FF',
+        selected: true,
+        selectedColor: '#E6F2FF',
+        selectedTextColor: '#4D94FF',
       };
     }
 
@@ -152,9 +153,6 @@ export function MonthCalendar({
         selectedDayTextColor: '#FFFFFF',
         // 無効状態
         textDisabledColor: '#cbd5e1',
-        // ドットマーカー
-        dotColor: '#4D94FF',
-        selectedDotColor: '#FFFFFF',
         // 背景
         backgroundColor: '#f9fafb',
         calendarBackground: '#f9fafb',

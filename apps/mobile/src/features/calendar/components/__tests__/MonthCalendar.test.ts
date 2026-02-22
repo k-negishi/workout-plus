@@ -25,13 +25,14 @@ function generateMarkedDates(
 ): Record<string, MarkedDateEntry> {
   const marks: Record<string, MarkedDateEntry> = {};
 
-  // トレーニング日にドットマーカーを追加
+  // トレーニング日に薄いブルー背景を設定（ドットより視認しやすい）
   for (const date of trainingDates) {
     const dateStr = format(date, 'yyyy-MM-dd');
     marks[dateStr] = {
       ...(marks[dateStr] ?? {}),
-      marked: true,
-      dotColor: '#4D94FF',
+      selected: true,
+      selectedColor: '#E6F2FF',
+      selectedTextColor: '#4D94FF',
     };
   }
 
@@ -67,20 +68,23 @@ describe('MonthCalendar ロジック', () => {
   describe('generateMarkedDates', () => {
     const today = '2026-02-21';
 
-    it('トレーニング日のマーカーが正しく設定される', () => {
+    it('トレーニング日に薄いブルー背景が設定される（ドットより視認しやすい）', () => {
       const trainingDates = [new Date(2026, 1, 1), new Date(2026, 1, 5), new Date(2026, 1, 10)];
 
       const marks = generateMarkedDates(trainingDates, null, today);
 
+      // 薄いブルー背景＋ブルーテキストで視認性を確保する
       expect(marks['2026-02-01']).toBeDefined();
-      expect(marks['2026-02-01']!.marked).toBe(true);
-      expect(marks['2026-02-01']!.dotColor).toBe('#4D94FF');
+      expect(marks['2026-02-01']!.selected).toBe(true);
+      expect(marks['2026-02-01']!.selectedColor).toBe('#E6F2FF');
+      expect(marks['2026-02-01']!.selectedTextColor).toBe('#4D94FF');
 
       expect(marks['2026-02-05']).toBeDefined();
-      expect(marks['2026-02-05']!.marked).toBe(true);
+      expect(marks['2026-02-05']!.selected).toBe(true);
+      expect(marks['2026-02-05']!.selectedColor).toBe('#E6F2FF');
 
       expect(marks['2026-02-10']).toBeDefined();
-      expect(marks['2026-02-10']!.marked).toBe(true);
+      expect(marks['2026-02-10']!.selected).toBe(true);
     });
 
     it('選択日に選択スタイルが適用される', () => {
@@ -91,14 +95,15 @@ describe('MonthCalendar ロジック', () => {
       expect(marks['2026-02-15']!.selectedColor).toBe('#4D94FF');
     });
 
-    it('トレーニング日かつ選択日の場合、両方のスタイルが適用される', () => {
+    it('トレーニング日かつ選択日の場合、濃いブルー（選択状態）が優先される', () => {
       const trainingDates = [new Date(2026, 1, 15)];
 
       const marks = generateMarkedDates(trainingDates, '2026-02-15', today);
 
-      expect(marks['2026-02-15']!.marked).toBe(true);
+      // 選択日の濃いブルーがトレーニング日の薄いブルーを上書きする
       expect(marks['2026-02-15']!.selected).toBe(true);
-      expect(marks['2026-02-15']!.dotColor).toBe('#4D94FF');
+      expect(marks['2026-02-15']!.selectedColor).toBe('#4D94FF');
+      expect(marks['2026-02-15']!.selectedTextColor).toBe('#FFFFFF');
     });
 
     it('トレーニングしていない日にはマーカーが付かない', () => {
