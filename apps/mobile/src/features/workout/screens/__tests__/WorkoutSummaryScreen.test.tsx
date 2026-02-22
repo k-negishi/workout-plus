@@ -2,7 +2,7 @@
  * WorkoutSummaryScreen テスト
  * - PR セクションの条件付きレンダリング（T030）
  */
-import { render, waitFor } from '@testing-library/react-native';
+import { fireEvent, render, waitFor } from '@testing-library/react-native';
 import React from 'react';
 
 // --- モック定義 ---
@@ -18,9 +18,12 @@ jest.mock('react-native-safe-area-context', () => ({
 }));
 
 const mockReset = jest.fn();
+const mockNavigateParent = jest.fn();
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({
     reset: mockReset,
+    // getParent() でタブ navigator の navigate を返す
+    getParent: () => ({ navigate: mockNavigateParent }),
   }),
   useRoute: () => ({
     params: { workoutId: 'w-test-1' },
@@ -132,6 +135,25 @@ describe('WorkoutSummaryScreen', () => {
       // 「ベンチプレス」は PR セクションと種目別サマリーの両方に表示されるため getAllByText を使用
       expect(getAllByText('ベンチプレス').length).toBeGreaterThanOrEqual(2);
       expect(getByText('最大重量: 100kg')).toBeTruthy();
+    });
+  });
+
+  describe('ホームに戻る', () => {
+    it('ボタン押下で RecordStack をリセットして HomeTab に遷移する', async () => {
+      setupDefaultMocks({ withPRs: false });
+
+      const { getByText, queryByText } = render(<WorkoutSummaryScreen />);
+
+      await waitFor(() => {
+        expect(queryByText('ワークアウト完了')).toBeTruthy();
+      });
+
+      fireEvent.press(getByText('ホームに戻る'));
+
+      // RecordStack を Record 画面にリセット（WorkoutSummary に戻らないように）
+      expect(mockReset).toHaveBeenCalledWith({ index: 0, routes: [{ name: 'Record' }] });
+      // 親のタブ navigator で HomeTab に遷移
+      expect(mockNavigateParent).toHaveBeenCalledWith('HomeTab');
     });
   });
 

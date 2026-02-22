@@ -11,11 +11,12 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getDatabase } from '@/database/client';
 import { PersonalRecordRepository } from '@/database/repositories/pr';
 import { colors } from '@/shared/constants/colors';
-import type { RecordStackParamList, RootStackParamList, TimerStatus } from '@/types';
+import type { RecordStackParamList, TimerStatus } from '@/types';
 
 import { calculateVolume } from '../utils/calculate1RM';
 
-type SummaryNavProp = NativeStackNavigationProp<RootStackParamList>;
+// RecordStack 内の画面なので RecordStackParamList を使用する
+type SummaryNavProp = NativeStackNavigationProp<RecordStackParamList>;
 type SummaryRouteProp = RouteProp<RecordStackParamList, 'WorkoutSummary'>;
 
 /** 種目サマリーデータ */
@@ -155,12 +156,14 @@ export const WorkoutSummaryScreen: React.FC = () => {
     void loadSummary();
   }, [workoutId]);
 
-  /** ホームに戻る */
+  /** ホームに戻る
+   * RecordStack を Record 画面にリセットしてから、
+   * 親のタブ navigator で HomeTab に切り替える。
+   * reset しないと戻るボタンで WorkoutSummary に戻ってしまう。
+   */
   const handleGoHome = () => {
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'MainTabs' }],
-    });
+    navigation.reset({ index: 0, routes: [{ name: 'Record' }] });
+    navigation.getParent()?.navigate('HomeTab' as never);
   };
 
   if (isLoading) {
