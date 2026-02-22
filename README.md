@@ -40,11 +40,14 @@ analyze → checklist
 # モバイルアプリを起動（Expo Go）
 pnpm --filter mobile start
 
-# iOS シミュレーター
+# iOS シミュレーター（--localhost 固定済み。LAN IP だとタイムアウトするため）
 pnpm --filter mobile ios
 
 # Android エミュレーター
 pnpm --filter mobile android
+
+# SQLite データをクリアして起動（Expo Go ごと削除→再インストール）
+xcrun simctl uninstall booted host.exp.Exponent && pnpm --filter mobile ios
 ```
 
 ### 品質チェック

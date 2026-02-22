@@ -36,7 +36,7 @@ specify → clarify → plan → tasks → [taskstoissues] → implement
 
 ```bash
 pnpm --filter mobile start       # Expo Go 起動
-pnpm --filter mobile ios         # iOS シミュレーター
+pnpm --filter mobile ios         # iOS シミュレーター（--localhost 固定済み。LAN IP だとタイムアウトするため）
 pnpm lint                        # 全パッケージ Lint
 pnpm --filter mobile test        # テスト実行
 pnpm --filter mobile test --coverage  # カバレッジ付き（目標 90%+）
