@@ -7,7 +7,7 @@
  *
  * DB アクセスやナビゲーションはモックで置き換え、レンダリングのみ確認する。
  */
-import { render, screen, within } from '@testing-library/react-native';
+import { render, screen, waitFor, within } from '@testing-library/react-native';
 import React from 'react';
 import { ScrollView } from 'react-native';
 
@@ -54,9 +54,10 @@ jest.mock('@/database/client', () => ({
 }));
 
 // T10: WorkoutRepository モック（記録中チェックで呼ばれる）
+const mockFindRecording = jest.fn().mockResolvedValue(null);
 jest.mock('@/database/repositories/workout', () => ({
   WorkoutRepository: {
-    findRecording: jest.fn().mockResolvedValue(null),
+    findRecording: (...args: unknown[]) => mockFindRecording(...args),
     findTodayCompleted: jest.fn().mockResolvedValue(null),
   },
 }));
@@ -105,10 +106,15 @@ jest.mock('date-fns/locale', () => ({
   ...jest.requireActual('date-fns/locale'),
 }));
 
+// useFocusEffect モック参照（テスト内でコールバック実行制御するため）
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { useFocusEffect: mockUseFocusEffect } = require('@react-navigation/native');
+
 beforeEach(() => {
   jest.clearAllMocks();
   mockGetAllAsync.mockResolvedValue([]);
   mockGetFirstAsync.mockResolvedValue(null);
+  mockFindRecording.mockResolvedValue(null);
 });
 
 describe('HomeScreen SafeArea', () => {
@@ -246,5 +252,38 @@ describe('HomeScreen タイトルヘッダー', () => {
 
     // 設定ボタンが testID で取得できる（presence チェックは getBy 系）
     expect(screen.getByTestId('settings-button')).toBeTruthy();
+  });
+});
+
+describe('HomeScreen 記録中バナーと記録ボタンの排他表示', () => {
+  it('記録中セッションがないとき、記録ボタンが表示されバナーは非表示', async () => {
+    // useFocusEffect のコールバックを実行して isRecording を評価させる
+    mockUseFocusEffect.mockImplementation((cb: () => void) => cb());
+    mockFindRecording.mockResolvedValue(null);
+
+    render(<HomeScreen />);
+    await screen.findByText('今月のトレーニング');
+
+    expect(screen.getByTestId('record-workout-button')).toBeTruthy();
+    expect(screen.queryByTestId('recording-banner')).toBeNull();
+  });
+
+  it('記録中セッションがあるとき、バナーが表示され記録ボタンは非表示', async () => {
+    // useFocusEffect のコールバックを実行して isRecording = true にする
+    mockUseFocusEffect.mockImplementation((cb: () => void) => cb());
+    mockFindRecording.mockResolvedValue({
+      id: 'recording-1',
+      status: 'recording',
+      created_at: Date.now(),
+    });
+
+    render(<HomeScreen />);
+    await screen.findByText('今月のトレーニング');
+
+    // 非同期の setIsRecording 反映を待つ
+    await waitFor(() => {
+      expect(screen.getByTestId('recording-banner')).toBeTruthy();
+    });
+    expect(screen.queryByTestId('record-workout-button')).toBeNull();
   });
 });

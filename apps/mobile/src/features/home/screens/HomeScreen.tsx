@@ -346,25 +346,27 @@ export function HomeScreen() {
           </TouchableOpacity>
         )}
 
-        {/* T10: ワークアウト記録ボタン */}
-        <TouchableOpacity
-          testID="record-workout-button"
-          onPress={() => void handleRecordButtonPress()}
-          style={{
-            backgroundColor: '#4D94FF',
-            borderRadius: 8,
-            paddingHorizontal: 16,
-            paddingVertical: 16,
-            alignItems: 'center',
-            marginHorizontal: 20,
-            marginTop: 16,
-            marginBottom: 4,
-          }}
-        >
-          <Text style={{ fontSize: 16, fontWeight: '600', color: '#ffffff' }}>
-            本日のワークアウトを記録
-          </Text>
-        </TouchableOpacity>
+        {/* 記録中でないときのみワークアウト記録ボタンを表示する（記録中はバナーのみ） */}
+        {!isRecording && (
+          <TouchableOpacity
+            testID="record-workout-button"
+            onPress={() => void handleRecordButtonPress()}
+            style={{
+              backgroundColor: '#4D94FF',
+              borderRadius: 8,
+              paddingHorizontal: 16,
+              paddingVertical: 16,
+              alignItems: 'center',
+              marginHorizontal: 20,
+              marginTop: 16,
+              marginBottom: 4,
+            }}
+          >
+            <Text style={{ fontSize: 16, fontWeight: '600', color: '#ffffff' }}>
+              本日のワークアウトを記録
+            </Text>
+          </TouchableOpacity>
+        )}
 
         {/* メインコンテンツ */}
         {/* contentContainerStyle で全体余白を持たせる代わりに、本文ブロックへ個別に余白を適用 */}
