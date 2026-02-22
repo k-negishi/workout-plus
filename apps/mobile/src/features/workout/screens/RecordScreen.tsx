@@ -2,12 +2,18 @@
  * 記録画面（RecordScreen）
  * ワークアウト記録のメイン画面
  * TimerBar（上部固定） + ExerciseBlockのScrollView + 種目追加・完了ボタン
+ *
+ * T09: スタック画面化
+ * - useFocusEffect + useRef → useEffect に変更（スタック遷移でアンマウントされるため）
+ * - route.params で workoutId / targetDate を受け取る
+ * - pendingContinuationWorkoutId 参照を完全削除（T04 で廃止）
+ * - completeWorkout 後は navigate('WorkoutSummary') で遷移
  */
-import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
 import { format, parseISO } from 'date-fns';
 import { ja } from 'date-fns/locale';
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -15,7 +21,7 @@ import { getDatabase } from '@/database/client';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { showSuccessToast } from '@/shared/components/Toast';
 import { useWorkoutSessionStore } from '@/stores/workoutSessionStore';
-import type { Exercise, RecordStackParamList, WorkoutSet } from '@/types';
+import type { Exercise, HomeStackParamList, WorkoutSet } from '@/types';
 
 import { ExerciseBlock } from '../components/ExerciseBlock';
 import { TimerBar } from '../components/TimerBar';
@@ -29,8 +35,12 @@ type PreviousSetData = {
   reps: number | null;
 };
 
-type RecordScreenNavProp = NativeStackNavigationProp<RecordStackParamList, 'Record'>;
-type RecordScreenRouteProp = NativeStackScreenProps<RecordStackParamList, 'Record'>['route'];
+/**
+ * T09: HomeStackParamList の Record 画面 Props
+ * workoutId があれば編集モード、targetDate があれば過去日付記録モード、どちらもなければ当日新規
+ */
+type RecordScreenNavProp = NativeStackNavigationProp<HomeStackParamList, 'Record'>;
+type RecordScreenRouteProp = NativeStackScreenProps<HomeStackParamList, 'Record'>['route'];
 
 /**
  * 各種目の前回記録を取得する内部コンポーネント
@@ -47,6 +57,8 @@ const ExerciseBlockWithPrevious: React.FC<{
   sets: WorkoutSet[];
   currentWorkoutId: string | null;
   memo: string | null;
+  /** 編集モード時は前回記録バッジを非表示にする */
+  showPreviousRecord: boolean;
   onWeightChange: (setId: string, weight: number | null) => void;
   onRepsChange: (setId: string, reps: number | null) => void;
   onCopyPreviousSet: (setId: string, previousSet: PreviousSetData) => void;
@@ -62,6 +74,7 @@ const ExerciseBlockWithPrevious: React.FC<{
   sets,
   currentWorkoutId,
   memo,
+  showPreviousRecord,
   onWeightChange,
   onRepsChange,
   onCopyPreviousSet,
@@ -91,7 +104,7 @@ const ExerciseBlockWithPrevious: React.FC<{
       exercise={exerciseMeta}
       workoutExerciseId={workoutExerciseId}
       sets={sets}
-      previousRecord={previousRecord}
+      previousRecord={showPreviousRecord ? previousRecord : null}
       memo={memo}
       onWeightChange={onWeightChange}
       onRepsChange={onRepsChange}
@@ -108,6 +121,20 @@ const ExerciseBlockWithPrevious: React.FC<{
 export const RecordScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<RecordScreenNavProp>();
+  const route = useRoute<RecordScreenRouteProp>();
+
+  /**
+   * T09: route.params から workoutId / targetDate を取得する
+   * workoutId が存在する場合は編集モード（既存ワークアウトを再開）
+   * targetDate が存在する場合は過去日付への新規記録モード
+   * どちらもなければ当日の新規記録モード
+   */
+  const workoutId = route.params?.workoutId;
+  const targetDate = route.params?.targetDate;
+
+  /** 編集モード: workoutId が params に含まれている場合 */
+  const isEditMode = !!workoutId;
+
   const store = useWorkoutSessionStore();
   const timer = useTimer();
   const session = useWorkoutSession();
@@ -116,36 +143,20 @@ export const RecordScreen: React.FC = () => {
   const [exerciseMap, setExerciseMap] = useState<Record<string, Exercise>>({});
 
   /**
-   * 初回フォーカス済みフラグ。
-   * useFocusEffect は画面表示のたびに呼ばれるため、
-   * pendingId がない通常の再フォーカスでは startSession を呼ばないよう制御する。
+   * T09: useFocusEffect → useEffect に変更。
+   * スタック画面はナビゲーション時にアンマウント/マウントされるため
+   * useFocusEffect は不要。useEffect(fn, []) で初回マウント時のみ実行する。
    */
-  const sessionInitializedRef = useRef(false);
-
-  /**
-   * 画面フォーカス時にセッションを開始する。
-   * useEffect([], []) の代わりに useFocusEffect を使う理由:
-   * WorkoutDetailScreen から RecordTab に遷移する場合、RecordScreen がすでに
-   * マウントされていると useEffect は再実行されない。useFocusEffect なら
-   * 画面がフォーカスを得るたびに実行される。
-   */
-  useFocusEffect(
-    useCallback(() => {
-      // Zustand store の最新値を直接取得（クロージャの陳腐化を防ぐ）
-      const storeState = useWorkoutSessionStore.getState();
-      const pendingId = storeState.pendingContinuationWorkoutId;
-
-      if (pendingId !== null) {
-        // 継続モード: pendingId をクリアしてからセッションを開始する
-        storeState.setPendingContinuationWorkoutId(null);
-        void session.startSession(pendingId);
-      } else if (!sessionInitializedRef.current) {
-        // 初回フォーカス時のみ新規セッションを開始する（再フォーカスでは起動しない）
-        sessionInitializedRef.current = true;
-        void session.startSession();
-      }
-    }, [session]),
-  );
+  useEffect(() => {
+    if (workoutId) {
+      // 編集モード: 既存ワークアウトを開く
+      void session.startSession({ workoutId });
+    } else {
+      // 新規記録モード: 当日 or 過去日付（targetDate）
+      void session.startSession(targetDate !== undefined ? { targetDate } : undefined);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /** 種目マスタを読み込む */
   useEffect(() => {
@@ -188,11 +199,12 @@ export const RecordScreen: React.FC = () => {
   const handleComplete = useCallback(async () => {
     if (store.currentExercises.length === 0) return;
     try {
-      const workoutId = store.currentWorkout?.id;
+      const completedWorkoutId = store.currentWorkout?.id;
       await session.completeWorkout();
       showSuccessToast('ワークアウトを記録しました');
-      if (workoutId) {
-        navigation.replace('WorkoutSummary', { workoutId });
+      if (completedWorkoutId) {
+        // T09: RecordStack 廃止後は現在のスタック内の WorkoutSummary に遷移
+        navigation.replace('WorkoutSummary', { workoutId: completedWorkoutId });
       }
     } catch {
       // エラートーストはuseWorkoutSession内で表示済み
@@ -305,11 +317,32 @@ export const RecordScreen: React.FC = () => {
 
   const hasExercises = store.currentExercises.length > 0;
 
+  // ヘッダーに表示する日付ラベル: 過去日付記録なら選択日、当日なら今日の日付
+  const headerDateString = targetDate ?? format(new Date(), 'yyyy-MM-dd');
+  const headerDateLabel = format(parseISO(headerDateString), 'M月d日のワークアウト', {
+    locale: ja,
+  });
+
   return (
     <View
       testID="record-screen-container"
       style={{ flex: 1, backgroundColor: '#f9fafb', paddingTop: insets.top }}
     >
+      {/* 日付ヘッダー: どの日のワークアウトを記録しているか明示する */}
+      <View
+        style={{
+          paddingHorizontal: 16,
+          paddingVertical: 8,
+          backgroundColor: '#ffffff',
+          borderBottomWidth: 1,
+          borderBottomColor: '#e2e8f0',
+        }}
+      >
+        <Text style={{ fontSize: 13, fontWeight: '500', color: '#475569' }}>
+          {headerDateLabel}
+        </Text>
+      </View>
+
       {/* タイマーバー（上部固定） */}
       <TimerBar
         timerStatus={timer.timerStatus}
@@ -349,6 +382,7 @@ export const RecordScreen: React.FC = () => {
             sets={store.currentSets[exercise.id] ?? []}
             currentWorkoutId={store.currentWorkout?.id ?? null}
             memo={exercise.memo}
+            showPreviousRecord={!isEditMode}
             onWeightChange={handleWeightChange}
             onRepsChange={handleRepsChange}
             onCopyPreviousSet={handleCopyPreviousSet}
@@ -360,7 +394,7 @@ export const RecordScreen: React.FC = () => {
           />
         ))}
 
-        {/* 種目追加ボタン */}
+        {/* 種目追加ボタン（T09: solid border に変更） */}
         <TouchableOpacity
           onPress={handleAddExercise}
           style={{
@@ -368,21 +402,22 @@ export const RecordScreen: React.FC = () => {
             alignItems: 'center',
             justifyContent: 'center',
             gap: 8,
-            marginHorizontal: 20,
+            marginHorizontal: 16,
             marginTop: 16,
-            paddingVertical: 14,
+            paddingVertical: 16,
             borderWidth: 1,
-            borderStyle: 'dashed',
-            borderColor: '#4D94FF',
+            borderStyle: 'solid',
+            borderColor: '#e2e8f0',
             borderRadius: 8,
+            backgroundColor: '#ffffff',
           }}
           accessibilityLabel="種目を追加"
         >
-          <Text style={{ fontSize: 16, fontWeight: '600', color: '#4D94FF' }}>+ 種目を追加</Text>
+          <Text style={{ fontSize: 15, fontWeight: '600', color: '#475569' }}>+ 種目を追加</Text>
         </TouchableOpacity>
 
-        {/* T041: ワークアウトメモ */}
-        <View style={{ marginHorizontal: 20, marginTop: 16 }}>
+        {/* ワークアウトメモ */}
+        <View style={{ marginHorizontal: 16, marginTop: 16 }}>
           <Text style={{ fontSize: 14, color: '#64748b', marginBottom: 4 }}>ワークアウトメモ</Text>
           <TextInput
             style={{

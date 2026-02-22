@@ -17,13 +17,11 @@ jest.mock('react-native-safe-area-context', () => ({
   SafeAreaProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
-const mockReset = jest.fn();
-const mockNavigateParent = jest.fn();
+const mockPopToTop = jest.fn();
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({
-    reset: mockReset,
-    // getParent() でタブ navigator の navigate を返す
-    getParent: () => ({ navigate: mockNavigateParent }),
+    // T08: RecordStack 廃止後は popToTop() でルートまで戻る
+    popToTop: mockPopToTop,
   }),
   useRoute: () => ({
     params: { workoutId: 'w-test-1' },
@@ -133,7 +131,7 @@ describe('WorkoutSummaryScreen', () => {
   });
 
   describe('ホームに戻る', () => {
-    it('ボタン押下で RecordStack をリセットして HomeTab に遷移する', async () => {
+    it('T08: ボタン押下で popToTop() が呼ばれる（RecordStack 廃止後はスタックルートに戻る）', async () => {
       setupDefaultMocks({ withPRs: false });
 
       render(<WorkoutSummaryScreen />);
@@ -142,10 +140,8 @@ describe('WorkoutSummaryScreen', () => {
 
       fireEvent.press(screen.getByText('ホームに戻る'));
 
-      // RecordStack を Record 画面にリセット（WorkoutSummary に戻らないように）
-      expect(mockReset).toHaveBeenCalledWith({ index: 0, routes: [{ name: 'Record' }] });
-      // 親のタブ navigator で HomeTab に遷移
-      expect(mockNavigateParent).toHaveBeenCalledWith('HomeTab');
+      // T08: RecordStack 廃止後は popToTop() でスタックのルート画面（Home/Calendar）に戻る
+      expect(mockPopToTop).toHaveBeenCalledTimes(1);
     });
   });
 

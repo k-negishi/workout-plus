@@ -1,10 +1,11 @@
 /**
- * MainTabs テスト
- * - タブ数が 5 であることを検証
+ * MainTabs テスト（T07: 4タブ化対応）
+ * - タブ数が 4 であることを検証
  * - 各タブのラベルを検証
+ * - record-tab-button が存在しないことを検証（FloatingRecordButton 廃止）
  */
 import { NavigationContainer } from '@react-navigation/native';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { render, screen } from '@testing-library/react-native';
 import React from 'react';
 
 import { colors } from '@/shared/constants/colors';
@@ -37,35 +38,29 @@ jest.mock('react-native-gifted-charts', () => ({
   BarChart: 'BarChart',
 }));
 
-// handlePress が非同期で DB を参照するため WorkoutRepository をモックする
-jest.mock('@/database/repositories/workout', () => ({
-  WorkoutRepository: {
-    findRecording: jest.fn().mockResolvedValue(null),
-    findTodayCompleted: jest.fn().mockResolvedValue(null),
-  },
-}));
-
-// setPendingContinuationWorkoutId が必要なため store をモックする
-jest.mock('@/stores/workoutSessionStore', () => ({
-  useWorkoutSessionStore: jest.fn(() => ({
-    setPendingContinuationWorkoutId: jest.fn(),
-  })),
-}));
-
-// RecordStack の依存（SQLite/Zustand等）を排除し、遷移検証に必要な最小コンポーネントで代替する
-jest.mock('../RecordStack', () => {
+// T07: RecordStack 廃止。CalendarStack/HomeStack に Record フローが移動したため
+// HomeStack・CalendarStack もモックして依存を排除する
+jest.mock('../HomeStack', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const React = require('react');
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { View } = require('react-native');
   return {
-    RecordStack: () => React.createElement(View, { testID: 'record-stack-screen' }),
+    HomeStack: () => React.createElement(View, { testID: 'home-stack-screen' }),
+  };
+});
+
+jest.mock('../CalendarStack', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const React = require('react');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { View } = require('react-native');
+  return {
+    CalendarStack: () => React.createElement(View, { testID: 'calendar-stack-screen' }),
   };
 });
 
 import { MainTabs } from '../MainTabs';
-
-const RECORD_BUTTON_TEST_ID = 'record-tab-button';
 
 describe('MainTabs', () => {
   beforeEach(() => {
@@ -94,48 +89,33 @@ describe('MainTabs', () => {
     expect(screen.getByText('統計')).toBeTruthy();
   });
 
-  it('record-tab-button が存在する', () => {
+  it('カレンダータブラベルが表示される', () => {
     renderWithNav();
-    expect(screen.getByTestId(RECORD_BUTTON_TEST_ID)).toBeTruthy();
+    expect(screen.getByText('カレンダー')).toBeTruthy();
   });
 
-  it('RecordTabButton に shadowColor スタイルが設定されている', () => {
+  it('T07: record-tab-button が存在しない（FloatingRecordButton 廃止）', () => {
     renderWithNav();
-    const button = screen.getByTestId(RECORD_BUTTON_TEST_ID);
-    expect(typeof button.props.style).toBe('object');
-    const style = button.props.style;
-    expect(style).toMatchObject({
-      width: 56,
-      height: 56,
-      borderRadius: 28,
-      backgroundColor: colors.primary,
-      borderWidth: 4,
-      borderColor: colors.background,
-      shadowColor: colors.primary,
-      shadowOffset: { width: 0, height: 4 },
-      shadowRadius: 16,
-      shadowOpacity: 0.4,
-    });
+    // T07 で FloatingRecordButton を廃止したため testID が存在しないことを検証する
+    expect(screen.queryByTestId('record-tab-button')).toBeNull();
   });
 
-  it('中央ボタンにWF準拠の + 記号が表示される', () => {
+  it('T07: 4タブ構成である（ホーム/カレンダー/統計/AI）', () => {
     renderWithNav();
-    const plus = screen.getByText('+');
-    expect(plus).toBeTruthy();
-    expect(plus.props.style).toMatchObject({
-      fontSize: 28,
-      lineHeight: 28,
-      color: colors.white,
-    });
+    // 4つのタブラベルが全て表示されることを確認
+    expect(screen.getByText('ホーム')).toBeTruthy();
+    expect(screen.getByText('カレンダー')).toBeTruthy();
+    expect(screen.getByText('統計')).toBeTruthy();
+    expect(screen.getByText('AI')).toBeTruthy();
   });
 
-  it('+ボタン押下で RecordTab に遷移する（RecordStack が描画される）', async () => {
+  it('ホームタブのアイコン色がプライマリカラーである（フォーカス時）', () => {
     renderWithNav();
-    const button = screen.getByTestId(RECORD_BUTTON_TEST_ID);
-    fireEvent.press(button);
-    // handlePress は非同期（DB 確認後にナビゲート）なので waitFor で待機する
-    await waitFor(() => {
-      expect(screen.getByTestId('record-stack-screen')).toBeTruthy();
+    // ホームタブがデフォルトでアクティブなので、プライマリカラーが適用されることを確認
+    // タブラベルの色を確認する（アクティブ = colors.primary）
+    const homeLabel = screen.getByText('ホーム');
+    expect(homeLabel.props.style).toMatchObject({
+      color: colors.primary,
     });
   });
 });

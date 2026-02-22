@@ -11,14 +11,17 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getDatabase } from '@/database/client';
 import { PersonalRecordRepository } from '@/database/repositories/pr';
 import { colors } from '@/shared/constants/colors';
-import type { RecordStackParamList } from '@/types';
+import type { HomeStackParamList } from '@/types';
 import { TimerStatus } from '@/types';
 
 import { calculateVolume } from '../utils/calculate1RM';
 
-// RecordStack 内の画面なので RecordStackParamList を使用する
-type SummaryNavProp = NativeStackNavigationProp<RecordStackParamList>;
-type SummaryRouteProp = RouteProp<RecordStackParamList, 'WorkoutSummary'>;
+/**
+ * T08: RecordStackParamList 廃止につき HomeStackParamList に変更。
+ * HomeStack/CalendarStack 両方に配置されるが、useNavigation が実行時コンテキストを使うため正常に動作する。
+ */
+type SummaryNavProp = NativeStackNavigationProp<HomeStackParamList>;
+type SummaryRouteProp = RouteProp<HomeStackParamList, 'WorkoutSummary'>;
 
 /** 種目サマリーデータ */
 type ExerciseSummary = {
@@ -157,14 +160,14 @@ export const WorkoutSummaryScreen: React.FC = () => {
     void loadSummary();
   }, [workoutId]);
 
-  /** ホームに戻る
-   * RecordStack を Record 画面にリセットしてから、
-   * 親のタブ navigator で HomeTab に切り替える。
-   * reset しないと戻るボタンで WorkoutSummary に戻ってしまう。
+  /**
+   * ホームに戻る
+   * T08: RecordStack 廃止後は HomeStack/CalendarStack 内にいるため、
+   * スタックのルートまでポップしてホーム画面に戻る。
+   * popToTop() でスタック内のすべての画面を閉じ、ルート（Home/Calendar）に戻る。
    */
   const handleGoHome = () => {
-    navigation.reset({ index: 0, routes: [{ name: 'Record' }] });
-    navigation.getParent()?.navigate('HomeTab' as never);
+    navigation.popToTop();
   };
 
   if (isLoading) {

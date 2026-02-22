@@ -7,14 +7,13 @@
 import { type RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Pressable, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getDatabase } from '@/database/client';
 import { WorkoutRepository } from '@/database/repositories/workout';
 import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import { showErrorToast, showSuccessToast } from '@/shared/components/Toast';
-import { useWorkoutSessionStore } from '@/stores/workoutSessionStore';
 import type { Exercise, HomeStackParamList, Workout, WorkoutExercise, WorkoutSet } from '@/types';
 
 type DetailNavProp = NativeStackNavigationProp<HomeStackParamList, 'WorkoutDetail'>;
@@ -54,7 +53,7 @@ export const WorkoutDetailScreen: React.FC = () => {
   // SafeArea 対応: ノッチ・ダイナミックアイランド対応
   const insets = useSafeAreaInsets();
 
-  const continuationStore = useWorkoutSessionStore();
+  // T04: pendingContinuationWorkoutId 廃止につき store 参照を削除
 
   const [workout, setWorkout] = useState<Workout | null>(null);
   const [exerciseBlocks, setExerciseBlocks] = useState<ExerciseBlockData[]>([]);
@@ -159,10 +158,7 @@ export const WorkoutDetailScreen: React.FC = () => {
     void load();
   }, [workoutId]);
 
-  /** 編集画面へ遷移 */
-  const handleEdit = useCallback(() => {
-    navigation.navigate('WorkoutEdit', { workoutId });
-  }, [navigation, workoutId]);
+  // T13: WorkoutEditScreen 廃止。ヘッダーの「編集」ボタンは handleEditWorkout を使う
 
   /** T049: 削除確認 → 削除実行 */
   const handleDelete = useCallback(async () => {
@@ -182,33 +178,13 @@ export const WorkoutDetailScreen: React.FC = () => {
   }, [navigation]);
 
   /**
-   * 当日のワークアウトかどうかを判定する
-   * completedAt が今日の範囲内（0:00〜翌日0:00）かチェック
+   * 編集ボタンのハンドラー（旧: 続きを記録）
+   * T12: WorkoutEditScreen 廃止にあわせて RecordScreen の編集モードに直接遷移する。
+   * workoutId を params に渡すことで RecordScreen が既存ワークアウトを開く。
    */
-  const isTodayWorkout = useCallback((): boolean => {
-    if (!workout?.completedAt) return false;
-    const today = new Date();
-    const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
-    const dayEnd = dayStart + 86400000;
-    return workout.completedAt >= dayStart && workout.completedAt < dayEnd;
-  }, [workout]);
-
-  /** 続きを記録ボタンのハンドラー */
-  const handleContinueWorkout = useCallback(async () => {
-    const recording = await WorkoutRepository.findRecording();
-    if (recording) {
-      // すでに記録中のセッションがある場合はユーザーに通知する（サイレントリターンは混乱を招く）
-      Alert.alert(
-        '記録中のセッションがあります',
-        '記録中のセッションを先に完了または破棄してから続きを記録してください。',
-        [{ text: 'OK' }],
-      );
-      return;
-    }
-    continuationStore.setPendingContinuationWorkoutId(workoutId);
-    // React Navigation の navigate は親ナビゲーターまで遡って RecordTab を探してくれる
-    navigation.navigate('RecordTab' as never);
-  }, [workoutId, continuationStore, navigation]);
+  const handleEditWorkout = useCallback(() => {
+    navigation.navigate('Record', { workoutId });
+  }, [workoutId, navigation]);
 
   if (!workout) {
     return (
@@ -262,18 +238,6 @@ export const WorkoutDetailScreen: React.FC = () => {
             {formatDateTime(workout.createdAt)}
           </Text>
         </View>
-        <TouchableOpacity
-          onPress={handleEdit}
-          style={{
-            paddingHorizontal: 14,
-            paddingVertical: 6,
-            borderWidth: 1,
-            borderColor: '#4D94FF',
-            borderRadius: 8,
-          }}
-        >
-          <Text style={{ fontSize: 13, fontWeight: '600', color: '#4D94FF' }}>編集</Text>
-        </TouchableOpacity>
       </View>
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 40 }}>
@@ -400,23 +364,21 @@ export const WorkoutDetailScreen: React.FC = () => {
           </View>
         )}
 
-        {/* 当日のワークアウトのみ「続きを記録」ボタンを表示 */}
-        {isTodayWorkout() && (
-          <View style={{ paddingHorizontal: 16, paddingBottom: 12 }}>
-            <TouchableOpacity
-              testID="continue-workout-button"
-              onPress={() => void handleContinueWorkout()}
-              style={{
-                backgroundColor: '#4D94FF',
-                borderRadius: 8,
-                paddingVertical: 14,
-                alignItems: 'center',
-              }}
-            >
-              <Text style={{ fontSize: 15, fontWeight: '600', color: '#FFFFFF' }}>続きを記録</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+        {/* T12: 当日/過去問わず「編集」ボタンを表示（旧: 続きを記録は当日のみ） */}
+        <View style={{ paddingHorizontal: 16, paddingBottom: 12 }}>
+          <TouchableOpacity
+            testID="edit-workout-button"
+            onPress={handleEditWorkout}
+            style={{
+              backgroundColor: '#4D94FF',
+              borderRadius: 8,
+              paddingVertical: 14,
+              alignItems: 'center',
+            }}
+          >
+            <Text style={{ fontSize: 15, fontWeight: '600', color: '#FFFFFF' }}>編集</Text>
+          </TouchableOpacity>
+        </View>
 
         {/* T049: 削除ボタン */}
         <View style={{ alignItems: 'center', paddingVertical: 16 }}>

@@ -90,12 +90,15 @@ export function MonthCalendar({
     }
 
     // 今日
+    // todayTextColor は MarkingProps 型定義に含まれないが、
+    // react-native-calendars は実行時にカレンダー内部で todayTextColor を参照する。
+    // 型安全を担保しつつ実装するため unknown 経由でキャストする。
     if (!selectedDate || selectedDate !== today) {
       marks[today] = {
         ...(marks[today] ?? {}),
         ...(marks[today]?.marked ? {} : {}),
         todayTextColor: '#4D94FF',
-      };
+      } as (typeof marks)[string];
     }
 
     return marks;

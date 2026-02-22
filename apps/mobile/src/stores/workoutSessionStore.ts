@@ -25,8 +25,10 @@ type WorkoutSessionState = {
   invalidationCounter: number;
   /** 継続モード時の基準種目IDリスト（null = 通常モード） */
   continuationBaseExerciseIds: string[] | null;
-  /** 継続対象のワークアウトID（+ボタン → RecordScreen 連携用） */
-  pendingContinuationWorkoutId: string | null;
+  /** カレンダー画面で選択中の日付（'yyyy-MM-dd'）。+ボタンの過去日付判定に使用 */
+  calendarSelectedDate: string | null;
+  /** 進行中セッションの対象日付（'yyyy-MM-dd'）。過去日付記録時に completeWorkout が参照する */
+  sessionTargetDate: string | null;
 
   // === アクション ===
   /** 進行中ワークアウトをセット */
@@ -51,8 +53,10 @@ type WorkoutSessionState = {
   incrementInvalidation: () => void;
   /** 継続モードの基準種目IDリストをセット */
   setContinuationBaseExerciseIds: (ids: string[] | null) => void;
-  /** 継続対象のワークアウトIDをセット */
-  setPendingContinuationWorkoutId: (id: string | null) => void;
+  /** カレンダー選択日付をセット */
+  setCalendarSelectedDate: (date: string | null) => void;
+  /** セッション対象日付をセット */
+  setSessionTargetDate: (date: string | null) => void;
   /** ストアを初期状態にリセット */
   reset: () => void;
 };
@@ -66,7 +70,8 @@ const initialState = {
   timerStartedAt: null,
   invalidationCounter: 0,
   continuationBaseExerciseIds: null as string[] | null,
-  pendingContinuationWorkoutId: null as string | null,
+  calendarSelectedDate: null as string | null,
+  sessionTargetDate: null as string | null,
 };
 
 export const useWorkoutSessionStore = create<WorkoutSessionState>((set) => ({
@@ -119,7 +124,9 @@ export const useWorkoutSessionStore = create<WorkoutSessionState>((set) => ({
 
   setContinuationBaseExerciseIds: (ids) => set({ continuationBaseExerciseIds: ids }),
 
-  setPendingContinuationWorkoutId: (id) => set({ pendingContinuationWorkoutId: id }),
+  setCalendarSelectedDate: (date) => set({ calendarSelectedDate: date }),
+
+  setSessionTargetDate: (date) => set({ sessionTargetDate: date }),
 
   reset: () => set(initialState),
 }));

@@ -4,7 +4,7 @@
  *
  * ## SQLite 型アフィニティの対応
  *   TEXT    → 文字列リテラル（Union Typeの値をそのまま格納）
- *   INTEGER → 整数（bool は 0|1、タイムスタンプは UNIX ミリ秒 UTC）
+ *   INTEGER → 整数（bool は 0|1、タイムスタンプは UNIX ミリ秒 案UTC）
  *   REAL    → 浮動小数点（重量 kg・推定1RM計算値）
  *
  * ## 日付カラムの設計方針

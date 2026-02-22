@@ -1,12 +1,10 @@
 /**
- * メインタブナビゲーター
- * ワイヤーフレーム準拠: ホーム / カレンダー / [+]記録ボタン / 統計 / AI
+ * メインタブナビゲーター（T07: 4タブ化）
  *
- * +ボタン実装方針:
- * BottomTabBar ラッパー方式は React Navigation の内部 View が overflow:hidden を持つため
- * ボタンが clip される問題があった。
- * 代わりに「タブバー全体を完全カスタム実装」し、ボタン分のスペース(BUTTON_RISE)を
- * コンテナ高さに含めることで overflow 不要とする。
+ * T07: FloatingRecordButton と RecordTab を廃止。
+ * ホーム/カレンダーそれぞれのスタック内で Record 画面へ遷移する設計に変更。
+ * これにより中央インデント（BUTTON_RISE）が不要になり、
+ * シンプルな4タブバーに整理できる。
  */
 import { Ionicons } from '@expo/vector-icons';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
@@ -15,14 +13,11 @@ import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { WorkoutRepository } from '@/database/repositories/workout';
 import { colors } from '@/shared/constants/colors';
-import { useWorkoutSessionStore } from '@/stores/workoutSessionStore';
 import type { MainTabParamList } from '@/types';
 
 import { CalendarStack } from './CalendarStack';
 import { HomeStack } from './HomeStack';
-import { RecordStack } from './RecordStack';
 import { AIScreen } from './screens/AIScreen';
 import { PlaceholderScreen } from './screens/PlaceholderScreen';
 
@@ -34,94 +29,21 @@ function StatsScreen() {
 }
 
 /**
- * 中央の記録開始ボタン（フローティング）
+ * シンプルなカスタムタブバー（T07: FloatingRecordButton 廃止後のシンプル版）
  *
- * useNavigation() はタブバーが Root レベルのコンテキストで描画されるため
- * RootStack の navigation を返してしまい RecordTab を解決できない。
- * CustomTabBar が BottomTabBarProps として受け取る navigation（タブ navigator 確実）
- * を prop で渡すことで正しく遷移できる。
- */
-function FloatingRecordButton({ navigation }: Pick<BottomTabBarProps, 'navigation'>) {
-  const store = useWorkoutSessionStore();
-
-  /** 当日ワークアウトの存在を確認してから記録画面へ遷移する */
-  const handlePress = async () => {
-    // 1. recording 中のセッションを優先（既存の復帰ロジック）
-    const recording = await WorkoutRepository.findRecording();
-    if (!recording) {
-      // 2. 当日の完了済みワークアウトを確認
-      const todayWorkout = await WorkoutRepository.findTodayCompleted();
-      if (todayWorkout) {
-        // 継続モード: workoutId を store 経由で RecordScreen に渡す
-        store.setPendingContinuationWorkoutId(todayWorkout.id);
-      }
-    }
-    navigation.navigate('RecordTab' as never);
-  };
-
-  return (
-    <Pressable
-      testID="record-tab-button"
-      onPress={() => void handlePress()}
-      style={{
-        // WF L344-346: width: 56px, height: 56px, border-radius: 50%
-        width: 56,
-        height: 56,
-        borderRadius: 28,
-        backgroundColor: colors.primary,
-        alignItems: 'center',
-        justifyContent: 'center',
-        // WF L353: box-shadow: 0 4px 16px rgba(77,148,255,0.4)
-        shadowColor: colors.primary,
-        shadowOffset: { width: 0, height: 4 },
-        shadowRadius: 16,
-        shadowOpacity: 0.4,
-        elevation: 8,
-        // WF L354: border: 4px solid var(--md-sys-color-background)
-        borderWidth: 4,
-        borderColor: colors.background,
-      }}
-    >
-      <Text
-        style={{
-          // WF L350-352: font-size: 28px, color: white
-          fontSize: 28,
-          lineHeight: 28,
-          fontWeight: '300',
-          color: colors.white,
-        }}
-      >
-        +
-      </Text>
-    </Pressable>
-  );
-}
-
-/**
- * 完全カスタムタブバー
- *
- * レイアウト構成（高さの内訳）:
- *   BUTTON_RISE  (24px): ボタンがタブアイテム上端より浮き上がる透明ゾーン
- *   TAB_CONTENT (56px): アイコン + ラベルの実表示エリア
- *   BOTTOM_SAFE (insets.bottom): iPhone ホームインジケーター等のセーフエリア
- *
- * +ボタン (56px) は top:0 に配置するため、
- * - 0 〜 24px: 透明ゾーンに収まる（コンテンツ背景が透過して見える）
- * - 24 〜 56px: 白背景エリアに重なる
- * overflow: visible 不要でコンテナ内に完全に収まる。
+ * BUTTON_RISE や中央インデントが不要になったため、
+ * 素直な4アイテムのフラットなタブバーに整理する。
  */
 function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
 
-  const BUTTON_RISE = 24;
   const TAB_CONTENT = 56;
   const BOTTOM_SAFE = insets.bottom;
   const TAB_BAR_HEIGHT = TAB_CONTENT + BOTTOM_SAFE;
-  const TOTAL_HEIGHT = BUTTON_RISE + TAB_BAR_HEIGHT;
 
   return (
-    <View style={{ height: TOTAL_HEIGHT }}>
-      {/* 白背景: タブアイテムエリア（下部 TAB_BAR_HEIGHT 分のみ）*/}
+    <View style={{ height: TAB_BAR_HEIGHT }}>
+      {/* 白背景 */}
       <View
         style={{
           position: 'absolute',
@@ -147,11 +69,6 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
         }}
       >
         {state.routes.map((route, index) => {
-          // 中央スロット: FloatingRecordButton のスペースとして空けておく
-          if (route.name === 'RecordTab') {
-            return <View key={route.key} style={{ flex: 1 }} />;
-          }
-
           const { options } = descriptors[route.key]!;
           const focused = state.index === index;
           const label = typeof options.tabBarLabel === 'string' ? options.tabBarLabel : '';
@@ -201,20 +118,6 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
           );
         })}
       </View>
-
-      {/* フローティングボタン: コンテナ上端に配置 */}
-      {/* top: 0 から 56px 分が全てコンテナ内に収まるため overflow 不要 */}
-      <View
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          alignItems: 'center',
-        }}
-      >
-        <FloatingRecordButton navigation={navigation} />
-      </View>
     </View>
   );
 }
@@ -245,16 +148,6 @@ export function MainTabs() {
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="calendar-outline" size={size} color={color} />
           ),
-        }}
-      />
-      <Tab.Screen
-        name="RecordTab"
-        component={RecordStack}
-        options={{
-          // 中央スロットはアイコン・ラベルなし（FloatingRecordButton がオーバーレイ）
-          tabBarLabel: '',
-          tabBarIcon: () => null,
-          tabBarAccessibilityLabel: '記録を開始',
         }}
       />
       <Tab.Screen

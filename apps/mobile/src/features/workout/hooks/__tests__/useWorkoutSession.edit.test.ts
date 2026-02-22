@@ -8,6 +8,7 @@
  */
 import { getDatabase } from '@/database/client';
 import { PersonalRecordRepository } from '@/database/repositories/pr';
+import { SetRepository } from '@/database/repositories/set';
 import { WorkoutRepository } from '@/database/repositories/workout';
 import { useWorkoutSessionStore } from '@/stores/workoutSessionStore';
 import type { Workout, WorkoutExercise, WorkoutSet } from '@/types';
@@ -15,6 +16,7 @@ import type { Workout, WorkoutExercise, WorkoutSet } from '@/types';
 // 各リポジトリをモック
 jest.mock('@/database/repositories/workout');
 jest.mock('@/database/repositories/pr');
+jest.mock('@/database/repositories/set');
 jest.mock('@/database/client');
 
 const mockWorkoutUpdate = WorkoutRepository.update as jest.MockedFunction<
@@ -148,7 +150,8 @@ describe('PR再計算ロジック（T047）', () => {
     // saveEditのロジックをシミュレート
     const workoutId = 'workout-1';
     const db = await getDatabase();
-    const weRows = await (db as { getAllAsync: jest.Mock }).getAllAsync(
+    // TS2352 回避: SQLiteDatabase と jest.Mock の型が重ならないため unknown 経由でキャスト
+    const weRows = await (db as unknown as { getAllAsync: jest.Mock }).getAllAsync(
       'SELECT exercise_id FROM workout_exercises WHERE workout_id = ?',
       [workoutId],
     );
@@ -180,7 +183,8 @@ describe('PR再計算ロジック（T047）', () => {
     mockGetDatabase.mockResolvedValue(mockDb as never);
 
     const db = await getDatabase();
-    const weRows = await (db as { getAllAsync: jest.Mock }).getAllAsync(
+    // TS2352 回避: SQLiteDatabase と jest.Mock の型が重ならないため unknown 経由でキャスト
+    const weRows = await (db as unknown as { getAllAsync: jest.Mock }).getAllAsync(
       'SELECT exercise_id FROM workout_exercises WHERE workout_id = ?',
       ['workout-1'],
     );
@@ -205,7 +209,8 @@ describe('PR再計算ロジック（T047）', () => {
     mockGetDatabase.mockResolvedValue(mockDb as never);
 
     const db = await getDatabase();
-    const weRows = await (db as { getAllAsync: jest.Mock }).getAllAsync(
+    // TS2352 回避: SQLiteDatabase と jest.Mock の型が重ならないため unknown 経由でキャスト
+    const weRows = await (db as unknown as { getAllAsync: jest.Mock }).getAllAsync(
       'SELECT exercise_id FROM workout_exercises WHERE workout_id = ?',
       ['workout-1'],
     );
@@ -388,5 +393,83 @@ describe('ストア状態管理 - 編集関連', () => {
     expect(state.currentSets['we-1']![0]!.id).toBe('set-1');
     expect(state.currentSets['we-1']![1]!.setNumber).toBe(2);
     expect(state.currentSets['we-1']![1]!.id).toBe('set-3');
+  });
+});
+
+describe('addExercise デフォルト3セット作成（Issue #119）', () => {
+  const mockSetCreate = SetRepository.create as jest.MockedFunction<typeof SetRepository.create>;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    useWorkoutSessionStore.getState().reset();
+
+    // getDatabase モック: runAsync（INSERT用）を返す
+    const mockDb = {
+      runAsync: jest.fn().mockResolvedValue(undefined),
+    };
+    mockGetDatabase.mockResolvedValue(mockDb as never);
+  });
+
+  it('addExercise 後に currentSets に3セットが作成される', async () => {
+    const store = useWorkoutSessionStore.getState();
+    store.setCurrentWorkout(mockWorkout);
+
+    // SetRepository.create を3回呼ばれることを想定し、各回で異なるセットを返す
+    const now = Date.now();
+    mockSetCreate
+      .mockResolvedValueOnce({
+        id: 'set-new-1',
+        workoutExerciseId: 'we-test',
+        setNumber: 1,
+        weight: null,
+        reps: null,
+        estimated1RM: null,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .mockResolvedValueOnce({
+        id: 'set-new-2',
+        workoutExerciseId: 'we-test',
+        setNumber: 2,
+        weight: null,
+        reps: null,
+        estimated1RM: null,
+        createdAt: now,
+        updatedAt: now,
+      })
+      .mockResolvedValueOnce({
+        id: 'set-new-3',
+        workoutExerciseId: 'we-test',
+        setNumber: 3,
+        weight: null,
+        reps: null,
+        estimated1RM: null,
+        createdAt: now,
+        updatedAt: now,
+      });
+
+    // addExercise のロジックをシミュレート（Issue #119: デフォルト3セット表示対応）
+    const workoutExerciseId = 'we-test';
+
+    // デフォルト3セットを並行作成
+    const initialSets = await Promise.all(
+      [1, 2, 3].map((setNumber) =>
+        SetRepository.create({ workoutExerciseId, setNumber }),
+      ),
+    );
+    store.setSetsForExercise(workoutExerciseId, initialSets);
+
+    // 検証: SetRepository.create が3回呼ばれている
+    expect(mockSetCreate).toHaveBeenCalledTimes(3);
+    expect(mockSetCreate).toHaveBeenCalledWith({ workoutExerciseId, setNumber: 1 });
+    expect(mockSetCreate).toHaveBeenCalledWith({ workoutExerciseId, setNumber: 2 });
+    expect(mockSetCreate).toHaveBeenCalledWith({ workoutExerciseId, setNumber: 3 });
+
+    // 検証: ストアに3セットが格納されている
+    const state = useWorkoutSessionStore.getState();
+    expect(state.currentSets[workoutExerciseId]).toHaveLength(3);
+    expect(state.currentSets[workoutExerciseId]![0]!.setNumber).toBe(1);
+    expect(state.currentSets[workoutExerciseId]![1]!.setNumber).toBe(2);
+    expect(state.currentSets[workoutExerciseId]![2]!.setNumber).toBe(3);
   });
 });

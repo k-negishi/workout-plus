@@ -1,17 +1,16 @@
 /**
- * SetRow コンポーネントテスト
- * - インライン前回記録（「前回:」テキスト）が表示されないこと
- * - セット行本体（セット番号、NumericInput）が正常にレンダリングされること
- * - NumericInput に placeholder が渡されていないこと（US2）
- * - セット番号がテキストラベル形式であること（US2）
+ * SetRow コンポーネントテスト（Issue #121: NumericInput → TextInput 化）
+ *
+ * TextInput を使った軽量デザインへの変更に伴い、
+ * 旧テスト（NumericInput 前提）を全面刷新する。
  */
-import { render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
 
 import { SetRow } from '../SetRow';
 
-/** テスト用のセットデータ */
-const mockSet = {
+/** テスト用のセットデータ（weight/reps null = 未入力状態） */
+const mockSetEmpty = {
   id: '1',
   workoutExerciseId: 'we1',
   setNumber: 1,
@@ -22,53 +21,147 @@ const mockSet = {
   updatedAt: 123,
 };
 
+/** テスト用のセットデータ（重量・レップ入力済み → 1RM 計算可能） */
+const mockSetFilled = {
+  id: '2',
+  workoutExerciseId: 'we1',
+  setNumber: 2,
+  // 100kg × 5reps → Epley 式: 100 * (1 + 5/30) ≈ 117
+  weight: 100,
+  reps: 5,
+  estimated1RM: null,
+  createdAt: 123,
+  updatedAt: 123,
+};
+
 describe('SetRow', () => {
   const defaultProps = {
-    set: mockSet,
+    set: mockSetEmpty,
     onWeightChange: jest.fn(),
     onRepsChange: jest.fn(),
     onDelete: jest.fn(),
   };
 
-  it('前回記録のインラインテキストが表示されない', () => {
-    render(<SetRow {...defaultProps} />);
-    // 「前回:」というインライン表示が存在しないこと
-    expect(screen.queryByText(/前回:/)).toBeNull();
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
-  it('SetRowProps に previousSet / onCopyPrevious が存在しない', () => {
-    // previousSet, onCopyPrevious が props から削除されていることを確認
-    // 型エラーなくレンダリングできること自体がテストの証明
-    render(<SetRow {...defaultProps} />);
-    expect(screen.queryByText(/前回:/)).toBeNull();
+  // ────────────────────────────────────────────────────────────
+  // レイアウト: 枠線なし（borderless 確認）
+  // ────────────────────────────────────────────────────────────
+
+  it('行コンテナに borderWidth が存在しないこと（枠線なしデザイン）', () => {
+    const { UNSAFE_getAllByType } = render(<SetRow {...defaultProps} />);
+    // jest.requireActual で react-native の View を取得（require() スタイル禁止のための代替手段）
+    const { View } = jest.requireActual<typeof import('react-native')>('react-native');
+    const allViews = UNSAFE_getAllByType(View);
+    // 最初の View が行コンテナ。borderWidth を持たないことを確認する
+    // （TextInput の入力枠と行全体の枠線を混同しないための検証）
+    const containerStyle = allViews[0].props.style as Record<string, unknown> | undefined;
+    // TS4111: index signature プロパティは ['key'] 形式でアクセスする必要がある
+    expect(containerStyle?.['borderWidth']).toBeUndefined();
   });
 
-  it('セット番号が表示される', () => {
+  // ────────────────────────────────────────────────────────────
+  // 重量フィールド: keyboardType
+  // ────────────────────────────────────────────────────────────
+
+  it('重量入力フィールドが decimal-pad キーボードを持つこと', () => {
     render(<SetRow {...defaultProps} />);
-    expect(screen.getByText('1')).toBeTruthy();
+    // placeholder="-" の TextInput が2つあるうち、最初が重量
+    const weightInput = screen.getAllByPlaceholderText('-')[0];
+    expect(weightInput.props.keyboardType).toBe('decimal-pad');
   });
 
-  it('セット番号がテキストのみで表示される（丸バッジなし）', () => {
+  // ────────────────────────────────────────────────────────────
+  // レップフィールド: keyboardType
+  // ────────────────────────────────────────────────────────────
+
+  it('レップ入力フィールドが number-pad キーボードを持つこと', () => {
     render(<SetRow {...defaultProps} />);
-    const setNumberElement = screen.getByText('1');
-    // セット番号は直接 Text として表示され、fontWeight: '700' のスタイルを持つ
-    expect(setNumberElement.props.style).toEqual(
-      expect.objectContaining({
-        fontWeight: '700',
-        color: '#94a3b8',
-      }),
-    );
+    // placeholder="-" の TextInput が2つあるうち、2番目がレップ
+    const repsInput = screen.getAllByPlaceholderText('-')[1];
+    expect(repsInput.props.keyboardType).toBe('number-pad');
   });
 
-  it('NumericInput に placeholder prop が渡されていない', () => {
+  // ────────────────────────────────────────────────────────────
+  // placeholder
+  // ────────────────────────────────────────────────────────────
+
+  it('重量・レップ両フィールドの placeholder が "-" であること', () => {
     render(<SetRow {...defaultProps} />);
-    // value が null → TextInput の表示値は空文字列
-    const textInputs = screen.getAllByDisplayValue('');
-    // 重量とレップの2つの TextInput が存在する
-    expect(textInputs.length).toBe(2);
-    // どちらの TextInput にも placeholder が設定されていないこと
-    textInputs.forEach((input) => {
-      expect(input.props.placeholder).toBeUndefined();
-    });
+    const inputs = screen.getAllByPlaceholderText('-');
+    // 重量とレップの2フィールドが存在する
+    expect(inputs).toHaveLength(2);
+  });
+
+  // ────────────────────────────────────────────────────────────
+  // 1RM 表示: 未計算（null）のとき "-" を表示
+  // ────────────────────────────────────────────────────────────
+
+  it('weight/reps が null のとき 1RM セルに "-" が表示されること', () => {
+    render(<SetRow {...defaultProps} />);
+    // 1RM 未計算時は "-" というテキストが表示される（prefix "1RM " なし）
+    expect(screen.getByText('-')).toBeTruthy();
+  });
+
+  // ────────────────────────────────────────────────────────────
+  // 1RM 表示: 計算済みのとき数値を表示
+  // ────────────────────────────────────────────────────────────
+
+  it('weight=100 reps=5 のとき推定1RM が数値で表示されること', () => {
+    render(<SetRow {...defaultProps} set={mockSetFilled} />);
+    // Epley 式: 100 * (1 + 5/30) ≈ 117（四捨五入）
+    // "1RM " prefix なしの純粋な数値文字列
+    expect(screen.getByText('117')).toBeTruthy();
+    // "1RM xxx" 形式のテキストが存在しないこと（旧仕様の確認）
+    expect(screen.queryByText(/^1RM /)).toBeNull();
+  });
+
+  // ────────────────────────────────────────────────────────────
+  // 削除ボタン
+  // ────────────────────────────────────────────────────────────
+
+  it('削除ボタンをタップすると onDelete が set.id を引数に呼ばれること', () => {
+    render(<SetRow {...defaultProps} />);
+    fireEvent.press(screen.getByLabelText('セット1を削除'));
+    expect(defaultProps.onDelete).toHaveBeenCalledWith('1');
+    expect(defaultProps.onDelete).toHaveBeenCalledTimes(1);
+  });
+
+  // ────────────────────────────────────────────────────────────
+  // 重量変更コールバック
+  // ────────────────────────────────────────────────────────────
+
+  it('重量フィールドに "60.5" を入力すると onWeightChange(setId, 60.5) が呼ばれること', () => {
+    render(<SetRow {...defaultProps} />);
+    const weightInput = screen.getAllByPlaceholderText('-')[0];
+    fireEvent.changeText(weightInput, '60.5');
+    expect(defaultProps.onWeightChange).toHaveBeenCalledWith('1', 60.5);
+  });
+
+  it('重量フィールドに空文字を入力すると onWeightChange(setId, null) が呼ばれること', () => {
+    render(<SetRow {...defaultProps} />);
+    const weightInput = screen.getAllByPlaceholderText('-')[0];
+    fireEvent.changeText(weightInput, '');
+    expect(defaultProps.onWeightChange).toHaveBeenCalledWith('1', null);
+  });
+
+  it('重量フィールドに "-" を入力すると onWeightChange(setId, null) が呼ばれること', () => {
+    render(<SetRow {...defaultProps} />);
+    const weightInput = screen.getAllByPlaceholderText('-')[0];
+    fireEvent.changeText(weightInput, '-');
+    expect(defaultProps.onWeightChange).toHaveBeenCalledWith('1', null);
+  });
+
+  // ────────────────────────────────────────────────────────────
+  // レップ変更コールバック
+  // ────────────────────────────────────────────────────────────
+
+  it('レップフィールドに "10" を入力すると onRepsChange(setId, 10) が呼ばれること', () => {
+    render(<SetRow {...defaultProps} />);
+    const repsInput = screen.getAllByPlaceholderText('-')[1];
+    fireEvent.changeText(repsInput, '10');
+    expect(defaultProps.onRepsChange).toHaveBeenCalledWith('1', 10);
   });
 });

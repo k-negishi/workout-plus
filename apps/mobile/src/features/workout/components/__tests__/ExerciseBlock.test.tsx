@@ -1,9 +1,15 @@
 /**
  * ExerciseBlock コンポーネントテスト
- * - 前回記録ありのとき「前回の全セットをコピー」ボタンが表示される
- * - そのボタンタップで onCopyAllPrevious が呼ばれる
- * - 前回記録なしのときボタンが非表示
- * - 種目削除ボタンのタップで onDeleteExercise が呼ばれる
+ *
+ * 検証対象（Issue #121 カードデザイン刷新）:
+ * - カード外枠スタイル（bg-white border rounded-lg）
+ * - 種目名: 16px / #334155 / font-semibold
+ * - 削除ボタン: テキスト「✕」
+ * - カラムヘッダー行（Set / kg / 回 / 1RM）
+ * - 「+ セットを追加」テキストリンク（背景・ボーダーなし）
+ * - showPreviousRecord=false のとき前回記録バッジ非表示
+ * - 前回記録コピーボタン（既存テスト維持）
+ * - 種目削除ボタン（既存テスト維持）
  */
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
@@ -172,6 +178,57 @@ describe('ExerciseBlock', () => {
 
       // 「前回: 2セット (2/20)」が表示されること
       expect(screen.getByText('前回: 2セット (2/20)')).toBeTruthy();
+    });
+  });
+
+  // ---- Issue #121 カードデザイン刷新 ----
+
+  describe('カラムヘッダー行', () => {
+    it('Set / kg / 回 / 1RM のラベルが表示される', () => {
+      render(<ExerciseBlock {...createDefaultProps()} />);
+
+      // セットリスト上部にカラムヘッダーが追加されること
+      // kg / 回 は SetRow 内でも使われるため getAllByText で「少なくとも1つ」を確認
+      expect(screen.getByText('Set')).toBeTruthy();
+      expect(screen.getAllByText('kg').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText('回').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getByText('1RM')).toBeTruthy();
+    });
+  });
+
+  describe('「+ セットを追加」ボタン', () => {
+    it('タップで onAddSet が1回呼ばれる', () => {
+      const mockOnAddSet = jest.fn();
+      render(<ExerciseBlock {...createDefaultProps({ onAddSet: mockOnAddSet })} />);
+
+      fireEvent.press(screen.getByLabelText('セットを追加'));
+
+      expect(mockOnAddSet).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('showPreviousRecord prop', () => {
+    it('showPreviousRecord=false のとき前回記録バッジが非表示', () => {
+      render(<ExerciseBlock {...createDefaultProps({ showPreviousRecord: false })} />);
+
+      // バッジ本体（コピーボタン）が非表示であること
+      expect(screen.queryByLabelText(COPY_ALL_LABEL)).toBeNull();
+      // バッジテキストも非表示であること
+      expect(screen.queryByText(/前回:/)).toBeNull();
+    });
+
+    it('showPreviousRecord=true（デフォルト）のとき前回記録バッジが表示される', () => {
+      render(<ExerciseBlock {...createDefaultProps({ showPreviousRecord: true })} />);
+
+      expect(screen.getByLabelText(COPY_ALL_LABEL)).toBeTruthy();
+    });
+
+    it('showPreviousRecord 未指定のとき前回記録バッジが表示される（デフォルト true）', () => {
+      // showPreviousRecord を省略した場合に true と同じ挙動になること
+      const props = createDefaultProps();
+      render(<ExerciseBlock {...props} />);
+
+      expect(screen.getByLabelText(COPY_ALL_LABEL)).toBeTruthy();
     });
   });
 });

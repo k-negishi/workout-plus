@@ -15,13 +15,18 @@ import { ExerciseRepository } from '@/database/repositories/exercise';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { showErrorToast } from '@/shared/components/Toast';
 import { useWorkoutSessionStore } from '@/stores/workoutSessionStore';
-import type { Equipment, Exercise, MuscleGroup, RecordStackParamList } from '@/types';
+import type { Equipment, Exercise, HomeStackParamList, MuscleGroup } from '@/types';
 
 import { useWorkoutSession } from '../../workout/hooks/useWorkoutSession';
 import { MUSCLE_GROUP_LABELS, useExerciseSearch } from '../hooks/useExerciseSearch';
 
-type PickerNavProp = NativeStackNavigationProp<RecordStackParamList, 'ExercisePicker'>;
-type PickerRouteProp = RouteProp<RecordStackParamList, 'ExercisePicker'>;
+/**
+ * T08: RecordStackParamList 廃止につき HomeStackParamList に変更。
+ * HomeStack/CalendarStack 両方に同じ画面を配置するが、
+ * useNavigation/useRoute が実行時のスタックコンテキストを使うため型が一致していれば問題ない。
+ */
+type PickerNavProp = NativeStackNavigationProp<HomeStackParamList, 'ExercisePicker'>;
+type PickerRouteProp = RouteProp<HomeStackParamList, 'ExercisePicker'>;
 
 /** カテゴリタブの部位リスト */
 const CATEGORIES: Array<{ key: MuscleGroup | null; label: string }> = [

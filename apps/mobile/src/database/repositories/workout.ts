@@ -10,6 +10,8 @@ import type { WorkoutRow, WorkoutStatus } from '../types';
 /** ワークアウト作成パラメータ */
 type CreateWorkoutParams = {
   memo?: string | null;
+  /** 過去日付記録時に指定する UNIX ミリ秒。省略時は Date.now() */
+  createdAt?: number;
 };
 
 /** ワークアウト更新パラメータ */
@@ -33,7 +35,8 @@ export const WorkoutRepository = {
    */
   async create(params?: CreateWorkoutParams): Promise<WorkoutRow> {
     const db = await getDatabase();
-    const now = Date.now();
+    // createdAt が指定された場合は過去日付記録として使用する
+    const now = params?.createdAt ?? Date.now();
     const id = ulid();
 
     await db.runAsync(
@@ -118,6 +121,24 @@ export const WorkoutRepository = {
 
     values.push(id);
     await db.runAsync(`UPDATE workouts SET ${fields.join(', ')} WHERE id = ?`, values);
+  },
+
+  /**
+   * 指定日の完了済みワークアウトを取得する（最新1件）
+   * 過去日付への追記判定に使用する
+   *
+   * @param dateString - 'yyyy-MM-dd' 形式の日付文字列
+   */
+  async findCompletedByDate(dateString: string): Promise<WorkoutRow | null> {
+    const db = await getDatabase();
+    const [year, month, day] = dateString.split('-').map(Number);
+    // month は 0-indexed
+    const dayStart = new Date(year!, month! - 1, day!).getTime();
+    const dayEnd = dayStart + 86400000; // 翌日0:00
+    return db.getFirstAsync<WorkoutRow>(
+      "SELECT * FROM workouts WHERE status = 'completed' AND completed_at >= ? AND completed_at < ? ORDER BY completed_at DESC LIMIT 1",
+      [dayStart, dayEnd],
+    );
   },
 
   /** ワークアウトを削除する（CASCADE で関連レコードも削除） */

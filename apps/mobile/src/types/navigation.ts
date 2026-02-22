@@ -1,6 +1,8 @@
 /**
  * React Navigation 7 型定義
  * ナビゲーション構造に対応するパラメータ型とScreen Props型
+ *
+ * T05: RecordTab 廃止・HomeStack/CalendarStack に Record フローを追加
  */
 import type { BottomTabScreenProps } from '@react-navigation/bottom-tabs';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -11,63 +13,89 @@ export type RootStackParamList = {
   DiscardDialog: undefined;
 };
 
-/** メインタブ */
+/**
+ * メインタブ（T07: 4タブ化 RecordTab 廃止）
+ * Home / Calendar / Stats / AI の4タブ構成
+ */
 export type MainTabParamList = {
   HomeTab: undefined;
   CalendarTab: undefined;
-  /** 記録スタック（中央の+ボタンで遷移） */
-  RecordTab: undefined;
   StatsTab: undefined;
   AITab: undefined;
 };
 
-/** ホームタブ内スタック */
+/**
+ * ホームタブ内スタック
+ * T05: WorkoutEdit 廃止、Record フローを追加
+ */
 export type HomeStackParamList = {
   Home: undefined;
   WorkoutDetail: { workoutId: string };
-  WorkoutEdit: { workoutId: string };
+  /** Record: workoutId があれば編集モード、targetDate があれば過去日付記録モード */
+  Record: { workoutId?: string; targetDate?: string } | undefined;
+  ExercisePicker: { mode: 'single' | 'multi' };
+  WorkoutSummary: { workoutId: string };
   ExerciseHistory: { exerciseId: string; exerciseName: string };
 };
 
-/** カレンダータブ内スタック */
+/**
+ * カレンダータブ内スタック
+ * T05: WorkoutEdit 廃止、Record フローを追加
+ */
 export type CalendarStackParamList = {
   Calendar: undefined;
   WorkoutDetail: { workoutId: string };
-  /** カレンダーから過去ワークアウトを編集するための画面 */
-  WorkoutEdit: { workoutId: string };
-  ExerciseHistory: { exerciseId: string; exerciseName: string };
-};
-
-/** 記録スタック（フルスクリーンモーダル） */
-export type RecordStackParamList = {
-  Record: undefined;
+  /** Record: workoutId があれば編集モード、targetDate があれば過去日付記録モード */
+  Record: { workoutId?: string; targetDate?: string } | undefined;
   ExercisePicker: { mode: 'single' | 'multi' };
-  ExerciseHistory: { exerciseId: string; exerciseName: string };
   WorkoutSummary: { workoutId: string };
+  ExerciseHistory: { exerciseId: string; exerciseName: string };
 };
 
 /** 各Screen用のProps型 */
 export type HomeScreenProps = NativeStackScreenProps<HomeStackParamList, 'Home'>;
 export type WorkoutDetailScreenProps = NativeStackScreenProps<HomeStackParamList, 'WorkoutDetail'>;
-export type WorkoutEditScreenProps = NativeStackScreenProps<HomeStackParamList, 'WorkoutEdit'>;
 export type CalendarScreenProps = NativeStackScreenProps<CalendarStackParamList, 'Calendar'>;
 export type CalendarWorkoutDetailScreenProps = NativeStackScreenProps<
   CalendarStackParamList,
   'WorkoutDetail'
 >;
-export type RecordScreenProps = NativeStackScreenProps<RecordStackParamList, 'Record'>;
-export type ExercisePickerScreenProps = NativeStackScreenProps<
-  RecordStackParamList,
+
+/**
+ * T05: HomeStack の Record 画面 Props
+ * route.params は { workoutId?, targetDate? } | undefined
+ */
+export type HomeRecordScreenProps = NativeStackScreenProps<HomeStackParamList, 'Record'>;
+
+/**
+ * T05: CalendarStack の Record 画面 Props
+ */
+export type CalendarRecordScreenProps = NativeStackScreenProps<CalendarStackParamList, 'Record'>;
+
+/** HomeStack 向け ExercisePicker Props */
+export type HomeExercisePickerScreenProps = NativeStackScreenProps<
+  HomeStackParamList,
   'ExercisePicker'
 >;
-export type ExerciseHistoryScreenProps = NativeStackScreenProps<
-  RecordStackParamList,
-  'ExerciseHistory'
+
+/** CalendarStack 向け ExercisePicker Props */
+export type CalendarExercisePickerScreenProps = NativeStackScreenProps<
+  CalendarStackParamList,
+  'ExercisePicker'
 >;
-export type WorkoutSummaryScreenProps = NativeStackScreenProps<
-  RecordStackParamList,
+
+/** HomeStack 向け WorkoutSummary Props */
+export type HomeWorkoutSummaryScreenProps = NativeStackScreenProps<
+  HomeStackParamList,
   'WorkoutSummary'
 >;
+
+/** CalendarStack 向け WorkoutSummary Props */
+export type CalendarWorkoutSummaryScreenProps = NativeStackScreenProps<
+  CalendarStackParamList,
+  'WorkoutSummary'
+>;
+
 export type HomeExerciseHistoryScreenProps = NativeStackScreenProps<
   HomeStackParamList,
   'ExerciseHistory'

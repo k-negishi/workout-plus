@@ -130,8 +130,12 @@ export function dateStringToMs(dateString: string): number {
 
 /** フックの戻り値型 */
 export type UseWorkoutSessionReturn = {
-  /** セッションを開始する（workoutId指定時は継続モード、targetDate指定時は過去日付記録） */
-  startSession: (workoutId?: string, targetDate?: string) => Promise<void>;
+  /**
+   * セッションを開始する。
+   * workoutId を指定した場合は継続モード（当日ワークアウトへの追記）。
+   * targetDate を指定した場合は過去日付記録（'yyyy-MM-dd' 形式）。
+   */
+  startSession: (options?: { workoutId?: string; targetDate?: string }) => Promise<void>;
   /** 種目を追加する */
   addExercise: (exerciseId: string) => Promise<void>;
   /** 種目を削除する */
@@ -166,9 +170,15 @@ export type UseWorkoutSessionReturn = {
 export function useWorkoutSession(): UseWorkoutSessionReturn {
   const store = useWorkoutSessionStore();
 
-  /** セッションを開始する（workoutId指定時は継続モード、targetDate指定時は過去日付記録） */
+  /**
+   * セッションを開始する。
+   * workoutId を指定した場合は継続モード（当日ワークアウトへの追記）。
+   * targetDate を指定した場合は過去日付記録（'yyyy-MM-dd' 形式）。
+   */
   const startSession = useCallback(
-    async (workoutId?: string, targetDate?: string) => {
+    async (options?: { workoutId?: string; targetDate?: string }) => {
+      // オプションオブジェクトから分解する（未指定時は両方 undefined になる）
+      const { workoutId, targetDate } = options ?? {};
       try {
         // 過去日付が指定された場合はストアに記録する（completeWorkout 時に参照）
         if (targetDate) {
@@ -286,9 +296,8 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
 
         // 新規セッション作成
         // targetDate が指定されている場合は過去日付を created_at に設定する
-        const workout = await WorkoutRepository.create({
-          createdAt: targetDate ? dateStringToMs(targetDate) : undefined,
-        });
+        const createParams = targetDate ? { createdAt: dateStringToMs(targetDate) } : undefined;
+        const workout = await WorkoutRepository.create(createParams);
         store.setCurrentWorkout({
           id: workout.id,
           status: workout.status,

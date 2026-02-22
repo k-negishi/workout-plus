@@ -200,24 +200,51 @@ describe('workoutSessionStore - 継続モードフィールド', () => {
     expect(useWorkoutSessionStore.getState().continuationBaseExerciseIds).toEqual(['ex-1', 'ex-2']);
   });
 
-  it('pendingContinuationWorkoutId の初期値が null', () => {
-    const state = useWorkoutSessionStore.getState();
-    expect(state.pendingContinuationWorkoutId).toBeNull();
-  });
+  // T04: pendingContinuationWorkoutId 廃止。テストを削除済み。
 
-  it('setPendingContinuationWorkoutId で値をセットできる', () => {
-    const store = useWorkoutSessionStore.getState();
-    store.setPendingContinuationWorkoutId('workout-123');
-    expect(useWorkoutSessionStore.getState().pendingContinuationWorkoutId).toBe('workout-123');
-  });
-
-  it('reset() で両フィールドが null にリセットされる', () => {
+  it('reset() で continuationBaseExerciseIds が null にリセットされる', () => {
     const store = useWorkoutSessionStore.getState();
     store.setContinuationBaseExerciseIds(['ex-1']);
-    store.setPendingContinuationWorkoutId('workout-123');
     store.reset();
     const state = useWorkoutSessionStore.getState();
     expect(state.continuationBaseExerciseIds).toBeNull();
-    expect(state.pendingContinuationWorkoutId).toBeNull();
+  });
+});
+
+describe('workoutSessionStore - 過去日付記録フィールド', () => {
+  beforeEach(() => {
+    useWorkoutSessionStore.getState().reset();
+  });
+
+  it('calendarSelectedDate の初期値が null', () => {
+    const state = useWorkoutSessionStore.getState();
+    expect(state.calendarSelectedDate).toBeNull();
+  });
+
+  it('setCalendarSelectedDate で日付をセットできる', () => {
+    const store = useWorkoutSessionStore.getState();
+    store.setCalendarSelectedDate('2026-02-14');
+    expect(useWorkoutSessionStore.getState().calendarSelectedDate).toBe('2026-02-14');
+  });
+
+  it('sessionTargetDate の初期値が null', () => {
+    const state = useWorkoutSessionStore.getState();
+    expect(state.sessionTargetDate).toBeNull();
+  });
+
+  it('setSessionTargetDate で日付をセットできる', () => {
+    const store = useWorkoutSessionStore.getState();
+    store.setSessionTargetDate('2026-02-14');
+    expect(useWorkoutSessionStore.getState().sessionTargetDate).toBe('2026-02-14');
+  });
+
+  it('reset() で calendarSelectedDate と sessionTargetDate が null にリセットされる', () => {
+    const store = useWorkoutSessionStore.getState();
+    store.setCalendarSelectedDate('2026-02-14');
+    store.setSessionTargetDate('2026-02-14');
+    store.reset();
+    const state = useWorkoutSessionStore.getState();
+    expect(state.calendarSelectedDate).toBeNull();
+    expect(state.sessionTargetDate).toBeNull();
   });
 });

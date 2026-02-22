@@ -35,9 +35,12 @@ jest.mock('react-native-safe-area-context', () => {
 });
 
 // ナビゲーションモック
+// T10: HomeScreen で useFocusEffect を使うため no-op モックを追加する
+// （実際の navigation context が不要なためコールバックを実行しないことで副作用を防ぐ）
 jest.mock('@react-navigation/native', () => ({
   ...jest.requireActual('@react-navigation/native'),
   useNavigation: () => ({ navigate: jest.fn(), push: jest.fn() }),
+  useFocusEffect: jest.fn(),
 }));
 
 const mockGetAllAsync = jest.fn().mockResolvedValue([]);
@@ -48,6 +51,14 @@ jest.mock('@/database/client', () => ({
     getAllAsync: (...args: unknown[]) => mockGetAllAsync(...args),
     getFirstAsync: (...args: unknown[]) => mockGetFirstAsync(...args),
   }),
+}));
+
+// T10: WorkoutRepository モック（記録中チェックで呼ばれる）
+jest.mock('@/database/repositories/workout', () => ({
+  WorkoutRepository: {
+    findRecording: jest.fn().mockResolvedValue(null),
+    findTodayCompleted: jest.fn().mockResolvedValue(null),
+  },
 }));
 
 // @expo/vector-icons モック（Ionicons 等をシンプルなコンポーネントに差し替え）

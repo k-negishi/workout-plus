@@ -4,7 +4,7 @@
  * StreakCard、最近のワークアウト3件、QuickStatsWidget
  */
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
   endOfMonth,
@@ -19,6 +19,7 @@ import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'rea
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getDatabase } from '@/database/client';
+import { WorkoutRepository } from '@/database/repositories/workout';
 import type { ExerciseRow, SetRow, WorkoutExerciseRow, WorkoutRow } from '@/database/types';
 import { colors } from '@/shared/constants/colors';
 import type { HomeStackParamList, TimerStatus } from '@/types';
@@ -103,6 +104,8 @@ export function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [workoutSummaries, setWorkoutSummaries] = useState<WorkoutSummary[]>([]);
   const [trainingDates, setTrainingDates] = useState<Date[]>([]);
+  /** T10: 記録中セッションの有無（バナー表示制御） */
+  const [isRecording, setIsRecording] = useState(false);
 
   // データ取得
   const fetchData = useCallback(async () => {
@@ -142,6 +145,44 @@ export function HomeScreen() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  /**
+   * T10: 画面フォーカス時に記録中セッションを確認する。
+   * useFocusEffect を使う理由: BottomTab 画面はアンマウントされないため、
+   * 他の画面から戻ってきた際に useEffect([], []) では再実行されない。
+   */
+  useFocusEffect(
+    useCallback(() => {
+      const checkRecording = async () => {
+        const recording = await WorkoutRepository.findRecording();
+        setIsRecording(recording !== null);
+      };
+      void checkRecording();
+    }, []),
+  );
+
+  /**
+   * T10: 「本日のワークアウトを記録」ボタンのハンドラー
+   * 当日完了済みワークアウトがあれば編集モード、なければ新規記録モードで Record 画面へ遷移する
+   */
+  const handleRecordButtonPress = useCallback(async () => {
+    const todayWorkout = await WorkoutRepository.findTodayCompleted();
+    if (todayWorkout) {
+      // 当日完了済みワークアウトがあれば編集モードで開く
+      navigation.navigate('Record', { workoutId: todayWorkout.id });
+    } else {
+      // なければ新規記録モード
+      navigation.navigate('Record', undefined);
+    }
+  }, [navigation]);
+
+  /**
+   * T10: 記録中バナータップ → 記録画面へ（記録継続）
+   * recording 状態のワークアウトは startSession が既存セッションを復元する
+   */
+  const handleRecordingBannerPress = useCallback(() => {
+    navigation.navigate('Record', undefined);
+  }, [navigation]);
 
   // 今月/今週のワークアウト回数・前週比・ボリューム・セット数
   const {
@@ -275,6 +316,53 @@ export function HomeScreen() {
           </View>
           <StreakCard trainingDates={trainingDates} />
         </View>
+
+        {/* T10: 記録中バナー。記録中セッションがある場合のみ表示する */}
+        {isRecording && (
+          <TouchableOpacity
+            testID="recording-banner"
+            onPress={handleRecordingBannerPress}
+            style={{
+              backgroundColor: '#E6F2FF',
+              borderWidth: 1,
+              borderColor: '#4D94FF',
+              borderRadius: 8,
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              marginHorizontal: 20,
+              marginTop: 16,
+              marginBottom: 4,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <Text style={{ fontSize: 14, fontWeight: '600', color: '#4D94FF' }}>
+              記録中のワークアウト
+            </Text>
+            <Text style={{ fontSize: 14, color: '#4D94FF' }}>続けて記録する →</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* T10: ワークアウト記録ボタン */}
+        <TouchableOpacity
+          testID="record-workout-button"
+          onPress={() => void handleRecordButtonPress()}
+          style={{
+            backgroundColor: '#4D94FF',
+            borderRadius: 8,
+            paddingHorizontal: 16,
+            paddingVertical: 16,
+            alignItems: 'center',
+            marginHorizontal: 20,
+            marginTop: 16,
+            marginBottom: 4,
+          }}
+        >
+          <Text style={{ fontSize: 16, fontWeight: '600', color: '#ffffff' }}>
+            本日のワークアウトを記録
+          </Text>
+        </TouchableOpacity>
 
         {/* メインコンテンツ */}
         {/* contentContainerStyle で全体余白を持たせる代わりに、本文ブロックへ個別に余白を適用 */}
