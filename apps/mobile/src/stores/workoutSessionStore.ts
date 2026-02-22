@@ -5,8 +5,8 @@
  */
 import { create } from 'zustand';
 
-import { TimerStatus } from '@/types';
 import type { Workout, WorkoutExercise, WorkoutSet } from '@/types';
+import { TimerStatus } from '@/types';
 
 type WorkoutSessionState = {
   /** 進行中のワークアウト */

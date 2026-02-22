@@ -11,8 +11,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getDatabase } from '@/database/client';
 import { PersonalRecordRepository } from '@/database/repositories/pr';
 import { colors } from '@/shared/constants/colors';
-import { TimerStatus } from '@/types';
 import type { RecordStackParamList } from '@/types';
+import { TimerStatus } from '@/types';
 
 import { calculateVolume } from '../utils/calculate1RM';
 

@@ -9,8 +9,8 @@
  *   このファイルは Row型のみを保持し、Union Type は types/ から re-export する。
  */
 
-import type { Equipment, MuscleGroup, TimerStatus, WorkoutStatus } from '../types/workout';
 import type { PRType } from '../types/pr';
+import type { Equipment, MuscleGroup, TimerStatus, WorkoutStatus } from '../types/workout';
 
 // Union Type の SSOT は src/types/。re-export のみ。
 export type { Equipment, MuscleGroup, TimerStatus, WorkoutStatus };
