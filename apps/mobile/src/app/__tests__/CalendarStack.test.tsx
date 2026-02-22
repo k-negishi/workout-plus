@@ -31,7 +31,11 @@ jest.mock('@/features/calendar/screens/CalendarScreen', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { View, TouchableOpacity, Text } = require('react-native');
   return {
-    CalendarScreen: ({ navigation }: { navigation: { navigate: (name: string, params?: object) => void } }) =>
+    CalendarScreen: ({
+      navigation,
+    }: {
+      navigation: { navigate: (name: string, params?: object) => void };
+    }) =>
       React.createElement(
         View,
         { testID: 'calendar-screen' },
@@ -54,7 +58,13 @@ jest.mock('@/features/workout/screens/WorkoutDetailScreen', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { View, TouchableOpacity, Text } = require('react-native');
   return {
-    WorkoutDetailScreen: ({ navigation, route }: { navigation: { navigate: (name: string, params?: object) => void }; route: { params: { workoutId: string } } }) =>
+    WorkoutDetailScreen: ({
+      navigation,
+      route,
+    }: {
+      navigation: { navigate: (name: string, params?: object) => void };
+      route: { params: { workoutId: string } };
+    }) =>
       React.createElement(
         View,
         { testID: 'workout-detail-screen' },
@@ -63,7 +73,8 @@ jest.mock('@/features/workout/screens/WorkoutDetailScreen', () => {
           {
             testID: 'edit-button',
             // CalendarStack 経由で WorkoutEdit へ遷移するボタン
-            onPress: () => navigation.navigate('WorkoutEdit', { workoutId: route.params.workoutId }),
+            onPress: () =>
+              navigation.navigate('WorkoutEdit', { workoutId: route.params.workoutId }),
           },
           React.createElement(Text, null, '編集'),
         ),
@@ -89,7 +100,8 @@ jest.mock('@/features/exercise/screens/ExerciseHistoryFullScreen', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { View } = require('react-native');
   return {
-    ExerciseHistoryFullScreen: () => React.createElement(View, { testID: 'exercise-history-screen' }),
+    ExerciseHistoryFullScreen: () =>
+      React.createElement(View, { testID: 'exercise-history-screen' }),
   };
 });
 

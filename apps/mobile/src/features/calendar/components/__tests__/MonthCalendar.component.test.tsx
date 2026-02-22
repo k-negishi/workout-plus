@@ -42,13 +42,7 @@ describe('MonthCalendar コンポーネント - handleDayPress', () => {
   it('過去の日付をタップすると onDayPress が呼ばれる', () => {
     // Given: MonthCalendar がレンダリングされている
     const mockOnDayPress = jest.fn();
-    render(
-      <MonthCalendar
-        trainingDates={[]}
-        selectedDate={null}
-        onDayPress={mockOnDayPress}
-      />,
-    );
+    render(<MonthCalendar trainingDates={[]} selectedDate={null} onDayPress={mockOnDayPress} />);
 
     // When: 明らかに過去の日付を押下する
     expect(capturedOnDayPress).not.toBeNull();
@@ -61,13 +55,7 @@ describe('MonthCalendar コンポーネント - handleDayPress', () => {
 
   it('先月の日付をタップすると onDayPress が呼ばれる', () => {
     const mockOnDayPress = jest.fn();
-    render(
-      <MonthCalendar
-        trainingDates={[]}
-        selectedDate={null}
-        onDayPress={mockOnDayPress}
-      />,
-    );
+    render(<MonthCalendar trainingDates={[]} selectedDate={null} onDayPress={mockOnDayPress} />);
 
     // 2026-01-15（先月）を押下
     capturedOnDayPress!({ dateString: '2026-01-15' });
@@ -77,13 +65,7 @@ describe('MonthCalendar コンポーネント - handleDayPress', () => {
 
   it('未来の日付をタップしても onDayPress が呼ばれない', () => {
     const mockOnDayPress = jest.fn();
-    render(
-      <MonthCalendar
-        trainingDates={[]}
-        selectedDate={null}
-        onDayPress={mockOnDayPress}
-      />,
-    );
+    render(<MonthCalendar trainingDates={[]} selectedDate={null} onDayPress={mockOnDayPress} />);
 
     // 5年後の日付を押下（明らかに未来）
     capturedOnDayPress!({ dateString: '2031-01-01' });
@@ -93,13 +75,7 @@ describe('MonthCalendar コンポーネント - handleDayPress', () => {
 
   it('今日の日付をタップすると onDayPress が呼ばれる', () => {
     const mockOnDayPress = jest.fn();
-    render(
-      <MonthCalendar
-        trainingDates={[]}
-        selectedDate={null}
-        onDayPress={mockOnDayPress}
-      />,
-    );
+    render(<MonthCalendar trainingDates={[]} selectedDate={null} onDayPress={mockOnDayPress} />);
 
     // 今日の日付（テスト実行時点のローカル日付文字列）を押下
     const today = new Date();
@@ -111,13 +87,7 @@ describe('MonthCalendar コンポーネント - handleDayPress', () => {
 
   it('過去日を複数タップすると、それぞれ onDayPress が呼ばれる', () => {
     const mockOnDayPress = jest.fn();
-    render(
-      <MonthCalendar
-        trainingDates={[]}
-        selectedDate={null}
-        onDayPress={mockOnDayPress}
-      />,
-    );
+    render(<MonthCalendar trainingDates={[]} selectedDate={null} onDayPress={mockOnDayPress} />);
 
     capturedOnDayPress!({ dateString: '2025-12-01' });
     capturedOnDayPress!({ dateString: '2026-01-10' });
