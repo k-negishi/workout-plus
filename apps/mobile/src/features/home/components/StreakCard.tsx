@@ -2,7 +2,7 @@
  * StreakCard - 今月のトレーニング日数と週間カレンダー
  * ワイヤーフレーム: streak-card セクション準拠
  */
-import { eachDayOfInterval, endOfWeek, format, isSameDay, isToday, startOfWeek } from 'date-fns';
+import { eachDayOfInterval, endOfWeek, format, isSameDay, startOfWeek } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import { useMemo } from 'react';
 import { Text, View } from 'react-native';
@@ -72,7 +72,6 @@ export function StreakCard({ trainingDates }: StreakCardProps) {
       date: day,
       label: format(day, 'E', { locale: ja }).charAt(0),
       isDone: trainingDates.some((d) => isSameDay(new Date(d), day)),
-      isToday: isToday(day),
     }));
   }, [weekDays, trainingDates]);
 
@@ -110,7 +109,6 @@ export function StreakCard({ trainingDates }: StreakCardProps) {
               className="w-7 h-7 rounded-full items-center justify-center"
               style={{
                 backgroundColor: day.isDone ? '#4D94FF' : 'rgba(77, 148, 255, 0.10)',
-                ...(day.isToday && !day.isDone ? { borderWidth: 2, borderColor: '#4D94FF' } : {}),
               }}
             >
               {day.isDone ? <CheckIcon /> : null}
