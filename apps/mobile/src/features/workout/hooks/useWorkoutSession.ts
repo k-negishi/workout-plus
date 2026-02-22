@@ -13,6 +13,7 @@ import { WorkoutRepository } from '@/database/repositories/workout';
 import { showErrorToast } from '@/shared/components/Toast';
 import { useWorkoutSessionStore } from '@/stores/workoutSessionStore';
 import type { WorkoutExercise, WorkoutSet } from '@/types';
+import { TimerStatus } from '@/types';
 
 import { calculate1RM, calculateVolume } from '../utils/calculate1RM';
 
@@ -120,8 +121,8 @@ export type WorkoutSummaryData = {
 
 /** フックの戻り値型 */
 export type UseWorkoutSessionReturn = {
-  /** セッションを開始する */
-  startSession: () => Promise<void>;
+  /** セッションを開始する（workoutId指定時は継続モード） */
+  startSession: (workoutId?: string) => Promise<void>;
   /** 種目を追加する */
   addExercise: (exerciseId: string) => Promise<void>;
   /** 種目を削除する */
@@ -156,9 +157,66 @@ export type UseWorkoutSessionReturn = {
 export function useWorkoutSession(): UseWorkoutSessionReturn {
   const store = useWorkoutSessionStore();
 
-  /** セッションを開始する */
-  const startSession = useCallback(async () => {
+  /** セッションを開始する（workoutId指定時は継続モード） */
+  const startSession = useCallback(async (workoutId?: string) => {
     try {
+      // 継続モード: workoutId が指定されている場合（当日ワークアウトへの追記）
+      if (workoutId) {
+        const targetWorkout = await WorkoutRepository.findById(workoutId);
+        if (!targetWorkout) {
+          showErrorToast('継続対象のワークアウトが見つかりません');
+          return;
+        }
+        // completed → recording に再オープン
+        await WorkoutRepository.update(workoutId, { status: 'recording' });
+        store.setCurrentWorkout({
+          id: targetWorkout.id,
+          status: 'recording',
+          createdAt: targetWorkout.created_at,
+          startedAt: targetWorkout.started_at,
+          completedAt: targetWorkout.completed_at,
+          timerStatus: TimerStatus.NOT_STARTED,
+          elapsedSeconds: 0,
+          timerStartedAt: null,
+          memo: targetWorkout.memo,
+        });
+        store.setTimerStatus(TimerStatus.NOT_STARTED);
+        store.setElapsedSeconds(0);
+        store.setTimerStartedAt(null);
+
+        // 既存の種目・セットを復元
+        const db = await getDatabase();
+        const exercises = await db.getAllAsync<{
+          id: string;
+          workout_id: string;
+          exercise_id: string;
+          display_order: number;
+          memo: string | null;
+          created_at: number;
+        }>('SELECT * FROM workout_exercises WHERE workout_id = ? ORDER BY display_order', [workoutId]);
+
+        const baseExerciseIds: string[] = [];
+        for (const ex of exercises) {
+          const workoutExercise: WorkoutExercise = {
+            id: ex.id,
+            workoutId: ex.workout_id,
+            exerciseId: ex.exercise_id,
+            displayOrder: ex.display_order,
+            memo: ex.memo,
+            createdAt: ex.created_at,
+          };
+          store.addExercise(workoutExercise);
+          baseExerciseIds.push(ex.id);
+
+          // findByWorkoutExerciseId は WorkoutSet[]（camelCase 変換済み）を返す
+          const sets = await SetRepository.findByWorkoutExerciseId(ex.id);
+          store.setSetsForExercise(ex.id, sets);
+        }
+        // 継続モードの基準種目IDリストを記録
+        store.setContinuationBaseExerciseIds(baseExerciseIds);
+        return;
+      }
+
       // 既存の recording セッションがあるか確認
       const existing = await WorkoutRepository.findRecording();
       if (existing) {
@@ -202,17 +260,8 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
           };
           store.addExercise(workoutExercise);
 
-          const setRows = await SetRepository.findByWorkoutExerciseId(ex.id);
-          const sets: WorkoutSet[] = setRows.map((s) => ({
-            id: s.id,
-            workoutExerciseId: s.workout_exercise_id,
-            setNumber: s.set_number,
-            weight: s.weight,
-            reps: s.reps,
-            estimated1rm: s.estimated_1rm,
-            createdAt: s.created_at,
-            updatedAt: s.updated_at,
-          }));
+          // findByWorkoutExerciseId は WorkoutSet[]（camelCase 変換済み）を返す
+          const sets = await SetRepository.findByWorkoutExerciseId(ex.id);
           store.setSetsForExercise(ex.id, sets);
         }
 
@@ -243,6 +292,12 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
     async (exerciseId: string) => {
       if (!store.currentWorkout) return;
 
+      // 重複チェック: 同一ワークアウト内に同じ種目が既に存在する場合はスキップ（Issue #116）
+      // UI側（ExercisePickerScreen）でもタップを無効化しているが、フック側でも防護する
+      if (store.currentExercises.some((e) => e.exerciseId === exerciseId)) {
+        return;
+      }
+
       const db = await getDatabase();
       const now = Date.now();
       const id = ulid();
@@ -265,22 +320,12 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
       store.addExercise(workoutExercise);
 
       // 初期セット（1セット目）を自動追加
-      const setRow = await SetRepository.create({
-        workout_exercise_id: id,
-        set_number: 1,
+      // SetRepository.create() は WorkoutSet（camelCase）を返す
+      const newSet = await SetRepository.create({
+        workoutExerciseId: id,
+        setNumber: 1,
       });
-      store.setSetsForExercise(id, [
-        {
-          id: setRow.id,
-          workoutExerciseId: setRow.workout_exercise_id,
-          setNumber: setRow.set_number,
-          weight: setRow.weight,
-          reps: setRow.reps,
-          estimated1rm: setRow.estimated_1rm,
-          createdAt: setRow.created_at,
-          updatedAt: setRow.updated_at,
-        },
-      ]);
+      store.setSetsForExercise(id, [newSet]);
     },
     [store],
   );
@@ -302,21 +347,11 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
       const currentSets = store.currentSets[workoutExerciseId] ?? [];
       const nextSetNumber = currentSets.length + 1;
 
-      const setRow = await SetRepository.create({
-        workout_exercise_id: workoutExerciseId,
-        set_number: nextSetNumber,
+      // create は WorkoutSet（camelCase 変換済み）を返す
+      const newSet = await SetRepository.create({
+        workoutExerciseId,
+        setNumber: nextSetNumber,
       });
-
-      const newSet: WorkoutSet = {
-        id: setRow.id,
-        workoutExerciseId: setRow.workout_exercise_id,
-        setNumber: setRow.set_number,
-        weight: setRow.weight,
-        reps: setRow.reps,
-        estimated1rm: setRow.estimated_1rm,
-        createdAt: setRow.created_at,
-        updatedAt: setRow.updated_at,
-      };
 
       store.setSetsForExercise(workoutExerciseId, [...currentSets, newSet]);
       return newSet;
@@ -342,7 +377,7 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
         if (s.id !== setId) return s;
         const newWeight = params.weight !== undefined ? params.weight : s.weight;
         const newReps = params.reps !== undefined ? params.reps : s.reps;
-        const estimated1rm =
+        const estimated1RM =
           newWeight != null && newReps != null && newWeight > 0 && newReps > 0
             ? calculate1RM(newWeight, newReps)
             : null;
@@ -350,7 +385,7 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
           ...s,
           weight: newWeight ?? s.weight,
           reps: newReps ?? s.reps,
-          estimated1rm: estimated1rm,
+          estimated1RM: estimated1RM,
           updatedAt: Date.now(),
         };
       });
@@ -440,6 +475,23 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
   /** ワークアウトを破棄する */
   const discardWorkout = useCallback(async () => {
     if (!store.currentWorkout) return;
+
+    // 継続モードの場合: 追加分のみ削除し、元の completed 状態に戻す
+    if (store.continuationBaseExerciseIds !== null) {
+      const db = await getDatabase();
+      const baseIds = store.continuationBaseExerciseIds;
+      // 新規追加した種目（base に含まれない）を削除
+      const newExercises = store.currentExercises.filter((e) => !baseIds.includes(e.id));
+      for (const ex of newExercises) {
+        await db.runAsync('DELETE FROM workout_exercises WHERE id = ?', [ex.id]);
+      }
+      // ワークアウトを completed に戻す（completed_at は元の値を維持）
+      await WorkoutRepository.update(store.currentWorkout.id, { status: 'completed' });
+      store.reset();
+      return;
+    }
+
+    // 通常モード: ワークアウト全体を削除
     await WorkoutRepository.delete(store.currentWorkout.id);
     store.reset();
   }, [store]);

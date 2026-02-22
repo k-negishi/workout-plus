@@ -3,16 +3,18 @@
  * 通常ページとして種目を選択する（pushナビゲーション）
  * single モード: タップで即選択、multi モード: チェックボックス選択 + 一括追加
  * T039: カスタム種目編集フォーム内蔵
+ * Issue #116: 追加済み種目にバッジ表示 + タップ無効化
  */
 import { type RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { FlatList, SectionList, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ExerciseRepository } from '@/database/repositories/exercise';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { showErrorToast } from '@/shared/components/Toast';
+import { useWorkoutSessionStore } from '@/stores/workoutSessionStore';
 import type { Equipment, Exercise, MuscleGroup, RecordStackParamList } from '@/types';
 
 import { useWorkoutSession } from '../../workout/hooks/useWorkoutSession';
@@ -72,6 +74,130 @@ const MUSCLE_GROUP_OPTIONS: Array<{ key: MuscleGroup; label: string }> = [
   { key: 'abs', label: '腹筋' },
 ];
 
+/**
+ * Issue #116: 種目アクションボタン群コンポーネント
+ * renderItem の complexity 削減のためコンポーネントに分離
+ */
+const ExerciseItemActions: React.FC<{
+  isAdded: boolean;
+  isCustom: boolean;
+  isFavorite: boolean;
+  onStartEdit: () => void;
+  onToggleFavorite: () => void;
+}> = ({ isAdded, isCustom, isFavorite, onStartEdit, onToggleFavorite }) => (
+  <View className="flex-row items-center gap-1">
+    {/* Issue #116: 追加済みバッジ */}
+    {isAdded && (
+      <View className="px-2 py-[3px] rounded-lg bg-[#E6FAF1]">
+        <Text className="text-[11px] font-semibold text-[#10B981]">追加済み</Text>
+      </View>
+    )}
+    {/* T039: カスタム種目の編集ボタン */}
+    {isCustom && (
+      <TouchableOpacity
+        onPress={onStartEdit}
+        className="w-7 h-7 items-center justify-center"
+        hitSlop={4}
+      >
+        <Text className="text-[14px] text-[#64748b] opacity-50">{'✎'}</Text>
+      </TouchableOpacity>
+    )}
+    {/* お気に入りボタン */}
+    <TouchableOpacity
+      onPress={onToggleFavorite}
+      className="w-7 h-7 items-center justify-center"
+      hitSlop={4}
+      accessibilityLabel={isFavorite ? 'お気に入り解除' : 'お気に入りに追加'}
+    >
+      <Text className={`text-[15px] ${isFavorite ? 'text-[#F59E0B]' : 'text-[#64748b] opacity-50'}`}>
+        {isFavorite ? '★' : '☆'}
+      </Text>
+    </TouchableOpacity>
+  </View>
+);
+
+/**
+ * T039: インライン編集フォームコンポーネント
+ * renderItem の complexity 削減のためコンポーネントに分離
+ */
+const InlineEditForm: React.FC<{
+  editName: string;
+  editMuscleGroup: MuscleGroup;
+  editEquipment: Equipment;
+  onNameChange: (text: string) => void;
+  onMuscleGroupChange: (mg: MuscleGroup) => void;
+  onEquipmentChange: (eq: Equipment) => void;
+  onSave: () => void;
+  onCancel: () => void;
+}> = ({
+  editName,
+  editMuscleGroup,
+  editEquipment,
+  onNameChange,
+  onMuscleGroupChange,
+  onEquipmentChange,
+  onSave,
+  onCancel,
+}) => (
+  <View className="px-5 py-3 bg-[#f9fafb] border-b border-[#e2e8f0]">
+    <TextInput
+      className="bg-white border border-[#e2e8f0] rounded-lg px-3 py-2.5 text-[14px] text-[#475569] mb-3"
+      placeholder="種目名"
+      value={editName}
+      onChangeText={onNameChange}
+      autoFocus
+    />
+    <Text className="text-[11px] font-semibold text-[#64748b] tracking-wide mb-1.5">部位</Text>
+    <View className="flex-row flex-wrap gap-1.5 mb-3">
+      {MUSCLE_GROUP_OPTIONS.map((opt) => (
+        <TouchableOpacity
+          key={opt.key}
+          onPress={() => onMuscleGroupChange(opt.key)}
+          className={`px-2.5 py-1 rounded-full border ${
+            editMuscleGroup === opt.key ? 'bg-[#E6F2FF] border-[#4D94FF]' : 'border-[#e2e8f0]'
+          }`}
+        >
+          <Text
+            className={`text-[12px] ${
+              editMuscleGroup === opt.key ? 'text-[#4D94FF] font-semibold' : 'text-[#64748b]'
+            }`}
+          >
+            {opt.label}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+    <Text className="text-[11px] font-semibold text-[#64748b] tracking-wide mb-1.5">器具</Text>
+    <View className="flex-row flex-wrap gap-1.5 mb-3">
+      {EQUIPMENT_OPTIONS.map((opt) => (
+        <TouchableOpacity
+          key={opt.key}
+          onPress={() => onEquipmentChange(opt.key)}
+          className={`px-2.5 py-1 rounded-full border ${
+            editEquipment === opt.key ? 'bg-[#E6F2FF] border-[#4D94FF]' : 'border-[#e2e8f0]'
+          }`}
+        >
+          <Text
+            className={`text-[12px] ${
+              editEquipment === opt.key ? 'text-[#4D94FF] font-semibold' : 'text-[#64748b]'
+            }`}
+          >
+            {opt.label}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+    <View className="flex-row gap-2">
+      <TouchableOpacity onPress={onSave} className="flex-1 py-2.5 bg-[#4D94FF] rounded-lg items-center">
+        <Text className="text-[13px] font-semibold text-white">保存</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={onCancel} className="px-4 py-2.5 items-center">
+        <Text className="text-[13px] text-[#64748b]">キャンセル</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+);
+
 export const ExercisePickerScreen: React.FC = () => {
   const navigation = useNavigation<PickerNavProp>();
   const route = useRoute<PickerRouteProp>();
@@ -79,6 +205,14 @@ export const ExercisePickerScreen: React.FC = () => {
   // SafeArea 対応: ノッチ・ダイナミックアイランド対応
   const insets = useSafeAreaInsets();
   const { query, setQuery, selectedCategory, setSelectedCategory, sections } = useExerciseSearch();
+
+  // Issue #116: 現在のワークアウトに追加済みの exerciseId セットを構築
+  // currentExercises が更新されると再計算される
+  const currentExercises = useWorkoutSessionStore((s) => s.currentExercises);
+  const addedExerciseIds = useMemo(
+    () => new Set(currentExercises.map((e) => e.exerciseId)),
+    [currentExercises],
+  );
 
   // T038: mode パラメータ（デフォルト: single）
   const mode = (route.params as { mode?: 'single' | 'multi' } | undefined)?.mode ?? 'single';
@@ -101,6 +235,9 @@ export const ExercisePickerScreen: React.FC = () => {
   /** single モード: 種目を選択する */
   const handleSelectExercise = useCallback(
     async (exercise: Exercise) => {
+      // Issue #116: 追加済み種目はタップ無効（UI側でも防護）
+      if (addedExerciseIds.has(exercise.id)) return;
+
       if (mode === 'multi') {
         // multi モード: 選択状態をトグル
         setSelectedIds((prev) => {
@@ -141,7 +278,7 @@ export const ExercisePickerScreen: React.FC = () => {
     try {
       const row = await ExerciseRepository.create({
         name: newExerciseName.trim(),
-        muscle_group: newMuscleGroup,
+        muscleGroup: newMuscleGroup,
         equipment: newEquipment,
       });
       if (mode === 'single') {
@@ -274,11 +411,16 @@ export const ExercisePickerScreen: React.FC = () => {
         renderItem={({ item }) => {
           const isSelected = selectedIds.has(item.id);
           const isEditing = editingExerciseId === item.id;
+          // Issue #116: 追加済み判定
+          const isAdded = addedExerciseIds.has(item.id);
 
           return (
             <View>
               <TouchableOpacity
                 onPress={() => handleSelectExercise(item)}
+                // Issue #116: 追加済み種目はタップ無効 + 半透明
+                disabled={isAdded}
+                style={isAdded ? { opacity: 0.5 } : undefined}
                 className={`flex-row items-center px-5 py-3 border-b border-[#e2e8f0] ${
                   isSelected ? 'bg-[#E6F2FF] border-l-[3px] border-l-[#4D94FF]' : 'bg-white'
                 }`}
@@ -311,115 +453,28 @@ export const ExercisePickerScreen: React.FC = () => {
                   </View>
                 </View>
 
-                {/* アクションボタン群 */}
-                <View className="flex-row items-center gap-1">
-                  {/* T039: カスタム種目の編集ボタン */}
-                  {item.isCustom && (
-                    <TouchableOpacity
-                      onPress={() => handleStartEdit(item)}
-                      className="w-7 h-7 items-center justify-center"
-                      hitSlop={4}
-                    >
-                      <Text className="text-[14px] text-[#64748b] opacity-50">{'✎'}</Text>
-                    </TouchableOpacity>
-                  )}
-                  {/* お気に入りボタン */}
-                  <TouchableOpacity
-                    onPress={() => handleToggleFavorite(item.id)}
-                    className="w-7 h-7 items-center justify-center"
-                    hitSlop={4}
-                    accessibilityLabel={item.isFavorite ? 'お気に入り解除' : 'お気に入りに追加'}
-                  >
-                    <Text
-                      className={`text-[15px] ${
-                        item.isFavorite ? 'text-[#F59E0B]' : 'text-[#64748b] opacity-50'
-                      }`}
-                    >
-                      {item.isFavorite ? '★' : '☆'}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
+                {/* アクションボタン群（コンポーネントに分離して complexity を削減） */}
+                <ExerciseItemActions
+                  isAdded={isAdded}
+                  isCustom={item.isCustom}
+                  isFavorite={item.isFavorite}
+                  onStartEdit={() => handleStartEdit(item)}
+                  onToggleFavorite={() => handleToggleFavorite(item.id)}
+                />
               </TouchableOpacity>
 
-              {/* T039: インライン編集フォーム */}
+              {/* T039: インライン編集フォーム（コンポーネントに分離して complexity を削減） */}
               {isEditing && (
-                <View className="px-5 py-3 bg-[#f9fafb] border-b border-[#e2e8f0]">
-                  <TextInput
-                    className="bg-white border border-[#e2e8f0] rounded-lg px-3 py-2.5 text-[14px] text-[#475569] mb-3"
-                    placeholder="種目名"
-                    value={editName}
-                    onChangeText={setEditName}
-                    autoFocus
-                  />
-                  {/* 部位選択チップ */}
-                  <Text className="text-[11px] font-semibold text-[#64748b] tracking-wide mb-1.5">
-                    部位
-                  </Text>
-                  <View className="flex-row flex-wrap gap-1.5 mb-3">
-                    {MUSCLE_GROUP_OPTIONS.map((opt) => (
-                      <TouchableOpacity
-                        key={opt.key}
-                        onPress={() => setEditMuscleGroup(opt.key)}
-                        className={`px-2.5 py-1 rounded-full border ${
-                          editMuscleGroup === opt.key
-                            ? 'bg-[#E6F2FF] border-[#4D94FF]'
-                            : 'border-[#e2e8f0]'
-                        }`}
-                      >
-                        <Text
-                          className={`text-[12px] ${
-                            editMuscleGroup === opt.key
-                              ? 'text-[#4D94FF] font-semibold'
-                              : 'text-[#64748b]'
-                          }`}
-                        >
-                          {opt.label}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                  {/* 器具選択チップ */}
-                  <Text className="text-[11px] font-semibold text-[#64748b] tracking-wide mb-1.5">
-                    器具
-                  </Text>
-                  <View className="flex-row flex-wrap gap-1.5 mb-3">
-                    {EQUIPMENT_OPTIONS.map((opt) => (
-                      <TouchableOpacity
-                        key={opt.key}
-                        onPress={() => setEditEquipment(opt.key)}
-                        className={`px-2.5 py-1 rounded-full border ${
-                          editEquipment === opt.key
-                            ? 'bg-[#E6F2FF] border-[#4D94FF]'
-                            : 'border-[#e2e8f0]'
-                        }`}
-                      >
-                        <Text
-                          className={`text-[12px] ${
-                            editEquipment === opt.key
-                              ? 'text-[#4D94FF] font-semibold'
-                              : 'text-[#64748b]'
-                          }`}
-                        >
-                          {opt.label}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                  <View className="flex-row gap-2">
-                    <TouchableOpacity
-                      onPress={handleSaveEdit}
-                      className="flex-1 py-2.5 bg-[#4D94FF] rounded-lg items-center"
-                    >
-                      <Text className="text-[13px] font-semibold text-white">保存</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={() => setEditingExerciseId(null)}
-                      className="px-4 py-2.5 items-center"
-                    >
-                      <Text className="text-[13px] text-[#64748b]">キャンセル</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
+                <InlineEditForm
+                  editName={editName}
+                  editMuscleGroup={editMuscleGroup}
+                  editEquipment={editEquipment}
+                  onNameChange={setEditName}
+                  onMuscleGroupChange={setEditMuscleGroup}
+                  onEquipmentChange={setEditEquipment}
+                  onSave={handleSaveEdit}
+                  onCancel={() => setEditingExerciseId(null)}
+                />
               )}
             </View>
           );

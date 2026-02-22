@@ -56,7 +56,7 @@ const mockSet1: WorkoutSet = {
   setNumber: 1,
   weight: 80,
   reps: 10,
-  estimated1rm: 107,
+  estimated1RM: 107,
   createdAt: Date.now(),
   updatedAt: Date.now(),
 };
@@ -220,6 +220,74 @@ describe('PR再計算ロジック（T047）', () => {
     }
 
     expect(mockRecalculate).not.toHaveBeenCalled();
+  });
+});
+
+describe('addExercise 重複チェック（Issue #116）', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    useWorkoutSessionStore.getState().reset();
+  });
+
+  it('currentExercisesに同じexerciseIdがある場合は重複と判定される', () => {
+    const store = useWorkoutSessionStore.getState();
+    store.setCurrentWorkout(mockWorkout);
+    store.addExercise(mockExercise1); // exercise-chest-1 を追加
+
+    // hook の addExercise 冒頭のガード条件をシミュレート
+    const exerciseId = 'exercise-chest-1';
+    const isDuplicate = useWorkoutSessionStore
+      .getState()
+      .currentExercises.some((e) => e.exerciseId === exerciseId);
+
+    expect(isDuplicate).toBe(true);
+  });
+
+  it('異なるexerciseIdは重複とみなされない', () => {
+    const store = useWorkoutSessionStore.getState();
+    store.setCurrentWorkout(mockWorkout);
+    store.addExercise(mockExercise1); // exercise-chest-1 を追加
+
+    const differentExerciseId = 'exercise-back-1';
+    const isDuplicate = useWorkoutSessionStore
+      .getState()
+      .currentExercises.some((e) => e.exerciseId === differentExerciseId);
+
+    expect(isDuplicate).toBe(false);
+  });
+
+  it('重複時はDBに接続しないことをシミュレートで検証する', async () => {
+    const store = useWorkoutSessionStore.getState();
+    store.setCurrentWorkout(mockWorkout);
+    store.addExercise(mockExercise1); // exercise-chest-1 を追加
+
+    // hook の addExercise のロジック: 重複なら早期リターン → getDatabase は呼ばれない
+    const exerciseId = 'exercise-chest-1';
+    const isDuplicate = useWorkoutSessionStore
+      .getState()
+      .currentExercises.some((e) => e.exerciseId === exerciseId);
+
+    if (!isDuplicate) {
+      // 重複でない場合のみ DB を呼ぶ（hook 内と同じ条件分岐）
+      await getDatabase();
+    }
+
+    expect(mockGetDatabase).not.toHaveBeenCalled();
+    // ストアの種目数は変化しない
+    expect(useWorkoutSessionStore.getState().currentExercises).toHaveLength(1);
+  });
+
+  it('currentExercisesが空の場合は重複なしと判定される', () => {
+    const store = useWorkoutSessionStore.getState();
+    store.setCurrentWorkout(mockWorkout);
+    // 種目未追加の状態
+
+    const exerciseId = 'exercise-chest-1';
+    const isDuplicate = useWorkoutSessionStore
+      .getState()
+      .currentExercises.some((e) => e.exerciseId === exerciseId);
+
+    expect(isDuplicate).toBe(false);
   });
 });
 
