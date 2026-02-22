@@ -68,17 +68,17 @@ async function migrateV2ToV3(db: SQLiteDatabase): Promise<void> {
 
   // workouts テーブルのタイムスタンプを更新（古い seed データのみ対象）
   await db.execAsync(
-    `UPDATE workouts SET created_at = ${NEW_CREATED_AT}, completed_at = ${NEW_COMPLETED_AT} WHERE completed_at = ${OLD_COMPLETED_AT}`
+    `UPDATE workouts SET created_at = ${NEW_CREATED_AT}, completed_at = ${NEW_COMPLETED_AT} WHERE completed_at = ${OLD_COMPLETED_AT}`,
   );
 
   // workout_exercises テーブルのタイムスタンプを更新
   await db.execAsync(
-    `UPDATE workout_exercises SET created_at = ${NEW_CREATED_AT} WHERE created_at = ${OLD_CREATED_AT}`
+    `UPDATE workout_exercises SET created_at = ${NEW_CREATED_AT} WHERE created_at = ${OLD_CREATED_AT}`,
   );
 
   // sets テーブルのタイムスタンプを更新（seed で挿入したセット行のみ）
   await db.execAsync(
-    `UPDATE sets SET created_at = ${NEW_CREATED_AT}, updated_at = ${NEW_CREATED_AT} WHERE created_at = ${OLD_CREATED_AT}`
+    `UPDATE sets SET created_at = ${NEW_CREATED_AT}, updated_at = ${NEW_CREATED_AT} WHERE created_at = ${OLD_CREATED_AT}`,
   );
 }
 

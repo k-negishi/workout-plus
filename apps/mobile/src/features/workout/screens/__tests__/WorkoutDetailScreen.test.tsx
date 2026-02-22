@@ -217,9 +217,7 @@ describe('WorkoutDetailScreen', () => {
       // データ読み込み完了を待つ
       const header = await waitFor(() => getByTestId('workout-detail-header'));
       // style prop に paddingTop が設定されている
-      expect(header.props.style).toEqual(
-        expect.objectContaining({ paddingTop: 44 + 16 }),
-      );
+      expect(header.props.style).toEqual(expect.objectContaining({ paddingTop: 44 + 16 }));
     });
   });
 

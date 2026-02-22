@@ -66,13 +66,15 @@ jest.mock('../../hooks/useExerciseHistory', () => ({
       totalSessions: 10,
       totalVolume: 30000,
       lastPRDate: 1700000000000,
-      totalSets: 50,        // 追加 (#113)
+      totalSets: 50, // 追加 (#113)
       maxEstimated1RM: 116, // 追加 (#114)
     },
     weeklyData: [],
     prHistory: [],
     allHistory: [],
-    get loading() { return mockLoading; },
+    get loading() {
+      return mockLoading;
+    },
   }),
 }));
 

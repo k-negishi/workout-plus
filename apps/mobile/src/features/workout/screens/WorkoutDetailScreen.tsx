@@ -180,7 +180,14 @@ export const WorkoutDetailScreen: React.FC = () => {
 
   if (!workout) {
     return (
-      <View style={{ flex: 1, backgroundColor: '#f9fafb', alignItems: 'center', justifyContent: 'center' }}>
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: '#f9fafb',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
         <Text style={{ fontSize: 14, color: '#64748b' }}>読み込み中...</Text>
       </View>
     );
@@ -209,18 +216,29 @@ export const WorkoutDetailScreen: React.FC = () => {
           paddingTop: insets.top + 16,
         }}
       >
-        <TouchableOpacity onPress={handleBack} style={{ width: 24, height: 24, alignItems: 'center', justifyContent: 'center' }}>
+        <TouchableOpacity
+          onPress={handleBack}
+          style={{ width: 24, height: 24, alignItems: 'center', justifyContent: 'center' }}
+        >
           <Text style={{ fontSize: 18, color: '#475569' }}>{'←'}</Text>
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 18, fontWeight: '600', color: '#334155' }}>ワークアウト詳細</Text>
+          <Text style={{ fontSize: 18, fontWeight: '600', color: '#334155' }}>
+            ワークアウト詳細
+          </Text>
           <Text style={{ fontSize: 13, color: '#64748b', marginTop: 4 }}>
             {formatDateTime(workout.createdAt)}
           </Text>
         </View>
         <TouchableOpacity
           onPress={handleEdit}
-          style={{ paddingHorizontal: 14, paddingVertical: 6, borderWidth: 1, borderColor: '#4D94FF', borderRadius: 8 }}
+          style={{
+            paddingHorizontal: 14,
+            paddingVertical: 6,
+            borderWidth: 1,
+            borderColor: '#4D94FF',
+            borderRadius: 8,
+          }}
         >
           <Text style={{ fontSize: 13, fontWeight: '600', color: '#4D94FF' }}>編集</Text>
         </TouchableOpacity>
@@ -228,7 +246,19 @@ export const WorkoutDetailScreen: React.FC = () => {
 
       <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 40 }}>
         {/* サマリーカード */}
-        <View style={{ marginHorizontal: 16, marginTop: 8, padding: 16, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, flexDirection: 'row', alignItems: 'center' }}>
+        <View
+          style={{
+            marginHorizontal: 16,
+            marginTop: 8,
+            padding: 16,
+            backgroundColor: '#FFFFFF',
+            borderWidth: 1,
+            borderColor: '#e2e8f0',
+            borderRadius: 8,
+            flexDirection: 'row',
+            alignItems: 'center',
+          }}
+        >
           <View style={{ flex: 1, alignItems: 'center', gap: 4 }}>
             <Text style={{ fontSize: 12, color: '#64748b' }}>所要時間</Text>
             <Text style={{ fontSize: 16, fontWeight: '600', color: '#334155' }}>
@@ -255,7 +285,14 @@ export const WorkoutDetailScreen: React.FC = () => {
           {exerciseBlocks.map((block) => (
             <View
               key={block.workoutExercise.id}
-              style={{ backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, padding: 16, marginBottom: 12 }}
+              style={{
+                backgroundColor: '#FFFFFF',
+                borderWidth: 1,
+                borderColor: '#e2e8f0',
+                borderRadius: 8,
+                padding: 16,
+                marginBottom: 12,
+              }}
             >
               {/* 種目名（タップで種目別履歴へ遷移） */}
               <Pressable
@@ -269,7 +306,9 @@ export const WorkoutDetailScreen: React.FC = () => {
                   }
                 }}
               >
-                <Text style={{ fontSize: 16, fontWeight: '600', color: '#4D94FF', marginBottom: 12 }}>
+                <Text
+                  style={{ fontSize: 16, fontWeight: '600', color: '#4D94FF', marginBottom: 12 }}
+                >
                   {block.exercise?.name ?? '不明な種目'}
                 </Text>
               </Pressable>
@@ -279,12 +318,22 @@ export const WorkoutDetailScreen: React.FC = () => {
                 {block.sets.map((set) => (
                   <View
                     key={set.id}
-                    style={{ flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, backgroundColor: '#F0FDF4' }}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 12,
+                      paddingHorizontal: 12,
+                      paddingVertical: 8,
+                      borderRadius: 8,
+                      backgroundColor: '#F0FDF4',
+                    }}
                   >
                     {/* チェックアイコン */}
                     <Text style={{ fontSize: 14, color: '#10B981' }}>{'✓'}</Text>
                     {/* セット番号 */}
-                    <Text style={{ fontSize: 14, color: '#64748b', width: 16 }}>{set.setNumber}</Text>
+                    <Text style={{ fontSize: 14, color: '#64748b', width: 16 }}>
+                      {set.setNumber}
+                    </Text>
                     {/* 値 */}
                     <Text style={{ fontSize: 15, fontWeight: '600', color: '#334155', flex: 1 }}>
                       {set.weight ?? '-'}kg x {set.reps ?? '-'}
@@ -312,7 +361,9 @@ export const WorkoutDetailScreen: React.FC = () => {
         {/* ワークアウトメモ */}
         {workout.memo && (
           <View style={{ paddingHorizontal: 16, paddingBottom: 16 }}>
-            <Text style={{ fontSize: 12, fontWeight: '600', color: '#64748b', marginBottom: 4 }}>メモ</Text>
+            <Text style={{ fontSize: 12, fontWeight: '600', color: '#64748b', marginBottom: 4 }}>
+              メモ
+            </Text>
             <Text style={{ fontSize: 14, color: '#475569' }}>{workout.memo}</Text>
           </View>
         )}

@@ -224,7 +224,7 @@ describe('useExerciseHistory ロジック', () => {
         totalVolume: 0,
         averageWeight: 0,
         lastPRDate: null,
-        totalSets: 0,       // 追加
+        totalSets: 0, // 追加
         maxEstimated1RM: 0, // 追加
       });
     });
@@ -276,9 +276,30 @@ describe('useExerciseHistory ロジック', () => {
   describe('calculateStats - totalSets', () => {
     it('全セット数を正しくカウントする（nullも含む）', () => {
       const sets: SetWithWorkout[] = [
-        { weight: 60, reps: 10, set_number: 1, workout_id: 'w1', completed_at: 1000000, workout_exercise_id: 'we1' },
-        { weight: null, reps: 8, set_number: 2, workout_id: 'w1', completed_at: 1000000, workout_exercise_id: 'we1' },
-        { weight: 70, reps: null, set_number: 3, workout_id: 'w1', completed_at: 1000000, workout_exercise_id: 'we1' },
+        {
+          weight: 60,
+          reps: 10,
+          set_number: 1,
+          workout_id: 'w1',
+          completed_at: 1000000,
+          workout_exercise_id: 'we1',
+        },
+        {
+          weight: null,
+          reps: 8,
+          set_number: 2,
+          workout_id: 'w1',
+          completed_at: 1000000,
+          workout_exercise_id: 'we1',
+        },
+        {
+          weight: 70,
+          reps: null,
+          set_number: 3,
+          workout_id: 'w1',
+          completed_at: 1000000,
+          workout_exercise_id: 'we1',
+        },
       ];
       const stats = calculateStats(sets, []);
       // weight/reps が null でもセット数としてカウントされる
@@ -295,8 +316,22 @@ describe('useExerciseHistory ロジック', () => {
     it('Epley式で最高推定1RMを計算する', () => {
       // 80kg × (1 + 10/30) ≈ 106.67 vs 100kg × (1 + 5/30) ≈ 116.67 → max は 116.67
       const sets: SetWithWorkout[] = [
-        { weight: 80, reps: 10, set_number: 1, workout_id: 'w1', completed_at: 1000000, workout_exercise_id: 'we1' },
-        { weight: 100, reps: 5, set_number: 2, workout_id: 'w1', completed_at: 1000000, workout_exercise_id: 'we1' },
+        {
+          weight: 80,
+          reps: 10,
+          set_number: 1,
+          workout_id: 'w1',
+          completed_at: 1000000,
+          workout_exercise_id: 'we1',
+        },
+        {
+          weight: 100,
+          reps: 5,
+          set_number: 2,
+          workout_id: 'w1',
+          completed_at: 1000000,
+          workout_exercise_id: 'we1',
+        },
       ];
       const stats = calculateStats(sets, []);
       // 100 × (1 + 5/30) ≈ 116.67 が最大
@@ -305,8 +340,22 @@ describe('useExerciseHistory ロジック', () => {
 
     it('weight/repsがnullのセットは除外される', () => {
       const sets: SetWithWorkout[] = [
-        { weight: null, reps: 10, set_number: 1, workout_id: 'w1', completed_at: 1000000, workout_exercise_id: 'we1' },
-        { weight: 50, reps: null, set_number: 2, workout_id: 'w1', completed_at: 1000000, workout_exercise_id: 'we1' },
+        {
+          weight: null,
+          reps: 10,
+          set_number: 1,
+          workout_id: 'w1',
+          completed_at: 1000000,
+          workout_exercise_id: 'we1',
+        },
+        {
+          weight: 50,
+          reps: null,
+          set_number: 2,
+          workout_id: 'w1',
+          completed_at: 1000000,
+          workout_exercise_id: 'we1',
+        },
       ];
       const stats = calculateStats(sets, []);
       // 有効なデータがないため 0
@@ -315,7 +364,14 @@ describe('useExerciseHistory ロジック', () => {
 
     it('reps=1のときweight自体が最高RM', () => {
       const sets: SetWithWorkout[] = [
-        { weight: 120, reps: 1, set_number: 1, workout_id: 'w1', completed_at: 1000000, workout_exercise_id: 'we1' },
+        {
+          weight: 120,
+          reps: 1,
+          set_number: 1,
+          workout_id: 'w1',
+          completed_at: 1000000,
+          workout_exercise_id: 'we1',
+        },
       ];
       const stats = calculateStats(sets, []);
       // Epley式: reps=1 のとき weight * (1 + 1/30) ≈ 124 だが、

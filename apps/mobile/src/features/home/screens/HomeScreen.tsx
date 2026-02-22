@@ -262,9 +262,7 @@ export function HomeScreen() {
               marginBottom: 16,
             }}
           >
-            <Text style={{ fontSize: 20, fontWeight: '700', color: colors.primary }}>
-              Workout+
-            </Text>
+            <Text style={{ fontSize: 20, fontWeight: '700', color: colors.primary }}>Workout+</Text>
             {/* 設定ボタン: タップ時アクションは将来対応 */}
             <TouchableOpacity
               testID="settings-button"

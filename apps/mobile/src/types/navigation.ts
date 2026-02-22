@@ -66,7 +66,10 @@ export type WorkoutSummaryScreenProps = NativeStackScreenProps<
   RecordStackParamList,
   'WorkoutSummary'
 >;
-export type HomeExerciseHistoryScreenProps = NativeStackScreenProps<HomeStackParamList, 'ExerciseHistory'>;
+export type HomeExerciseHistoryScreenProps = NativeStackScreenProps<
+  HomeStackParamList,
+  'ExerciseHistory'
+>;
 export type CalendarExerciseHistoryScreenProps = NativeStackScreenProps<
   CalendarStackParamList,
   'ExerciseHistory'

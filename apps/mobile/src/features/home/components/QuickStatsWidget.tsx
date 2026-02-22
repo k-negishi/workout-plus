@@ -11,7 +11,14 @@ import { colors } from '@/shared/constants/colors';
 /** ターゲットアイコン（今月のワークアウト） */
 function TargetIcon() {
   return (
-    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={colors.primary} strokeWidth={2}>
+    <Svg
+      width={16}
+      height={16}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={colors.primary}
+      strokeWidth={2}
+    >
       <Circle cx={12} cy={12} r={10} />
       <Circle cx={12} cy={12} r={6} />
       <Circle cx={12} cy={12} r={2} />
@@ -22,7 +29,14 @@ function TargetIcon() {
 /** カレンダーアイコン（今週の回数） */
 function CalendarIcon() {
   return (
-    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={colors.primary} strokeWidth={2}>
+    <Svg
+      width={16}
+      height={16}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={colors.primary}
+      strokeWidth={2}
+    >
       <Path d="M3 6a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6z" />
       <Line x1={16} y1={2} x2={16} y2={6} />
       <Line x1={8} y1={2} x2={8} y2={6} />
@@ -34,7 +48,14 @@ function CalendarIcon() {
 /** トロフィーアイコン（最長ストリーク） */
 function TrophyIcon() {
   return (
-    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={colors.primary} strokeWidth={2}>
+    <Svg
+      width={16}
+      height={16}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={colors.primary}
+      strokeWidth={2}
+    >
       <Path
         d="M6 9H4a2 2 0 01-2-2V5a2 2 0 012-2h2M18 9h2a2 2 0 002-2V5a2 2 0 00-2-2h-2M6 3h12v6a6 6 0 11-12 0V3zM9 21h6M12 15v6"
         strokeLinecap="round"
@@ -47,7 +68,14 @@ function TrophyIcon() {
 /** チャートアイコン（月間総ボリューム） */
 function ChartIcon() {
   return (
-    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke={colors.primary} strokeWidth={2}>
+    <Svg
+      width={16}
+      height={16}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={colors.primary}
+      strokeWidth={2}
+    >
       <Polyline
         points="22 12 18 12 15 21 9 3 6 12 2 12"
         strokeLinecap="round"
@@ -100,11 +128,27 @@ function WidgetCard({
 }) {
   // flex: 1 で同一行の兄弟カードと高さを揃える
   return (
-    <View style={{ flex: 1, backgroundColor: colors.white, borderRadius: 8, padding: 16, borderWidth: 1, borderColor: colors.border }}>
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: colors.white,
+        borderRadius: 8,
+        padding: 16,
+        borderWidth: 1,
+        borderColor: colors.border,
+      }}
+    >
       {/* ヘッダー: アイコン + タイトル */}
       <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12, gap: 8 }}>
         <View
-          style={{ width: 32, height: 32, borderRadius: 6, alignItems: 'center', justifyContent: 'center', backgroundColor: iconBg }}
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 6,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: iconBg,
+          }}
         >
           {icon}
         </View>
@@ -117,7 +161,9 @@ function WidgetCard({
       </Text>
 
       {/* サブタイトル */}
-      {subtitle ? <Text style={{ fontSize: 12, color: colors.textSecondary }}>{subtitle}</Text> : null}
+      {subtitle ? (
+        <Text style={{ fontSize: 12, color: colors.textSecondary }}>{subtitle}</Text>
+      ) : null}
     </View>
   );
 }

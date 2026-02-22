@@ -32,10 +32,7 @@ export function WeeklyGoalsWidget({
   targetWorkouts = 3,
 }: WeeklyGoalsWidgetProps) {
   // 達成率: 0〜100%
-  const achievementRate = Math.min(
-    Math.round((thisWeekWorkouts / targetWorkouts) * 100),
-    100,
-  );
+  const achievementRate = Math.min(Math.round((thisWeekWorkouts / targetWorkouts) * 100), 100);
 
   // 前週比
   const workoutDiff = thisWeekWorkouts - lastWeekWorkouts;

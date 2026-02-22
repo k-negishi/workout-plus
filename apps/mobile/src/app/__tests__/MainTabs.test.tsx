@@ -61,7 +61,7 @@ describe('MainTabs', () => {
     render(
       <NavigationContainer>
         <MainTabs />
-      </NavigationContainer>
+      </NavigationContainer>,
     );
 
   it('AI タブラベルが表示される', () => {

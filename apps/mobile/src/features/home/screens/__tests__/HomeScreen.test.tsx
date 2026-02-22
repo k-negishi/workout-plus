@@ -56,7 +56,10 @@ jest.mock('@expo/vector-icons', () => {
   const RN = require('react');
   const mockIcon = (name: string) => {
     const C = (props: Record<string, unknown>) =>
-      RN.createElement(name, { testID: props['testID'], accessibilityLabel: props['accessibilityLabel'] });
+      RN.createElement(name, {
+        testID: props['testID'],
+        accessibilityLabel: props['accessibilityLabel'],
+      });
     C.displayName = name;
     return C;
   };

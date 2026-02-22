@@ -114,9 +114,7 @@ export const TimerBar: React.FC<TimerBarProps> = ({
         }}
         accessibilityLabel={timerStatus === 'running' ? '一時停止' : '開始'}
       >
-        <Text
-          style={{ fontSize: 10, color: playButtonStyle.textColor, lineHeight: 10 }}
-        >
+        <Text style={{ fontSize: 10, color: playButtonStyle.textColor, lineHeight: 10 }}>
           {toggleLabel}
         </Text>
       </TouchableOpacity>

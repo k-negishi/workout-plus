@@ -22,7 +22,14 @@ import { useExerciseHistory } from '../hooks/useExerciseHistory';
 /** 戻るアイコン */
 function BackArrow() {
   return (
-    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke={colors.textPrimary} strokeWidth={2}>
+    <Svg
+      width={20}
+      height={20}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={colors.textPrimary}
+      strokeWidth={2}
+    >
       <Path d="M19 12H5M12 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
     </Svg>
   );
@@ -111,7 +118,11 @@ export function ExerciseHistoryFullScreen() {
       {/* フルスクリーンヘッダー */}
       <View
         className="flex-row items-center justify-between px-4 pb-3 bg-white"
-        style={{ paddingTop: insets.top + 12, borderBottomWidth: 1, borderBottomColor: colors.border }}
+        style={{
+          paddingTop: insets.top + 12,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+        }}
       >
         <Pressable onPress={() => navigation.goBack()} className="py-1">
           <View className="flex-row items-center" style={{ gap: 4 }}>
@@ -141,11 +152,7 @@ export function ExerciseHistoryFullScreen() {
             <StatCard label="総ボリューム" value={formatVolume(stats.totalVolume)} />
             {/* 「最終PR」→「最高RM」に変更: Epley式による推定1RMを表示 (#114) */}
             {stats.maxEstimated1RM > 0 ? (
-              <StatCard
-                label="最高RM"
-                value={`${Math.round(stats.maxEstimated1RM)}`}
-                unit="kg"
-              />
+              <StatCard label="最高RM" value={`${Math.round(stats.maxEstimated1RM)}`} unit="kg" />
             ) : (
               <StatCard label="最高RM" value="-" />
             )}
