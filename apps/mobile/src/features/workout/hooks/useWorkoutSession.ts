@@ -352,9 +352,7 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
       // デフォルト3セットを並行作成（Issue #119: デフォルト3セット表示対応）
       // SetRepository.create() は WorkoutSet（camelCase）を返す
       const initialSets = await Promise.all(
-        [1, 2, 3].map((setNumber) =>
-          SetRepository.create({ workoutExerciseId: id, setNumber }),
-        ),
+        [1, 2, 3].map((setNumber) => SetRepository.create({ workoutExerciseId: id, setNumber })),
       );
       store.setSetsForExercise(id, initialSets);
     },

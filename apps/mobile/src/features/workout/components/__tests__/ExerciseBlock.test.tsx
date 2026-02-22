@@ -147,7 +147,9 @@ describe('ExerciseBlock', () => {
 
     it('コピーボタンタップで onCopyAllPrevious が1回呼ばれる', () => {
       const mockOnCopyAllPrevious = jest.fn();
-      render(<ExerciseBlock {...createDefaultProps({ onCopyAllPrevious: mockOnCopyAllPrevious })} />);
+      render(
+        <ExerciseBlock {...createDefaultProps({ onCopyAllPrevious: mockOnCopyAllPrevious })} />,
+      );
 
       fireEvent.press(screen.getByLabelText(COPY_ALL_LABEL));
 

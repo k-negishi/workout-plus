@@ -52,12 +52,9 @@ export function CalendarScreen() {
   }, [fetchTrainingDates]);
 
   // 日付タップ: ローカル状態のみ更新（T07: store.calendarSelectedDate は FloatingRecordButton 廃止により不要）
-  const handleDayPress = useCallback(
-    (dateString: string) => {
-      setSelectedDate(dateString);
-    },
-    [],
-  );
+  const handleDayPress = useCallback((dateString: string) => {
+    setSelectedDate(dateString);
+  }, []);
 
   // ワークアウト詳細への遷移
   const handleNavigateToDetail = useCallback(

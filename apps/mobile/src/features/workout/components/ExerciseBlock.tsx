@@ -86,7 +86,14 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
     // カード外枠: 白背景・細ボーダー・角丸・内側パディング・下マージン
     <View className="bg-white border border-[#e2e8f0] rounded-lg p-4 mb-3">
       {/* 種目ヘッダー */}
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          marginBottom: 12,
+        }}
+      >
         <TouchableOpacity onPress={() => onExerciseNamePress(exercise.id)}>
           {/* 種目名: 16px / #334155（ダークグレー）/ semibold */}
           <Text style={{ fontSize: 16, fontWeight: '600', color: '#334155' }}>{exercise.name}</Text>
@@ -128,21 +135,53 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
       {/* カラムヘッダー行: Set / kg / (x スペーサー) / 回 / 1RM / (削除スペーサー) */}
       <View style={{ flexDirection: 'row', gap: 8, paddingLeft: 8, paddingBottom: 8 }}>
         {/* Set: セット番号列幅 32px */}
-        <Text style={{ width: 32, fontSize: 11, fontWeight: '600', color: '#64748b', textAlign: 'left' }}>
+        <Text
+          style={{
+            width: 32,
+            fontSize: 11,
+            fontWeight: '600',
+            color: '#64748b',
+            textAlign: 'left',
+          }}
+        >
           Set
         </Text>
         {/* kg: flex-1 で重量入力列に合わせる */}
-        <Text style={{ flex: 1, fontSize: 11, fontWeight: '600', color: '#64748b', textAlign: 'center' }}>
+        <Text
+          style={{
+            flex: 1,
+            fontSize: 11,
+            fontWeight: '600',
+            color: '#64748b',
+            textAlign: 'center',
+          }}
+        >
           kg
         </Text>
         {/* ×記号のスペーサー: SetRow の区切り文字列幅に合わせて 16px */}
         <View style={{ width: 16 }} />
         {/* 回: flex-1 でレップ数入力列に合わせる */}
-        <Text style={{ flex: 1, fontSize: 11, fontWeight: '600', color: '#64748b', textAlign: 'center' }}>
+        <Text
+          style={{
+            flex: 1,
+            fontSize: 11,
+            fontWeight: '600',
+            color: '#64748b',
+            textAlign: 'center',
+          }}
+        >
           回
         </Text>
         {/* 1RM: 推定1RM表示列幅 48px */}
-        <Text style={{ width: 48, fontSize: 11, fontWeight: '600', color: '#64748b', textAlign: 'center' }}>
+        <Text
+          style={{
+            width: 48,
+            fontSize: 11,
+            fontWeight: '600',
+            color: '#64748b',
+            textAlign: 'center',
+          }}
+        >
           1RM
         </Text>
         {/* 削除ボタン列のスペーサー: SetRow の削除ボタン幅 20px に合わせる */}

@@ -82,8 +82,7 @@ jest.mock('@/features/workout/screens/WorkoutDetailScreen', () => {
           TouchableOpacity,
           {
             testID: 'edit-button',
-            onPress: () =>
-              navigation.navigate('Record', { workoutId: route.params.workoutId }),
+            onPress: () => navigation.navigate('Record', { workoutId: route.params.workoutId }),
           },
           React.createElement(Text, null, '編集'),
         ),

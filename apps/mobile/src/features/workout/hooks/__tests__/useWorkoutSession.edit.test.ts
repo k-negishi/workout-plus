@@ -453,9 +453,7 @@ describe('addExercise デフォルト3セット作成（Issue #119）', () => {
 
     // デフォルト3セットを並行作成
     const initialSets = await Promise.all(
-      [1, 2, 3].map((setNumber) =>
-        SetRepository.create({ workoutExerciseId, setNumber }),
-      ),
+      [1, 2, 3].map((setNumber) => SetRepository.create({ workoutExerciseId, setNumber })),
     );
     store.setSetsForExercise(workoutExerciseId, initialSets);
 

@@ -40,12 +40,7 @@ export type SetRowProps = {
   onDelete: (setId: string) => void;
 };
 
-export const SetRow: React.FC<SetRowProps> = ({
-  set,
-  onWeightChange,
-  onRepsChange,
-  onDelete,
-}) => {
+export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChange, onDelete }) => {
   /** 重量テキスト変更ハンドラー：文字列 → number | null に変換して親へ渡す */
   const handleWeightChangeText = useCallback(
     (text: string) => {

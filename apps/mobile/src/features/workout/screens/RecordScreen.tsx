@@ -10,7 +10,10 @@
  * - completeWorkout 後は navigate('WorkoutSummary') で遷移
  */
 import { useNavigation, useRoute } from '@react-navigation/native';
-import type { NativeStackNavigationProp, NativeStackScreenProps } from '@react-navigation/native-stack';
+import type {
+  NativeStackNavigationProp,
+  NativeStackScreenProps,
+} from '@react-navigation/native-stack';
 import { format, parseISO } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -338,9 +341,7 @@ export const RecordScreen: React.FC = () => {
           borderBottomColor: '#e2e8f0',
         }}
       >
-        <Text style={{ fontSize: 13, fontWeight: '500', color: '#475569' }}>
-          {headerDateLabel}
-        </Text>
+        <Text style={{ fontSize: 13, fontWeight: '500', color: '#475569' }}>{headerDateLabel}</Text>
       </View>
 
       {/* タイマーバー（上部固定） */}
