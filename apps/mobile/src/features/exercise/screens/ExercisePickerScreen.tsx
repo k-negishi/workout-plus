@@ -1,6 +1,6 @@
 /**
  * T038: 種目選択画面（ExercisePickerScreen）
- * フルスクリーンモーダルで種目を選択する
+ * 通常ページとして種目を選択する（pushナビゲーション）
  * single モード: タップで即選択、multi モード: チェックボックス選択 + 一括追加
  * T039: カスタム種目編集フォーム内蔵
  */
@@ -8,6 +8,7 @@ import { type RouteProp, useNavigation, useRoute } from '@react-navigation/nativ
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useState } from 'react';
 import { FlatList, SectionList, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ExerciseRepository } from '@/database/repositories/exercise';
 import { EmptyState } from '@/shared/components/EmptyState';
@@ -75,6 +76,8 @@ export const ExercisePickerScreen: React.FC = () => {
   const navigation = useNavigation<PickerNavProp>();
   const route = useRoute<PickerRouteProp>();
   const session = useWorkoutSession();
+  // SafeArea 対応: ノッチ・ダイナミックアイランド対応
+  const insets = useSafeAreaInsets();
   const { query, setQuery, selectedCategory, setSelectedCategory, sections } = useExerciseSearch();
 
   // T038: mode パラメータ（デフォルト: single）
@@ -189,10 +192,13 @@ export const ExercisePickerScreen: React.FC = () => {
 
   return (
     <View className="flex-1 bg-white">
-      {/* モーダルヘッダー */}
-      <View className="flex-row items-center px-4 py-3 border-b border-[#e2e8f0]">
+      {/* ページヘッダー（通常pushナビゲーション） */}
+      <View
+        className="flex-row items-center px-4 pb-3 border-b border-[#e2e8f0]"
+        style={{ paddingTop: insets.top + 12 }}
+      >
         <TouchableOpacity onPress={handleClose} className="w-8 h-8 items-center justify-center">
-          <Text className="text-[20px] text-[#475569]">{'\u00D7'}</Text>
+          <Text className="text-[22px] text-[#475569]">{'‹'}</Text>
         </TouchableOpacity>
         <Text className="flex-1 text-center text-[16px] font-bold text-[#334155]">種目を選択</Text>
         {/* T038: モード切替トグル（ヘッダー右） */}

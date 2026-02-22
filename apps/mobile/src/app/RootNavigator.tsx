@@ -3,9 +3,9 @@
  * メインタブ + モーダルスタック（記録フロー、破棄確認）
  *
  * 構造:
- * RootNavigator (Stack - modal mode)
+ * RootNavigator (Stack)
  * ├── MainTabs
- * ├── RecordStack (fullScreenModal)
+ * ├── RecordStack (通常push遷移)
  * └── DiscardDialog (transparentModal)
  */
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -28,14 +28,8 @@ export function RootNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="MainTabs" component={MainTabs} />
-      <Stack.Screen
-        name="RecordStack"
-        component={RecordStack}
-        options={{
-          presentation: 'fullScreenModal',
-          animation: 'slide_from_bottom',
-        }}
-      />
+      {/* 記録フロー: モーダルではなく通常のpush遷移（右からスライド） */}
+      <Stack.Screen name="RecordStack" component={RecordStack} />
       <Stack.Screen
         name="DiscardDialog"
         component={DiscardDialogScreen}
