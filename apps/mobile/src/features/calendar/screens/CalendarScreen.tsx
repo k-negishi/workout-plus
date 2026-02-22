@@ -8,6 +8,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { format } from 'date-fns';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getDatabase } from '@/database/client';
 import type { WorkoutRow } from '@/database/types';
@@ -20,6 +21,7 @@ type CalendarNavigation = NativeStackNavigationProp<CalendarStackParamList, 'Cal
 
 export function CalendarScreen() {
   const navigation = useNavigation<CalendarNavigation>();
+  const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [trainingDates, setTrainingDates] = useState<Date[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
@@ -67,7 +69,12 @@ export function CalendarScreen() {
   }
 
   return (
-    <ScrollView className="flex-1 bg-background px-5 pt-4" showsVerticalScrollIndicator={false}>
+    <ScrollView
+      testID="calendar-scroll-view"
+      className="flex-1 bg-background px-5"
+      style={{ paddingTop: insets.top + 16 }}
+      showsVerticalScrollIndicator={false}
+    >
       {/* カレンダー */}
       <MonthCalendar
         trainingDates={trainingDates}

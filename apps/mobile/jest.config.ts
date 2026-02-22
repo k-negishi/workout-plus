@@ -11,7 +11,10 @@ const config: Config = {
         '<rootDir>/src/**/__tests__/**/*.test.tsx',
       ],
       transformIgnorePatterns: [
-        'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|native-base|react-native-svg|nativewind|react-native-css-interop|react-native-reanimated|@gorhom/bottom-sheet|burnt|zustand|date-fns|ulid|react-native-calendars|react-native-gifted-charts|expo-modules-core|expo-sqlite)',
+        // jest-expo 54 のデフォルトパターンを踏襲しつつ、追加パッケージを列挙する。
+        // pnpm は .pnpm/ にパッケージをフラット展開するため先頭に .pnpm を含める。
+        // leading `/` を付けることで jest-expo と同じ絶対パス形式に一致させる。
+        '/node_modules/(?!(.pnpm|react-native|@react-native|@react-native-community|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation|native-base|react-native-svg|nativewind|react-native-css-interop|react-native-reanimated|@gorhom/bottom-sheet|burnt|zustand|date-fns|ulid|react-native-calendars|react-native-gifted-charts|expo-modules-core|expo-sqlite))',
       ],
       setupFilesAfterEnv: ['@testing-library/jest-native/extend-expect'],
       moduleNameMapper: {
@@ -47,6 +50,8 @@ const config: Config = {
     '!src/**/hooks/usePreviousRecord.ts',
     // ストア re-export index は実体のないバレルファイルのため除外
     '!src/stores/index.ts',
+    // __tests__ ディレクトリ内のファイルはカバレッジ対象から除外（テストファイル自体は計測しない）
+    '!src/**/__tests__/**',
   ],
   coverageThreshold: {
     global: {
