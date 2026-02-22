@@ -8,6 +8,7 @@ import { type RouteProp, useNavigation, useRoute } from '@react-navigation/nativ
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getDatabase } from '@/database/client';
 import { PersonalRecordRepository } from '@/database/repositories/pr';
@@ -32,6 +33,9 @@ export const WorkoutEditScreen: React.FC = () => {
   const navigation = useNavigation<EditNavProp>();
   const route = useRoute<EditRouteProp>();
   const { workoutId } = route.params;
+
+  // ノッチ・ダイナミックアイランド等の SafeArea トップインセットを取得
+  const insets = useSafeAreaInsets();
 
   const [exerciseBlocks, setExerciseBlocks] = useState<EditExerciseBlock[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
@@ -107,7 +111,7 @@ export const WorkoutEditScreen: React.FC = () => {
             setNumber: s.set_number,
             weight: s.weight,
             reps: s.reps,
-            estimated1rm: s.estimated_1rm,
+            estimated1RM: s.estimated_1rm,
             createdAt: s.created_at,
             updatedAt: s.updated_at,
           })),
@@ -128,7 +132,7 @@ export const WorkoutEditScreen: React.FC = () => {
       const sets = [...block.sets];
       const s = { ...sets[setIdx]! };
       s.weight = weight;
-      s.estimated1rm =
+      s.estimated1RM =
         weight != null && s.reps != null && weight > 0 && s.reps > 0
           ? calculate1RM(weight, s.reps)
           : null;
@@ -149,7 +153,7 @@ export const WorkoutEditScreen: React.FC = () => {
       const sets = [...block.sets];
       const s = { ...sets[setIdx]! };
       s.reps = reps;
-      s.estimated1rm =
+      s.estimated1RM =
         s.weight != null && reps != null && s.weight > 0 && reps > 0
           ? calculate1RM(s.weight, reps)
           : null;
@@ -167,26 +171,15 @@ export const WorkoutEditScreen: React.FC = () => {
       const block = exerciseBlocks[blockIdx];
       if (!block) return;
       const nextNum = block.sets.length + 1;
-      const setRow = await SetRepository.create({
-        workout_exercise_id: block.workoutExercise.id,
-        set_number: nextNum,
+      // create は WorkoutSet（camelCase 変換済み）を返す
+      const newSet = await SetRepository.create({
+        workoutExerciseId: block.workoutExercise.id,
+        setNumber: nextNum,
       });
       setExerciseBlocks((prev) => {
         const next = [...prev];
         const b = { ...next[blockIdx]! };
-        b.sets = [
-          ...b.sets,
-          {
-            id: setRow.id,
-            workoutExerciseId: setRow.workout_exercise_id,
-            setNumber: setRow.set_number,
-            weight: setRow.weight,
-            reps: setRow.reps,
-            estimated1rm: setRow.estimated_1rm,
-            createdAt: setRow.created_at,
-            updatedAt: setRow.updated_at,
-          },
-        ];
+        b.sets = [...b.sets, newSet];
         next[blockIdx] = b;
         return next;
       });
@@ -242,7 +235,7 @@ export const WorkoutEditScreen: React.FC = () => {
           await SetRepository.update(set.id, {
             weight: set.weight,
             reps: set.reps,
-            set_number: set.setNumber,
+            setNumber: set.setNumber,
           });
         }
       }
@@ -279,8 +272,12 @@ export const WorkoutEditScreen: React.FC = () => {
 
   return (
     <View className="flex-1 bg-[#f9fafb]">
-      {/* ヘッダー */}
-      <View className="flex-row items-center gap-3 px-4 py-3 bg-white border-b border-[#e2e8f0]">
+      {/* ヘッダー: paddingTop に SafeArea トップインセットを適用（ノッチ重なり防止） */}
+      <View
+        testID="workout-edit-header"
+        style={{ paddingTop: insets.top }}
+        className="flex-row items-center gap-3 px-4 py-3 bg-white border-b border-[#e2e8f0]"
+      >
         <TouchableOpacity onPress={handleCancel}>
           <Text className="text-[15px] text-[#475569]">キャンセル</Text>
         </TouchableOpacity>
@@ -362,7 +359,7 @@ export const WorkoutEditScreen: React.FC = () => {
                     />
                     {/* 推定1RM */}
                     <Text className="w-12 text-[13px] text-[#64748b] text-center">
-                      {set.estimated1rm != null ? Math.round(set.estimated1rm) : '-'}
+                      {set.estimated1RM != null ? Math.round(set.estimated1RM) : '-'}
                     </Text>
                     {/* 削除ボタン */}
                     <TouchableOpacity
