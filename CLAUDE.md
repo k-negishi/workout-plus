@@ -1,6 +1,7 @@
 # 開発ワークフロー
 
 当面の間、 main ブランチで作業すること
+当面の間、ワイヤーフレーム/WF を参照する際は、/Users/Kei/Development/projects/workout-plus/requirements/adopted/workout_plus_wireframes_v5_md3.html を参照すること
 
 ## 仕様策定 → 実装の標準フロー
 
