@@ -6,10 +6,10 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 import { ALL_CREATE_TABLES, CREATE_INDEXES } from './schema';
-import { generateSeedSQL } from './seed';
+import { generateDevWorkoutSeedSQL, generateSeedSQL } from './seed';
 
 /** 現在の最新スキーマバージョン */
-const LATEST_VERSION = 1;
+const LATEST_VERSION = 3;
 
 /**
  * 現在のスキーマバージョンを取得する
@@ -45,12 +45,51 @@ async function migrateV0ToV1(db: SQLiteDatabase): Promise<void> {
   await db.execAsync(seedSQL);
 }
 
+/**
+ * バージョン 1 → 2: 開発用ワークアウトシードデータ投入
+ */
+async function migrateV1ToV2(db: SQLiteDatabase): Promise<void> {
+  await generateDevWorkoutSeedSQL(db);
+}
+
+/**
+ * バージョン 2 → 3: 開発用シードデータのタイムスタンプ修正
+ *
+ * v2 で投入したシードデータのタイムスタンプが誤っていた（2025年のUNIX時刻を使用）。
+ * カレンダー画面で 2026/2/1 を選択したときに履歴が表示されるよう正しい値に更新する。
+ * - 旧: 1738339200000 (2025-02-01 01:00 JST)
+ * - 新: 1769878800000 (2026-02-01 02:00 JST)
+ */
+async function migrateV2ToV3(db: SQLiteDatabase): Promise<void> {
+  const OLD_CREATED_AT = 1738332000000;
+  const OLD_COMPLETED_AT = 1738339200000;
+  const NEW_CREATED_AT = 1769871600000; // 2026/2/1 00:00 JST
+  const NEW_COMPLETED_AT = 1769878800000; // 2026/2/1 02:00 JST
+
+  // workouts テーブルのタイムスタンプを更新（古い seed データのみ対象）
+  await db.execAsync(
+    `UPDATE workouts SET created_at = ${NEW_CREATED_AT}, completed_at = ${NEW_COMPLETED_AT} WHERE completed_at = ${OLD_COMPLETED_AT}`
+  );
+
+  // workout_exercises テーブルのタイムスタンプを更新
+  await db.execAsync(
+    `UPDATE workout_exercises SET created_at = ${NEW_CREATED_AT} WHERE created_at = ${OLD_CREATED_AT}`
+  );
+
+  // sets テーブルのタイムスタンプを更新（seed で挿入したセット行のみ）
+  await db.execAsync(
+    `UPDATE sets SET created_at = ${NEW_CREATED_AT}, updated_at = ${NEW_CREATED_AT} WHERE created_at = ${OLD_CREATED_AT}`
+  );
+}
+
 /** マイグレーション関数の型 */
 type Migration = (db: SQLiteDatabase) => Promise<void>;
 
 /** バージョンごとのマイグレーション関数マップ */
 const MIGRATIONS: Record<number, Migration> = {
   1: migrateV0ToV1,
+  2: migrateV1ToV2,
+  3: migrateV2ToV3,
 };
 
 /**
