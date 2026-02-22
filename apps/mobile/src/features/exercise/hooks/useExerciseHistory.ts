@@ -136,6 +136,26 @@ function buildWorkoutSessionMap(sets: SetWithWorkout[]): Map<
 }
 
 /**
+ * セットデータから最高推定1RMを計算するヘルパー。
+ * Epley式: weight * (1 + reps/30)。reps=1 のときは weight 自体が1RM。
+ * calculateStats の cyclomatic complexity を下げるため分離。
+ * 循環依存を避けるため calculate1RM.ts への import はせずインライン計算する。
+ */
+function computeMaxEstimated1RM(sets: SetWithWorkout[]): number {
+  let maxEstimated1RM = 0;
+  for (const set of sets) {
+    if (set.weight != null && set.weight > 0 && set.reps != null && set.reps > 0) {
+      const estimated1rm =
+        set.reps === 1
+          ? set.weight
+          : Math.round(set.weight * (1 + set.reps / 30) * 100) / 100;
+      if (estimated1rm > maxEstimated1RM) maxEstimated1RM = estimated1rm;
+    }
+  }
+  return maxEstimated1RM;
+}
+
+/**
  * セットデータからExerciseStats（統計サマリー）を計算する純粋関数
  * useExerciseHistoryのfetchData内で使用。テスト容易性のためエクスポート。
  */
@@ -151,24 +171,6 @@ export function calculateStats(sets: SetWithWorkout[], prs: PRForStats[]): Exerc
 
   const lastPRDate = prs.length > 0 ? Math.max(...prs.map((pr) => pr.achieved_at)) : null;
 
-  // 全セット数: weight/reps の null に関わらずすべてカウント
-  const totalSets = sets.length;
-
-  // 最高推定1RM: Epley式 weight * (1 + reps/30)
-  // weight と reps の両方が null でない場合のみ計算対象
-  // 循環依存を避けるため calculate1RM.ts への import はせずインライン計算する
-  let maxEstimated1RM = 0;
-  for (const set of sets) {
-    if (set.weight != null && set.weight > 0 && set.reps != null && set.reps > 0) {
-      // reps=1 のとき Epley 式は weight*1 = weight 自体が1RM
-      const estimated1rm =
-        set.reps === 1
-          ? set.weight
-          : Math.round(set.weight * (1 + set.reps / 30) * 100) / 100;
-      if (estimated1rm > maxEstimated1RM) maxEstimated1RM = estimated1rm;
-    }
-  }
-
   return {
     maxWeight,
     maxVolume,
@@ -177,8 +179,10 @@ export function calculateStats(sets: SetWithWorkout[], prs: PRForStats[]): Exerc
     totalVolume,
     averageWeight,
     lastPRDate,
-    totalSets,
-    maxEstimated1RM,
+    // 全セット数: weight/reps の null に関わらずすべてカウント
+    totalSets: sets.length,
+    // 最高推定1RM: ヘルパーに分離してcomplexityを抑制
+    maxEstimated1RM: computeMaxEstimated1RM(sets),
   };
 }
 
