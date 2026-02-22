@@ -22,7 +22,8 @@ $ARGUMENTS
 1. `/speckit.specify`
 2. `/speckit.plan`
 3. `/speckit.tasks`
-4. `/speckit.implement`
+4. `/speckit.analyze`
+5. `/speckit.implement`
 
 ## 実行ポリシー
 
@@ -49,7 +50,13 @@ $ARGUMENTS
 - Step 2 の成果物から `tasks.md` を生成する。
 - 総タスク数、ユーザーストーリーごとのタスク数、並列実行可能タスク数を要約する。
 
-### Step 4: 実装実行（`/speckit.implement`）
+### Step 4: 整合性分析（`/speckit.analyze`）
+
+- Step 1〜3 の成果物を横断的に分析し、整合性レポートを生成する。
+- 不整合の種類（例: 要件の矛盾、未定義項目、重複タスク）と影響範囲を特定する。
+- 整合性レポートを要約し、重大な不整合がある場合はユーザーに明示する。
+
+### Step 5: 実装実行（`/speckit.implement`）
 
 - `tasks.md` を実行し、完了タスクを `[X]` に更新する。
 - テスト・型チェック・Lint の実行結果を収集する。
