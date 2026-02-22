@@ -19,6 +19,7 @@ export type MainTabParamList = {
   /** 記録開始ボタン（ダミー: タブとして描画はしない） */
   RecordButton: undefined;
   StatsTab: undefined;
+  AITab: undefined;
 };
 
 /** ホームタブ内スタック */
@@ -26,12 +27,14 @@ export type HomeStackParamList = {
   Home: undefined;
   WorkoutDetail: { workoutId: string };
   WorkoutEdit: { workoutId: string };
+  ExerciseHistory: { exerciseId: string; exerciseName: string };
 };
 
 /** カレンダータブ内スタック */
 export type CalendarStackParamList = {
   Calendar: undefined;
   WorkoutDetail: { workoutId: string };
+  ExerciseHistory: { exerciseId: string; exerciseName: string };
 };
 
 /** 記録スタック（フルスクリーンモーダル） */
@@ -64,4 +67,10 @@ export type WorkoutSummaryScreenProps = NativeStackScreenProps<
   RecordStackParamList,
   'WorkoutSummary'
 >;
+export type HomeExerciseHistoryScreenProps = NativeStackScreenProps<HomeStackParamList, 'ExerciseHistory'>;
+export type CalendarExerciseHistoryScreenProps = NativeStackScreenProps<
+  CalendarStackParamList,
+  'ExerciseHistory'
+>;
+export type AITabScreenProps = BottomTabScreenProps<MainTabParamList, 'AITab'>;
 export type MainTabScreenProps = BottomTabScreenProps<MainTabParamList>;

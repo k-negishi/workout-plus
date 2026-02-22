@@ -6,6 +6,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 
 import { CalendarScreen } from '@/features/calendar/screens/CalendarScreen';
+import { ExerciseHistoryFullScreen } from '@/features/exercise/screens/ExerciseHistoryFullScreen';
 import { WorkoutDetailScreen } from '@/features/workout/screens/WorkoutDetailScreen';
 import type { CalendarStackParamList } from '@/types';
 
@@ -16,6 +17,7 @@ export function CalendarStack() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="Calendar" component={CalendarScreen} />
       <Stack.Screen name="WorkoutDetail" component={WorkoutDetailScreen} />
+      <Stack.Screen name="ExerciseHistory" component={ExerciseHistoryFullScreen} />
     </Stack.Navigator>
   );
 }
