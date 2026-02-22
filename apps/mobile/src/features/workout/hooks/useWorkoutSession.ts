@@ -119,10 +119,19 @@ export type WorkoutSummaryData = {
   newPRs: PRCheckResult[];
 };
 
+/**
+ * 'yyyy-MM-dd' 形式の日付文字列をその日の 00:00:00 ローカル時刻の UNIX ms に変換する
+ * 過去日付記録時に created_at / completed_at を適切なタイムスタンプに設定するために使用する
+ */
+export function dateStringToMs(dateString: string): number {
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year!, month! - 1, day!).getTime();
+}
+
 /** フックの戻り値型 */
 export type UseWorkoutSessionReturn = {
-  /** セッションを開始する（workoutId指定時は継続モード） */
-  startSession: (workoutId?: string) => Promise<void>;
+  /** セッションを開始する（workoutId指定時は継続モード、targetDate指定時は過去日付記録） */
+  startSession: (workoutId?: string, targetDate?: string) => Promise<void>;
   /** 種目を追加する */
   addExercise: (exerciseId: string) => Promise<void>;
   /** 種目を削除する */
@@ -157,10 +166,14 @@ export type UseWorkoutSessionReturn = {
 export function useWorkoutSession(): UseWorkoutSessionReturn {
   const store = useWorkoutSessionStore();
 
-  /** セッションを開始する（workoutId指定時は継続モード） */
+  /** セッションを開始する（workoutId指定時は継続モード、targetDate指定時は過去日付記録） */
   const startSession = useCallback(
-    async (workoutId?: string) => {
+    async (workoutId?: string, targetDate?: string) => {
       try {
+        // 過去日付が指定された場合はストアに記録する（completeWorkout 時に参照）
+        if (targetDate) {
+          store.setSessionTargetDate(targetDate);
+        }
         // 継続モード: workoutId が指定されている場合（当日ワークアウトへの追記）
         if (workoutId) {
           const targetWorkout = await WorkoutRepository.findById(workoutId);
@@ -272,7 +285,10 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
         }
 
         // 新規セッション作成
-        const workout = await WorkoutRepository.create();
+        // targetDate が指定されている場合は過去日付を created_at に設定する
+        const workout = await WorkoutRepository.create({
+          createdAt: targetDate ? dateStringToMs(targetDate) : undefined,
+        });
         store.setCurrentWorkout({
           id: workout.id,
           status: workout.status,
@@ -324,13 +340,14 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
       };
       store.addExercise(workoutExercise);
 
-      // 初期セット（1セット目）を自動追加
+      // デフォルト3セットを並行作成（Issue #119: デフォルト3セット表示対応）
       // SetRepository.create() は WorkoutSet（camelCase）を返す
-      const newSet = await SetRepository.create({
-        workoutExerciseId: id,
-        setNumber: 1,
-      });
-      store.setSetsForExercise(id, [newSet]);
+      const initialSets = await Promise.all(
+        [1, 2, 3].map((setNumber) =>
+          SetRepository.create({ workoutExerciseId: id, setNumber }),
+        ),
+      );
+      store.setSetsForExercise(id, initialSets);
     },
     [store],
   );
@@ -421,7 +438,10 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
     }
 
     try {
-      const now = Date.now();
+      // sessionTargetDate が設定されている場合は過去日付で保存する
+      // それ以外は実際の完了時刻（Date.now()）を使用する
+      const sessionTargetDate = useWorkoutSessionStore.getState().sessionTargetDate;
+      const now = sessionTargetDate ? dateStringToMs(sessionTargetDate) : Date.now();
 
       // weight と reps が両方 null のセットをDBから除外
       for (const exercise of store.currentExercises) {
