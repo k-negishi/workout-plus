@@ -37,6 +37,17 @@ jest.mock('react-native-gifted-charts', () => ({
   BarChart: 'BarChart',
 }));
 
+// RecordStack の依存（SQLite/Zustand等）を排除し、遷移検証に必要な最小コンポーネントで代替する
+jest.mock('../RecordStack', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const React = require('react');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { View } = require('react-native');
+  return {
+    RecordStack: () => React.createElement(View, { testID: 'record-stack-screen' }),
+  };
+});
+
 import { MainTabs } from '../MainTabs';
 
 const RECORD_BUTTON_TEST_ID = 'record-tab-button';
@@ -103,10 +114,11 @@ describe('MainTabs', () => {
     });
   });
 
-  it('+ボタン押下で RecordTab に遷移する', () => {
+  it('+ボタン押下で RecordTab に遷移する（RecordStack が描画される）', () => {
     const { getByTestId } = renderWithNav();
     const button = getByTestId(RECORD_BUTTON_TEST_ID);
     fireEvent.press(button);
-    expect(mockNavigate).toHaveBeenCalledWith('RecordTab');
+    // 実際にタブが切り替わり RecordStack（モック）が描画されることを検証
+    expect(getByTestId('record-stack-screen')).toBeTruthy();
   });
 });

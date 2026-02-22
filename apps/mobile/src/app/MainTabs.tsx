@@ -9,9 +9,8 @@
  * コンテナ高さに含めることで overflow 不要とする。
  */
 import { Ionicons } from '@expo/vector-icons';
-import type { BottomTabBarProps, BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -34,15 +33,17 @@ function StatsScreen() {
 
 /**
  * 中央の記録開始ボタン（フローティング）
- * RecordTab はメインタブの1つなので BottomTabNavigationProp で navigate する
+ *
+ * useNavigation() はタブバーが Root レベルのコンテキストで描画されるため
+ * RootStack の navigation を返してしまい RecordTab を解決できない。
+ * CustomTabBar が BottomTabBarProps として受け取る navigation（タブ navigator 確実）
+ * を prop で渡すことで正しく遷移できる。
  */
-function FloatingRecordButton() {
-  const navigation = useNavigation<BottomTabNavigationProp<MainTabParamList>>();
-
+function FloatingRecordButton({ navigation }: Pick<BottomTabBarProps, 'navigation'>) {
   return (
     <Pressable
       testID="record-tab-button"
-      onPress={() => navigation.navigate('RecordTab')}
+      onPress={() => navigation.navigate('RecordTab' as never)}
       style={{
         // WF L344-346: width: 56px, height: 56px, border-radius: 50%
         width: 56,
@@ -193,7 +194,7 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
           alignItems: 'center',
         }}
       >
-        <FloatingRecordButton />
+        <FloatingRecordButton navigation={navigation} />
       </View>
     </View>
   );
