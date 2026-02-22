@@ -95,7 +95,7 @@ export const TimerBar: React.FC<TimerBarProps> = ({
           height: 24,
           borderRadius: 12,
           borderWidth: 1.5,
-          borderColor: '#4D94FF',
+          borderColor: isTimerDiscarded ? '#94a3b8' : '#4D94FF',
           alignItems: 'center',
           justifyContent: 'center',
         }}
