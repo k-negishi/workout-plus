@@ -103,12 +103,14 @@ export function MonthCalendar({
   // 日付タップハンドラ（未来日は無効）
   const handleDayPress = useCallback(
     (day: DateData) => {
-      const selected = new Date(day.dateString);
-      const todayDate = startOfDay(new Date());
+      // 'yyyy-MM-dd' 文字列を UTC ではなくローカル日付として安全に解釈するため、
+      // split で分解してローカル時刻として Date を生成する
+      const [year, month, date] = day.dateString.split('-').map(Number);
+      const selected = new Date(year!, month! - 1, date!);
+      const endOfToday = new Date(startOfDay(new Date()).getTime() + 86400000);
 
-      // 未来日はタップ無効
-      if (!isBefore(selected, new Date(todayDate.getTime() + 86400000))) {
-        // 今日以前ならOK
+      // 今日以前のみ選択可能
+      if (isBefore(selected, endOfToday)) {
         onDayPress(day.dateString);
       }
     },
