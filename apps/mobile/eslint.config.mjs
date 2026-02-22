@@ -1,6 +1,7 @@
 import tseslint from '@typescript-eslint/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
 import jest from 'eslint-plugin-jest';
+import reactHooks from 'eslint-plugin-react-hooks';
 import reactNative from 'eslint-plugin-react-native';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import sonarjs from 'eslint-plugin-sonarjs';
@@ -25,6 +26,8 @@ export default [
       'simple-import-sort': simpleImportSort,
       'react-native': reactNative,
       sonarjs,
+      // React Hooks ルール: フック呼び出し規則 + 依存配列の完全性チェック
+      'react-hooks': reactHooks,
     },
     rules: {
       // TypeScript 厳格ルール
@@ -39,6 +42,11 @@ export default [
       // SonarJS バグパターン検出
       'sonarjs/no-duplicate-string': 'warn',
       'sonarjs/cognitive-complexity': ['error', 15],
+      // React Hooks: フック呼び出し規則（条件分岐内での呼び出し等を禁止）
+      'react-hooks/rules-of-hooks': 'error',
+      // React Hooks: useFocusEffect/useEffect の依存配列漏れを検出
+      // → stale closure 起因のバグを事前検知し、getState() パターンへ誘導する
+      'react-hooks/exhaustive-deps': 'warn',
     },
   },
   {
@@ -49,6 +57,9 @@ export default [
     },
     rules: {
       ...jest.configs['recommended'].rules,
+      // Testing Library ベストプラクティス
+      // （インストール済みだったが未有効化だったため追加）
+      ...testingLibrary.configs['react'].rules,
     },
   },
 ];
