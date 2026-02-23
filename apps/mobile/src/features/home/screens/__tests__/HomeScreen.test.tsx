@@ -4,10 +4,11 @@
  * - useSafeAreaInsets によるデバイスのノッチ・ダイナミックアイランド対応を検証
  * - ワークアウト 0 件でも StreakCard が表示されることを検証（EmptyState 廃止）
  * - 💪 絵文字テキストが表示されないことを検証
+ * - T7: 最近のワークアウトカードタップ時のクロスタブナビゲーションを検証
  *
  * DB アクセスやナビゲーションはモックで置き換え、レンダリングのみ確認する。
  */
-import { render, screen, waitFor, within } from '@testing-library/react-native';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react-native';
 import React from 'react';
 import { ScrollView } from 'react-native';
 
@@ -34,12 +35,15 @@ jest.mock('react-native-safe-area-context', () => {
   };
 });
 
+// T7: navigate のスパイを外部変数として保持し、テスト内で呼び出し検証できるようにする
+const mockNavigate = jest.fn();
+
 // ナビゲーションモック
 // T10: HomeScreen で useFocusEffect を使うため no-op モックを追加する
 // （実際の navigation context が不要なためコールバックを実行しないことで副作用を防ぐ）
 jest.mock('@react-navigation/native', () => ({
   ...jest.requireActual('@react-navigation/native'),
-  useNavigation: () => ({ navigate: jest.fn(), push: jest.fn() }),
+  useNavigation: () => ({ navigate: mockNavigate, push: jest.fn() }),
   useFocusEffect: jest.fn(),
 }));
 
@@ -115,6 +119,7 @@ beforeEach(() => {
   mockGetAllAsync.mockResolvedValue([]);
   mockGetFirstAsync.mockResolvedValue(null);
   mockFindRecording.mockResolvedValue(null);
+  mockNavigate.mockClear();
 });
 
 describe('HomeScreen SafeArea', () => {
@@ -285,5 +290,51 @@ describe('HomeScreen 記録中バナーと記録ボタンの排他表示', () =>
       expect(screen.getByTestId('recording-banner')).toBeTruthy();
     });
     expect(screen.queryByTestId('record-workout-button')).toBeNull();
+  });
+});
+
+describe('HomeScreen クロスタブナビゲーション（T7）', () => {
+  it('最近のワークアウトカードタップ時に CalendarTab + Calendar + targetDate で遷移する', async () => {
+    // 2026-02-10 00:00:00 UTC に完了したワークアウトを用意
+    // new Date(1739145600000) === 2026-02-10T00:00:00.000Z
+    const completedAt = 1739145600000;
+    const expectedDate = (() => {
+      const d = new Date(completedAt);
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    })();
+
+    mockGetAllAsync.mockImplementation((query: string) => {
+      if (query.includes("FROM workouts WHERE status = 'completed'")) {
+        return Promise.resolve([
+          {
+            id: 'w-cross-tab',
+            status: 'completed',
+            created_at: completedAt,
+            started_at: completedAt,
+            completed_at: completedAt,
+            timer_status: 'not_started',
+            elapsed_seconds: 3600,
+            timer_started_at: null,
+            memo: null,
+          },
+        ]);
+      }
+      if (query.includes('FROM workout_exercises')) {
+        return Promise.resolve([]);
+      }
+      return Promise.resolve([]);
+    });
+
+    render(<HomeScreen />);
+
+    // カードが描画されるまで待機する
+    const card = await screen.findByTestId('workout-card-w-cross-tab');
+    fireEvent.press(card);
+
+    // CalendarTab + ネスト画面へのクロスタブナビゲーションが呼ばれることを確認する
+    expect(mockNavigate).toHaveBeenCalledWith('CalendarTab', {
+      screen: 'Calendar',
+      params: { targetDate: expectedDate },
+    });
   });
 });

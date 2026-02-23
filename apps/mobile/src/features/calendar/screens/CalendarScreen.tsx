@@ -6,29 +6,38 @@
  * T11: 記録・編集ボタンを追加
  * T07: calendarSelectedDate の store 連携を削除（FloatingRecordButton 廃止につき不要）
  */
-import { useNavigation } from '@react-navigation/native';
+import type { RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { format, isAfter, parseISO } from 'date-fns';
 import { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getDatabase } from '@/database/client';
 import { WorkoutRepository } from '@/database/repositories/workout';
 import type { WorkoutRow } from '@/database/types';
+import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import type { CalendarStackParamList } from '@/types';
 
 import { DaySummary } from '../components/DaySummary';
 import { MonthCalendar } from '../components/MonthCalendar';
 
 type CalendarNavigation = NativeStackNavigationProp<CalendarStackParamList, 'Calendar'>;
+type CalendarRoute = RouteProp<CalendarStackParamList, 'Calendar'>;
 
 export function CalendarScreen() {
   const navigation = useNavigation<CalendarNavigation>();
+  const route = useRoute<CalendarRoute>();
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [trainingDates, setTrainingDates] = useState<Date[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
+  // 削除ダイアログ制御
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+  // DaySummary の再取得トリガー（インクリメントするとデータを再フェッチする）
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // トレーニング日のデータ取得
   const fetchTrainingDates = useCallback(async () => {
@@ -51,18 +60,57 @@ export function CalendarScreen() {
     fetchTrainingDates();
   }, [fetchTrainingDates]);
 
+  // T6: targetDate パラメータが渡された場合、選択日付をその値に更新する
+  // ホーム画面などから特定の日付を指定してカレンダーを開くユースケースに対応
+  useEffect(() => {
+    const targetDate = route.params?.targetDate;
+    if (targetDate) {
+      setSelectedDate(targetDate);
+    }
+  }, [route.params?.targetDate]);
+
   // 日付タップ: ローカル状態のみ更新（T07: store.calendarSelectedDate は FloatingRecordButton 廃止により不要）
   const handleDayPress = useCallback((dateString: string) => {
     setSelectedDate(dateString);
   }, []);
 
-  // ワークアウト詳細への遷移
-  const handleNavigateToDetail = useCallback(
-    (workoutId: string) => {
-      navigation.navigate('WorkoutDetail', { workoutId });
+  /**
+   * 種目名タップ: ExerciseHistory 画面へ遷移する
+   */
+  const handleNavigateToExerciseHistory = useCallback(
+    (exerciseId: string, exerciseName: string) => {
+      navigation.navigate('ExerciseHistory', { exerciseId, exerciseName });
     },
     [navigation],
   );
+
+  /**
+   * 削除ボタンタップ: ダイアログを表示する（実際の削除は handleConfirmDelete で行う）
+   */
+  const handleDeleteWorkout = useCallback((workoutId: string) => {
+    setDeleteTargetId(workoutId);
+    setShowDeleteDialog(true);
+  }, []);
+
+  /**
+   * 削除ダイアログで「削除」を確定したとき: WorkoutRepository.delete を実行し、
+   * カレンダーとサマリーを更新する
+   */
+  const handleConfirmDelete = useCallback(async () => {
+    if (!deleteTargetId) return;
+    try {
+      await WorkoutRepository.delete(deleteTargetId);
+      setShowDeleteDialog(false);
+      setDeleteTargetId(null);
+      // DaySummary を再フェッチさせる
+      setRefreshKey((prev) => prev + 1);
+      // カレンダーのトレーニング日マーキングも更新
+      void fetchTrainingDates();
+    } catch (error) {
+      console.error('ワークアウト削除エラー:', error);
+      Alert.alert('エラー', 'ワークアウトの削除に失敗しました');
+    }
+  }, [deleteTargetId, fetchTrainingDates]);
 
   /**
    * T11: 記録・編集ボタンのハンドラー
@@ -100,42 +148,64 @@ export function CalendarScreen() {
   }
 
   return (
-    <ScrollView
-      testID="calendar-scroll-view"
-      className="flex-1 bg-background px-5"
-      style={{ paddingTop: insets.top + 16 }}
-      showsVerticalScrollIndicator={false}
-    >
-      {/* カレンダー */}
-      <MonthCalendar
-        trainingDates={trainingDates}
-        selectedDate={selectedDate}
-        onDayPress={handleDayPress}
+    <View style={{ flex: 1 }}>
+      <ScrollView
+        testID="calendar-scroll-view"
+        className="flex-1 bg-background px-5"
+        style={{ paddingTop: insets.top + 16 }}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* カレンダー */}
+        <MonthCalendar
+          trainingDates={trainingDates}
+          selectedDate={selectedDate}
+          onDayPress={handleDayPress}
+        />
+
+        {/* 選択日のサマリー */}
+        <DaySummary
+          dateString={selectedDate}
+          onNavigateToExerciseHistory={handleNavigateToExerciseHistory}
+          onDeleteWorkout={handleDeleteWorkout}
+          refreshKey={refreshKey}
+        />
+
+        {/* T11: 記録・編集ボタン（未来日付は非表示） */}
+        {!isFutureDate && (
+          <TouchableOpacity
+            testID="record-or-edit-button"
+            onPress={() => void handleRecordOrEdit()}
+            style={{
+              backgroundColor: '#4D94FF',
+              borderRadius: 8,
+              paddingHorizontal: 16,
+              paddingVertical: 12,
+              alignItems: 'center',
+              marginTop: 12,
+            }}
+          >
+            <Text style={{ fontSize: 15, fontWeight: '600', color: '#ffffff' }}>記録・編集</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* タブバーのスペーサー */}
+        <View style={{ height: 100 }} />
+      </ScrollView>
+
+      {/* ワークアウト削除確認ダイアログ */}
+      <ConfirmDialog
+        visible={showDeleteDialog}
+        title="ワークアウトを削除"
+        message="このワークアウトを削除してよろしいですか？"
+        confirmLabel="削除"
+        cancelLabel="キャンセル"
+        destructive
+        onConfirm={() => void handleConfirmDelete()}
+        onCancel={() => {
+          setShowDeleteDialog(false);
+          setDeleteTargetId(null);
+        }}
       />
-
-      {/* 選択日のサマリー */}
-      <DaySummary dateString={selectedDate} onNavigateToDetail={handleNavigateToDetail} />
-
-      {/* T11: 記録・編集ボタン（未来日付は非表示） */}
-      {!isFutureDate && (
-        <TouchableOpacity
-          testID="record-or-edit-button"
-          onPress={() => void handleRecordOrEdit()}
-          style={{
-            backgroundColor: '#4D94FF',
-            borderRadius: 8,
-            paddingHorizontal: 16,
-            paddingVertical: 12,
-            alignItems: 'center',
-            marginTop: 12,
-          }}
-        >
-          <Text style={{ fontSize: 15, fontWeight: '600', color: '#ffffff' }}>記録・編集</Text>
-        </TouchableOpacity>
-      )}
-
-      {/* タブバーのスペーサー */}
-      <View style={{ height: 100 }} />
-    </ScrollView>
+    </View>
   );
 }

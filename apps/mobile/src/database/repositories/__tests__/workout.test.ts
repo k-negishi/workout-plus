@@ -120,6 +120,62 @@ describe('WorkoutRepository.findCompletedByDate', () => {
   });
 });
 
+describe('WorkoutRepository.update（workout_date 自動算出）', () => {
+  it('status=completed かつ completed_at をセットすると workout_date が自動算出される', async () => {
+    const mockDb = createMockDb();
+    mockGetDatabase.mockResolvedValue(mockDb as never);
+
+    // 2026-02-19 の UNIX ミリ秒（JST: 2026-02-19T00:00:00.000+09:00 = 2026-02-18T15:00:00.000Z）
+    // ローカルタイムゾーンでの日付算出を検証するため、new Date() で生成
+    const completedAt = new Date(2026, 1, 19, 10, 0, 0).getTime(); // ローカル時刻 2026-02-19 10:00:00
+
+    await WorkoutRepository.update('workout-id', {
+      status: 'completed',
+      completed_at: completedAt,
+    });
+
+    // UPDATE クエリに workout_date が含まれていることを検証
+    const callArgs = mockDb.runAsync.mock.calls[0] as [string, (string | number | null)[]];
+    const query = callArgs[0];
+    const values = callArgs[1];
+
+    expect(query).toContain('workout_date = ?');
+    // ローカル時刻での日付文字列が設定されていることを確認
+    const workoutDateValue = values.find((v) => typeof v === 'string' && v.match(/^\d{4}-\d{2}-\d{2}$/));
+    expect(workoutDateValue).toBe('2026-02-19');
+  });
+
+  it('status=completed だが completed_at が null の場合は workout_date を設定しない', async () => {
+    const mockDb = createMockDb();
+    mockGetDatabase.mockResolvedValue(mockDb as never);
+
+    await WorkoutRepository.update('workout-id', {
+      status: 'completed',
+      completed_at: null,
+    });
+
+    const callArgs = mockDb.runAsync.mock.calls[0] as [string, (string | number | null)[]];
+    const query = callArgs[0];
+    // completed_at が null の場合は workout_date を含まない
+    expect(query).not.toContain('workout_date = ?');
+  });
+
+  it('status=recording の場合は workout_date を設定しない', async () => {
+    const mockDb = createMockDb();
+    mockGetDatabase.mockResolvedValue(mockDb as never);
+
+    await WorkoutRepository.update('workout-id', {
+      status: 'recording',
+      started_at: Date.now(),
+    });
+
+    const callArgs = mockDb.runAsync.mock.calls[0] as [string, (string | number | null)[]];
+    const query = callArgs[0];
+    // recording 状態では workout_date を含まない
+    expect(query).not.toContain('workout_date = ?');
+  });
+});
+
 describe('WorkoutRepository.create（createdAt オプション）', () => {
   it('createdAt を指定すると INSERT クエリに渡される', async () => {
     const mockDb = createMockDb();

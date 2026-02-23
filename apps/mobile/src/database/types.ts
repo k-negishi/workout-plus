@@ -27,6 +27,8 @@ export type WorkoutRow = {
   elapsed_seconds: number;
   timer_started_at: number | null;
   memo: string | null;
+  /** 完了日付 yyyy-MM-dd（ローカル時刻）。recording 中は NULL */
+  workout_date: string | null;
 };
 
 /** exercises テーブル行型 */

@@ -6,7 +6,6 @@ export type {
   CalendarRecordScreenProps,
   CalendarScreenProps,
   CalendarStackParamList,
-  CalendarWorkoutDetailScreenProps,
   CalendarWorkoutSummaryScreenProps,
   HomeExerciseHistoryScreenProps,
   HomeExercisePickerScreenProps,
@@ -17,7 +16,6 @@ export type {
   MainTabParamList,
   MainTabScreenProps,
   RootStackParamList,
-  WorkoutDetailScreenProps,
 } from './navigation';
 // PRType は as const の値も必要なため value export
 export type { PersonalRecord, PRAchievement } from './pr';

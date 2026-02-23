@@ -3,6 +3,7 @@
  *
  * - SafeArea 対応（useSafeAreaInsets）
  * - トレーニング日インジケーター（dot）の検証
+ * - targetDate パラメータ対応（T6）
  */
 import { render, screen, waitFor } from '@testing-library/react-native';
 import React from 'react';
@@ -18,9 +19,13 @@ jest.mock('react-native-safe-area-context', () => ({
   SafeAreaProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
-// ナビゲーションのモック
+// useRoute のモック返却値（テストごとに差し替える）
+const mockRouteParams: { targetDate?: string } | undefined = {};
+
+// ナビゲーションのモック（useRoute を含む）
 jest.mock('@react-navigation/native', () => ({
   useNavigation: jest.fn().mockReturnValue({ navigate: jest.fn() }),
+  useRoute: jest.fn(() => ({ params: mockRouteParams })),
 }));
 
 // データベースのモック（テストごとに返り値を変更できるよう変数化）
@@ -46,6 +51,7 @@ jest.mock('../../components/DaySummary', () => ({
   DaySummary: () => null,
 }));
 
+import { useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CalendarScreen } from '../CalendarScreen';
@@ -75,6 +81,37 @@ describe('CalendarScreen', () => {
       // ScrollView の paddingTop が insets.top + 16 になっていることを検証
       const scrollView = await screen.findByTestId('calendar-scroll-view');
       expect(scrollView.props.style).toEqual(expect.objectContaining({ paddingTop: 44 + 16 }));
+    });
+  });
+
+  describe('targetDate パラメータ対応', () => {
+    it('targetDate パラメータが渡された場合、MonthCalendar の selectedDate がその値に更新される', async () => {
+      // targetDate を持つルートパラメータを設定
+      (useRoute as jest.Mock).mockReturnValue({ params: { targetDate: '2026-01-15' } });
+
+      render(<CalendarScreen />);
+
+      // selectedDate が targetDate の値（'2026-01-15'）に更新されることを確認
+      await waitFor(() => {
+        const selected = capturedMonthCalendarProps['selectedDate'] as string;
+        expect(selected).toBe('2026-01-15');
+      });
+    });
+
+    it('targetDate パラメータがない場合、selectedDate が今日の日付のままである', async () => {
+      // targetDate なしのルートパラメータを設定
+      (useRoute as jest.Mock).mockReturnValue({ params: undefined });
+
+      render(<CalendarScreen />);
+
+      // selectedDate は今日の日付（'yyyy-MM-dd' 形式）のまま
+      await waitFor(() => {
+        const selected = capturedMonthCalendarProps['selectedDate'] as string;
+        // 今日の日付パターンを検証（YYYY-MM-DD 形式であること）
+        expect(selected).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+        // '2026-01-15' ではないこと（targetDate が無視されていること）
+        expect(selected).not.toBe('2026-01-15');
+      });
     });
   });
 

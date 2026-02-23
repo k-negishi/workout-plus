@@ -115,6 +115,18 @@ export const WorkoutRepository = {
       }
     }
 
+    // status が 'completed' に変更され、かつ completed_at が提供された場合に
+    // workout_date をローカル時刻で自動算出する
+    // （UTC ではなく端末のローカル時刻で日付を決定するのは、ユーザーの感覚に合わせるため）
+    if (params.status === 'completed' && params.completed_at != null) {
+      const date = new Date(params.completed_at);
+      const yyyy = date.getFullYear();
+      const mm = String(date.getMonth() + 1).padStart(2, '0');
+      const dd = String(date.getDate()).padStart(2, '0');
+      fields.push('workout_date = ?');
+      values.push(`${yyyy}-${mm}-${dd}`);
+    }
+
     if (fields.length === 0) {
       return;
     }

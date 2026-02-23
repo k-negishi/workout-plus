@@ -1,8 +1,9 @@
 /**
- * CalendarStack のナビゲーション登録テスト（T06/T13 対応）
+ * CalendarStack のナビゲーション登録テスト（T06/T13/T08 対応）
  *
  * T13: WorkoutEditScreen 廃止。WorkoutEdit のモック・テストを削除。
  * T06: CalendarStack に Record フローを追加。Record への遷移テストを追加。
+ * T08: WorkoutDetailScreen 廃止。WorkoutDetail 関連のモック・テストを削除。
  */
 import { NavigationContainer } from '@react-navigation/native';
 import { fireEvent, render, screen } from '@testing-library/react-native';
@@ -43,48 +44,10 @@ jest.mock('@/features/calendar/screens/CalendarScreen', () => {
         React.createElement(
           TouchableOpacity,
           {
-            testID: 'go-to-detail',
-            onPress: () => navigation.navigate('WorkoutDetail', { workoutId: 'test-id' }),
-          },
-          React.createElement(Text, null, '詳細へ'),
-        ),
-        React.createElement(
-          TouchableOpacity,
-          {
             testID: 'go-to-record',
             onPress: () => navigation.navigate('Record', { targetDate: '2026-01-15' }),
           },
           React.createElement(Text, null, '記録・編集'),
-        ),
-      ),
-  };
-});
-
-// WorkoutDetailScreen モック
-jest.mock('@/features/workout/screens/WorkoutDetailScreen', () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const React = require('react');
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { View, TouchableOpacity, Text } = require('react-native');
-  return {
-    WorkoutDetailScreen: ({
-      navigation,
-      route,
-    }: {
-      navigation: { navigate: (name: string, params?: object) => void };
-      route: { params: { workoutId: string } };
-    }) =>
-      React.createElement(
-        View,
-        { testID: 'workout-detail-screen' },
-        // T12: 「編集」ボタンが Record 画面に遷移する
-        React.createElement(
-          TouchableOpacity,
-          {
-            testID: 'edit-button',
-            onPress: () => navigation.navigate('Record', { workoutId: route.params.workoutId }),
-          },
-          React.createElement(Text, null, '編集'),
         ),
       ),
   };
@@ -150,27 +113,9 @@ describe('CalendarStack', () => {
     expect(screen.getByTestId('calendar-screen')).toBeTruthy();
   });
 
-  it('CalendarStack から WorkoutDetail へ遷移できる', async () => {
-    renderCalendarStack();
-    fireEvent.press(screen.getByTestId('go-to-detail'));
-    expect(await screen.findByTestId('workout-detail-screen')).toBeTruthy();
-  });
-
   it('T06: CalendarStack から Record へ遷移できる（記録・編集ボタン）', async () => {
     renderCalendarStack();
     fireEvent.press(screen.getByTestId('go-to-record'));
-    expect(await screen.findByTestId('record-screen')).toBeTruthy();
-  });
-
-  it('T12: WorkoutDetail の編集ボタンから Record へ遷移できる（CalendarStack 経由）', async () => {
-    renderCalendarStack();
-
-    // Calendar → WorkoutDetail へ遷移
-    fireEvent.press(screen.getByTestId('go-to-detail'));
-    expect(await screen.findByTestId('workout-detail-screen')).toBeTruthy();
-
-    // T12: WorkoutDetail → Record へ遷移（WorkoutEdit は廃止）
-    fireEvent.press(screen.getByTestId('edit-button'));
     expect(await screen.findByTestId('record-screen')).toBeTruthy();
   });
 });

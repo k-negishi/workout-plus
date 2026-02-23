@@ -9,7 +9,7 @@ import { format, parseISO } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
-import { Path, Polyline, Svg } from 'react-native-svg';
+import { Polyline, Svg } from 'react-native-svg';
 
 import { getDatabase } from '@/database/client';
 import type { ExerciseRow, SetRow, WorkoutExerciseRow, WorkoutRow } from '@/database/types';
@@ -19,15 +19,6 @@ function CheckIcon() {
   return (
     <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth={2}>
       <Polyline points="20 6 9 17 4 12" strokeLinecap="round" strokeLinejoin="round" />
-    </Svg>
-  );
-}
-
-/** 矢印アイコン（右向き） */
-function ChevronRight() {
-  return (
-    <Svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth={2}>
-      <Path d="M9 18l6-6-6-6" strokeLinecap="round" strokeLinejoin="round" />
     </Svg>
   );
 }
@@ -47,6 +38,8 @@ function formatDuration(seconds: number | null, timerStatus?: string): string {
 
 /** 種目別のセットデータ */
 type ExerciseSetData = {
+  /** 種目 ID（ExerciseHistory 遷移時に使用） */
+  exerciseId: string;
   exerciseName: string;
   sets: Array<{
     setNumber: number;
@@ -59,11 +52,20 @@ type ExerciseSetData = {
 type DaySummaryProps = {
   /** 選択日付 (yyyy-MM-dd) */
   dateString: string;
-  /** ワークアウト詳細画面への遷移 */
-  onNavigateToDetail?: (workoutId: string) => void;
+  /** 種目履歴画面への遷移（種目名タップ時に呼ばれる） */
+  onNavigateToExerciseHistory?: (exerciseId: string, exerciseName: string) => void;
+  /** ワークアウト削除コールバック: workoutId を引数に渡す */
+  onDeleteWorkout?: (workoutId: string) => void;
+  /** 外部からのリフレッシュトリガー（値が変わるとデータを再取得する） */
+  refreshKey?: number;
 };
 
-export function DaySummary({ dateString, onNavigateToDetail }: DaySummaryProps) {
+export function DaySummary({
+  dateString,
+  onNavigateToExerciseHistory,
+  onDeleteWorkout,
+  refreshKey,
+}: DaySummaryProps) {
   const [loading, setLoading] = useState(true);
   const [workout, setWorkout] = useState<WorkoutRow | null>(null);
   const [exerciseSets, setExerciseSets] = useState<ExerciseSetData[]>([]);
@@ -144,6 +146,8 @@ export function DaySummary({ dateString, onNavigateToDetail }: DaySummaryProps) 
         });
 
         exerciseData.push({
+          // exercise_id は WorkoutExerciseRow から取得（ExerciseHistory 遷移時に使用）
+          exerciseId: we.exercise_id,
           exerciseName: exercise?.name ?? '不明な種目',
           sets: setData,
         });
@@ -157,7 +161,9 @@ export function DaySummary({ dateString, onNavigateToDetail }: DaySummaryProps) 
     } finally {
       setLoading(false);
     }
-  }, [dateString]);
+  // refreshKey を依存配列に含めることで、外部からのリフレッシュ（削除後の再取得など）に対応する
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dateString, refreshKey]);
 
   useEffect(() => {
     fetchDayData();
@@ -187,20 +193,16 @@ export function DaySummary({ dateString, onNavigateToDetail }: DaySummaryProps) 
 
   return (
     <View style={{ marginTop: 20 }}>
-      {/* 日付ヘッダー（タップでワークアウト詳細へ） */}
-      <Pressable
+      {/* 日付ヘッダー: T5 でタップ遷移を廃止し、非インタラクティブな View に変更 */}
+      <View
+        testID="date-header"
         style={{
           paddingVertical: 12,
           marginBottom: 12,
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
         }}
-        onPress={() => onNavigateToDetail?.(workout.id)}
       >
         <Text style={{ fontSize: 16, fontWeight: '600', color: '#334155' }}>{dateLabel}</Text>
-        <ChevronRight />
-      </Pressable>
+      </View>
 
       {/* サマリーカード */}
       <View
@@ -259,9 +261,12 @@ export function DaySummary({ dateString, onNavigateToDetail }: DaySummaryProps) 
               borderColor: '#e2e8f0',
             }}
           >
-            <Text style={{ fontSize: 17, fontWeight: '600', color: '#4D94FF', marginBottom: 8 }}>
-              {ex.exerciseName}
-            </Text>
+            {/* 種目名タップで ExerciseHistory 画面へ遷移する */}
+            <Pressable onPress={() => onNavigateToExerciseHistory?.(ex.exerciseId, ex.exerciseName)}>
+              <Text style={{ fontSize: 17, fontWeight: '600', color: '#4D94FF', marginBottom: 8 }}>
+                {ex.exerciseName}
+              </Text>
+            </Pressable>
             <View style={{ gap: 6 }}>
               {ex.sets.map((set) => (
                 <View
@@ -292,6 +297,19 @@ export function DaySummary({ dateString, onNavigateToDetail }: DaySummaryProps) 
           </View>
         ))}
       </View>
+
+      {/* 削除ボタン: onDeleteWorkout が渡されている場合のみ表示 */}
+      {onDeleteWorkout && (
+        <Pressable
+          testID="delete-workout-button"
+          onPress={() => onDeleteWorkout(workout.id)}
+          style={{ alignItems: 'center', marginTop: 16, paddingVertical: 8 }}
+        >
+          <Text style={{ color: '#EF4444', fontSize: 14, fontWeight: '600' }}>
+            ワークアウトを削除
+          </Text>
+        </Pressable>
+      )}
     </View>
   );
 }

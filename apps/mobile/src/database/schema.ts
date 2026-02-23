@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS exercises (
  * @column elapsed_seconds  - 累計経過秒数。一時停止をまたいで保持される合計時間。表示用経過時間 = elapsed_seconds + (Date.now() - timer_started_at) / 1000
  * @column timer_started_at - 現在の計測区間の開始日時（UNIX ミリ秒 UTC）。timer_status='running' 時のみ有効。paused / not_started / discarded は NULL
  * @column memo             - セッションメモ（任意入力）
+ * @column workout_date     - ワークアウト完了日（yyyy-MM-dd 形式、例: '2026-02-22'）。status='completed' 時に WorkoutRepository が自動設定する。status='recording' の間は NULL。UNIQUE 部分インデックス（idx_workouts_unique_date）により同日の completed ワークアウトは1件のみ許可。NULL（recording 中）は制約対象外で複数共存可能
  */
 export const CREATE_WORKOUTS_TABLE = `
 CREATE TABLE IF NOT EXISTS workouts (

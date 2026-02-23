@@ -61,6 +61,8 @@ type RecentWorkoutCardProps = {
   timerStatus?: TimerStatus;
   /** 主要部位（アイコン背景色の決定に使用） */
   primaryMuscleGroup?: string;
+  /** テスト用 ID */
+  testID?: string;
   /** タップ時のコールバック */
   onPress: () => void;
 };
@@ -73,6 +75,7 @@ export function RecentWorkoutCard({
   durationSeconds,
   timerStatus,
   primaryMuscleGroup,
+  testID,
   onPress,
 }: RecentWorkoutCardProps) {
   // 日付フォーマット: 「2/21 土曜日」
@@ -82,7 +85,7 @@ export function RecentWorkoutCard({
   }, [completedAt]);
 
   return (
-    <Pressable style={styles.card} onPress={onPress}>
+    <Pressable style={styles.card} onPress={onPress} testID={testID}>
       {/* task-header: アイコン + info + バッジ（WF L655-660） */}
       <View style={styles.header}>
         {/* task-icon（WF L662-675） */}
