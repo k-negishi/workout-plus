@@ -180,7 +180,9 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
       // オプションオブジェクトから分解する（未指定時は両方 undefined になる）
       const { workoutId, targetDate } = options ?? {};
       try {
-        // 過去日付が指定された場合はストアに記録する（completeWorkout 時に参照）
+        // 前回セッションのストアデータをクリアする（重複キー防止）
+        store.reset();
+        // 過去日付が指定された場合はストアに記録する（reset() で sessionTargetDate がクリアされるため、この順序が重要）
         if (targetDate) {
           store.setSessionTargetDate(targetDate);
         }

@@ -91,7 +91,7 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
             color: '#334155',
             textAlign: 'center',
           }}
-          placeholder="-"
+          placeholder="0"
           placeholderTextColor="#94a3b8"
           keyboardType="decimal-pad"
           value={set.weight != null ? String(set.weight) : ''}
@@ -115,7 +115,7 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
             color: '#334155',
             textAlign: 'center',
           }}
-          placeholder="-"
+          placeholder="0"
           placeholderTextColor="#94a3b8"
           keyboardType="number-pad"
           value={set.reps != null ? String(set.reps) : ''}
