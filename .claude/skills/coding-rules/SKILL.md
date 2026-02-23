@@ -2,6 +2,9 @@
 name: coding-rules
 description: workout-plus プロジェクトのコーディング規約リファレンス。Enum/型定義・StyleSheet・パフォーマンス最適化・副作用管理・命名規則・インポート順序など実装時の判断基準を提供する。コードレビューや実装方針の確認時に参照する。
 allowed-tools: Read
+metadata:
+  author: workout-plus
+  version: '1.0.0'
 ---
 
 # コーディングルール スキル

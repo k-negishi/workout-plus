@@ -1,6 +1,7 @@
 ---
 name: workout-design
 description: workout-plus プロジェクト固有のデザイン方針・決定事項を管理するスキル
+allowed-tools: Read, Write, Edit
 ---
 
 # workout-design スキル

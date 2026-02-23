@@ -7,6 +7,7 @@ description: >-
   issues including complex type gymnastics, build performance, debugging, and
   architectural decisions. If a specialized expert is a better fit, I will
   recommend switching and stop.
+allowed-tools: Read, Write, Edit, Bash
 category: framework
 bundle: [typescript-type-expert, typescript-build-expert]
 displayName: TypeScript
