@@ -13,11 +13,20 @@ import { format } from 'date-fns';
 import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-native';
 import { BarChart } from 'react-native-gifted-charts';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Path, Svg } from 'react-native-svg';
+import { Path, Polyline, Svg } from 'react-native-svg';
 
 import { colors } from '@/shared/constants/colors';
 
 import { useExerciseHistory } from '../hooks/useExerciseHistory';
+
+/** チェックアイコン（DaySummary と同じデザイン） */
+function CheckIcon() {
+  return (
+    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={colors.success} strokeWidth={2}>
+      <Polyline points="20 6 9 17 4 12" strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
 
 /** 戻るアイコン */
 function BackArrow() {
@@ -74,17 +83,16 @@ function formatVolume(kg: number): string {
   return `${kg.toLocaleString()}kg`;
 }
 
-/** 日付を相対表示 */
-function formatRelativeDate(timestamp: number): string {
-  const now = new Date();
+/** 曜日ラベル */
+const DAY_OF_WEEK = ['日', '月', '火', '水', '木', '金', '土'] as const;
+
+/** 日付を「M月D日(曜日)」形式にフォーマット */
+function formatJapaneseDate(timestamp: number): string {
   const date = new Date(timestamp);
-  const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-
-  const dateStr = format(date, 'yyyy-MM-dd');
-
-  if (diffDays === 0) return `${dateStr} (今日)`;
-  if (diffDays === 1) return `${dateStr} (昨日)`;
-  return `${dateStr} (${diffDays}日前)`;
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const dayOfWeek = DAY_OF_WEEK[date.getDay()]!;
+  return `${month}月${day}日(${dayOfWeek})`;
 }
 
 export function ExerciseHistoryFullScreen() {
@@ -222,32 +230,78 @@ export function ExerciseHistoryFullScreen() {
             {allHistory.map((session) => (
               <View
                 key={session.workoutId}
-                className="bg-white rounded-sm p-3 mb-3"
-                style={{ borderWidth: 1, borderColor: colors.border }}
+                style={{
+                  backgroundColor: colors.white,
+                  borderRadius: 4,
+                  padding: 12,
+                  marginBottom: 12,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                }}
               >
                 {/* 日付行 */}
-                <View className="flex-row items-center mb-2">
-                  <Text className="text-[13px] text-text-primary">
-                    {formatRelativeDate(session.completedAt)}
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    marginBottom: 8,
+                  }}
+                >
+                  <Text style={{ fontSize: 13, color: colors.textPrimary }}>
+                    {formatJapaneseDate(session.completedAt)}
                   </Text>
                   {session.hasPR ? (
                     <View
-                      className="ml-2 px-1.5 py-0.5 rounded-sm"
-                      style={{ backgroundColor: colors.primaryBg }}
+                      style={{
+                        marginLeft: 8,
+                        paddingHorizontal: 6,
+                        paddingVertical: 2,
+                        borderRadius: 2,
+                        backgroundColor: colors.primaryBg,
+                      }}
                     >
-                      <Text className="text-primary" style={{ fontSize: 10, fontWeight: '700' }}>
+                      <Text style={{ fontSize: 10, fontWeight: '700', color: colors.primary }}>
                         PR
                       </Text>
                     </View>
                   ) : null}
                 </View>
 
-                {/* セット詳細 */}
-                <View style={{ gap: 4 }}>
+                {/* セット詳細（DaySummary パターン統一） */}
+                <View style={{ gap: 6 }}>
                   {session.sets.map((set) => (
-                    <Text key={set.setNumber} className="text-sm text-text-secondary">
-                      {set.weight ?? '-'}kg × {set.reps ?? '-'}
-                    </Text>
+                    <View
+                      key={set.setNumber}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        borderRadius: 4,
+                        paddingHorizontal: 8,
+                        paddingVertical: 6,
+                        backgroundColor: '#f0fdf4',
+                        gap: 8,
+                      }}
+                    >
+                      <CheckIcon />
+                      <Text style={{ fontSize: 15, color: colors.textSecondary, width: 14 }}>
+                        {set.setNumber}
+                      </Text>
+                      <Text
+                        style={{
+                          fontSize: 16,
+                          fontWeight: '600',
+                          flex: 1,
+                          color: '#334155',
+                        }}
+                      >
+                        {set.weight ?? '-'}kg × {set.reps ?? '-'}
+                      </Text>
+                      {set.estimated1RM != null ? (
+                        <Text style={{ fontSize: 13, color: colors.textSecondary }}>
+                          1RM: {Math.round(set.estimated1RM)}kg
+                        </Text>
+                      ) : null}
+                    </View>
                   ))}
                 </View>
               </View>

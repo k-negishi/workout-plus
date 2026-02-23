@@ -469,5 +469,31 @@ describe('useExerciseHistory ロジック', () => {
       const history = buildHistory([], new Set());
       expect(history).toHaveLength(0);
     });
+
+    it('セットにestimated1RMが含まれる（Epley式で計算）', () => {
+      const sets: SetWithWorkout[] = [
+        {
+          weight: 100,
+          reps: 5,
+          set_number: 1,
+          workout_id: 'w1',
+          completed_at: 1000000,
+          workout_exercise_id: 'we1',
+        },
+        {
+          weight: null,
+          reps: 8,
+          set_number: 2,
+          workout_id: 'w1',
+          completed_at: 1000000,
+          workout_exercise_id: 'we1',
+        },
+      ];
+      const history = buildHistory(sets, new Set());
+      // 100 * (1 + 5/30) = 116.67 → Math.round = 117
+      expect(history[0]!.sets[0]!.estimated1RM).toBe(117);
+      // weight が null の場合は null
+      expect(history[0]!.sets[1]!.estimated1RM).toBeNull();
+    });
   });
 });

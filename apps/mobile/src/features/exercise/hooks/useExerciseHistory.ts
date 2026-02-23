@@ -45,6 +45,8 @@ export type SessionHistoryItem = {
     setNumber: number;
     weight: number | null;
     reps: number | null;
+    /** Epley式推定1RM（weight/reps が null の場合は null） */
+    estimated1RM: number | null;
   }>;
   hasPR: boolean;
 };
@@ -188,6 +190,16 @@ export function calculateStats(sets: SetWithWorkout[], prs: PRForStats[]): Exerc
  * セットデータからセッション履歴リストを生成する純粋関数
  * useExerciseHistoryのfetchData内で使用。テスト容易性のためエクスポート。
  */
+/** セット単位の推定1RMを計算するヘルパー（Epley式） */
+function computeSetEstimated1RM(
+  weight: number | null,
+  reps: number | null,
+): number | null {
+  if (weight == null || reps == null || weight <= 0 || reps <= 0) return null;
+  if (reps === 1) return weight;
+  return Math.round(weight * (1 + reps / 30));
+}
+
 export function buildHistory(
   sets: SetWithWorkout[],
   prWorkoutIds: Set<string>,
@@ -196,13 +208,23 @@ export function buildHistory(
     string,
     {
       completedAt: number;
-      sets: Array<{ setNumber: number; weight: number | null; reps: number | null }>;
+      sets: Array<{
+        setNumber: number;
+        weight: number | null;
+        reps: number | null;
+        estimated1RM: number | null;
+      }>;
     }
   >();
 
   for (const set of sets) {
     const existing = workoutMap.get(set.workout_id);
-    const setData = { setNumber: set.set_number, weight: set.weight, reps: set.reps };
+    const setData = {
+      setNumber: set.set_number,
+      weight: set.weight,
+      reps: set.reps,
+      estimated1RM: computeSetEstimated1RM(set.weight, set.reps),
+    };
     if (existing) {
       existing.sets.push(setData);
     } else {
