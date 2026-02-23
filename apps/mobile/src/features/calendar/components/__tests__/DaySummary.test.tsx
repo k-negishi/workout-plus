@@ -415,9 +415,27 @@ describe('DaySummary - set 文言追加', () => {
       expect(screen.getByText('ベンチプレス')).toBeTruthy();
     });
 
-    // Then: "1 set" と "2 set" のテキストが表示される
+    // Then: "1 set" が表示される（セット行）
     expect(screen.getByText('1 set')).toBeTruthy();
-    expect(screen.getByText('2 set')).toBeTruthy();
+    // "2 set" はサマリーカード（totalSets）とセット行（set_number 2）の両方に表示されるため getAllByText で検証
+    expect(screen.getAllByText('2 set').length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('サマリーカードのセット数に "set" 文言が表示される', async () => {
+    // Given: ワークアウトデータあり（2セット）
+    setupMockWithWorkout();
+
+    render(<DaySummary dateString="2026-02-01" />);
+
+    // When: データ読み込み完了
+    await waitFor(() => {
+      expect(screen.getByText('ベンチプレス')).toBeTruthy();
+    });
+
+    // Then: サマリーカードに「セット数」ラベルが表示され、"2 set" テキストが存在する
+    expect(screen.getByText('セット数')).toBeTruthy();
+    // "2 set" はサマリーカードとセット行の両方に存在するため getAllByText で検証
+    expect(screen.getAllByText('2 set').length).toBe(2);
   });
 });
 

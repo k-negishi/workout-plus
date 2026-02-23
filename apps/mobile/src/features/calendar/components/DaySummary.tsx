@@ -242,7 +242,7 @@ export function DaySummary({
         {/* セット数（3番目） */}
         <View style={{ flex: 1, alignItems: 'center', gap: 4 }}>
           <Text style={{ fontSize: 13, color: '#64748b' }}>セット数</Text>
-          <Text style={{ fontSize: 16, fontWeight: '600', color: '#334155' }}>{totalSets}</Text>
+          <Text style={{ fontSize: 16, fontWeight: '600', color: '#334155' }}>{totalSets} set</Text>
         </View>
         <View style={{ width: 1, height: 28, backgroundColor: '#e2e8f0' }} />
         {/* 総ボリューム（4番目・最後）: 派生指標のため末尾に配置 */}
@@ -332,12 +332,19 @@ export function DaySummary({
         ))}
       </View>
 
-      {/* 削除ボタン: onDeleteWorkout が渡されている場合のみ表示 */}
+      {/* 削除ボタン: onDeleteWorkout が渡されている場合のみ表示。赤ボーダーで視認性を確保 */}
       {onDeleteWorkout && (
         <Pressable
           testID="delete-workout-button"
           onPress={() => onDeleteWorkout(workout.id)}
-          style={{ alignItems: 'center', marginTop: 16, paddingVertical: 8 }}
+          style={{
+            alignItems: 'center',
+            marginTop: 16,
+            paddingVertical: 12,
+            borderWidth: 1,
+            borderColor: '#EF4444',
+            borderRadius: 8,
+          }}
         >
           <Text style={{ color: '#EF4444', fontSize: 14, fontWeight: '600' }}>
             ワークアウトを削除
