@@ -1,13 +1,33 @@
 /**
- * ExercisePickerScreen テスト（Issue #116）
+ * ExercisePickerScreen テスト（Issue #116, #136）
  * - 追加済み種目に「追加済み」バッジが表示される
  * - 追加済み種目をタップしても session.addExercise が呼ばれない
  * - 未追加種目をタップすると session.addExercise が呼ばれる
+ * - Issue #136: カスタム種目追加 FAB が画面右下に表示される
  */
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
 
 // --- モック定義 ---
+
+// @expo/vector-icons モック（Ionicons を testID 付きコンポーネントに差し替え）
+jest.mock('@expo/vector-icons', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const RN = require('react');
+  const mockIcon = (name: string) => {
+    const C = (props: Record<string, unknown>) =>
+      RN.createElement(name, {
+        testID: props['testID'],
+        accessibilityLabel: props['accessibilityLabel'],
+      });
+    C.displayName = name;
+    return C;
+  };
+  return {
+    __esModule: true,
+    Ionicons: mockIcon('Ionicons'),
+  };
+});
 
 jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: jest.fn().mockReturnValue({
@@ -148,5 +168,44 @@ describe('ExercisePickerScreen - 追加済み種目の表示と操作（Issue #1
     fireEvent.press(screen.getByText('スクワット'));
 
     expect(mockAddExercise).toHaveBeenCalledWith('exercise-squat');
+  });
+});
+
+describe('ExercisePickerScreen - カスタム種目追加 FAB（Issue #136）', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('FAB が表示される（accessibilityLabel で検索）', () => {
+    render(<ExercisePickerScreen />);
+
+    expect(screen.getByLabelText('カスタム種目を追加')).toBeTruthy();
+  });
+
+  it('リスト末尾の「+ カスタム種目を追加」テキストボタンが表示されない', () => {
+    render(<ExercisePickerScreen />);
+
+    // 旧ボタンのテキストが存在しないことを確認
+    expect(screen.queryByText('+ カスタム種目を追加')).toBeNull();
+  });
+
+  it('FAB をタップするとカスタム種目作成フォームが表示される', () => {
+    render(<ExercisePickerScreen />);
+
+    // FAB をタップ
+    fireEvent.press(screen.getByLabelText('カスタム種目を追加'));
+
+    // フォーム内の「作成して追加」ボタンが表示される
+    expect(screen.getByText('作成して追加')).toBeTruthy();
+  });
+
+  it('フォーム表示中は FAB が非表示になる', () => {
+    render(<ExercisePickerScreen />);
+
+    // FAB をタップしてフォームを表示
+    fireEvent.press(screen.getByLabelText('カスタム種目を追加'));
+
+    // FAB が消えている
+    expect(screen.queryByLabelText('カスタム種目を追加')).toBeNull();
   });
 });
