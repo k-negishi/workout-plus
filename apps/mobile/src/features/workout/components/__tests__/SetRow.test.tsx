@@ -63,6 +63,17 @@ describe('SetRow', () => {
   });
 
   // ────────────────────────────────────────────────────────────
+  // 行間スペーシング（Issue #128）
+  // ────────────────────────────────────────────────────────────
+
+  it('外枠 View に paddingVertical: 4 が設定されていること（Issue #128 行間拡大）', () => {
+    render(<SetRow {...defaultProps} />);
+    // testID="set-row-container" で外枠 View を特定して垂直パディングを検証する
+    const container = screen.getByTestId('set-row-container');
+    expect(container.props.style).toMatchObject({ paddingVertical: 4 });
+  });
+
+  // ────────────────────────────────────────────────────────────
   // 重量フィールド: keyboardType
   // ────────────────────────────────────────────────────────────
 

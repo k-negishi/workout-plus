@@ -209,6 +209,17 @@ describe('ExerciseBlock', () => {
     });
   });
 
+  // ---- Issue #128 セット間行間拡大 ----
+
+  describe('セットコンテナの gap（Issue #128）', () => {
+    it('セットリストコンテナの gap が 12 であること', () => {
+      render(<ExerciseBlock {...createDefaultProps()} />);
+      // testID="set-list-container" でコンテナを特定して gap を検証する
+      const container = screen.getByTestId('set-list-container');
+      expect(container.props.style).toMatchObject({ gap: 12 });
+    });
+  });
+
   describe('showPreviousRecord prop', () => {
     it('showPreviousRecord=false のとき前回記録バッジが非表示', () => {
       render(<ExerciseBlock {...createDefaultProps({ showPreviousRecord: false })} />);

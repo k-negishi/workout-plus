@@ -188,8 +188,8 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
         <View style={{ width: 20 }} />
       </View>
 
-      {/* セットリスト: gap を 8px に拡大（以前は 2px） */}
-      <View style={{ gap: 8 }}>
+      {/* セットリスト: gap を 12px に拡大してセット間の行間を広げる（Issue #128） */}
+      <View testID="set-list-container" style={{ gap: 12 }}>
         <FlatList
           data={sets}
           keyExtractor={(item) => item.id}

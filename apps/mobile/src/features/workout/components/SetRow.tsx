@@ -61,8 +61,9 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
   const estimated1RM = computeEstimated1RM(set.weight, set.reps);
 
   return (
-    <View>
-      {/* 行本体: 枠線・背景・パディングを持たない軽量レイアウト */}
+    // 外枠: 上下に余白を追加してセット間の行間を広げる（Issue #128）
+    <View testID="set-row-container" style={{ paddingVertical: 4 }}>
+      {/* 行本体: 枠線・背景なしの軽量レイアウト */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
         {/* セット番号: 幅32・左揃えで視認性を確保 */}
         <Text
