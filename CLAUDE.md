@@ -79,6 +79,8 @@ pnpm --filter mobile tsc --noEmit    # 型チェック
 - SQLite via expo-sqlite（既存スキーマ変更なし、リポジトリメソッド追加のみ） (20260222-当日ワークアウト継続登録)
 - TypeScript 5.x + React Native 0.81.5 (Expo SDK 52), `@expo/vector-icons` (Ionicons, 既存導入済み), `react-native-safe-area-context` (20260222-ホーム画面タイトルヘッダー追加)
 - N/A（UIのみ） (20260222-ホーム画面タイトルヘッダー追加)
+- TypeScript 5.x + React Native 0.81.5 (Expo SDK 52), Zustand, expo-sqlite ~15.2.0, @testing-library/react-native, Jest 29 (20260223-種目選択ソート)
+- SQLite（既存スキーマ変更なし。`workout_exercises` テーブルをJOINして使用回数集計） (20260223-種目選択ソート)
 
 ## Recent Changes
 - 003-wireframe-ui-fix: Added TypeScript 5.x / React Native 0.81.5 (Expo SDK 52) + @react-navigation/bottom-tabs v7, NativeWind v4, react-native-calendars, expo-sqlite ~15.2.0, react-native-svg
