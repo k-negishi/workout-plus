@@ -114,7 +114,9 @@ export function RecentWorkoutCard({
         {/* task-info（WF L677-692） */}
         <View style={styles.info}>
           <View style={styles.titleRow}>
-            <Text style={styles.title}>{dateLabel}</Text>
+            {/* 日付: 補助情報として小さく表示 */}
+            <Text style={styles.dateLabel}>{dateLabel}</Text>
+            {/* 部位名: メイン情報として大きく表示 */}
             {muscleLabel !== '' && (
               <Text style={styles.muscleLabel}>{muscleLabel}</Text>
             )}
@@ -179,19 +181,22 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+    // 日付と部位名を縦並びで表示
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: 2,
   },
-  title: {
+  // 日付: 補助情報として部位名より小さく
+  dateLabel: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: colors.textSecondary,
+  },
+  // 部位名: メイン情報として大きく・太く
+  muscleLabel: {
     fontSize: 17,
     fontWeight: '600',
     color: colors.textPrimary,
-  },
-  // 日付隣の部位名ラベル
-  muscleLabel: {
-    fontSize: 14,
-    color: colors.textSecondary,
   },
   // 完了バッジ（WF L551-560, L567-570）
   badge: {

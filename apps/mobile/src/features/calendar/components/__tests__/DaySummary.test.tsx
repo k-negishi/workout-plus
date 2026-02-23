@@ -230,51 +230,30 @@ describe('DaySummary - 削除ボタン', () => {
     mockGetFirstAsync.mockResolvedValue(null);
   };
 
-  it('ワークアウトがある場合に「ワークアウトを削除」ボタンが表示される', async () => {
-    // Given: ワークアウトデータあり・onDeleteWorkout コールバックを渡す
+  it('ワークアウトがある場合に onWorkoutFound が workoutId 付きで呼ばれる', async () => {
+    // Given: ワークアウトデータあり・onWorkoutFound コールバックを渡す
     setupMockWithWorkout();
-    const mockOnDelete = jest.fn();
+    const mockOnWorkoutFound = jest.fn();
 
-    render(<DaySummary dateString="2026-02-01" onDeleteWorkout={mockOnDelete} />);
+    render(<DaySummary dateString="2026-02-01" onWorkoutFound={mockOnWorkoutFound} />);
 
     // When: データ読み込みが完了するまで待機
     await waitFor(() => {
-      expect(screen.getByTestId('delete-workout-button')).toBeTruthy();
+      expect(mockOnWorkoutFound).toHaveBeenCalledWith('workout-delete-1');
     });
   });
 
-  it('ワークアウトがない場合に「ワークアウトを削除」ボタンが表示されない', async () => {
+  it('ワークアウトがない場合に onWorkoutFound が null で呼ばれる', async () => {
     // Given: ワークアウトデータなし
     setupMockWithNoWorkout();
-    const mockOnDelete = jest.fn();
+    const mockOnWorkoutFound = jest.fn();
 
-    render(<DaySummary dateString="2026-02-01" onDeleteWorkout={mockOnDelete} />);
-
-    // When: データ読み込みが完了するまで待機（ローディングが消えるのを確認）
-    await waitFor(() => {
-      // ローディングインジケーターが消えていることを確認
-      expect(screen.queryByTestId('delete-workout-button')).toBeNull();
-    });
-  });
-
-  it('「ワークアウトを削除」ボタンタップで onDeleteWorkout が workoutId 付きで呼ばれる', async () => {
-    // Given: ワークアウトデータあり
-    setupMockWithWorkout();
-    const mockOnDelete = jest.fn();
-
-    render(<DaySummary dateString="2026-02-01" onDeleteWorkout={mockOnDelete} />);
+    render(<DaySummary dateString="2026-02-01" onWorkoutFound={mockOnWorkoutFound} />);
 
     // When: データ読み込みが完了するまで待機
     await waitFor(() => {
-      expect(screen.getByTestId('delete-workout-button')).toBeTruthy();
+      expect(mockOnWorkoutFound).toHaveBeenCalledWith(null);
     });
-
-    // When: 削除ボタンをタップ
-    fireEvent.press(screen.getByTestId('delete-workout-button'));
-
-    // Then: コールバックが正しい workoutId で呼ばれる
-    expect(mockOnDelete).toHaveBeenCalledWith('workout-delete-1');
-    expect(mockOnDelete).toHaveBeenCalledTimes(1);
   });
 });
 

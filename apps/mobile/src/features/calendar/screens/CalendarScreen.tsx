@@ -38,6 +38,8 @@ export function CalendarScreen() {
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   // DaySummary の再取得トリガー（インクリメントするとデータを再フェッチする）
   const [refreshKey, setRefreshKey] = useState(0);
+  // 選択日のワークアウトID（DaySummary から通知される。削除ボタンの表示制御に使用）
+  const [currentWorkoutId, setCurrentWorkoutId] = useState<string | null>(null);
 
   // トレーニング日のデータ取得
   const fetchTrainingDates = useCallback(async () => {
@@ -70,8 +72,10 @@ export function CalendarScreen() {
   }, [route.params?.targetDate]);
 
   // 日付タップ: ローカル状態のみ更新（T07: store.calendarSelectedDate は FloatingRecordButton 廃止により不要）
+  // 日付切り替え時は currentWorkoutId をリセットし、削除ボタンを非表示にする
   const handleDayPress = useCallback((dateString: string) => {
     setSelectedDate(dateString);
+    setCurrentWorkoutId(null);
   }, []);
 
   /**
@@ -166,7 +170,7 @@ export function CalendarScreen() {
         <DaySummary
           dateString={selectedDate}
           onNavigateToExerciseHistory={handleNavigateToExerciseHistory}
-          onDeleteWorkout={handleDeleteWorkout}
+          onWorkoutFound={setCurrentWorkoutId}
           refreshKey={refreshKey}
         />
 
@@ -185,6 +189,26 @@ export function CalendarScreen() {
             }}
           >
             <Text style={{ fontSize: 15, fontWeight: '600', color: '#ffffff' }}>記録・編集</Text>
+          </TouchableOpacity>
+        )}
+
+        {/* ワークアウト削除ボタン: ワークアウトがある日のみ最下部に表示 */}
+        {currentWorkoutId && (
+          <TouchableOpacity
+            testID="delete-workout-button"
+            onPress={() => handleDeleteWorkout(currentWorkoutId)}
+            style={{
+              alignItems: 'center',
+              marginTop: 16,
+              paddingVertical: 12,
+              borderWidth: 1,
+              borderColor: '#EF4444',
+              borderRadius: 8,
+            }}
+          >
+            <Text style={{ color: '#EF4444', fontSize: 14, fontWeight: '600' }}>
+              ワークアウトを削除
+            </Text>
           </TouchableOpacity>
         )}
 

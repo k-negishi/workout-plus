@@ -58,8 +58,8 @@ type DaySummaryProps = {
   dateString: string;
   /** 種目履歴画面への遷移（種目名タップ時に呼ばれる） */
   onNavigateToExerciseHistory?: (exerciseId: string, exerciseName: string) => void;
-  /** ワークアウト削除コールバック: workoutId を引数に渡す */
-  onDeleteWorkout?: (workoutId: string) => void;
+  /** ワークアウト取得時のコールバック: 親が削除ボタンを管理するために使用 */
+  onWorkoutFound?: (workoutId: string | null) => void;
   /** 外部からのリフレッシュトリガー（値が変わるとデータを再取得する） */
   refreshKey?: number;
 };
@@ -67,7 +67,7 @@ type DaySummaryProps = {
 export function DaySummary({
   dateString,
   onNavigateToExerciseHistory,
-  onDeleteWorkout,
+  onWorkoutFound,
   refreshKey,
 }: DaySummaryProps) {
   const [loading, setLoading] = useState(true);
@@ -105,12 +105,16 @@ export function DaySummary({
         setExerciseSets([]);
         setTotalSets(0);
         setTotalVolume(0);
+        // ワークアウトなし: 親に通知
+        onWorkoutFound?.(null);
         setLoading(false);
         return;
       }
 
       const w = workouts[0]!;
       setWorkout(w);
+      // ワークアウト取得時: 親に workoutId を通知（削除ボタンの表示制御に使用）
+      onWorkoutFound?.(w.id);
 
       // 種目一覧を取得
       const exercises = await db.getAllAsync<WorkoutExerciseRow>(
@@ -332,25 +336,6 @@ export function DaySummary({
         ))}
       </View>
 
-      {/* 削除ボタン: onDeleteWorkout が渡されている場合のみ表示。赤ボーダーで視認性を確保 */}
-      {onDeleteWorkout && (
-        <Pressable
-          testID="delete-workout-button"
-          onPress={() => onDeleteWorkout(workout.id)}
-          style={{
-            alignItems: 'center',
-            marginTop: 16,
-            paddingVertical: 12,
-            borderWidth: 1,
-            borderColor: '#EF4444',
-            borderRadius: 8,
-          }}
-        >
-          <Text style={{ color: '#EF4444', fontSize: 14, fontWeight: '600' }}>
-            ワークアウトを削除
-          </Text>
-        </Pressable>
-      )}
     </View>
   );
 }
