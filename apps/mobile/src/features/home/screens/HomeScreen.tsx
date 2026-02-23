@@ -4,6 +4,8 @@
  * StreakCard、最近のワークアウト3件、QuickStatsWidget
  */
 import { Ionicons } from '@expo/vector-icons';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import type { CompositeNavigationProp } from '@react-navigation/native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import {
@@ -22,14 +24,22 @@ import { getDatabase } from '@/database/client';
 import { WorkoutRepository } from '@/database/repositories/workout';
 import type { ExerciseRow, SetRow, WorkoutExerciseRow, WorkoutRow } from '@/database/types';
 import { colors } from '@/shared/constants/colors';
-import type { HomeStackParamList, TimerStatus } from '@/types';
+import type { HomeStackParamList, MainTabParamList, TimerStatus } from '@/types';
 
 import { QuickStatsWidget } from '../components/QuickStatsWidget';
 import { RecentWorkoutCard } from '../components/RecentWorkoutCard';
 import { StreakCard } from '../components/StreakCard';
 import { WeeklyGoalsWidget } from '../components/WeeklyGoalsWidget';
 
-type HomeNavigation = NativeStackNavigationProp<HomeStackParamList, 'Home'>;
+/**
+ * T7: HomeScreen のナビゲーション型
+ * CompositeNavigationProp を使って HomeStack と MainTab の両方を型安全に扱う。
+ * これにより CalendarTab へのクロスタブ遷移が型チェックされる。
+ */
+type HomeNavigation = CompositeNavigationProp<
+  NativeStackNavigationProp<HomeStackParamList, 'Home'>,
+  BottomTabNavigationProp<MainTabParamList>
+>;
 
 /** getDatabase が返す DB インスタンスの型エイリアス（パラメータ型として使用） */
 type AppDatabase = Awaited<ReturnType<typeof getDatabase>>;
@@ -45,6 +55,14 @@ type WorkoutSummary = {
   timerStatus: TimerStatus;
   /** 最初の種目の部位（カードアイコンの背景色に使用） */
   primaryMuscleGroup?: string;
+};
+
+/** ダッシュボード統計（SQL集計値） */
+type DashboardStats = {
+  monthlyExerciseCount: number;
+  monthlySetCount: number;
+  weeklyExerciseCount: number;
+  weeklySetCount: number;
 };
 
 /**
@@ -97,6 +115,38 @@ async function buildWorkoutSummary(db: AppDatabase, workout: WorkoutRow): Promis
   };
 }
 
+/**
+ * 指定期間の種目数・セット数を SQL で集計する。
+ * JS 側ループより効率的で、最近3件以外のワークアウトも正確に集計できる。
+ */
+async function fetchPeriodStats(
+  db: AppDatabase,
+  startMs: number,
+  endMs: number,
+): Promise<{ exerciseCount: number; setCount: number }> {
+  const exerciseResult = await db.getFirstAsync<{ count: number }>(
+    `SELECT COUNT(we.id) AS count
+     FROM workout_exercises we
+     JOIN workouts w ON we.workout_id = w.id
+     WHERE w.status = 'completed' AND w.completed_at BETWEEN ? AND ?`,
+    [startMs, endMs],
+  );
+
+  const setResult = await db.getFirstAsync<{ count: number }>(
+    `SELECT COUNT(s.id) AS count
+     FROM sets s
+     JOIN workout_exercises we ON s.workout_exercise_id = we.id
+     JOIN workouts w ON we.workout_id = w.id
+     WHERE w.status = 'completed' AND w.completed_at BETWEEN ? AND ?`,
+    [startMs, endMs],
+  );
+
+  return {
+    exerciseCount: exerciseResult?.count ?? 0,
+    setCount: setResult?.count ?? 0,
+  };
+}
+
 export function HomeScreen() {
   const navigation = useNavigation<HomeNavigation>();
   // SafeArea 対応: デバイスのノッチ・ダイナミックアイランドに合わせた動的パディング
@@ -104,6 +154,12 @@ export function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [workoutSummaries, setWorkoutSummaries] = useState<WorkoutSummary[]>([]);
   const [trainingDates, setTrainingDates] = useState<Date[]>([]);
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats>({
+    monthlyExerciseCount: 0,
+    monthlySetCount: 0,
+    weeklyExerciseCount: 0,
+    weeklySetCount: 0,
+  });
   /** T10: 記録中セッションの有無（バナー表示制御） */
   const [isRecording, setIsRecording] = useState(false);
 
@@ -124,7 +180,7 @@ export function HomeScreen() {
         return;
       }
 
-      // トレーニング日付リスト
+      // トレーニング日付リスト（StreakCard 用）
       const dates = workouts
         .filter((w) => w.completed_at != null)
         .map((w) => new Date(w.completed_at!));
@@ -133,8 +189,27 @@ export function HomeScreen() {
       // 各ワークアウトの詳細を取得（最新3件分）— helper で複雑度を分散
       const recentWorkouts = workouts.slice(0, 3);
       const summaries = await Promise.all(recentWorkouts.map((w) => buildWorkoutSummary(db, w)));
-
       setWorkoutSummaries(summaries);
+
+      // ダッシュボード統計を SQL 集計で取得する。
+      // workoutSummaries は最新3件しか持たないため、月次・週次の正確な集計には SQL が必要。
+      const now = new Date();
+      const monthStartMs = startOfMonth(now).getTime();
+      const monthEndMs = endOfMonth(now).getTime();
+      const weekStartMs = startOfWeek(now, { weekStartsOn: 1 }).getTime();
+      const weekEndMs = endOfWeek(now, { weekStartsOn: 1 }).getTime();
+
+      const [monthlyStats, weeklyStats] = await Promise.all([
+        fetchPeriodStats(db, monthStartMs, monthEndMs),
+        fetchPeriodStats(db, weekStartMs, weekEndMs),
+      ]);
+
+      setDashboardStats({
+        monthlyExerciseCount: monthlyStats.exerciseCount,
+        monthlySetCount: monthlyStats.setCount,
+        weeklyExerciseCount: weeklyStats.exerciseCount,
+        weeklySetCount: weeklyStats.setCount,
+      });
     } catch (error) {
       console.error('ホーム画面データ取得エラー:', error);
     } finally {
@@ -184,22 +259,15 @@ export function HomeScreen() {
     navigation.navigate('Record', undefined);
   }, [navigation]);
 
-  // 今月/今週のワークアウト回数・前週比・ボリューム・セット数
-  const {
-    monthlyWorkouts,
-    weeklyWorkouts,
-    monthlyVolume,
-    lastWeekWorkouts,
-    weeklySetCount,
-    monthlySetCount,
-  } = useMemo(() => {
+  // 今月/今週のワークアウト回数と前週比（trainingDates から集計）
+  const { monthlyWorkouts, weeklyWorkouts, lastWeekWorkouts } = useMemo(() => {
     const now = new Date();
     const monthStart = startOfMonth(now);
     const monthEnd = endOfMonth(now);
     const weekStart = startOfWeek(now, { weekStartsOn: 1 });
     const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
 
-    // 前週の範囲
+    // 前週比表示のため WeeklyGoalsWidget が必要とする前週ワークアウト数
     const lastWeekStart = startOfWeek(subWeeks(now, 1), { weekStartsOn: 1 });
     const lastWeekEnd = endOfWeek(subWeeks(now, 1), { weekStartsOn: 1 });
 
@@ -219,46 +287,33 @@ export function HomeScreen() {
       }
     }
 
-    // 月間ボリュームは、今月のサマリーの合計
-    const monthlyVol = workoutSummaries
-      .filter((ws) => {
-        const d = new Date(ws.completedAt);
-        return isWithinInterval(d, { start: monthStart, end: monthEnd });
-      })
-      .reduce((sum, ws) => sum + ws.totalVolume, 0);
-
-    // 今週の総セット数（総負荷量より実際の実施量が直感的に分かるため採用）
-    const weeklySets = workoutSummaries
-      .filter((ws) => {
-        const d = new Date(ws.completedAt);
-        return isWithinInterval(d, { start: weekStart, end: weekEnd });
-      })
-      .reduce((sum, ws) => sum + ws.setCount, 0);
-
-    // 月間総セット数
-    const monthlySets = workoutSummaries
-      .filter((ws) => {
-        const d = new Date(ws.completedAt);
-        return isWithinInterval(d, { start: monthStart, end: monthEnd });
-      })
-      .reduce((sum, ws) => sum + ws.setCount, 0);
-
     return {
       monthlyWorkouts: monthly,
       weeklyWorkouts: weekly,
-      monthlyVolume: monthlyVol,
       lastWeekWorkouts: lastWeekly,
-      weeklySetCount: weeklySets,
-      monthlySetCount: monthlySets,
     };
-  }, [trainingDates, workoutSummaries]);
+  }, [trainingDates]);
 
-  // ワークアウト詳細への遷移
+  /**
+   * T7: ワークアウトカードタップ → CalendarTab へクロスタブ遷移する。
+   * completed_at の UNIX ミリ秒から yyyy-MM-dd 形式の日付を生成し、
+   * Calendar 画面の targetDate として渡すことで該当日付をハイライトさせる。
+   */
   const handleWorkoutPress = useCallback(
     (workoutId: string) => {
-      navigation.navigate('WorkoutDetail', { workoutId });
+      const ws = workoutSummaries.find((w) => w.id === workoutId);
+      if (!ws?.completedAt) return;
+
+      const d = new Date(ws.completedAt);
+      // ローカルタイムゾーンで yyyy-MM-dd を生成する（サーバー UTC 変換は不要）
+      const targetDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+      navigation.navigate('CalendarTab', {
+        screen: 'Calendar',
+        params: { targetDate },
+      });
     },
-    [navigation],
+    [navigation, workoutSummaries],
   );
 
   if (loading) {
@@ -375,7 +430,7 @@ export function HomeScreen() {
           {workoutSummaries.length > 0 && (
             <WeeklyGoalsWidget
               thisWeekWorkouts={weeklyWorkouts}
-              thisWeekSets={weeklySetCount}
+              thisWeekSets={dashboardStats.weeklySetCount}
               lastWeekWorkouts={lastWeekWorkouts}
             />
           )}
@@ -400,6 +455,8 @@ export function HomeScreen() {
           {workoutSummaries.map((ws) => (
             <RecentWorkoutCard
               key={ws.id}
+              // テスト用 ID: ワークアウト ID を含めてカード単位でタップ検証できるようにする
+              testID={`workout-card-${ws.id}`}
               completedAt={ws.completedAt}
               exerciseCount={ws.exerciseCount}
               setCount={ws.setCount}
@@ -431,9 +488,11 @@ export function HomeScreen() {
 
           <QuickStatsWidget
             monthlyWorkouts={monthlyWorkouts}
+            monthlyExerciseCount={dashboardStats.monthlyExerciseCount}
+            monthlySetCount={dashboardStats.monthlySetCount}
             weeklyWorkouts={weeklyWorkouts}
-            monthlyVolume={monthlyVolume}
-            monthlySetCount={monthlySetCount}
+            weeklyExerciseCount={dashboardStats.weeklyExerciseCount}
+            weeklySetCount={dashboardStats.weeklySetCount}
           />
         </View>
       </ScrollView>
