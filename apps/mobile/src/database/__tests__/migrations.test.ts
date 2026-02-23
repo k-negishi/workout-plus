@@ -215,12 +215,138 @@ describe('runMigrations V4 → V5', () => {
     expect(updatedIds).toContain('workout-b');
   });
 
-  it('既にバージョン 5 の場合はマイグレーションをスキップすること', async () => {
+  it('バージョン 5 からは V6 マイグレーションが実行されること', async () => {
     const db = createMockDb(5);
 
     await runMigrations(db as unknown as SQLiteDatabase);
 
-    // バージョンが既に 5 なので何も実行されないはず
+    // v5 → v6 マイグレーションが実行される（LATEST_VERSION = 6 のため）
+    expect(db.withTransactionAsync).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('runMigrations V5 → V6', () => {
+  /**
+   * createMockDb の v5 版。exercises テーブルの PRAGMA table_info を返す。
+   * sort_order カラム未存在状態をシミュレートする。
+   */
+  function createMockDbV5() {
+    let schemaVersion = 5;
+
+    const getFirstAsync = jest.fn(async (sql: string) => {
+      if (sql === 'PRAGMA user_version') {
+        return { user_version: schemaVersion };
+      }
+      // MAX(sort_order) 相当のクエリは今回のマイグレーションでは使わない
+      return null;
+    });
+
+    const getAllAsync = jest.fn(async (sql: string) => {
+      if (sql === 'PRAGMA table_info(exercises)') {
+        // sort_order カラムが未存在の状態をシミュレート
+        return [] as { name: string }[];
+      }
+      return [];
+    });
+
+    const execAsync = jest.fn(async (sql: string) => {
+      const match = sql.match(/PRAGMA user_version = (\d+)/);
+      if (match?.[1] != null) {
+        schemaVersion = parseInt(match[1], 10);
+      }
+    });
+
+    const runAsync = jest.fn(async (_sql: string, _params?: unknown[]) => {});
+
+    const withTransactionAsync = jest.fn(async (callback: () => Promise<void>) => {
+      await callback();
+    });
+
+    return {
+      getSchemaVersion: () => schemaVersion,
+      getFirstAsync,
+      getAllAsync,
+      execAsync,
+      runAsync,
+      withTransactionAsync,
+    } as unknown as jest.Mocked<SQLiteDatabase> & {
+      getSchemaVersion: () => number;
+      getFirstAsync: jest.Mock;
+      getAllAsync: jest.Mock;
+      execAsync: jest.Mock;
+      runAsync: jest.Mock;
+      withTransactionAsync: jest.Mock;
+    };
+  }
+
+  it('マイグレーション V6 実行後に sort_order カラムを追加する ALTER TABLE が実行されること', async () => {
+    const db = createMockDbV5();
+
+    await runMigrations(db as unknown as SQLiteDatabase);
+
+    const execCalls = db.execAsync.mock.calls.map((call) => String(call[0]));
+    const hasAlterTable = execCalls.some(
+      (sql) => sql.includes('ALTER TABLE exercises') && sql.includes('ADD COLUMN sort_order'),
+    );
+    expect(hasAlterTable).toBe(true);
+  });
+
+  it('マイグレーション V6 実行後に既存種目に sort_order = rowid を設定する UPDATE が実行されること', async () => {
+    const db = createMockDbV5();
+
+    await runMigrations(db as unknown as SQLiteDatabase);
+
+    const execCalls = db.execAsync.mock.calls.map((call) => String(call[0]));
+    const hasUpdateRowid = execCalls.some(
+      (sql) =>
+        sql.includes('UPDATE exercises') &&
+        sql.includes('sort_order') &&
+        sql.includes('rowid'),
+    );
+    expect(hasUpdateRowid).toBe(true);
+  });
+
+  it('sort_order カラムが既存の場合は ALTER TABLE をスキップして冪等に実行されること', async () => {
+    const db = createMockDbV5();
+
+    // sort_order が既に存在する状態をシミュレート
+    db.getAllAsync.mockImplementation(async (sql: string) => {
+      if (sql === 'PRAGMA table_info(exercises)') {
+        return [{ name: 'sort_order' }] as { name: string }[];
+      }
+      return [];
+    });
+
+    await runMigrations(db as unknown as SQLiteDatabase);
+
+    // ALTER TABLE は実行されないはず
+    const execCalls = db.execAsync.mock.calls.map((call) => String(call[0]));
+    const hasAlterTable = execCalls.some(
+      (sql) => sql.includes('ALTER TABLE exercises') && sql.includes('ADD COLUMN sort_order'),
+    );
+    expect(hasAlterTable).toBe(false);
+  });
+
+  it('既にバージョン 6 の場合はマイグレーションをスキップすること', async () => {
+    let schemaVersion = 6;
+    const db = {
+      getFirstAsync: jest.fn(async (sql: string) => {
+        if (sql === 'PRAGMA user_version') return { user_version: schemaVersion };
+        return null;
+      }),
+      getAllAsync: jest.fn(async () => []),
+      execAsync: jest.fn(async (sql: string) => {
+        const match = sql.match(/PRAGMA user_version = (\d+)/);
+        if (match?.[1] != null) schemaVersion = parseInt(match[1], 10);
+      }),
+      runAsync: jest.fn(async () => {}),
+      withTransactionAsync: jest.fn(async (cb: () => Promise<void>) => {
+        await cb();
+      }),
+    } as unknown as jest.Mocked<SQLiteDatabase>;
+
+    await runMigrations(db as unknown as SQLiteDatabase);
+
     expect(db.withTransactionAsync).not.toHaveBeenCalled();
     expect(db.execAsync).not.toHaveBeenCalled();
   });

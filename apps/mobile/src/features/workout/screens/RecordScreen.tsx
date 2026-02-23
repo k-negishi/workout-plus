@@ -163,6 +163,7 @@ export const RecordScreen: React.FC = () => {
         is_favorite: 0 | 1;
         created_at: number;
         updated_at: number;
+        sort_order: number;
       }>('SELECT * FROM exercises');
       const map: Record<string, Exercise> = {};
       for (const row of rows) {
@@ -175,6 +176,7 @@ export const RecordScreen: React.FC = () => {
           isFavorite: row.is_favorite === 1,
           createdAt: row.created_at,
           updatedAt: row.updated_at,
+          sortOrder: row.sort_order,
         };
       }
       setExerciseMap(map);

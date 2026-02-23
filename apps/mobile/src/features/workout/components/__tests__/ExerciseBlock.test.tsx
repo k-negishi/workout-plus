@@ -58,6 +58,7 @@ const mockExercise: Exercise = {
   isFavorite: false,
   createdAt: 1000,
   updatedAt: 1000,
+  sortOrder: 1,
 };
 
 /** テスト用セットデータ */

@@ -9,7 +9,7 @@ import { ALL_CREATE_TABLES, CREATE_INDEXES } from './schema';
 import { generateDevWorkoutSeedSQL, generateSeedSQL } from './seed';
 
 /** 現在の最新スキーマバージョン */
-const LATEST_VERSION = 5;
+const LATEST_VERSION = 6;
 
 /**
  * 現在のスキーマバージョンを取得する
@@ -171,6 +171,28 @@ async function migrateV4ToV5(db: SQLiteDatabase): Promise<void> {
   );
 }
 
+/**
+ * バージョン 5 → 6: exercises テーブルに sort_order カラムを追加
+ *
+ * sort_order は種目選択画面でのユーザー定義並び順。
+ * 既存レコードは rowid（挿入順序）で初期化する。
+ *
+ * 冪等性: PRAGMA table_info で存在チェックし ALTER TABLE の重複実行を防ぐ。
+ */
+async function migrateV5ToV6(db: SQLiteDatabase): Promise<void> {
+  // sort_order カラムが未存在の場合のみ追加する
+  const tableInfo = await db.getAllAsync<{ name: string }>('PRAGMA table_info(exercises)');
+  const hasSortOrder = tableInfo.some((col) => col.name === 'sort_order');
+  if (!hasSortOrder) {
+    // NOT NULL DEFAULT 0 で追加（直後の UPDATE で正式な値を設定するため DEFAULT 0 は暫定）
+    await db.execAsync('ALTER TABLE exercises ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0');
+  }
+
+  // 既存レコードを rowid 順（登録順）で初期化する
+  // rowid は SQLite の挿入順序を保証する整数であり、種目の登録順と対応する
+  await db.execAsync('UPDATE exercises SET sort_order = rowid WHERE sort_order = 0');
+}
+
 /** マイグレーション関数の型 */
 type Migration = (db: SQLiteDatabase) => Promise<void>;
 
@@ -181,6 +203,7 @@ const MIGRATIONS: Record<number, Migration> = {
   3: migrateV2ToV3,
   4: migrateV3ToV4,
   5: migrateV4ToV5,
+  6: migrateV5ToV6,
 };
 
 /**

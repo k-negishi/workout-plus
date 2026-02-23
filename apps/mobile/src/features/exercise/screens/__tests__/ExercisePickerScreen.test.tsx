@@ -74,6 +74,8 @@ jest.mock('../../hooks/useExerciseSearch', () => ({
     setQuery: jest.fn(),
     selectedCategory: null,
     setSelectedCategory: jest.fn(),
+    isLoading: false,
+    loadExercises: jest.fn(),
     // sections: ベンチプレス（追加済み）とスクワット（未追加）
     sections: [
       {
@@ -88,6 +90,7 @@ jest.mock('../../hooks/useExerciseSearch', () => ({
             isFavorite: false,
             createdAt: 1000,
             updatedAt: 1000,
+            sortOrder: 1,
           },
           {
             id: 'exercise-squat',
@@ -98,8 +101,33 @@ jest.mock('../../hooks/useExerciseSearch', () => ({
             isFavorite: false,
             createdAt: 1000,
             updatedAt: 1000,
+            sortOrder: 2,
           },
         ],
+      },
+    ],
+    allExercises: [
+      {
+        id: 'exercise-bench',
+        name: 'ベンチプレス',
+        muscleGroup: 'chest',
+        equipment: 'barbell',
+        isCustom: false,
+        isFavorite: false,
+        createdAt: 1000,
+        updatedAt: 1000,
+        sortOrder: 1,
+      },
+      {
+        id: 'exercise-squat',
+        name: 'スクワット',
+        muscleGroup: 'legs',
+        equipment: 'barbell',
+        isCustom: false,
+        isFavorite: false,
+        createdAt: 1000,
+        updatedAt: 1000,
+        sortOrder: 2,
       },
     ],
   }),
@@ -130,6 +158,17 @@ jest.mock('@/stores/workoutSessionStore', () => ({
       ],
     };
     return selector(state);
+  },
+}));
+
+// ExerciseReorderModal のモック（ボタン操作のみ検証するため内部実装は除外）
+jest.mock('../../components/ExerciseReorderModal', () => ({
+  ExerciseReorderModal: ({ visible }: { visible: boolean }) => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const React = require('react');
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { Text } = require('react-native');
+    return visible ? React.createElement(Text, null, '並び替えモーダル') : null;
   },
 }));
 
@@ -168,6 +207,31 @@ describe('ExercisePickerScreen - 追加済み種目の表示と操作（Issue #1
     fireEvent.press(screen.getByText('スクワット'));
 
     expect(mockAddExercise).toHaveBeenCalledWith('exercise-squat');
+  });
+});
+
+describe('ExercisePickerScreen - 並び替えボタン（Issue #141）', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('ヘッダーに並び替えボタン（testID: reorder-button）が存在する', () => {
+    render(<ExercisePickerScreen />);
+
+    expect(screen.getByTestId('reorder-button')).toBeTruthy();
+  });
+
+  it('並び替えボタンをタップすると並び替えモーダルが開く', () => {
+    render(<ExercisePickerScreen />);
+
+    // モーダルが閉じている状態を確認
+    expect(screen.queryByText('並び替えモーダル')).toBeNull();
+
+    // 並び替えボタンをタップ
+    fireEvent.press(screen.getByTestId('reorder-button'));
+
+    // モーダルが表示される
+    expect(screen.getByText('並び替えモーダル')).toBeTruthy();
   });
 });
 

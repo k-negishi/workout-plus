@@ -27,6 +27,7 @@ import { useWorkoutSessionStore } from '@/stores/workoutSessionStore';
 import type { Equipment, Exercise, HomeStackParamList, MuscleGroup } from '@/types';
 
 import { useWorkoutSession } from '../../workout/hooks/useWorkoutSession';
+import { ExerciseReorderModal } from '../components/ExerciseReorderModal';
 import { MUSCLE_GROUP_LABELS, useExerciseSearch } from '../hooks/useExerciseSearch';
 
 /**
@@ -324,7 +325,8 @@ export const ExercisePickerScreen: React.FC = () => {
   const session = useWorkoutSession();
   // SafeArea 対応: ノッチ・ダイナミックアイランド対応
   const insets = useSafeAreaInsets();
-  const { query, setQuery, selectedCategory, setSelectedCategory, sections } = useExerciseSearch();
+  const { query, setQuery, selectedCategory, setSelectedCategory, sections, allExercises, loadExercises } =
+    useExerciseSearch();
 
   // Issue #116: 現在のワークアウトに追加済みの exerciseId セットを構築
   // currentExercises が更新されると再計算される
@@ -345,6 +347,9 @@ export const ExercisePickerScreen: React.FC = () => {
   const [newExerciseName, setNewExerciseName] = useState('');
   const [newMuscleGroup, setNewMuscleGroup] = useState<MuscleGroup>('chest');
   const [newEquipment, setNewEquipment] = useState<Equipment>('barbell');
+
+  // 並び替えモーダル表示状態
+  const [isReorderModalVisible, setIsReorderModalVisible] = useState(false);
 
   // T039: インライン編集
   const [editingExerciseId, setEditingExerciseId] = useState<string | null>(null);
@@ -443,6 +448,20 @@ export const ExercisePickerScreen: React.FC = () => {
     navigation.goBack();
   }, [navigation]);
 
+  /**
+   * 並び替えモーダルの「保存する」ハンドラ
+   * 新しい並び順を DB に保存し、リストを再読み込みする
+   */
+  const handleReorderSave = useCallback(
+    async (ordered: Exercise[]) => {
+      const updates = ordered.map((ex, index) => ({ id: ex.id, sortOrder: index + 1 }));
+      await ExerciseRepository.updateSortOrders(updates);
+      await loadExercises();
+      setIsReorderModalVisible(false);
+    },
+    [loadExercises],
+  );
+
   const sectionData = sections.map((section) => ({
     title: section.title,
     data: section.data,
@@ -459,8 +478,15 @@ export const ExercisePickerScreen: React.FC = () => {
           <Text className="text-[24px] text-[#475569]">{'‹'}</Text>
         </TouchableOpacity>
         <Text className="flex-1 text-center text-[18px] font-bold text-[#334155]">種目を選択</Text>
-        {/* T038: モード切替トグル（ヘッダー右） */}
-        <View className="w-8" />
+        {/* Issue #141: 並び替えボタン */}
+        <TouchableOpacity
+          testID="reorder-button"
+          onPress={() => setIsReorderModalVisible(true)}
+          className="w-8 h-8 items-center justify-center"
+          accessibilityLabel="並び替え"
+        >
+          <Text className="text-[20px] text-[#475569]">⇅</Text>
+        </TouchableOpacity>
       </View>
 
       {/* 検索バー */}
@@ -649,6 +675,14 @@ export const ExercisePickerScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       )}
+
+      {/* Issue #141: 並び替えモーダル */}
+      <ExerciseReorderModal
+        visible={isReorderModalVisible}
+        exercises={allExercises}
+        onSave={handleReorderSave}
+        onClose={() => setIsReorderModalVisible(false)}
+      />
 
       {/* Issue #136: カスタム種目追加 FAB（フォーム表示中は非表示） */}
       {!isCreating && (

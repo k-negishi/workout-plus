@@ -29,6 +29,8 @@ export type UseExerciseSearchReturn = {
   isLoading: boolean;
   /** 種目の全リスト（フィルタリングなし） */
   allExercises: Exercise[];
+  /** 全種目を再読み込みする（並び替え保存後などに呼ぶ） */
+  loadExercises: () => Promise<void>;
 };
 
 /** DB行型からアプリ層型への変換（テスト容易性のためエクスポート） */
@@ -41,6 +43,7 @@ export function toExercise(row: {
   is_favorite: 0 | 1;
   created_at: number;
   updated_at: number;
+  sort_order: number;
 }): Exercise {
   return {
     id: row.id,
@@ -51,6 +54,7 @@ export function toExercise(row: {
     isFavorite: row.is_favorite === 1,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    sortOrder: row.sort_order,
   };
 }
 
@@ -179,6 +183,7 @@ export function useExerciseSearch(): UseExerciseSearchReturn {
     sections,
     isLoading,
     allExercises,
+    loadExercises,
   };
 }
 

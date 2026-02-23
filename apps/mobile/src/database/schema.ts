@@ -29,6 +29,7 @@
  * @column is_favorite   - お気に入り登録フラグ（0: 通常、1: お気に入り）。種目選択モーダルのフィルタリングに使用
  * @column created_at    - レコード作成日時（UNIX ミリ秒 UTC）
  * @column updated_at    - レコード最終更新日時（UNIX ミリ秒 UTC）。name・muscle_group・equipment・is_favorite の変更時に更新
+ * @column sort_order    - ユーザー定義の並び順。新規インストール時は Migration v6 の rowid 初期化と同等の値が設定される。一意制約なし（バルクUPDATE中の一時的重複を避けるため）
  */
 export const CREATE_EXERCISES_TABLE = `
 CREATE TABLE IF NOT EXISTS exercises (
@@ -39,7 +40,8 @@ CREATE TABLE IF NOT EXISTS exercises (
   is_custom     INTEGER NOT NULL DEFAULT 0,
   is_favorite   INTEGER NOT NULL DEFAULT 0,
   created_at    INTEGER NOT NULL,
-  updated_at    INTEGER NOT NULL
+  updated_at    INTEGER NOT NULL,
+  sort_order    INTEGER NOT NULL DEFAULT 0
 );
 `;
 

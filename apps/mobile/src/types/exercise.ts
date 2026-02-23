@@ -13,4 +13,6 @@ export type Exercise = {
   isFavorite: boolean;
   createdAt: number;
   updatedAt: number;
+  /** ユーザー定義の並び順。ExerciseReorderModal で変更可能 */
+  sortOrder: number;
 };

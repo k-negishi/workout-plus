@@ -18,10 +18,10 @@ type CreateExerciseParams = {
 type UpdateExerciseParams = Partial<Pick<ExerciseRow, 'name' | 'muscle_group' | 'equipment'>>;
 
 export const ExerciseRepository = {
-  /** 全種目を取得する（名前順） */
+  /** 全種目を取得する（ユーザー定義の並び順） */
   async findAll(): Promise<ExerciseRow[]> {
     const db = await getDatabase();
-    return db.getAllAsync<ExerciseRow>('SELECT * FROM exercises ORDER BY muscle_group, name');
+    return db.getAllAsync<ExerciseRow>('SELECT * FROM exercises ORDER BY sort_order ASC');
   },
 
   /** 部位カテゴリで種目を検索する */
@@ -61,11 +61,18 @@ export const ExerciseRepository = {
     const now = Date.now();
     const id = ulid();
 
+    // 現在の最大 sort_order を取得し、+1 して新規種目の順序を末尾に設定する
+    // テーブルが空の場合は COALESCE で 0 を返すため sort_order = 1 になる
+    const maxRow = await db.getFirstAsync<{ max_sort: number | null }>(
+      'SELECT COALESCE(MAX(sort_order), 0) AS max_sort FROM exercises',
+    );
+    const sortOrder = (maxRow?.max_sort ?? 0) + 1;
+
     await db.runAsync(
-      `INSERT INTO exercises (id, name, muscle_group, equipment, is_custom, is_favorite, created_at, updated_at)
-       VALUES (?, ?, ?, ?, 1, 0, ?, ?)`,
+      `INSERT INTO exercises (id, name, muscle_group, equipment, is_custom, is_favorite, created_at, updated_at, sort_order)
+       VALUES (?, ?, ?, ?, 1, 0, ?, ?, ?)`,
       // DBカラム名は snake_case のまま。params は camelCase で受け取る
-      [id, params.name, params.muscleGroup, params.equipment, now, now],
+      [id, params.name, params.muscleGroup, params.equipment, now, now, sortOrder],
     );
 
     const row = await db.getFirstAsync<ExerciseRow>('SELECT * FROM exercises WHERE id = ?', [id]);
@@ -100,6 +107,20 @@ export const ExerciseRepository = {
 
     values.push(id);
     await db.runAsync(`UPDATE exercises SET ${fields.join(', ')} WHERE id = ?`, values);
+  },
+
+  /**
+   * 複数種目の sort_order を一括更新する
+   * withTransactionAsync でアトミックに実行し、部分更新を防ぐ
+   */
+  async updateSortOrders(orders: { id: string; sortOrder: number }[]): Promise<void> {
+    if (orders.length === 0) return;
+    const db = await getDatabase();
+    await db.withTransactionAsync(async () => {
+      for (const { id, sortOrder } of orders) {
+        await db.runAsync('UPDATE exercises SET sort_order = ? WHERE id = ?', [sortOrder, id]);
+      }
+    });
   },
 
   /** お気に入りをトグルする */

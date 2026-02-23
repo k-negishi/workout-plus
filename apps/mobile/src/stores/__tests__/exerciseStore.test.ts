@@ -16,6 +16,7 @@ function makeExercise(overrides: Partial<Exercise> & { id: string; name: string 
     isFavorite: false,
     createdAt: now,
     updatedAt: now,
+    sortOrder: 0,
     ...overrides,
   };
 }

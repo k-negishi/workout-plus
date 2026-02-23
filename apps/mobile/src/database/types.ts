@@ -43,6 +43,8 @@ export type ExerciseRow = {
   is_favorite: 0 | 1;
   created_at: number;
   updated_at: number;
+  /** ユーザー定義の並び順。ExerciseReorderModal で変更可能 */
+  sort_order: number;
 };
 
 /** workout_exercises テーブル行型 */

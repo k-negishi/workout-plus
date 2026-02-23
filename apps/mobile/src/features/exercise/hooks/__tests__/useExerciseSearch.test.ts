@@ -22,6 +22,7 @@ function makeExercise(
     isFavorite: false,
     createdAt: now,
     updatedAt: now,
+    sortOrder: 0,
     ...overrides,
   };
 }
@@ -54,6 +55,7 @@ describe('toExercise: DBの行からExerciseへの変換', () => {
       is_favorite: 1 as 0 | 1,
       created_at: now,
       updated_at: now,
+      sort_order: 5,
     };
     const exercise = toExercise(row);
     expect(exercise.id).toBe('ex-1');
@@ -76,6 +78,7 @@ describe('toExercise: DBの行からExerciseへの変換', () => {
       is_favorite: 0 as 0 | 1,
       created_at: now,
       updated_at: now,
+      sort_order: 3,
     };
     const exercise = toExercise(row);
     expect(exercise.isCustom).toBe(true);
