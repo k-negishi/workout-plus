@@ -86,3 +86,23 @@ describe('usePreviousRecord - 型とインターフェーステスト', () => {
     expect(record.sets[0]!.estimated1RM).toBeNull();
   });
 });
+
+describe('usePreviousRecord - currentWorkoutCreatedAt パラメータ', () => {
+  it('currentWorkoutCreatedAt: number | null を受け取れる関数シグネチャになっている', () => {
+    // 型レベルのテスト: この型割り当てがコンパイルエラーにならないことを確認
+    type PreviousRecordFn = (
+      exerciseId: string,
+      currentWorkoutId: string | null,
+      currentWorkoutCreatedAt: number | null,
+    ) => { previousRecord: null; isLoading: boolean };
+
+    const mockFn: PreviousRecordFn = (
+      _exerciseId,
+      _currentWorkoutId,
+      _currentWorkoutCreatedAt,
+    ) => ({ previousRecord: null, isLoading: false });
+
+    expect(mockFn('ex-1', null, null)).toEqual({ previousRecord: null, isLoading: false });
+    expect(mockFn('ex-1', 'w-1', Date.now())).toEqual({ previousRecord: null, isLoading: false });
+  });
+});

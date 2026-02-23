@@ -27,10 +27,12 @@ export type UsePreviousRecordReturn = {
  * 指定された種目の前回記録を取得するカスタムフック
  * @param exerciseId 種目ID
  * @param currentWorkoutId 現在のワークアウトID（除外用）
+ * @param currentWorkoutCreatedAt 現在のワークアウト作成時刻（この時刻より前の記録のみ参照）
  */
 export function usePreviousRecord(
   exerciseId: string,
   currentWorkoutId: string | null,
+  currentWorkoutCreatedAt: number | null = null,
 ): UsePreviousRecordReturn {
   const [previousRecord, setPreviousRecord] = useState<PreviousRecord | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -47,9 +49,14 @@ export function usePreviousRecord(
 
       // 現在のワークアウトを除外して、直近の完了済みワークアウトを検索
       const excludeClause = currentWorkoutId ? 'AND w.id != ?' : '';
+      // 対象日付より前のワークアウトのみを前回セットとして参照する（過去日付セッション対応）
+      const dateClause = currentWorkoutCreatedAt !== null ? 'AND w.created_at < ?' : '';
       const params: (string | number)[] = [exerciseId];
       if (currentWorkoutId) {
         params.push(currentWorkoutId);
+      }
+      if (currentWorkoutCreatedAt !== null) {
+        params.push(currentWorkoutCreatedAt);
       }
 
       const row = await db.getFirstAsync<{
@@ -59,7 +66,7 @@ export function usePreviousRecord(
         `SELECT we.id AS workout_exercise_id, w.created_at
          FROM workout_exercises we
          JOIN workouts w ON we.workout_id = w.id
-         WHERE we.exercise_id = ? AND w.status = 'completed' ${excludeClause}
+         WHERE we.exercise_id = ? AND w.status = 'completed' ${excludeClause} ${dateClause}
          ORDER BY w.created_at DESC
          LIMIT 1`,
         params,
@@ -105,7 +112,7 @@ export function usePreviousRecord(
     } finally {
       setIsLoading(false);
     }
-  }, [exerciseId, currentWorkoutId]);
+  }, [exerciseId, currentWorkoutId, currentWorkoutCreatedAt]);
 
   useEffect(() => {
     void fetchPreviousRecord();

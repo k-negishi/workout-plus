@@ -123,8 +123,8 @@ export function CalendarScreen() {
   const handleRecordOrEdit = useCallback(async () => {
     const existing = await WorkoutRepository.findCompletedByDate(selectedDate);
     if (existing) {
-      // 既存ワークアウトがあれば編集モード
-      navigation.navigate('Record', { workoutId: existing.id });
+      // 既存ワークアウトがあれば編集モード（targetDate も渡してヘッダー日付を正しく表示する）
+      navigation.navigate('Record', { workoutId: existing.id, targetDate: selectedDate });
     } else {
       // なければ指定日付の新規記録モード
       const today = format(new Date(), 'yyyy-MM-dd');

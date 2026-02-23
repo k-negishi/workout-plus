@@ -60,6 +60,8 @@ const ExerciseBlockWithPrevious: React.FC<{
   sets: WorkoutSet[];
   currentWorkoutId: string | null;
   memo: string | null;
+  /** 現在のワークアウト作成時刻（対象日付以前のセットのみ前回記録として参照） */
+  currentWorkoutCreatedAt: number | null;
   /** 編集モード時は前回記録を非表示にする（null を渡すことで制御） */
   showPreviousRecord: boolean;
   onWeightChange: (setId: string, weight: number | null) => void;
@@ -75,6 +77,7 @@ const ExerciseBlockWithPrevious: React.FC<{
   exerciseMeta,
   sets,
   currentWorkoutId,
+  currentWorkoutCreatedAt,
   memo,
   showPreviousRecord,
   onWeightChange,
@@ -85,7 +88,7 @@ const ExerciseBlockWithPrevious: React.FC<{
   onMemoChange,
   onDeleteExercise,
 }) => {
-  const { previousRecord } = usePreviousRecord(exerciseId, currentWorkoutId);
+  const { previousRecord } = usePreviousRecord(exerciseId, currentWorkoutId, currentWorkoutCreatedAt);
 
   if (!exerciseMeta) return null;
 
@@ -382,6 +385,7 @@ export const RecordScreen: React.FC = () => {
             exerciseMeta={exerciseMap[exercise.exerciseId] ?? null}
             sets={store.currentSets[exercise.id] ?? []}
             currentWorkoutId={store.currentWorkout?.id ?? null}
+            currentWorkoutCreatedAt={store.currentWorkout?.createdAt ?? null}
             memo={exercise.memo}
             showPreviousRecord={!isEditMode}
             onWeightChange={handleWeightChange}
