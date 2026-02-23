@@ -18,7 +18,16 @@ import type {
 import { format, parseISO } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getDatabase } from '@/database/client';
@@ -380,13 +389,21 @@ export const RecordScreen: React.FC = () => {
         isCompleteDisabled={!hasExercises}
       />
 
-      {/* スクロール領域 */}
-      <ScrollView
+      {/* Issue #134: キーボード被り対策 - iOS では padding、Android では height で回避 */}
+      <KeyboardAvoidingView
+        testID="keyboard-avoiding-view"
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{ flex: 1 }}
-        contentContainerStyle={
-          hasExercises ? { paddingBottom: 120 } : { paddingBottom: 120, flexGrow: 1 }
-        }
       >
+        {/* スクロール領域: keyboardShouldPersistTaps でキーボード表示中のタップを処理 */}
+        <ScrollView
+          testID="record-scroll-view"
+          style={{ flex: 1 }}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={
+            hasExercises ? { paddingBottom: 120 } : { paddingBottom: 120, flexGrow: 1 }
+          }
+        >
         {/* 種目未追加時の空状態表示 */}
         {!hasExercises && (
           <EmptyState
@@ -465,7 +482,8 @@ export const RecordScreen: React.FC = () => {
             }}
           />
         </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 };

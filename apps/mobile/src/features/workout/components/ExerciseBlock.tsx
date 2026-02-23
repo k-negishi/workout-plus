@@ -101,16 +101,8 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
           <Text className="text-[14px] text-[#64748b] mt-[2px]">{muscleLabel}</Text>
         </TouchableOpacity>
 
-        {/* ヘッダー右エリア: 削除ボタン + コピーバッジ */}
+        {/* ヘッダー右エリア: コピーバッジ + 削除ボタン（Issue #137: 削除ボタンをバッジの右に移動） */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          {/* 削除ボタン: アイコンからテキスト「✕」に変更（シンプル化） */}
-          <TouchableOpacity
-            onPress={onDeleteExercise}
-            accessibilityLabel={`${exercise.name}を削除`}
-            style={{ padding: 4 }}
-          >
-            <Text style={{ fontSize: 16, color: '#64748b' }}>✕</Text>
-          </TouchableOpacity>
           {/* 前回記録バッジ: showPreviousRecord=false のとき非表示 */}
           {previousBadgeText && (
             <TouchableOpacity
@@ -129,10 +121,18 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
               <Text className="text-[13px] text-[#64748b]">{previousBadgeText}</Text>
             </TouchableOpacity>
           )}
+          {/* 削除ボタン: バッジの右側に配置（自然な左→右の読み順に合わせる） */}
+          <TouchableOpacity
+            onPress={onDeleteExercise}
+            accessibilityLabel={`${exercise.name}を削除`}
+            style={{ padding: 4 }}
+          >
+            <Text style={{ fontSize: 16, color: '#64748b' }}>✕</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
-      {/* カラムヘッダー行: Set / kg / (x スペーサー) / 回 / 1RM / (削除スペーサー) */}
+      {/* カラムヘッダー行: Set / kg / (x スペーサー) / rep / 1RM / (削除スペーサー) */}
       <View style={{ flexDirection: 'row', gap: 8, paddingLeft: 8, paddingBottom: 8 }}>
         {/* Set: セット番号列幅 32px */}
         <Text
@@ -160,7 +160,7 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
         </Text>
         {/* ×記号のスペーサー: SetRow の区切り文字列幅に合わせて 16px */}
         <View style={{ width: 16 }} />
-        {/* 回: flex-1 でレップ数入力列に合わせる */}
+        {/* rep: flex-1 でレップ数入力列に合わせる（Issue #134: 「回」→「rep」に変更） */}
         <Text
           style={{
             flex: 1,
@@ -170,7 +170,7 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
             textAlign: 'center',
           }}
         >
-          回
+          rep
         </Text>
         {/* 1RM: 推定1RM表示列幅 48px */}
         <Text

@@ -186,15 +186,22 @@ describe('ExerciseBlock', () => {
   // ---- Issue #121 カードデザイン刷新 ----
 
   describe('カラムヘッダー行', () => {
-    it('Set / kg / 回 / 1RM のラベルが表示される', () => {
+    it('Set / kg / rep / 1RM のラベルが表示される（Issue #134: 回→rep）', () => {
       render(<ExerciseBlock {...createDefaultProps()} />);
 
       // セットリスト上部にカラムヘッダーが追加されること
-      // kg / 回 は SetRow 内でも使われるため getAllByText で「少なくとも1つ」を確認
       expect(screen.getByText('Set')).toBeTruthy();
       expect(screen.getAllByText('kg').length).toBeGreaterThanOrEqual(1);
-      expect(screen.getAllByText('回').length).toBeGreaterThanOrEqual(1);
+      // Issue #134: 「回」→「rep」に変更
+      expect(screen.getAllByText('rep').length).toBeGreaterThanOrEqual(1);
       expect(screen.getByText('1RM')).toBeTruthy();
+    });
+
+    it('カラムヘッダーに「回」が表示されないこと（Issue #134: 回→rep）', () => {
+      render(<ExerciseBlock {...createDefaultProps()} />);
+
+      // 「回」のテキストが存在しないことを確認
+      expect(screen.queryByText('回')).toBeNull();
     });
   });
 
@@ -217,6 +224,60 @@ describe('ExerciseBlock', () => {
       // testID="set-list-container" でコンテナを特定して gap を検証する
       const container = screen.getByTestId('set-list-container');
       expect(container.props.style).toMatchObject({ gap: 12 });
+    });
+  });
+
+  // ---- Issue #137 種目削除ボタン配置修正 ----
+
+  describe('種目削除ボタンの配置（Issue #137）', () => {
+    it('前回記録バッジが削除ボタンより先にレンダリングされる（バッジ→✕の順）', () => {
+      const { toJSON } = render(<ExerciseBlock {...createDefaultProps()} />);
+      const json = JSON.stringify(toJSON());
+
+      // JSON 文字列中でバッジの accessibilityLabel が削除ボタンより前に現れること
+      const badgeIndex = json.indexOf('前回の全セットをコピー');
+      const deleteIndex = json.indexOf(`${EXERCISE_NAME}を削除`);
+
+      expect(badgeIndex).toBeGreaterThan(-1);
+      expect(deleteIndex).toBeGreaterThan(-1);
+      // バッジが削除ボタンより「前」に来ること（Issue #137 の修正確認）
+      expect(badgeIndex).toBeLessThan(deleteIndex);
+    });
+
+    it('前回記録バッジが非表示でも削除ボタンは表示される', () => {
+      render(<ExerciseBlock {...createDefaultProps({ previousRecord: null })} />);
+
+      // バッジは非表示
+      expect(screen.queryByLabelText(COPY_ALL_LABEL)).toBeNull();
+      // 削除ボタンは常に表示
+      expect(screen.getByLabelText(`${EXERCISE_NAME}を削除`)).toBeTruthy();
+    });
+  });
+
+  // ---- Issue #134 メモ入力 ----
+
+  describe('メモ入力（Issue #134）', () => {
+    it('メモ入力欄が表示される', () => {
+      render(<ExerciseBlock {...createDefaultProps()} />);
+
+      expect(screen.getByPlaceholderText('メモ（フォーム、体感など）')).toBeTruthy();
+    });
+
+    it('メモに文字を入力すると onMemoChange が呼ばれる', () => {
+      const mockOnMemoChange = jest.fn();
+      render(<ExerciseBlock {...createDefaultProps({ onMemoChange: mockOnMemoChange })} />);
+
+      const memoInput = screen.getByPlaceholderText('メモ（フォーム、体感など）');
+      fireEvent.changeText(memoInput, 'フォーム意識');
+
+      expect(mockOnMemoChange).toHaveBeenCalledWith('フォーム意識');
+    });
+
+    it('memo prop に値がある場合、入力欄に表示される', () => {
+      render(<ExerciseBlock {...createDefaultProps({ memo: '前回の感想' })} />);
+
+      const memoInput = screen.getByPlaceholderText('メモ（フォーム、体感など）');
+      expect(memoInput.props.value).toBe('前回の感想');
     });
   });
 
