@@ -141,7 +141,9 @@ describe('WorkoutRepository.update（workout_date 自動算出）', () => {
 
     expect(query).toContain('workout_date = ?');
     // ローカル時刻での日付文字列が設定されていることを確認
-    const workoutDateValue = values.find((v) => typeof v === 'string' && v.match(/^\d{4}-\d{2}-\d{2}$/));
+    const workoutDateValue = values.find(
+      (v) => typeof v === 'string' && v.match(/^\d{4}-\d{2}-\d{2}$/),
+    );
     expect(workoutDateValue).toBe('2026-02-19');
   });
 

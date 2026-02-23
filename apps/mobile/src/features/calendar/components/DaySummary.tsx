@@ -161,8 +161,8 @@ export function DaySummary({
     } finally {
       setLoading(false);
     }
-  // refreshKey を依存配列に含めることで、外部からのリフレッシュ（削除後の再取得など）に対応する
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // refreshKey を依存配列に含めることで、外部からのリフレッシュ（削除後の再取得など）に対応する
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dateString, refreshKey]);
 
   useEffect(() => {
@@ -262,7 +262,9 @@ export function DaySummary({
             }}
           >
             {/* 種目名タップで ExerciseHistory 画面へ遷移する */}
-            <Pressable onPress={() => onNavigateToExerciseHistory?.(ex.exerciseId, ex.exerciseName)}>
+            <Pressable
+              onPress={() => onNavigateToExerciseHistory?.(ex.exerciseId, ex.exerciseName)}
+            >
               <Text style={{ fontSize: 17, fontWeight: '600', color: '#4D94FF', marginBottom: 8 }}>
                 {ex.exerciseName}
               </Text>

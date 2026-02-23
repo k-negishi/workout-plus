@@ -74,8 +74,7 @@ describe('runMigrations V4 → V5', () => {
     // ALTER TABLE で workout_date カラムが追加されたか確認
     const execCalls = db.execAsync.mock.calls.map((call) => String(call[0]));
     const hasAlterTable = execCalls.some(
-      (sql) =>
-        sql.includes('ALTER TABLE workouts') && sql.includes('ADD COLUMN workout_date'),
+      (sql) => sql.includes('ALTER TABLE workouts') && sql.includes('ADD COLUMN workout_date'),
     );
     expect(hasAlterTable).toBe(true);
   });

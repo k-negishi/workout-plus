@@ -4,7 +4,16 @@
  * トレーニング日: 青ドットマーカー(#4D94FF)
  * 前後月ナビゲーション、フリックジェスチャー対応、未来日タップ無効
  */
-import { addMonths, format, isAfter, isBefore, parseISO, startOfDay, startOfMonth, subMonths } from 'date-fns';
+import {
+  addMonths,
+  format,
+  isAfter,
+  isBefore,
+  parseISO,
+  startOfDay,
+  startOfMonth,
+  subMonths,
+} from 'date-fns';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { PanResponder, View } from 'react-native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
@@ -67,9 +76,7 @@ export function MonthCalendar({
 
   // 表示月を内部状態で管理する（フリックおよび矢印ボタンで更新される）
   // startOfMonth で月の初日に正規化することで addMonths/subMonths が一貫した値を返す
-  const [displayMonth, _setDisplayMonth] = useState(
-    format(startOfMonth(new Date()), 'yyyy-MM-dd'),
-  );
+  const [displayMonth, _setDisplayMonth] = useState(format(startOfMonth(new Date()), 'yyyy-MM-dd'));
 
   // PanResponder コールバック内で displayMonth の最新値を参照するための ref
   // stale closure を防ぐため state と並行して管理する
@@ -166,10 +173,7 @@ export function MonthCalendar({
 
           if (dx > 50) {
             // 右フリック: 前月へ
-            const prev = format(
-              subMonths(parseISO(displayMonthRef.current), 1),
-              'yyyy-MM-dd',
-            );
+            const prev = format(subMonths(parseISO(displayMonthRef.current), 1), 'yyyy-MM-dd');
             setDisplayMonth(prev);
             onMonthChangeRef.current?.(prev);
           } else if (dx < -50) {

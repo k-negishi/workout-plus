@@ -264,9 +264,7 @@ describe('MonthCalendar コンポーネント - フリックジェスチャー',
   });
 
   it('矢印ボタンの月変更で displayMonth が同期される', async () => {
-    render(
-      <MonthCalendar trainingDates={[]} selectedDate={null} onDayPress={jest.fn()} />,
-    );
+    render(<MonthCalendar trainingDates={[]} selectedDate={null} onDayPress={jest.fn()} />);
 
     // Calendar の onMonthChange（矢印ボタン押下時に呼ばれる）をシミュレート
     act(() => {

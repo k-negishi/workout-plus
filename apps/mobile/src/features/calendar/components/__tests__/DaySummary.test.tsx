@@ -105,12 +105,7 @@ describe('DaySummary - 種目名タップ', () => {
     setupMockWithWorkout();
     const mockOnNavigate = jest.fn();
 
-    render(
-      <DaySummary
-        dateString="2026-02-01"
-        onNavigateToExerciseHistory={mockOnNavigate}
-      />,
-    );
+    render(<DaySummary dateString="2026-02-01" onNavigateToExerciseHistory={mockOnNavigate} />);
 
     // When: データ読み込みが完了するまで待機
     await waitFor(() => {
@@ -130,12 +125,7 @@ describe('DaySummary - 種目名タップ', () => {
     setupMockWithWorkout();
     const mockOnNavigate = jest.fn();
 
-    render(
-      <DaySummary
-        dateString="2026-02-01"
-        onNavigateToExerciseHistory={mockOnNavigate}
-      />,
-    );
+    render(<DaySummary dateString="2026-02-01" onNavigateToExerciseHistory={mockOnNavigate} />);
 
     await waitFor(() => {
       expect(screen.getByText('スクワット')).toBeTruthy();
@@ -152,9 +142,7 @@ describe('DaySummary - 種目名タップ', () => {
     // Given
     setupMockWithWorkout();
 
-    render(
-      <DaySummary dateString="2026-02-01" />,
-    );
+    render(<DaySummary dateString="2026-02-01" />);
 
     await waitFor(() => {
       expect(screen.getByText('ベンチプレス')).toBeTruthy();
@@ -169,9 +157,7 @@ describe('DaySummary - 種目名タップ', () => {
     // Given: コールバックなし（オプショナル prop）
     setupMockWithWorkout();
 
-    render(
-      <DaySummary dateString="2026-02-01" />,
-    );
+    render(<DaySummary dateString="2026-02-01" />);
 
     await waitFor(() => {
       expect(screen.getByText('ベンチプレス')).toBeTruthy();
@@ -215,7 +201,14 @@ describe('DaySummary - 削除ボタン', () => {
       }
       if (sql.includes('FROM sets')) {
         return Promise.resolve([
-          { id: 's-1', workout_exercise_id: 'we-1', set_number: 1, weight: 80, reps: 8, estimated_1rm: 100 },
+          {
+            id: 's-1',
+            workout_exercise_id: 'we-1',
+            set_number: 1,
+            weight: 80,
+            reps: 8,
+            estimated_1rm: 100,
+          },
         ]);
       }
       return Promise.resolve([]);
@@ -242,12 +235,7 @@ describe('DaySummary - 削除ボタン', () => {
     setupMockWithWorkout();
     const mockOnDelete = jest.fn();
 
-    render(
-      <DaySummary
-        dateString="2026-02-01"
-        onDeleteWorkout={mockOnDelete}
-      />,
-    );
+    render(<DaySummary dateString="2026-02-01" onDeleteWorkout={mockOnDelete} />);
 
     // When: データ読み込みが完了するまで待機
     await waitFor(() => {
@@ -260,12 +248,7 @@ describe('DaySummary - 削除ボタン', () => {
     setupMockWithNoWorkout();
     const mockOnDelete = jest.fn();
 
-    render(
-      <DaySummary
-        dateString="2026-02-01"
-        onDeleteWorkout={mockOnDelete}
-      />,
-    );
+    render(<DaySummary dateString="2026-02-01" onDeleteWorkout={mockOnDelete} />);
 
     // When: データ読み込みが完了するまで待機（ローディングが消えるのを確認）
     await waitFor(() => {
@@ -279,12 +262,7 @@ describe('DaySummary - 削除ボタン', () => {
     setupMockWithWorkout();
     const mockOnDelete = jest.fn();
 
-    render(
-      <DaySummary
-        dateString="2026-02-01"
-        onDeleteWorkout={mockOnDelete}
-      />,
-    );
+    render(<DaySummary dateString="2026-02-01" onDeleteWorkout={mockOnDelete} />);
 
     // When: データ読み込みが完了するまで待機
     await waitFor(() => {
@@ -334,9 +312,7 @@ describe('DaySummary - 日付ヘッダー（T5: タップ遷移なし）', () =>
     // Given: ワークアウトありのモックデータ
     setupMockWithWorkout();
 
-    render(
-      <DaySummary dateString="2026-02-01" />,
-    );
+    render(<DaySummary dateString="2026-02-01" />);
 
     // When: データ読み込み完了まで待機
     await waitFor(() => {
@@ -351,9 +327,7 @@ describe('DaySummary - 日付ヘッダー（T5: タップ遷移なし）', () =>
     // Given: ワークアウトありのモックデータ
     setupMockWithWorkout();
 
-    render(
-      <DaySummary dateString="2026-02-01" />,
-    );
+    render(<DaySummary dateString="2026-02-01" />);
 
     // When: データ読み込み完了まで待機
     await waitFor(() => {
