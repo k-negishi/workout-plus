@@ -57,12 +57,13 @@ jest.mock('@/database/client', () => ({
   }),
 }));
 
-// T10: WorkoutRepository モック（記録中チェックで呼ばれる）
+// T10: WorkoutRepository モック（記録中チェック・当日完了チェックで呼ばれる）
 const mockFindRecording = jest.fn().mockResolvedValue(null);
+const mockFindTodayCompleted = jest.fn().mockResolvedValue(null);
 jest.mock('@/database/repositories/workout', () => ({
   WorkoutRepository: {
     findRecording: (...args: unknown[]) => mockFindRecording(...args),
-    findTodayCompleted: jest.fn().mockResolvedValue(null),
+    findTodayCompleted: (...args: unknown[]) => mockFindTodayCompleted(...args),
   },
 }));
 
@@ -119,6 +120,7 @@ beforeEach(() => {
   mockGetAllAsync.mockResolvedValue([]);
   mockGetFirstAsync.mockResolvedValue(null);
   mockFindRecording.mockResolvedValue(null);
+  mockFindTodayCompleted.mockResolvedValue(null);
   mockNavigate.mockClear();
 });
 
@@ -336,5 +338,40 @@ describe('HomeScreen クロスタブナビゲーション（T7）', () => {
       screen: 'Calendar',
       params: { targetDate: expectedDate },
     });
+  });
+});
+
+describe('HomeScreen 当日完了済みボタンテキスト', () => {
+  it('当日完了済みワークアウトがないとき「本日のワークアウトを記録」と表示する', async () => {
+    mockUseFocusEffect.mockImplementation((cb: () => void) => cb());
+    mockFindRecording.mockResolvedValue(null);
+    mockFindTodayCompleted.mockResolvedValue(null);
+
+    render(<HomeScreen />);
+    await screen.findByText('今月のトレーニング');
+
+    await waitFor(() => {
+      expect(screen.getByText('本日のワークアウトを記録')).toBeTruthy();
+    });
+    expect(screen.queryByText('本日のワークアウトを再開する')).toBeNull();
+  });
+
+  it('当日完了済みワークアウトがあるとき「本日のワークアウトを再開する」と表示する', async () => {
+    mockUseFocusEffect.mockImplementation((cb: () => void) => cb());
+    mockFindRecording.mockResolvedValue(null);
+    mockFindTodayCompleted.mockResolvedValue({
+      id: 'today-completed-1',
+      status: 'completed',
+      created_at: Date.now(),
+      completed_at: Date.now(),
+    });
+
+    render(<HomeScreen />);
+    await screen.findByText('今月のトレーニング');
+
+    await waitFor(() => {
+      expect(screen.getByText('本日のワークアウトを再開する')).toBeTruthy();
+    });
+    expect(screen.queryByText('本日のワークアウトを記録')).toBeNull();
   });
 });

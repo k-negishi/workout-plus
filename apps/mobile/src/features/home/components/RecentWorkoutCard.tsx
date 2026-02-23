@@ -9,7 +9,18 @@ import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { colors } from '@/shared/constants/colors';
-import type { TimerStatus } from '@/types';
+import type { MuscleGroup, TimerStatus } from '@/types';
+
+/** 部位の日本語ラベル */
+const MUSCLE_GROUP_LABELS: Record<MuscleGroup, string> = {
+  chest: '胸',
+  back: '背中',
+  legs: '脚',
+  shoulders: '肩',
+  biceps: '二頭',
+  triceps: '三頭',
+  abs: '腹',
+};
 
 /** 秒数を「X時間X分」形式に変換する */
 function formatDuration(seconds: number | null, timerStatus?: TimerStatus): string {
@@ -22,14 +33,6 @@ function formatDuration(seconds: number | null, timerStatus?: TimerStatus): stri
     return `${hours}時間${minutes}分`;
   }
   return `${minutes}分`;
-}
-
-/** 重量を見やすくフォーマットする */
-function formatWeight(kg: number): string {
-  if (kg >= 1000) {
-    return `${(kg / 1000).toFixed(1)}t`;
-  }
-  return `${kg.toLocaleString()}kg`;
 }
 
 /** 部位別アイコン背景色（WF L673-675） */
@@ -46,6 +49,13 @@ function getIconBackgroundColor(muscleGroup?: string): string {
   }
 }
 
+/** 部位キー配列を日本語ラベルに変換して中黒区切りで返す */
+function formatMuscleGroups(groups: string[]): string {
+  return groups
+    .map((g) => MUSCLE_GROUP_LABELS[g as MuscleGroup] ?? g)
+    .join('・');
+}
+
 type RecentWorkoutCardProps = {
   /** ワークアウト完了日時（タイムスタンプ） */
   completedAt: number;
@@ -53,14 +63,14 @@ type RecentWorkoutCardProps = {
   exerciseCount: number;
   /** セット数 */
   setCount: number;
-  /** 総ボリューム（kg） */
+  /** 総ボリューム（kg） — タグ表示からは削除済みだが集計データとして保持 */
   totalVolume: number;
   /** 所要時間（秒） */
   durationSeconds: number | null;
   /** タイマー状態（discarded なら時間なし表示） */
   timerStatus?: TimerStatus;
-  /** 主要部位（アイコン背景色の決定に使用） */
-  primaryMuscleGroup?: string;
+  /** ワークアウトに含まれる部位の配列（表示とアイコン背景色に使用） */
+  muscleGroups: string[];
   /** テスト用 ID */
   testID?: string;
   /** タップ時のコールバック */
@@ -71,18 +81,23 @@ export function RecentWorkoutCard({
   completedAt,
   exerciseCount,
   setCount,
-  totalVolume,
   durationSeconds,
   timerStatus,
-  primaryMuscleGroup,
+  muscleGroups,
   testID,
   onPress,
 }: RecentWorkoutCardProps) {
-  // 日付フォーマット: 「2/21 土曜日」
+  // 日付フォーマット: 「2月18日(水)」
   const dateLabel = useMemo(() => {
     const date = new Date(completedAt);
-    return format(date, 'M/d EEEE', { locale: ja });
+    return format(date, 'M月d日(E)', { locale: ja });
   }, [completedAt]);
+
+  // 部位ラベル: 「胸・背中」形式
+  const muscleLabel = useMemo(
+    () => (muscleGroups.length > 0 ? formatMuscleGroups(muscleGroups) : ''),
+    [muscleGroups],
+  );
 
   return (
     <Pressable style={styles.card} onPress={onPress} testID={testID}>
@@ -91,15 +106,19 @@ export function RecentWorkoutCard({
         {/* task-icon（WF L662-675） */}
         <View
           testID="task-icon"
-          style={[styles.icon, { backgroundColor: getIconBackgroundColor(primaryMuscleGroup) }]}
+          style={[styles.icon, { backgroundColor: getIconBackgroundColor(muscleGroups[0]) }]}
         >
           <Text style={styles.iconEmoji}>💪</Text>
         </View>
 
         {/* task-info（WF L677-692） */}
         <View style={styles.info}>
-          <Text style={styles.title}>{dateLabel}</Text>
-          <Text style={styles.subtitle}>{exerciseCount}種目</Text>
+          <View style={styles.titleRow}>
+            <Text style={styles.title}>{dateLabel}</Text>
+            {muscleLabel !== '' && (
+              <Text style={styles.muscleLabel}>{muscleLabel}</Text>
+            )}
+          </View>
         </View>
 
         {/* 完了バッジ（WF L551-560, L567-570） */}
@@ -108,15 +127,13 @@ export function RecentWorkoutCard({
         </View>
       </View>
 
-      {/* task-tags 行（WF L694-711） */}
+      {/* task-tags 行（WF L694-711）: 種目数・セット数・所要時間 */}
       <View style={styles.tags}>
+        <View style={[styles.tag, { backgroundColor: colors.tagBlueBg }]}>
+          <Text style={[styles.tagText, { color: colors.tagBlueText }]}>{exerciseCount}種目</Text>
+        </View>
         <View style={[styles.tag, { backgroundColor: colors.tagYellowBg }]}>
           <Text style={[styles.tagText, { color: colors.tagYellowText }]}>{setCount}セット</Text>
-        </View>
-        <View style={[styles.tag, { backgroundColor: colors.tagBlueBg }]}>
-          <Text style={[styles.tagText, { color: colors.tagBlueText }]}>
-            {formatWeight(totalVolume)}
-          </Text>
         </View>
         <View style={[styles.tag, { backgroundColor: colors.tagPurpleBg }]}>
           <Text style={[styles.tagText, { color: colors.tagPurpleText }]}>
@@ -161,14 +178,19 @@ const styles = StyleSheet.create({
   info: {
     flex: 1,
   },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   title: {
     fontSize: 17,
     fontWeight: '600',
     color: colors.textPrimary,
-    marginBottom: 4,
   },
-  subtitle: {
-    fontSize: 15,
+  // 日付隣の部位名ラベル
+  muscleLabel: {
+    fontSize: 14,
     color: colors.textSecondary,
   },
   // 完了バッジ（WF L551-560, L567-570）

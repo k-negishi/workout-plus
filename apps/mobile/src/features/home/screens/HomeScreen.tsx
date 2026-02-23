@@ -53,8 +53,8 @@ type WorkoutSummary = {
   totalVolume: number;
   durationSeconds: number | null;
   timerStatus: TimerStatus;
-  /** 最初の種目の部位（カードアイコンの背景色に使用） */
-  primaryMuscleGroup?: string;
+  /** ワークアウトに含まれる部位の配列（重複排除済み） */
+  muscleGroups: string[];
 };
 
 /** ダッシュボード統計（SQL集計値） */
@@ -76,14 +76,18 @@ async function buildWorkoutSummary(db: AppDatabase, workout: WorkoutRow): Promis
     [workout.id],
   );
 
-  // 最初の種目の部位を取得（カードアイコン背景色用）
-  let primaryMuscleGroup: string | undefined;
-  if (exercises.length > 0) {
-    const firstExercise = await db.getFirstAsync<ExerciseRow>(
+  // 全種目の部位を取得（重複排除、順序保持）
+  const muscleGroups: string[] = [];
+  const seenGroups = new Set<string>();
+  for (const exercise of exercises) {
+    const exerciseRow = await db.getFirstAsync<ExerciseRow>(
       'SELECT * FROM exercises WHERE id = ?',
-      [exercises[0]!.exercise_id],
+      [exercise.exercise_id],
     );
-    primaryMuscleGroup = firstExercise?.muscle_group;
+    if (exerciseRow && !seenGroups.has(exerciseRow.muscle_group)) {
+      seenGroups.add(exerciseRow.muscle_group);
+      muscleGroups.push(exerciseRow.muscle_group);
+    }
   }
 
   // 全セットを取得してボリュームを集計
@@ -110,8 +114,7 @@ async function buildWorkoutSummary(db: AppDatabase, workout: WorkoutRow): Promis
     totalVolume: Math.round(totalVolume),
     durationSeconds: workout.elapsed_seconds,
     timerStatus: workout.timer_status,
-    // primaryMuscleGroup が undefined の場合は省略（exactOptionalPropertyTypes 対応）
-    ...(primaryMuscleGroup != null ? { primaryMuscleGroup } : {}),
+    muscleGroups,
   };
 }
 
@@ -162,6 +165,8 @@ export function HomeScreen() {
   });
   /** T10: 記録中セッションの有無（バナー表示制御） */
   const [isRecording, setIsRecording] = useState(false);
+  /** 当日完了済みワークアウトの有無（ボタンテキスト切替用） */
+  const [hasTodayCompleted, setHasTodayCompleted] = useState(false);
 
   // データ取得
   const fetchData = useCallback(async () => {
@@ -228,11 +233,15 @@ export function HomeScreen() {
    */
   useFocusEffect(
     useCallback(() => {
-      const checkRecording = async () => {
-        const recording = await WorkoutRepository.findRecording();
+      const checkStatus = async () => {
+        const [recording, todayCompleted] = await Promise.all([
+          WorkoutRepository.findRecording(),
+          WorkoutRepository.findTodayCompleted(),
+        ]);
         setIsRecording(recording !== null);
+        setHasTodayCompleted(todayCompleted !== null);
       };
-      void checkRecording();
+      void checkStatus();
     }, []),
   );
 
@@ -418,7 +427,7 @@ export function HomeScreen() {
             }}
           >
             <Text style={{ fontSize: 16, fontWeight: '600', color: '#ffffff' }}>
-              本日のワークアウトを記録
+              {hasTodayCompleted ? '本日のワークアウトを再開する' : '本日のワークアウトを記録'}
             </Text>
           </TouchableOpacity>
         )}
@@ -455,7 +464,6 @@ export function HomeScreen() {
           {workoutSummaries.map((ws) => (
             <RecentWorkoutCard
               key={ws.id}
-              // テスト用 ID: ワークアウト ID を含めてカード単位でタップ検証できるようにする
               testID={`workout-card-${ws.id}`}
               completedAt={ws.completedAt}
               exerciseCount={ws.exerciseCount}
@@ -463,11 +471,8 @@ export function HomeScreen() {
               totalVolume={ws.totalVolume}
               durationSeconds={ws.durationSeconds}
               timerStatus={ws.timerStatus}
+              muscleGroups={ws.muscleGroups}
               onPress={() => handleWorkoutPress(ws.id)}
-              // exactOptionalPropertyTypes 対応: undefined を直接渡さない
-              {...(ws.primaryMuscleGroup != null
-                ? { primaryMuscleGroup: ws.primaryMuscleGroup }
-                : {})}
             />
           ))}
 
