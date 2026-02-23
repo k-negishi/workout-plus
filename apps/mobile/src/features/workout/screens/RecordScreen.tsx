@@ -42,12 +42,6 @@ import { usePreviousRecord } from '../hooks/usePreviousRecord';
 import { useTimer } from '../hooks/useTimer';
 import { useWorkoutSession } from '../hooks/useWorkoutSession';
 
-/** 前回記録の型（1セット分） */
-type PreviousSetData = {
-  weight: number | null;
-  reps: number | null;
-};
-
 /**
  * T09: HomeStackParamList の Record 画面 Props
  * workoutId があれば編集モード、targetDate があれば過去日付記録モード、どちらもなければ当日新規
@@ -57,11 +51,7 @@ type RecordScreenRouteProp = NativeStackScreenProps<HomeStackParamList, 'Record'
 
 /**
  * 各種目の前回記録を取得する内部コンポーネント
- * usePreviousRecordはフックなので、種目ごとにラッパーコンポーネントが必要
- *
- * handleCopyAllPrevious はこのスコープで完結させる。
- * previousRecord は usePreviousRecord フックが保持しているため、
- * RecordScreen にリフトアップせず、ここで全セット分ループして onCopyPreviousSet を呼ぶ。
+ * usePreviousRecord はフックなので、種目ごとにラッパーコンポーネントが必要
  */
 const ExerciseBlockWithPrevious: React.FC<{
   exerciseId: string;
@@ -70,11 +60,10 @@ const ExerciseBlockWithPrevious: React.FC<{
   sets: WorkoutSet[];
   currentWorkoutId: string | null;
   memo: string | null;
-  /** 編集モード時は前回記録バッジを非表示にする */
+  /** 編集モード時は前回記録を非表示にする（null を渡すことで制御） */
   showPreviousRecord: boolean;
   onWeightChange: (setId: string, weight: number | null) => void;
   onRepsChange: (setId: string, reps: number | null) => void;
-  onCopyPreviousSet: (setId: string, previousSet: PreviousSetData) => void;
   onDeleteSet: (setId: string, workoutExerciseId: string) => void;
   onAddSet: (workoutExerciseId: string) => void;
   onExerciseNamePress: (exerciseId: string) => void;
@@ -90,7 +79,6 @@ const ExerciseBlockWithPrevious: React.FC<{
   showPreviousRecord,
   onWeightChange,
   onRepsChange,
-  onCopyPreviousSet,
   onDeleteSet,
   onAddSet,
   onExerciseNamePress,
@@ -98,17 +86,6 @@ const ExerciseBlockWithPrevious: React.FC<{
   onDeleteExercise,
 }) => {
   const { previousRecord } = usePreviousRecord(exerciseId, currentWorkoutId);
-
-  /** 前回記録を現在の全セットに一括コピー */
-  const handleCopyAllPrevious = useCallback(() => {
-    if (!previousRecord) return;
-    sets.forEach((set, i) => {
-      const prevSet = previousRecord.sets[i];
-      if (prevSet?.weight != null && prevSet?.reps != null) {
-        onCopyPreviousSet(set.id, { weight: prevSet.weight, reps: prevSet.reps });
-      }
-    });
-  }, [previousRecord, sets, onCopyPreviousSet]);
 
   if (!exerciseMeta) return null;
 
@@ -121,7 +98,6 @@ const ExerciseBlockWithPrevious: React.FC<{
       memo={memo}
       onWeightChange={onWeightChange}
       onRepsChange={onRepsChange}
-      onCopyAllPrevious={handleCopyAllPrevious}
       onDeleteSet={(setId) => onDeleteSet(setId, workoutExerciseId)}
       onAddSet={() => onAddSet(workoutExerciseId)}
       onExerciseNamePress={onExerciseNamePress}
@@ -263,23 +239,6 @@ export const RecordScreen: React.FC = () => {
       });
       if (exercise) {
         void session.updateSet(setId, exercise.id, { reps });
-      }
-    },
-    [session, store.currentExercises, store.currentSets],
-  );
-
-  /** 前回記録を1セットにコピー */
-  const handleCopyPreviousSet = useCallback(
-    (setId: string, previousSet: PreviousSetData) => {
-      const exercise = store.currentExercises.find((e) => {
-        const sets = store.currentSets[e.id];
-        return sets?.some((s) => s.id === setId);
-      });
-      if (exercise) {
-        void session.updateSet(setId, exercise.id, {
-          weight: previousSet.weight,
-          reps: previousSet.reps,
-        });
       }
     },
     [session, store.currentExercises, store.currentSets],
@@ -427,7 +386,6 @@ export const RecordScreen: React.FC = () => {
             showPreviousRecord={!isEditMode}
             onWeightChange={handleWeightChange}
             onRepsChange={handleRepsChange}
-            onCopyPreviousSet={handleCopyPreviousSet}
             onDeleteSet={handleDeleteSet}
             onAddSet={handleAddSet}
             onExerciseNamePress={handleExerciseNamePress}

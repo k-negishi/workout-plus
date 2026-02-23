@@ -1,9 +1,9 @@
 /**
- * 種目ブロックコンポーネント（Issue #121 カードデザイン刷新）
- * カード外枠・カラムヘッダー・テキストリンクボタン・showPreviousRecord prop を追加
+ * 種目ブロックコンポーネント（Issue #138 前回セットインラインチップ形式）
+ * バッジ形式を廃止し、前回の各セット内容（kg×rep）を常時インライン表示に変更
  */
 import { format } from 'date-fns';
-import React, { useMemo } from 'react';
+import React from 'react';
 import { FlatList, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import type { Exercise, WorkoutSet } from '@/types';
@@ -26,8 +26,6 @@ export type ExerciseBlockProps = {
   onWeightChange: (setId: string, weight: number | null) => void;
   /** セットのレップ数変更 */
   onRepsChange: (setId: string, reps: number | null) => void;
-  /** 前回記録を全セットにコピー */
-  onCopyAllPrevious: () => void;
   /** セットを削除 */
   onDeleteSet: (setId: string) => void;
   /** セットを追加 */
@@ -38,23 +36,28 @@ export type ExerciseBlockProps = {
   onMemoChange?: (memo: string) => void;
   /** 種目を削除 */
   onDeleteExercise?: () => void;
-  /**
-   * 前回記録バッジを表示するか（デフォルト true）
-   * false を渡すと previousRecord があっても非表示にする
-   */
-  showPreviousRecord?: boolean;
 };
 
-/** 部位の日本語ラベル */
-const MUSCLE_GROUP_LABELS: Record<string, string> = {
-  chest: '胸',
-  back: '背中',
-  legs: '脚',
-  shoulders: '肩',
-  biceps: '二頭',
-  triceps: '三頭',
-  abs: '腹',
+/**
+ * 丸数字（①〜⑳）。20を超えるセット数は "(N)" にフォールバック
+ * ワークアウトのセット数は通常20以下のため、この範囲で十分
+ */
+const CIRCLED_NUMBERS = [
+  '①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩',
+  '⑪', '⑫', '⑬', '⑭', '⑮', '⑯', '⑰', '⑱', '⑲', '⑳',
+];
+
+/** セット番号を丸数字文字列に変換する */
+const getCircledNumber = (n: number): string => {
+  if (n >= 1 && n <= 20) return CIRCLED_NUMBERS[n - 1]!;
+  return `(${n})`;
 };
+
+/** 前回チップのスタイル（控えめなグレー小テキスト） */
+const chipTextStyle = {
+  fontSize: 12,
+  color: '#94a3b8',
+} as const;
 
 export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
   exercise,
@@ -64,72 +67,62 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
   memo,
   onWeightChange,
   onRepsChange,
-  onCopyAllPrevious,
   onDeleteSet,
   onAddSet,
   onExerciseNamePress,
   onMemoChange,
   onDeleteExercise,
-  showPreviousRecord = true,
 }) => {
-  /** 前回記録のバッジテキスト。showPreviousRecord=false の場合は生成しない */
-  const previousBadgeText = useMemo(() => {
-    if (!showPreviousRecord) return null;
-    if (!previousRecord) return null;
-    const dateStr = format(previousRecord.workoutDate, 'M/d');
-    return `前回: ${previousRecord.sets.length}セット (${dateStr})`;
-  }, [showPreviousRecord, previousRecord]);
-
-  const muscleLabel = MUSCLE_GROUP_LABELS[exercise.muscleGroup] ?? exercise.muscleGroup;
-
   return (
     // カード外枠: 白背景・細ボーダー・角丸・内側パディング・下マージン
     <View className="bg-white border border-[#e2e8f0] rounded-lg p-4 mb-3">
-      {/* 種目ヘッダー */}
+      {/* 種目ヘッダー: 種目名（左）+ 前回チップ（中・右詰め）+ 削除ボタン（右端） */}
       <View
         style={{
           flexDirection: 'row',
-          justifyContent: 'space-between',
           alignItems: 'flex-start',
           marginBottom: 12,
         }}
       >
+        {/* 種目名（タップで種目履歴へ遷移） */}
         <TouchableOpacity onPress={() => onExerciseNamePress(exercise.id)}>
-          {/* 種目名: 16px / #334155（ダークグレー）/ semibold */}
           <Text style={{ fontSize: 16, fontWeight: '600', color: '#334155' }}>{exercise.name}</Text>
-          {/* 部位ラベル: 変更なし */}
-          <Text className="text-[14px] text-[#64748b] mt-[2px]">{muscleLabel}</Text>
         </TouchableOpacity>
 
-        {/* ヘッダー右エリア: コピーバッジ + 削除ボタン（Issue #137: 削除ボタンをバッジの右に移動） */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          {/* 前回記録バッジ: showPreviousRecord=false のとき非表示 */}
-          {previousBadgeText && (
-            <TouchableOpacity
-              onPress={onCopyAllPrevious}
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 4,
-                paddingHorizontal: 8,
-                paddingVertical: 4,
-                borderRadius: 8,
-                backgroundColor: '#F1F3F5',
-              }}
-              accessibilityLabel="前回の全セットをコピー"
-            >
-              <Text className="text-[13px] text-[#64748b]">{previousBadgeText}</Text>
-            </TouchableOpacity>
-          )}
-          {/* 削除ボタン: バッジの右側に配置（自然な左→右の読み順に合わせる） */}
-          <TouchableOpacity
-            onPress={onDeleteExercise}
-            accessibilityLabel={`${exercise.name}を削除`}
-            style={{ padding: 4 }}
+        {/* 前回記録チップ: flex:1 で残りスペースを占有し右詰め折り返し */}
+        {previousRecord ? (
+          <View
+            style={{
+              flex: 1,
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              justifyContent: 'flex-end',
+              gap: 4,
+              paddingHorizontal: 8,
+            }}
           >
-            <Text style={{ fontSize: 16, color: '#64748b' }}>✕</Text>
-          </TouchableOpacity>
-        </View>
+            <Text style={chipTextStyle}>
+              前回 {format(previousRecord.workoutDate, 'M/d')}
+            </Text>
+            {previousRecord.sets.map((set, index) => (
+              <Text key={set.id} style={chipTextStyle}>
+                {getCircledNumber(index + 1)} {set.weight ?? '-'}×{set.reps ?? '-'}
+              </Text>
+            ))}
+          </View>
+        ) : (
+          // チップなしでも削除ボタンを右端に寄せるスペーサー
+          <View style={{ flex: 1 }} />
+        )}
+
+        {/* 削除ボタン */}
+        <TouchableOpacity
+          onPress={onDeleteExercise}
+          accessibilityLabel={`${exercise.name}を削除`}
+          style={{ padding: 4 }}
+        >
+          <Text style={{ fontSize: 16, color: '#64748b' }}>✕</Text>
+        </TouchableOpacity>
       </View>
 
       {/* カラムヘッダー行: Set / kg / (x スペーサー) / rep / 1RM / (削除スペーサー) */}
@@ -205,7 +198,7 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
         />
       </View>
 
-      {/* 「+ セットを追加」: 背景・ボーダーなしのテキストリンクに変更 */}
+      {/* 「+ セットを追加」: 背景・ボーダーなしのテキストリンク */}
       <TouchableOpacity
         onPress={onAddSet}
         style={{ marginTop: 8, paddingVertical: 8, alignItems: 'center' }}
@@ -214,7 +207,7 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
         <Text style={{ fontSize: 14, fontWeight: '600', color: '#4D94FF' }}>+ セットを追加</Text>
       </TouchableOpacity>
 
-      {/* 種目メモ: 変更なし */}
+      {/* 種目メモ */}
       <View className="flex-row items-center mt-2 gap-2">
         <Text className="text-[14px] text-[#64748b]">{'\u270E'}</Text>
         <TextInput

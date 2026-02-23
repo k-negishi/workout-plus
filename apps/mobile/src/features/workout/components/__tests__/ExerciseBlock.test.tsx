@@ -1,15 +1,13 @@
 /**
  * ExerciseBlock コンポーネントテスト
  *
- * 検証対象（Issue #121 カードデザイン刷新）:
- * - カード外枠スタイル（bg-white border rounded-lg）
- * - 種目名: 16px / #334155 / font-semibold
- * - 削除ボタン: テキスト「✕」
- * - カラムヘッダー行（Set / kg / 回 / 1RM）
- * - 「+ セットを追加」テキストリンク（背景・ボーダーなし）
- * - showPreviousRecord=false のとき前回記録バッジ非表示
- * - 前回記録コピーボタン（既存テスト維持）
- * - 種目削除ボタン（既存テスト維持）
+ * 検証対象（Issue #138 インラインチップ形式）:
+ * - 部位ラベルが非表示
+ * - 前回記録チップ（前回 M/d、① kg×reps 形式）
+ * - 前回記録なしの場合はチップ非表示
+ * - カラムヘッダー行（Set / kg / rep / 1RM）
+ * - 「+ セットを追加」テキストリンク
+ * - 種目削除ボタン
  */
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
@@ -49,7 +47,6 @@ jest.mock('react-native/Libraries/Lists/FlatList', () => {
 const EXERCISE_ID = 'e1';
 const WORKOUT_EXERCISE_ID = 'we1';
 const EXERCISE_NAME = 'ベンチプレス';
-const COPY_ALL_LABEL = '前回の全セットをコピー';
 
 /** テスト用種目マスタデータ */
 const mockExercise: Exercise = {
@@ -124,7 +121,6 @@ function createDefaultProps(overrides?: Partial<ExerciseBlockProps>): ExerciseBl
     memo: null,
     onWeightChange: jest.fn(),
     onRepsChange: jest.fn(),
-    onCopyAllPrevious: jest.fn(),
     onDeleteSet: jest.fn(),
     onAddSet: jest.fn(),
     onExerciseNamePress: jest.fn(),
@@ -138,30 +134,65 @@ describe('ExerciseBlock', () => {
     jest.clearAllMocks();
   });
 
-  describe('前回記録コピーボタン', () => {
-    it('previousRecord があるとき「前回の全セットをコピー」ボタンが表示される', () => {
+  // ---- Issue #138 前回セットインラインチップ ----
+
+  describe('部位ラベル（Issue #138）', () => {
+    it('部位ラベル（胸・背中など）が表示されないこと', () => {
       render(<ExerciseBlock {...createDefaultProps()} />);
 
-      expect(screen.getByLabelText(COPY_ALL_LABEL)).toBeTruthy();
-    });
-
-    it('コピーボタンタップで onCopyAllPrevious が1回呼ばれる', () => {
-      const mockOnCopyAllPrevious = jest.fn();
-      render(
-        <ExerciseBlock {...createDefaultProps({ onCopyAllPrevious: mockOnCopyAllPrevious })} />,
-      );
-
-      fireEvent.press(screen.getByLabelText(COPY_ALL_LABEL));
-
-      expect(mockOnCopyAllPrevious).toHaveBeenCalledTimes(1);
-    });
-
-    it('previousRecord が null のときコピーボタンが非表示', () => {
-      render(<ExerciseBlock {...createDefaultProps({ previousRecord: null })} />);
-
-      expect(screen.queryByLabelText(COPY_ALL_LABEL)).toBeNull();
+      // MUSCLE_GROUP_LABELS による変換後のテキストが表示されないこと
+      expect(screen.queryByText('胸')).toBeNull();
     });
   });
+
+  describe('前回記録インラインチップ（Issue #138）', () => {
+    it('前回記録がある場合、日付テキスト「前回 2/20」が表示される', () => {
+      render(<ExerciseBlock {...createDefaultProps()} />);
+
+      expect(screen.getByText('前回 2/20')).toBeTruthy();
+    });
+
+    it('前回記録がある場合、1セット目のチップ「① 60×10」が表示される', () => {
+      render(<ExerciseBlock {...createDefaultProps()} />);
+
+      expect(screen.getByText('① 60×10')).toBeTruthy();
+    });
+
+    it('前回記録がある場合、2セット目のチップ「② 65×8」が表示される', () => {
+      render(<ExerciseBlock {...createDefaultProps()} />);
+
+      expect(screen.getByText('② 65×8')).toBeTruthy();
+    });
+
+    it('前回記録が null の場合、「前回」テキストが非表示', () => {
+      render(<ExerciseBlock {...createDefaultProps({ previousRecord: null })} />);
+
+      expect(screen.queryByText(/^前回/)).toBeNull();
+    });
+
+    it('セットの weight が null の場合、「-」で表示される', () => {
+      const recordWithNullWeight: PreviousRecord = {
+        sets: [
+          {
+            id: 'ps1',
+            workoutExerciseId: 'pwe1',
+            setNumber: 1,
+            weight: null,
+            reps: 10,
+            estimated1RM: null,
+            createdAt: 900,
+            updatedAt: 900,
+          },
+        ],
+        workoutDate: new Date('2026-02-20'),
+      };
+      render(<ExerciseBlock {...createDefaultProps({ previousRecord: recordWithNullWeight })} />);
+
+      expect(screen.getByText('① -×10')).toBeTruthy();
+    });
+  });
+
+  // ---- 種目削除ボタン ----
 
   describe('種目削除ボタン', () => {
     it('削除ボタンタップで onDeleteExercise が1回呼ばれる', () => {
@@ -172,14 +203,11 @@ describe('ExerciseBlock', () => {
 
       expect(mockOnDeleteExercise).toHaveBeenCalledTimes(1);
     });
-  });
 
-  describe('バッジテキスト', () => {
-    it('前回記録のセット数と日付が表示される', () => {
-      render(<ExerciseBlock {...createDefaultProps()} />);
+    it('前回記録が null でも削除ボタンは表示される', () => {
+      render(<ExerciseBlock {...createDefaultProps({ previousRecord: null })} />);
 
-      // 「前回: 2セット (2/20)」が表示されること
-      expect(screen.getByText('前回: 2セット (2/20)')).toBeTruthy();
+      expect(screen.getByLabelText(`${EXERCISE_NAME}を削除`)).toBeTruthy();
     });
   });
 
@@ -189,7 +217,6 @@ describe('ExerciseBlock', () => {
     it('Set / kg / rep / 1RM のラベルが表示される（Issue #134: 回→rep）', () => {
       render(<ExerciseBlock {...createDefaultProps()} />);
 
-      // セットリスト上部にカラムヘッダーが追加されること
       expect(screen.getByText('Set')).toBeTruthy();
       expect(screen.getAllByText('kg').length).toBeGreaterThanOrEqual(1);
       // Issue #134: 「回」→「rep」に変更
@@ -200,7 +227,6 @@ describe('ExerciseBlock', () => {
     it('カラムヘッダーに「回」が表示されないこと（Issue #134: 回→rep）', () => {
       render(<ExerciseBlock {...createDefaultProps()} />);
 
-      // 「回」のテキストが存在しないことを確認
       expect(screen.queryByText('回')).toBeNull();
     });
   });
@@ -221,36 +247,8 @@ describe('ExerciseBlock', () => {
   describe('セットコンテナの gap（Issue #128）', () => {
     it('セットリストコンテナの gap が 12 であること', () => {
       render(<ExerciseBlock {...createDefaultProps()} />);
-      // testID="set-list-container" でコンテナを特定して gap を検証する
       const container = screen.getByTestId('set-list-container');
       expect(container.props.style).toMatchObject({ gap: 12 });
-    });
-  });
-
-  // ---- Issue #137 種目削除ボタン配置修正 ----
-
-  describe('種目削除ボタンの配置（Issue #137）', () => {
-    it('前回記録バッジが削除ボタンより先にレンダリングされる（バッジ→✕の順）', () => {
-      const { toJSON } = render(<ExerciseBlock {...createDefaultProps()} />);
-      const json = JSON.stringify(toJSON());
-
-      // JSON 文字列中でバッジの accessibilityLabel が削除ボタンより前に現れること
-      const badgeIndex = json.indexOf('前回の全セットをコピー');
-      const deleteIndex = json.indexOf(`${EXERCISE_NAME}を削除`);
-
-      expect(badgeIndex).toBeGreaterThan(-1);
-      expect(deleteIndex).toBeGreaterThan(-1);
-      // バッジが削除ボタンより「前」に来ること（Issue #137 の修正確認）
-      expect(badgeIndex).toBeLessThan(deleteIndex);
-    });
-
-    it('前回記録バッジが非表示でも削除ボタンは表示される', () => {
-      render(<ExerciseBlock {...createDefaultProps({ previousRecord: null })} />);
-
-      // バッジは非表示
-      expect(screen.queryByLabelText(COPY_ALL_LABEL)).toBeNull();
-      // 削除ボタンは常に表示
-      expect(screen.getByLabelText(`${EXERCISE_NAME}を削除`)).toBeTruthy();
     });
   });
 
@@ -278,31 +276,6 @@ describe('ExerciseBlock', () => {
 
       const memoInput = screen.getByPlaceholderText('メモ（フォーム、体感など）');
       expect(memoInput.props.value).toBe('前回の感想');
-    });
-  });
-
-  describe('showPreviousRecord prop', () => {
-    it('showPreviousRecord=false のとき前回記録バッジが非表示', () => {
-      render(<ExerciseBlock {...createDefaultProps({ showPreviousRecord: false })} />);
-
-      // バッジ本体（コピーボタン）が非表示であること
-      expect(screen.queryByLabelText(COPY_ALL_LABEL)).toBeNull();
-      // バッジテキストも非表示であること
-      expect(screen.queryByText(/前回:/)).toBeNull();
-    });
-
-    it('showPreviousRecord=true（デフォルト）のとき前回記録バッジが表示される', () => {
-      render(<ExerciseBlock {...createDefaultProps({ showPreviousRecord: true })} />);
-
-      expect(screen.getByLabelText(COPY_ALL_LABEL)).toBeTruthy();
-    });
-
-    it('showPreviousRecord 未指定のとき前回記録バッジが表示される（デフォルト true）', () => {
-      // showPreviousRecord を省略した場合に true と同じ挙動になること
-      const props = createDefaultProps();
-      render(<ExerciseBlock {...props} />);
-
-      expect(screen.getByLabelText(COPY_ALL_LABEL)).toBeTruthy();
     });
   });
 });
