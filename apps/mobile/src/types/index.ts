@@ -1,4 +1,5 @@
 export type { Exercise } from './exercise';
+export type { ExerciseSortOrder } from './exerciseSort';
 export type {
   AITabScreenProps,
   CalendarExerciseHistoryScreenProps,

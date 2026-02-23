@@ -4,13 +4,15 @@
  */
 import { create } from 'zustand';
 
-import type { Exercise } from '@/types';
+import type { Exercise, ExerciseSortOrder } from '@/types';
 
 type ExerciseStoreState = {
   /** 種目リスト */
   exercises: Exercise[];
   /** UI再描画トリガー用カウンター */
   invalidationCounter: number;
+  /** 種目選択画面のソート順（セッション内保持） */
+  sortOrder: ExerciseSortOrder;
 
   // === アクション ===
   /** 種目リストを一括セット */
@@ -23,11 +25,14 @@ type ExerciseStoreState = {
   toggleFavoriteLocal: (id: string) => void;
   /** invalidationカウンターをインクリメント */
   incrementInvalidation: () => void;
+  /** ソート順を変更する */
+  setSortOrder: (order: ExerciseSortOrder) => void;
 };
 
 export const useExerciseStore = create<ExerciseStoreState>((set) => ({
   exercises: [],
   invalidationCounter: 0,
+  sortOrder: 'name',
 
   setExercises: (exercises) => set({ exercises }),
 
@@ -52,4 +57,6 @@ export const useExerciseStore = create<ExerciseStoreState>((set) => ({
     set((state) => ({
       invalidationCounter: state.invalidationCounter + 1,
     })),
+
+  setSortOrder: (order) => set({ sortOrder: order }),
 }));

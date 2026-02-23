@@ -107,4 +107,55 @@ describe('exerciseStore', () => {
       expect(useExerciseStore.getState().invalidationCounter).toBe(2);
     });
   });
+
+  describe('sortOrder（ソート順）', () => {
+    beforeEach(() => {
+      // sortOrder もリセットする
+      useExerciseStore.setState({ exercises: [], invalidationCounter: 0, sortOrder: 'name' });
+    });
+
+    it('初期値は "name" である', () => {
+      expect(useExerciseStore.getState().sortOrder).toBe('name');
+    });
+
+    it('setSortOrder で "muscle" に変更できる', () => {
+      useExerciseStore.getState().setSortOrder('muscle');
+      expect(useExerciseStore.getState().sortOrder).toBe('muscle');
+    });
+
+    it('setSortOrder で "date" に変更できる', () => {
+      useExerciseStore.getState().setSortOrder('date');
+      expect(useExerciseStore.getState().sortOrder).toBe('date');
+    });
+
+    it('setSortOrder で "frequency" に変更できる', () => {
+      useExerciseStore.getState().setSortOrder('frequency');
+      expect(useExerciseStore.getState().sortOrder).toBe('frequency');
+    });
+
+    it('"frequency" から "name" に戻せる', () => {
+      useExerciseStore.getState().setSortOrder('frequency');
+      useExerciseStore.getState().setSortOrder('name');
+      expect(useExerciseStore.getState().sortOrder).toBe('name');
+    });
+
+    it('sortOrder 変更は他の状態（exercises）に影響しない', () => {
+      useExerciseStore.getState().setExercises([ex1, ex2]);
+      useExerciseStore.getState().setSortOrder('muscle');
+      // exercises は変わらない
+      expect(useExerciseStore.getState().exercises).toHaveLength(2);
+      expect(useExerciseStore.getState().sortOrder).toBe('muscle');
+    });
+
+    it('Zustand のモジュールレベルシングルトンとして sortOrder がセッション内保持される', () => {
+      // Zustand はモジュールレベルで状態を保持するため、
+      // setState によるリセットなしには sortOrder が維持される
+      useExerciseStore.getState().setSortOrder('frequency');
+      // 同じ getState() 呼び出しで最新値が返る（セッション内保持の確認）
+      const state1 = useExerciseStore.getState();
+      const state2 = useExerciseStore.getState();
+      expect(state1.sortOrder).toBe('frequency');
+      expect(state2.sortOrder).toBe('frequency');
+    });
+  });
 });
