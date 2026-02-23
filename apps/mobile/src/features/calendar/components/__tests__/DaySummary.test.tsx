@@ -339,3 +339,242 @@ describe('DaySummary - 日付ヘッダー（T5: タップ遷移なし）', () =>
     expect(headerView.props.onPress).toBeUndefined();
   });
 });
+
+// ==========================================
+// Issue #133: set 文言追加のテスト
+// ==========================================
+describe('DaySummary - set 文言追加', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  const setupMockWithWorkout = () => {
+    mockGetAllAsync.mockImplementation((sql: string) => {
+      if (sql.includes('FROM workouts')) {
+        return Promise.resolve([
+          {
+            id: 'workout-set-1',
+            status: 'completed',
+            completed_at: new Date('2026-02-01T10:00:00.000Z').getTime(),
+            elapsed_seconds: 3600,
+            timer_status: 'stopped',
+            memo: null,
+          },
+        ]);
+      }
+      if (sql.includes('FROM workout_exercises')) {
+        return Promise.resolve([
+          {
+            id: 'we-1',
+            workout_id: 'workout-set-1',
+            exercise_id: 'ex-bench',
+            display_order: 1,
+            memo: null,
+          },
+        ]);
+      }
+      if (sql.includes('FROM sets')) {
+        return Promise.resolve([
+          {
+            id: 's-1',
+            workout_exercise_id: 'we-1',
+            set_number: 1,
+            weight: 100,
+            reps: 10,
+            estimated_1rm: 133,
+          },
+          {
+            id: 's-2',
+            workout_exercise_id: 'we-1',
+            set_number: 2,
+            weight: 100,
+            reps: 8,
+            estimated_1rm: 127,
+          },
+        ]);
+      }
+      return Promise.resolve([]);
+    });
+
+    mockGetFirstAsync.mockImplementation((_sql: string, params: unknown[]) => {
+      if (params[0] === 'ex-bench') {
+        return Promise.resolve({ id: 'ex-bench', name: 'ベンチプレス' });
+      }
+      return Promise.resolve(null);
+    });
+  };
+
+  it('セット行にセット番号と "set" 文言が表示される', async () => {
+    // Given: ワークアウトデータあり
+    setupMockWithWorkout();
+
+    render(<DaySummary dateString="2026-02-01" />);
+
+    // When: データ読み込み完了
+    await waitFor(() => {
+      expect(screen.getByText('ベンチプレス')).toBeTruthy();
+    });
+
+    // Then: "1 set" と "2 set" のテキストが表示される
+    expect(screen.getByText('1 set')).toBeTruthy();
+    expect(screen.getByText('2 set')).toBeTruthy();
+  });
+});
+
+// ==========================================
+// Issue #133: メモ表示のテスト
+// ==========================================
+describe('DaySummary - メモ表示', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  /**
+   * ワークアウトメモ・種目メモを含むモックデータ
+   */
+  const setupMockWithMemos = () => {
+    mockGetAllAsync.mockImplementation((sql: string) => {
+      if (sql.includes('FROM workouts')) {
+        return Promise.resolve([
+          {
+            id: 'workout-memo-1',
+            status: 'completed',
+            completed_at: new Date('2026-02-01T10:00:00.000Z').getTime(),
+            elapsed_seconds: 3600,
+            timer_status: 'stopped',
+            memo: '今日は調子が良かった',
+          },
+        ]);
+      }
+      if (sql.includes('FROM workout_exercises')) {
+        return Promise.resolve([
+          {
+            id: 'we-1',
+            workout_id: 'workout-memo-1',
+            exercise_id: 'ex-bench',
+            display_order: 1,
+            memo: 'グリップ幅を少し広めに',
+          },
+        ]);
+      }
+      if (sql.includes('FROM sets')) {
+        return Promise.resolve([
+          {
+            id: 's-1',
+            workout_exercise_id: 'we-1',
+            set_number: 1,
+            weight: 100,
+            reps: 10,
+            estimated_1rm: 133,
+          },
+        ]);
+      }
+      return Promise.resolve([]);
+    });
+
+    mockGetFirstAsync.mockImplementation((_sql: string, params: unknown[]) => {
+      if (params[0] === 'ex-bench') {
+        return Promise.resolve({ id: 'ex-bench', name: 'ベンチプレス' });
+      }
+      return Promise.resolve(null);
+    });
+  };
+
+  /**
+   * メモがないモックデータ
+   */
+  const setupMockWithoutMemos = () => {
+    mockGetAllAsync.mockImplementation((sql: string) => {
+      if (sql.includes('FROM workouts')) {
+        return Promise.resolve([
+          {
+            id: 'workout-nomemo-1',
+            status: 'completed',
+            completed_at: new Date('2026-02-01T10:00:00.000Z').getTime(),
+            elapsed_seconds: 3600,
+            timer_status: 'stopped',
+            memo: null,
+          },
+        ]);
+      }
+      if (sql.includes('FROM workout_exercises')) {
+        return Promise.resolve([
+          {
+            id: 'we-1',
+            workout_id: 'workout-nomemo-1',
+            exercise_id: 'ex-bench',
+            display_order: 1,
+            memo: null,
+          },
+        ]);
+      }
+      if (sql.includes('FROM sets')) {
+        return Promise.resolve([
+          {
+            id: 's-1',
+            workout_exercise_id: 'we-1',
+            set_number: 1,
+            weight: 100,
+            reps: 10,
+            estimated_1rm: 133,
+          },
+        ]);
+      }
+      return Promise.resolve([]);
+    });
+
+    mockGetFirstAsync.mockImplementation((_sql: string, params: unknown[]) => {
+      if (params[0] === 'ex-bench') {
+        return Promise.resolve({ id: 'ex-bench', name: 'ベンチプレス' });
+      }
+      return Promise.resolve(null);
+    });
+  };
+
+  it('ワークアウトメモが存在する場合に表示される', async () => {
+    // Given: メモ付きワークアウトデータ
+    setupMockWithMemos();
+
+    render(<DaySummary dateString="2026-02-01" />);
+
+    // When: データ読み込み完了
+    await waitFor(() => {
+      expect(screen.getByText('ベンチプレス')).toBeTruthy();
+    });
+
+    // Then: ワークアウトメモが表示される
+    expect(screen.getByText('今日は調子が良かった')).toBeTruthy();
+  });
+
+  it('種目メモが存在する場合に種目カード内に表示される', async () => {
+    // Given: 種目メモ付きデータ
+    setupMockWithMemos();
+
+    render(<DaySummary dateString="2026-02-01" />);
+
+    // When: データ読み込み完了
+    await waitFor(() => {
+      expect(screen.getByText('ベンチプレス')).toBeTruthy();
+    });
+
+    // Then: 種目メモが表示される
+    expect(screen.getByText('グリップ幅を少し広めに')).toBeTruthy();
+  });
+
+  it('メモがない場合はメモ領域が表示されない', async () => {
+    // Given: メモなしデータ
+    setupMockWithoutMemos();
+
+    render(<DaySummary dateString="2026-02-01" />);
+
+    // When: データ読み込み完了
+    await waitFor(() => {
+      expect(screen.getByText('ベンチプレス')).toBeTruthy();
+    });
+
+    // Then: ワークアウトメモの testID が存在しない
+    expect(screen.queryByTestId('workout-memo')).toBeNull();
+    // Then: 種目メモの testID が存在しない
+    expect(screen.queryByTestId('exercise-memo-we-1')).toBeNull();
+  });
+});

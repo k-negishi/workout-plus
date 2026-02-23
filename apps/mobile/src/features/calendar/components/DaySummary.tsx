@@ -38,9 +38,13 @@ function formatDuration(seconds: number | null, timerStatus?: string): string {
 
 /** 種目別のセットデータ */
 type ExerciseSetData = {
+  /** workout_exercise ID（メモ testID に使用） */
+  workoutExerciseId: string;
   /** 種目 ID（ExerciseHistory 遷移時に使用） */
   exerciseId: string;
   exerciseName: string;
+  /** workout_exercise.memo: 種目ごとのメモ */
+  memo: string | null;
   sets: Array<{
     setNumber: number;
     weight: number | null;
@@ -146,9 +150,11 @@ export function DaySummary({
         });
 
         exerciseData.push({
+          workoutExerciseId: we.id,
           // exercise_id は WorkoutExerciseRow から取得（ExerciseHistory 遷移時に使用）
           exerciseId: we.exercise_id,
           exerciseName: exercise?.name ?? '不明な種目',
+          memo: we.memo,
           sets: setData,
         });
       }
@@ -248,6 +254,23 @@ export function DaySummary({
         </View>
       </View>
 
+      {/* ワークアウトメモ: memo が存在する場合のみ表示 */}
+      {workout.memo ? (
+        <View
+          testID="workout-memo"
+          style={{
+            backgroundColor: '#FFFFFF',
+            borderRadius: 4,
+            padding: 12,
+            marginBottom: 12,
+            borderWidth: 1,
+            borderColor: '#e2e8f0',
+          }}
+        >
+          <Text style={{ fontSize: 13, color: '#64748b' }}>{workout.memo}</Text>
+        </View>
+      ) : null}
+
       {/* 種目別セット詳細 */}
       <View style={{ gap: 12 }}>
         {exerciseSets.map((ex, idx) => (
@@ -284,7 +307,7 @@ export function DaySummary({
                   }}
                 >
                   <CheckIcon />
-                  <Text style={{ fontSize: 15, color: '#64748b', width: 14 }}>{set.setNumber}</Text>
+                  <Text style={{ fontSize: 15, color: '#64748b' }}>{set.setNumber} set</Text>
                   <Text style={{ fontSize: 16, fontWeight: '600', flex: 1, color: '#334155' }}>
                     {set.weight ?? '-'}kg × {set.reps ?? '-'}
                   </Text>
@@ -296,6 +319,15 @@ export function DaySummary({
                 </View>
               ))}
             </View>
+            {/* 種目メモ: memo が存在する場合のみ表示 */}
+            {ex.memo ? (
+              <Text
+                testID={`exercise-memo-${ex.workoutExerciseId}`}
+                style={{ fontSize: 13, color: '#64748b', paddingTop: 8 }}
+              >
+                {ex.memo}
+              </Text>
+            ) : null}
           </View>
         ))}
       </View>
