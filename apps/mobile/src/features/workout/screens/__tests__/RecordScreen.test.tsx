@@ -31,10 +31,12 @@ const mockReplace = jest.fn();
 const mockGoBack = jest.fn();
 
 // T09: useFocusEffect のモックを削除（スタック画面化により useEffect を使用）
+// Issue #131: goBack をトップレベルに追加（ヘッダー戻るボタン対応）
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({
     navigate: mockNavigate,
     replace: mockReplace,
+    goBack: mockGoBack,
     getParent: () => ({ goBack: mockGoBack }),
   }),
   // T09: useRoute は params を持つ（workoutId, targetDate）
@@ -145,10 +147,43 @@ describe('RecordScreen', () => {
     });
 
     it('insets.top に基づいた paddingTop がヘッダーに適用される', () => {
+      // Issue #131: paddingTop はヘッダー（record-header）で吸収する
       render(<RecordScreen />);
-      const container = screen.getByTestId('record-screen-container');
-      // paddingTop は insets.top の値が反映されていること（44 + 追加マージン）
-      expect(container.props.style).toEqual(expect.objectContaining({ paddingTop: 44 }));
+      const header = screen.getByTestId('record-header');
+      expect(header.props.style).toEqual(expect.objectContaining({ paddingTop: 44 }));
+    });
+  });
+
+  describe('ヘッダー（Issue #131: 戻るボタン・タイトル中央寄せ・青系統）', () => {
+    it('戻るボタンが表示される', () => {
+      render(<RecordScreen />);
+      expect(screen.getByLabelText('戻る')).toBeTruthy();
+    });
+
+    it('戻るボタンをタップすると goBack が呼ばれる', () => {
+      render(<RecordScreen />);
+      fireEvent.press(screen.getByLabelText('戻る'));
+      expect(mockGoBack).toHaveBeenCalledTimes(1);
+    });
+
+    it('ヘッダーに日付タイトルが中央寄せで表示される', () => {
+      render(<RecordScreen />);
+      const title = screen.getByTestId('record-header-title');
+      expect(title).toBeTruthy();
+      expect(title.props.style).toEqual(expect.objectContaining({ textAlign: 'center' }));
+    });
+
+    it('ヘッダーの背景色が青系統 (#4D94FF) である', () => {
+      render(<RecordScreen />);
+      const header = screen.getByTestId('record-header');
+      expect(header.props.style).toEqual(expect.objectContaining({ backgroundColor: '#4D94FF' }));
+    });
+
+    it('当日のワークアウトタイトルが表示される', () => {
+      render(<RecordScreen />);
+      // 当日日付（2026-02-23）のタイトルが表示されることを確認
+      const title = screen.getByTestId('record-header-title');
+      expect(title.props.children).toMatch(/月\d+日のワークアウト/);
     });
   });
 

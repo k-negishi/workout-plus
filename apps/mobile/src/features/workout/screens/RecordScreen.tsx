@@ -9,6 +9,7 @@
  * - pendingContinuationWorkoutId 参照を完全削除（T04 で廃止）
  * - completeWorkout 後は navigate('WorkoutSummary') で遷移
  */
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import type {
   NativeStackNavigationProp,
@@ -327,21 +328,44 @@ export const RecordScreen: React.FC = () => {
   });
 
   return (
-    <View
-      testID="record-screen-container"
-      style={{ flex: 1, backgroundColor: '#f9fafb', paddingTop: insets.top }}
-    >
-      {/* 日付ヘッダー: どの日のワークアウトを記録しているか明示する */}
+    <View testID="record-screen-container" style={{ flex: 1, backgroundColor: '#f9fafb' }}>
+      {/* 青系統ヘッダー: SafeArea吸収 + 戻るボタン（左）+ 日付タイトル（中央）+ スペーサー（右） */}
       <View
+        testID="record-header"
         style={{
+          backgroundColor: '#4D94FF',
+          paddingTop: insets.top,
+          paddingBottom: 12,
           paddingHorizontal: 16,
-          paddingVertical: 8,
-          backgroundColor: '#ffffff',
-          borderBottomWidth: 1,
-          borderBottomColor: '#e2e8f0',
+          flexDirection: 'row',
+          alignItems: 'center',
         }}
       >
-        <Text style={{ fontSize: 13, fontWeight: '500', color: '#475569' }}>{headerDateLabel}</Text>
+        {/* 戻るボタン: 前の画面（HomeScreen / CalendarScreen）に戻る */}
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          accessibilityLabel="戻る"
+          style={{ width: 40, alignItems: 'flex-start' }}
+        >
+          <Ionicons name="chevron-back" size={24} color="#ffffff" />
+        </TouchableOpacity>
+
+        {/* 日付タイトル: 中央寄せで現在記録中の日付を明示する */}
+        <Text
+          testID="record-header-title"
+          style={{
+            flex: 1,
+            textAlign: 'center',
+            fontSize: 16,
+            fontWeight: '600',
+            color: '#ffffff',
+          }}
+        >
+          {headerDateLabel}
+        </Text>
+
+        {/* 右スペーサー: 戻るボタンとバランスを取るための空領域 */}
+        <View style={{ width: 40 }} />
       </View>
 
       {/* タイマーバー（上部固定） */}
