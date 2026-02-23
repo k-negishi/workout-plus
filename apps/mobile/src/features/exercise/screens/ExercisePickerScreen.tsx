@@ -27,7 +27,6 @@ import { useWorkoutSessionStore } from '@/stores/workoutSessionStore';
 import type { Equipment, Exercise, HomeStackParamList, MuscleGroup } from '@/types';
 
 import { useWorkoutSession } from '../../workout/hooks/useWorkoutSession';
-import { ExerciseSortChips } from '../components/ExerciseSortChips';
 import { MUSCLE_GROUP_LABELS, useExerciseSearch } from '../hooks/useExerciseSearch';
 
 /**
@@ -325,15 +324,7 @@ export const ExercisePickerScreen: React.FC = () => {
   const session = useWorkoutSession();
   // SafeArea 対応: ノッチ・ダイナミックアイランド対応
   const insets = useSafeAreaInsets();
-  const {
-    query,
-    setQuery,
-    selectedCategory,
-    setSelectedCategory,
-    sections,
-    sortOrder,
-    setSortOrder,
-  } = useExerciseSearch();
+  const { query, setQuery, selectedCategory, setSelectedCategory, sections } = useExerciseSearch();
 
   // Issue #116: 現在のワークアウトに追加済みの exerciseId セットを構築
   // currentExercises が更新されると再計算される
@@ -487,9 +478,6 @@ export const ExercisePickerScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* ソートチップ（検索バー直下） */}
-      <ExerciseSortChips sortOrder={sortOrder} onSortChange={setSortOrder} />
-
       {/* カテゴリタブ */}
       <View className="px-4 pb-2 border-b border-[#e2e8f0]">
         <FlatList
@@ -535,15 +523,12 @@ export const ExercisePickerScreen: React.FC = () => {
             description="検索ワードを変えてみてください"
           />
         }
-        renderSectionHeader={({ section }) =>
-          // date/frequency ソート時はタイトルが空のフラットリストになるためヘッダーを非表示
-          section.title ? (
-            <View className="flex-row justify-between items-center px-5 pt-3 pb-2">
-              <Text className="text-[15px] font-semibold text-[#334155]">{section.title}</Text>
-              <Text className="text-[14px] text-[#64748b]">{section.data.length}件</Text>
-            </View>
-          ) : null
-        }
+        renderSectionHeader={({ section }) => (
+          <View className="flex-row justify-between items-center px-5 pt-3 pb-2">
+            <Text className="text-[15px] font-semibold text-[#334155]">{section.title}</Text>
+            <Text className="text-[14px] text-[#64748b]">{section.data.length}件</Text>
+          </View>
+        )}
         renderItem={({ item }) => {
           const isSelected = selectedIds.has(item.id);
           const isEditing = editingExerciseId === item.id;
