@@ -218,11 +218,11 @@ const InlineEditForm: React.FC<{
 );
 
 /**
- * Issue #136: 種目リストのフッターコンポーネント
- * カスタム種目作成フォーム + FAB と重ならない余白を管理。
- * ExercisePickerScreen の complexity 削減のため分離。
+ * Issue #136: 種目リストのヘッダーコンポーネント
+ * カスタム種目作成フォームをリスト先頭に表示する。
+ * FAB タップ時にフォームが即座に見えるよう ListHeaderComponent に配置。
  */
-const ExerciseListFooter: React.FC<{
+const ExerciseListHeader: React.FC<{
   isCreating: boolean;
   newExerciseName: string;
   newMuscleGroup: MuscleGroup;
@@ -242,86 +242,81 @@ const ExerciseListFooter: React.FC<{
   onEquipmentChange,
   onSubmit,
   onCancel,
-}) => (
-  <View>
-    {isCreating && (
-      <View className="px-5 py-4">
-        <View className="border border-dashed border-[#e2e8f0] rounded-lg p-4">
-          <TextInput
-            className="bg-white border border-[#e2e8f0] rounded-lg px-3 py-2.5 text-[16px] text-[#475569] mb-3"
-            placeholder="種目名を入力"
-            value={newExerciseName}
-            onChangeText={onNameChange}
-            autoFocus
-          />
-          <Text className="text-[13px] font-semibold text-[#64748b] tracking-wide mb-1.5">
-            部位
-          </Text>
-          <View className="flex-row flex-wrap gap-1.5 mb-3">
-            {MUSCLE_GROUP_OPTIONS.map((opt) => (
-              <TouchableOpacity
-                key={opt.key}
-                onPress={() => onMuscleGroupChange(opt.key)}
-                className={`px-2.5 py-1 rounded-full border ${
+}) =>
+  isCreating ? (
+    <View className="px-5 py-4">
+      <View className="border border-dashed border-[#e2e8f0] rounded-lg p-4">
+        <TextInput
+          className="bg-white border border-[#e2e8f0] rounded-lg px-3 py-2.5 text-[16px] text-[#475569] mb-3"
+          placeholder="種目名を入力"
+          value={newExerciseName}
+          onChangeText={onNameChange}
+          autoFocus
+        />
+        <Text className="text-[13px] font-semibold text-[#64748b] tracking-wide mb-1.5">
+          部位
+        </Text>
+        <View className="flex-row flex-wrap gap-1.5 mb-3">
+          {MUSCLE_GROUP_OPTIONS.map((opt) => (
+            <TouchableOpacity
+              key={opt.key}
+              onPress={() => onMuscleGroupChange(opt.key)}
+              className={`px-2.5 py-1 rounded-full border ${
+                newMuscleGroup === opt.key
+                  ? 'bg-[#E6F2FF] border-[#4D94FF]'
+                  : 'border-[#e2e8f0]'
+              }`}
+            >
+              <Text
+                className={`text-[14px] ${
                   newMuscleGroup === opt.key
-                    ? 'bg-[#E6F2FF] border-[#4D94FF]'
-                    : 'border-[#e2e8f0]'
+                    ? 'text-[#4D94FF] font-semibold'
+                    : 'text-[#64748b]'
                 }`}
               >
-                <Text
-                  className={`text-[14px] ${
-                    newMuscleGroup === opt.key
-                      ? 'text-[#4D94FF] font-semibold'
-                      : 'text-[#64748b]'
-                  }`}
-                >
-                  {opt.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-          <Text className="text-[13px] font-semibold text-[#64748b] tracking-wide mb-1.5">
-            器具
-          </Text>
-          <View className="flex-row flex-wrap gap-1.5 mb-3">
-            {EQUIPMENT_OPTIONS.map((opt) => (
-              <TouchableOpacity
-                key={opt.key}
-                onPress={() => onEquipmentChange(opt.key)}
-                className={`px-2.5 py-1 rounded-full border ${
-                  newEquipment === opt.key
-                    ? 'bg-[#E6F2FF] border-[#4D94FF]'
-                    : 'border-[#e2e8f0]'
-                }`}
-              >
-                <Text
-                  className={`text-[14px] ${
-                    newEquipment === opt.key
-                      ? 'text-[#4D94FF] font-semibold'
-                      : 'text-[#64748b]'
-                  }`}
-                >
-                  {opt.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-          <TouchableOpacity
-            onPress={onSubmit}
-            className="py-2.5 bg-[#4D94FF] rounded-lg items-center"
-          >
-            <Text className="text-[15px] font-semibold text-white">作成して追加</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={onCancel} className="items-center mt-2">
-            <Text className="text-[15px] text-[#64748b]">キャンセル</Text>
-          </TouchableOpacity>
+                {opt.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
+        <Text className="text-[13px] font-semibold text-[#64748b] tracking-wide mb-1.5">
+          器具
+        </Text>
+        <View className="flex-row flex-wrap gap-1.5 mb-3">
+          {EQUIPMENT_OPTIONS.map((opt) => (
+            <TouchableOpacity
+              key={opt.key}
+              onPress={() => onEquipmentChange(opt.key)}
+              className={`px-2.5 py-1 rounded-full border ${
+                newEquipment === opt.key
+                  ? 'bg-[#E6F2FF] border-[#4D94FF]'
+                  : 'border-[#e2e8f0]'
+              }`}
+            >
+              <Text
+                className={`text-[14px] ${
+                  newEquipment === opt.key
+                    ? 'text-[#4D94FF] font-semibold'
+                    : 'text-[#64748b]'
+                }`}
+              >
+                {opt.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        <TouchableOpacity
+          onPress={onSubmit}
+          className="py-2.5 bg-[#4D94FF] rounded-lg items-center"
+        >
+          <Text className="text-[15px] font-semibold text-white">作成して追加</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={onCancel} className="items-center mt-2">
+          <Text className="text-[15px] text-[#64748b]">キャンセル</Text>
+        </TouchableOpacity>
       </View>
-    )}
-    {/* FAB と重ならないための余白 */}
-    <View style={{ height: 88 }} />
-  </View>
-);
+    </View>
+  ) : null;
 
 export const ExercisePickerScreen: React.FC = () => {
   const navigation = useNavigation<PickerNavProp>();
@@ -605,8 +600,8 @@ export const ExercisePickerScreen: React.FC = () => {
             </View>
           );
         }}
-        ListFooterComponent={
-          <ExerciseListFooter
+        ListHeaderComponent={
+          <ExerciseListHeader
             isCreating={isCreating}
             newExerciseName={newExerciseName}
             newMuscleGroup={newMuscleGroup}
@@ -620,6 +615,10 @@ export const ExercisePickerScreen: React.FC = () => {
               setNewExerciseName('');
             }}
           />
+        }
+        ListFooterComponent={
+          /* FAB と重ならないための余白 */
+          <View style={{ height: 88 }} />
         }
       />
 
