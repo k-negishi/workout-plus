@@ -47,7 +47,11 @@ pnpm --filter mobile ios
 pnpm --filter mobile android
 
 # SQLite データをクリアして起動（Expo Go ごと削除→再インストール）
-xcrun simctl uninstall booted host.exp.Exponent && pnpm --filter mobile ios
+# ※事前にシミュレーターを起動しておくこと（起動していないと "No devices are booted." エラー）
+open -a Simulator && sleep 3 && xcrun simctl uninstall booted host.exp.Exponent && pnpm --filter mobile ios
+
+# シミュレーターのデバイス指定（iPhone 16）
+pnpm --filter mobile ios --device "iPhone 16"
 ```
 
 ### 品質チェック
