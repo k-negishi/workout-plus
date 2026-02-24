@@ -3,12 +3,15 @@ import type { ConversationMessage } from '../schemas.js';
 import { createAPIError } from '../middleware/errorHandler.js';
 
 /**
- * OpenAI GPT-5 mini モデル ID（デフォルト）
+ * OpenAI モデル ID（デフォルト: gpt-4o-mini）
  * OPENAI_MODEL_ID 環境変数で上書き可能
+ *
+ * gpt-4o-mini を選ぶ理由: 推論ステップがなく低レイテンシ。パーソナルトレーナー用途には十分。
+ * gpt-5-mini は推論モデルのため応答が遅い（reasoning tokens 消費）。
  *
  * TODO: ストリーミング対応時は client.chat.completions.stream() に変更する
  */
-const MODEL_ID = process.env['OPENAI_MODEL_ID'] ?? 'gpt-5-mini';
+const MODEL_ID = process.env['OPENAI_MODEL_ID'] ?? 'gpt-4o-mini';
 
 /**
  * OpenAI クライアント（Lambda 実行環境用シングルトン）
@@ -62,9 +65,9 @@ export async function invokeModel(
   try {
     const response = await client.chat.completions.create({
       model: MODEL_ID,
-      // 推論モデル（gpt-5-mini 等）は reasoning_tokens + output_tokens の合計が上限になる
-      // reasoning に ~1024 消費されるため、出力トークンを確保するには大きめに設定する
-      max_completion_tokens: 4096,
+      // gpt-4o-mini 等の非推論モデルは max_tokens を使用する
+      // 推論モデル（gpt-5-mini 等）は max_completion_tokens が必要だが、現在は非推論モデルを使用
+      max_tokens: 1024,
       messages,
     });
 
