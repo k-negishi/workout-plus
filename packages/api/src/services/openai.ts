@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
 import type { ConversationMessage } from '../schemas.js';
 import { createAPIError } from '../middleware/errorHandler.js';
+import type { IAIProvider } from './provider.js';
 
 /**
  * OpenAI モデル ID（デフォルト: gpt-4o-mini）
@@ -62,12 +63,17 @@ export async function invokeModel(
     { role: 'user', content: userMessage },
   ];
 
+  // 推論モデル（gpt-5-mini, o1, o3 等）は max_completion_tokens を使用する
+  // 非推論モデル（gpt-4o-mini 等）は max_tokens を使用する
+  const isReasoningModel = MODEL_ID.startsWith('o') || MODEL_ID.includes('gpt-5');
+  const tokenParam = isReasoningModel
+    ? { max_completion_tokens: 4096 }
+    : { max_tokens: 1024 };
+
   try {
     const response = await client.chat.completions.create({
       model: MODEL_ID,
-      // gpt-4o-mini 等の非推論モデルは max_tokens を使用する
-      // 推論モデル（gpt-5-mini 等）は max_completion_tokens が必要だが、現在は非推論モデルを使用
-      max_tokens: 1024,
+      ...tokenParam,
       messages,
     });
 
@@ -79,5 +85,21 @@ export async function invokeModel(
       'BEDROCK_ERROR',
       `AI サービスの呼び出しに失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`,
     );
+  }
+}
+
+/**
+ * IAIProvider の OpenAI 実装
+ *
+ * createAIProvider() から生成される。直接インスタンス化する代わりに
+ * createAIProvider() を使うことでプロバイダーの切り替えが容易になる。
+ */
+export class OpenAIProvider implements IAIProvider {
+  async invoke(
+    systemPrompt: string,
+    conversationHistory: ConversationMessage[],
+    userMessage: string,
+  ): Promise<{ text: string }> {
+    return invokeModel(openaiClient, systemPrompt, conversationHistory, userMessage);
   }
 }

@@ -1,10 +1,14 @@
 import { createRoute } from '@hono/zod-openapi';
 import { z } from '@hono/zod-openapi';
 import { ChatRequestSchema, ChatResponseSchema, APIErrorSchema } from '../../schemas.js';
-import { openaiClient, buildSystemPrompt, invokeModel } from '../../services/openai.js';
+import { buildSystemPrompt } from '../../services/openai.js';
+import { createAIProvider } from '../../services/provider.js';
 import { RecentMonthsStrategy } from '../../strategies/workoutHistory/recentMonths.js';
 import type { WorkoutHistoryStrategy } from '../../strategies/workoutHistory/interface.js';
 import type { WorkoutHistoryContext } from '../../schemas.js';
+
+// モジュールロード時にプロバイダーを一度だけ生成する（Lambda コールドスタート最適化）
+const aiProvider = createAIProvider();
 
 /**
  * WorkoutHistoryStrategy をコンテキストの strategy フィールドで選択する
@@ -68,8 +72,7 @@ export async function handleAIChat(
   const historyStrategy = getStrategy(body.workoutHistory.strategy);
   const historyText = historyStrategy.buildPromptText(body.workoutHistory);
   const systemPrompt = buildSystemPrompt(historyText);
-  const { text } = await invokeModel(
-    openaiClient,
+  const { text } = await aiProvider.invoke(
     systemPrompt,
     body.conversationHistory,
     body.message,

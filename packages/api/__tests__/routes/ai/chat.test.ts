@@ -1,13 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('../../../src/services/openai.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../../../src/services/openai.js')>();
-  return {
-    ...actual,
-    openaiClient: {},
-    invokeModel: vi.fn().mockResolvedValue({ text: 'OpenAI からの返答' }),
-  };
-});
+// provider.ts をモックして invoke を差し替える
+// これにより OpenAI クライアントを使わずにルートの動作を検証できる
+vi.mock('../../../src/services/provider.js', () => ({
+  createAIProvider: vi.fn(() => ({
+    invoke: vi.fn().mockResolvedValue({ text: 'AI からの返答' }),
+  })),
+}));
 
 import { testClient } from 'hono/testing';
 import { createApp } from '../../../src/app.js';
@@ -35,7 +34,7 @@ describe('POST /ai/chat', () => {
     );
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.message).toBe('OpenAI からの返答');
+    expect(body.message).toBe('AI からの返答');
   });
 
   it('API Key なしで 401 が返ること', async () => {
