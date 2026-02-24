@@ -60,9 +60,10 @@ describe('APIAIService', () => {
       workoutHistory: emptyWorkoutHistory,
     });
 
-    // openapi-fetch は fetch(Request) 形式で呼ぶため、引数は Request オブジェクト
-    const request = mockFetch.mock.calls[0]![0] as Request;
-    expect(request.headers.get('x-api-key')).toBe(API_KEY);
+    // raw fetch(url, options) 形式で呼ぶため、第2引数の headers を確認する
+    const options = mockFetch.mock.calls[0]![1] as RequestInit;
+    const headers = options.headers as Record<string, string>;
+    expect(headers['x-api-key']).toBe(API_KEY);
   });
 
   it('401 レスポンスで認証エラーが throw されること', async () => {
@@ -118,7 +119,8 @@ describe('APIAIService', () => {
       workoutHistory: emptyWorkoutHistory,
     });
 
-    const request = mockFetch.mock.calls[0]![0] as Request;
-    expect(request.url).toContain('/ai/chat');
+    // raw fetch(url, options) 形式なので第1引数が URL 文字列
+    const url = mockFetch.mock.calls[0]![0] as string;
+    expect(url).toContain('/ai/chat');
   });
 });
