@@ -69,6 +69,14 @@ function getEquipmentLabel(key: Equipment | string): string {
   return EQUIPMENT_LABELS[key as Equipment] ?? key;
 }
 
+/**
+ * ⇅ ボタンのテキスト色を返す
+ * 部位フィルターなし（全て表示中）のとき disabled としてグレーアウトする
+ */
+function getReorderButtonColor(isDisabled: boolean): string {
+  return isDisabled ? 'text-[#cbd5e1]' : 'text-[#475569]';
+}
+
 /** 器具チップ選択肢 */
 const EQUIPMENT_OPTIONS: Array<{ key: Equipment; label: string }> = [
   { key: 'barbell', label: 'バーベル' },
@@ -325,7 +333,7 @@ export const ExercisePickerScreen: React.FC = () => {
   const session = useWorkoutSession();
   // SafeArea 対応: ノッチ・ダイナミックアイランド対応
   const insets = useSafeAreaInsets();
-  const { query, setQuery, selectedCategory, setSelectedCategory, sections, allExercises, loadExercises } =
+  const { query, setQuery, selectedCategory, setSelectedCategory, sections, loadExercises } =
     useExerciseSearch();
 
   // Issue #116: 現在のワークアウトに追加済みの exerciseId セットを構築
@@ -350,6 +358,13 @@ export const ExercisePickerScreen: React.FC = () => {
 
   // 並び替えモーダル表示状態
   const [isReorderModalVisible, setIsReorderModalVisible] = useState(false);
+
+  // フィルター適用後に表示されている種目（並び替えモーダルに渡す対象）
+  // sections を平坦化して現在のフィルター条件での表示種目を取得する
+  const visibleExercises = useMemo(
+    () => sections.flatMap((section) => section.data),
+    [sections],
+  );
 
   // T039: インライン編集
   const [editingExerciseId, setEditingExerciseId] = useState<string | null>(null);
@@ -478,14 +493,18 @@ export const ExercisePickerScreen: React.FC = () => {
           <Text className="text-[24px] text-[#475569]">{'‹'}</Text>
         </TouchableOpacity>
         <Text className="flex-1 text-center text-[18px] font-bold text-[#334155]">種目を選択</Text>
-        {/* Issue #141: 並び替えボタン */}
+        {/* Issue #141: 並び替えボタン（部位フィルター選択時のみ有効）
+            全て表示中は全種目をフラットに並び替えても意味がないため disabled にする */}
         <TouchableOpacity
           testID="reorder-button"
           onPress={() => setIsReorderModalVisible(true)}
+          disabled={selectedCategory === null}
           className="w-8 h-8 items-center justify-center"
           accessibilityLabel="並び替え"
         >
-          <Text className="text-[20px] text-[#475569]">⇅</Text>
+          <Text className={`text-[20px] ${getReorderButtonColor(selectedCategory === null)}`}>
+            ⇅
+          </Text>
         </TouchableOpacity>
       </View>
 
@@ -679,7 +698,7 @@ export const ExercisePickerScreen: React.FC = () => {
       {/* Issue #141: 並び替えモーダル */}
       <ExerciseReorderModal
         visible={isReorderModalVisible}
-        exercises={allExercises}
+        exercises={visibleExercises}
         onSave={handleReorderSave}
         onClose={() => setIsReorderModalVisible(false)}
       />

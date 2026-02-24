@@ -67,46 +67,29 @@ jest.mock('@/database/repositories/exercise', () => ({
   },
 }));
 
-// useExerciseSearch: テスト用の種目2件を返す
+// useExerciseSearch: テストごとに selectedCategory を変えられるよう jest.fn() で制御可能にする
+const mockUseExerciseSearch = jest.fn();
+
 jest.mock('../../hooks/useExerciseSearch', () => ({
-  useExerciseSearch: () => ({
-    query: '',
-    setQuery: jest.fn(),
-    selectedCategory: null,
-    setSelectedCategory: jest.fn(),
-    isLoading: false,
-    loadExercises: jest.fn(),
-    // sections: ベンチプレス（追加済み）とスクワット（未追加）
-    sections: [
-      {
-        title: 'テスト種目',
-        data: [
-          {
-            id: 'exercise-bench',
-            name: 'ベンチプレス',
-            muscleGroup: 'chest',
-            equipment: 'barbell',
-            isCustom: false,
-            isFavorite: false,
-            createdAt: 1000,
-            updatedAt: 1000,
-            sortOrder: 1,
-          },
-          {
-            id: 'exercise-squat',
-            name: 'スクワット',
-            muscleGroup: 'legs',
-            equipment: 'barbell',
-            isCustom: false,
-            isFavorite: false,
-            createdAt: 1000,
-            updatedAt: 1000,
-            sortOrder: 2,
-          },
-        ],
-      },
-    ],
-    allExercises: [
+  // クロージャでラップすることで factory ホイスティング後に mockUseExerciseSearch が
+  // 評価されるようにする（直接代入すると factory 実行時に undefined になる）
+  useExerciseSearch: (...args: unknown[]) => mockUseExerciseSearch(...args),
+  MUSCLE_GROUP_LABELS: {
+    chest: '胸',
+    legs: '脚',
+    back: '背中',
+    shoulders: '肩',
+    biceps: '二頭',
+    triceps: '三頭',
+    abs: '腹',
+  },
+}));
+
+/** テスト用の種目一覧 */
+const TEST_SECTIONS = [
+  {
+    title: 'テスト種目',
+    data: [
       {
         id: 'exercise-bench',
         name: 'ベンチプレス',
@@ -130,17 +113,20 @@ jest.mock('../../hooks/useExerciseSearch', () => ({
         sortOrder: 2,
       },
     ],
-  }),
-  MUSCLE_GROUP_LABELS: {
-    chest: '胸',
-    legs: '脚',
-    back: '背中',
-    shoulders: '肩',
-    biceps: '二頭',
-    triceps: '三頭',
-    abs: '腹',
   },
-}));
+];
+
+/** デフォルトの useExerciseSearch 返却値（全て表示・フィルターなし） */
+const DEFAULT_SEARCH_STATE = {
+  query: '',
+  setQuery: jest.fn(),
+  selectedCategory: null, // 全て表示中
+  setSelectedCategory: jest.fn(),
+  isLoading: false,
+  loadExercises: jest.fn(),
+  sections: TEST_SECTIONS,
+  allExercises: TEST_SECTIONS[0]!.data,
+};
 
 // currentExercises に「ベンチプレス」（exercise-bench）を含む状態をモック
 jest.mock('@/stores/workoutSessionStore', () => ({
@@ -177,6 +163,8 @@ import { ExercisePickerScreen } from '../ExercisePickerScreen';
 describe('ExercisePickerScreen - 追加済み種目の表示と操作（Issue #116）', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // デフォルトは全て表示（selectedCategory: null）
+    mockUseExerciseSearch.mockReturnValue(DEFAULT_SEARCH_STATE);
   });
 
   it('追加済み種目（ベンチプレス）に「追加済み」テキストが表示される', () => {
@@ -213,6 +201,7 @@ describe('ExercisePickerScreen - 追加済み種目の表示と操作（Issue #1
 describe('ExercisePickerScreen - 並び替えボタン（Issue #141）', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseExerciseSearch.mockReturnValue(DEFAULT_SEARCH_STATE);
   });
 
   it('ヘッダーに並び替えボタン（testID: reorder-button）が存在する', () => {
@@ -221,7 +210,22 @@ describe('ExercisePickerScreen - 並び替えボタン（Issue #141）', () => {
     expect(screen.getByTestId('reorder-button')).toBeTruthy();
   });
 
-  it('並び替えボタンをタップすると並び替えモーダルが開く', () => {
+  it('全て表示中（selectedCategory: null）は ⇅ ボタンが disabled になる', () => {
+    // DEFAULT_SEARCH_STATE は selectedCategory: null
+    render(<ExercisePickerScreen />);
+
+    const button = screen.getByTestId('reorder-button');
+    // disabled の TouchableOpacity は accessibilityState.disabled が true
+    expect(button.props.accessibilityState?.disabled ?? button.props.disabled).toBe(true);
+  });
+
+  it('部位フィルター選択中（selectedCategory: "chest"）は ⇅ ボタンが有効になり、タップでモーダルが開く', () => {
+    // 胸フィルターを選択している状態
+    mockUseExerciseSearch.mockReturnValue({
+      ...DEFAULT_SEARCH_STATE,
+      selectedCategory: 'chest',
+    });
+
     render(<ExercisePickerScreen />);
 
     // モーダルが閉じている状態を確認
@@ -238,6 +242,7 @@ describe('ExercisePickerScreen - 並び替えボタン（Issue #141）', () => {
 describe('ExercisePickerScreen - カスタム種目追加 FAB（Issue #136）', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockUseExerciseSearch.mockReturnValue(DEFAULT_SEARCH_STATE);
   });
 
   it('FAB が表示される（accessibilityLabel で検索）', () => {

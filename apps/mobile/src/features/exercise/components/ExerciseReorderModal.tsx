@@ -219,13 +219,18 @@ export function ExerciseReorderModal({
           </View>
 
           {/* 種目リスト（DraggableFlatList） */}
-          <DraggableFlatList
-            data={orderedItems}
-            renderItem={renderItem}
-            keyExtractor={(item) => item.id}
-            onDragEnd={handleDragEnd}
-            style={{ flex: 1, backgroundColor: colors.white }}
-          />
+          {/* containerStyle でコンポーネント外側コンテナを flex: 1 に固定し、
+              View ラップと組み合わせてフッターが常に画面内に収まるようにする */}
+          <View style={{ flex: 1 }}>
+            <DraggableFlatList
+              data={orderedItems}
+              renderItem={renderItem}
+              keyExtractor={(item) => item.id}
+              onDragEnd={handleDragEnd}
+              containerStyle={{ flex: 1 }}
+              style={{ backgroundColor: colors.white }}
+            />
+          </View>
 
           {/* フッター: キャンセル・保存ボタン */}
           <View
