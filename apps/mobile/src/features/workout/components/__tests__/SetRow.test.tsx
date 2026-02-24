@@ -79,8 +79,8 @@ describe('SetRow', () => {
 
   it('重量入力フィールドが decimal-pad キーボードを持つこと', () => {
     render(<SetRow {...defaultProps} />);
-    // placeholder="-" の TextInput が2つあるうち、最初が重量
-    const weightInput = screen.getAllByPlaceholderText('-')[0];
+    // placeholder="0" の TextInput が2つあるうち、最初が重量
+    const weightInput = screen.getAllByPlaceholderText('0')[0];
     expect(weightInput.props.keyboardType).toBe('decimal-pad');
   });
 
@@ -90,8 +90,8 @@ describe('SetRow', () => {
 
   it('レップ入力フィールドが number-pad キーボードを持つこと', () => {
     render(<SetRow {...defaultProps} />);
-    // placeholder="-" の TextInput が2つあるうち、2番目がレップ
-    const repsInput = screen.getAllByPlaceholderText('-')[1];
+    // placeholder="0" の TextInput が2つあるうち、2番目がレップ
+    const repsInput = screen.getAllByPlaceholderText('0')[1];
     expect(repsInput.props.keyboardType).toBe('number-pad');
   });
 
@@ -99,9 +99,9 @@ describe('SetRow', () => {
   // placeholder
   // ────────────────────────────────────────────────────────────
 
-  it('重量・レップ両フィールドの placeholder が "-" であること', () => {
+  it('重量・レップ両フィールドの placeholder が "0" であること', () => {
     render(<SetRow {...defaultProps} />);
-    const inputs = screen.getAllByPlaceholderText('-');
+    const inputs = screen.getAllByPlaceholderText('0');
     // 重量とレップの2フィールドが存在する
     expect(inputs).toHaveLength(2);
   });
@@ -146,21 +146,21 @@ describe('SetRow', () => {
 
   it('重量フィールドに "60.5" を入力すると onWeightChange(setId, 60.5) が呼ばれること', () => {
     render(<SetRow {...defaultProps} />);
-    const weightInput = screen.getAllByPlaceholderText('-')[0];
+    const weightInput = screen.getAllByPlaceholderText('0')[0];
     fireEvent.changeText(weightInput, '60.5');
     expect(defaultProps.onWeightChange).toHaveBeenCalledWith('1', 60.5);
   });
 
   it('重量フィールドに空文字を入力すると onWeightChange(setId, null) が呼ばれること', () => {
     render(<SetRow {...defaultProps} />);
-    const weightInput = screen.getAllByPlaceholderText('-')[0];
+    const weightInput = screen.getAllByPlaceholderText('0')[0];
     fireEvent.changeText(weightInput, '');
     expect(defaultProps.onWeightChange).toHaveBeenCalledWith('1', null);
   });
 
   it('重量フィールドに "-" を入力すると onWeightChange(setId, null) が呼ばれること', () => {
     render(<SetRow {...defaultProps} />);
-    const weightInput = screen.getAllByPlaceholderText('-')[0];
+    const weightInput = screen.getAllByPlaceholderText('0')[0];
     fireEvent.changeText(weightInput, '-');
     expect(defaultProps.onWeightChange).toHaveBeenCalledWith('1', null);
   });
@@ -171,7 +171,7 @@ describe('SetRow', () => {
 
   it('レップフィールドに "10" を入力すると onRepsChange(setId, 10) が呼ばれること', () => {
     render(<SetRow {...defaultProps} />);
-    const repsInput = screen.getAllByPlaceholderText('-')[1];
+    const repsInput = screen.getAllByPlaceholderText('0')[1];
     fireEvent.changeText(repsInput, '10');
     expect(defaultProps.onRepsChange).toHaveBeenCalledWith('1', 10);
   });
