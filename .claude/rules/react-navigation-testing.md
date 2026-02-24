@@ -51,6 +51,49 @@ useFocusEffect(
 );
 ```
 
+## jest.mock() factory でのモック変数参照：クロージャでラップする
+
+`jest.mock()` は Babel によってファイル先頭にホイストされるため、
+factory 関数の実行時点ではモジュールレベルの変数がまだ初期化されていない。
+
+### NG: factory 内でモック変数を直接代入する
+
+```typescript
+const mockUseExerciseSearch = jest.fn(); // ← factory 実行時はまだ undefined
+
+jest.mock('../../hooks/useExerciseSearch', () => ({
+  useExerciseSearch: mockUseExerciseSearch, // ← undefined が代入される
+}));
+// → TypeError: useExerciseSearch is not a function
+```
+
+### OK: クロージャでラップして評価を遅延させる
+
+```typescript
+const mockUseExerciseSearch = jest.fn();
+
+jest.mock('../../hooks/useExerciseSearch', () => ({
+  // クロージャにより、テスト実行時（変数初期化後）に評価される
+  useExerciseSearch: (...args: unknown[]) => mockUseExerciseSearch(...args),
+}));
+
+// beforeEach で返却値を設定してテストごとに制御する
+beforeEach(() => {
+  mockUseExerciseSearch.mockReturnValue({ query: '', sections: [], ... });
+});
+```
+
+### なぜ `() => ({ goBack: mockGoBack })` は動くか
+
+`useNavigation: () => ({ goBack: mockGoBack })` はネストした関数の中で `mockGoBack` を参照している。
+外側のアロー関数は factory 実行時に作成されるが、`mockGoBack` が評価されるのは
+コンポーネントが `useNavigation()` を呼ぶ時点（テスト実行中）。
+変数が初期化された後なので問題ない。
+
+直接代入（`key: mockVar`）だけが NG で、関数内での参照（`key: () => mockVar`）は OK。
+
+---
+
 ## Zustand `getState()` で stale closure を回避
 
 `useFocusEffect` / `useEffect` 内で Zustand の最新値が必要な場合、
