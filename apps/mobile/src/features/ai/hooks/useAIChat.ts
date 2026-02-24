@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 
-import type { ChatMessage, IAIService, QuickAction, WorkoutHistoryContext } from '../types/index';
+import type { ChatMessage, IAIService, QuickAction } from '../types/index';
+import { buildWorkoutHistoryContext } from '../utils/buildWorkoutHistory';
 
 /** useAIChat フックの戻り値 */
 type UseAIChatReturn = {
@@ -22,17 +23,6 @@ const WELCOME_MESSAGE: ChatMessage = {
     'こんにちは！トレーニングについて何でも聞いてください。メニュー提案、振り返り、目標達成のアドバイスなど対応できます。',
   createdAt: Date.now(),
 };
-
-/**
- * ワークアウト履歴コンテキストを構築するヘルパー
- *
- * 現在は空の履歴を返す。
- * TODO: SQLite から直近3ヶ月のデータを取得して WorkoutHistoryContext を構築する
- *       WorkoutHistoryStrategy パターンに移行時に実装する
- */
-async function buildWorkoutHistoryContext(): Promise<WorkoutHistoryContext> {
-  return { strategy: 'recent_months', data: [] };
-}
 
 /**
  * AI チャットの状態管理フック
@@ -62,7 +52,8 @@ export function useAIChat(service: IAIService): UseAIChatReturn {
       setIsLoading(true);
 
       try {
-        const workoutHistory = await buildWorkoutHistoryContext();
+        // メッセージ内容に応じてキーワードフィルタリングを適用してコンテキストを構築する
+        const workoutHistory = await buildWorkoutHistoryContext(text.trim());
 
         // コンテキスト用に現在の会話履歴を取得（setMessages の外なので state から直接読む）
         // NOTE: このクロージャは sendMessage 呼び出し時点の messages を参照するため、
