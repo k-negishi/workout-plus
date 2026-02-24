@@ -7,6 +7,10 @@
   "scripts": {
     "lint": "echo 'no lint configured'",
     "test": "echo 'no tests configured'",
-    "build": "echo 'no build configured'"
+    "build": "echo 'no build configured'",
+    "generate:api": "openapi-typescript ../api/openapi.json -o src/generated/api.d.ts"
+  },
+  "devDependencies": {
+    "openapi-typescript": "^7.13.0"
   }
 }
