@@ -66,10 +66,7 @@ function parseDateRangeFromMessage(message: string): number {
  * exercises の name と照合してフィルタリングに使う。
  * 現時点では配列形式で返すが、将来的に複数種目への拡張も可能。
  */
-function parseExerciseKeywordsFromMessage(
-  message: string,
-  exerciseNames: string[],
-): string[] {
+function parseExerciseKeywordsFromMessage(message: string, exerciseNames: string[]): string[] {
   // ワークアウト履歴内に存在する種目名と完全一致・部分一致でキーワードを抽出
   return exerciseNames.filter((name) => message.includes(name));
 }
@@ -97,9 +94,7 @@ async function fetchExercisesWithNames(
  *
  * workout_date が null のワークアウトは skip する（完了フローが正常でないデータ）。
  */
-async function buildSummaryFromWorkout(
-  workout: WorkoutRow,
-): Promise<WorkoutSummary | null> {
+async function buildSummaryFromWorkout(workout: WorkoutRow): Promise<WorkoutSummary | null> {
   // workout_date が null のレコードは異常データとして除外
   if (!workout.workout_date) {
     return null;
@@ -134,9 +129,7 @@ async function buildSummaryFromWorkout(
  * @param message - ユーザーが送信したメッセージ本文
  * @returns WorkoutHistoryContext（strategy='recent_months' 固定）
  */
-export async function buildWorkoutHistoryContext(
-  message: string,
-): Promise<WorkoutHistoryContext> {
+export async function buildWorkoutHistoryContext(message: string): Promise<WorkoutHistoryContext> {
   // 日付フィルタ期間をメッセージから解析
   const rangeMs = parseDateRangeFromMessage(message);
   const cutoffTime = Date.now() - rangeMs;
@@ -145,17 +138,11 @@ export async function buildWorkoutHistoryContext(
   const allWorkouts = await WorkoutRepository.findAllCompleted();
 
   // 期間フィルタを適用
-  const filteredByDate = allWorkouts.filter(
-    (w) => w.created_at >= cutoffTime,
-  );
+  const filteredByDate = allWorkouts.filter((w) => w.created_at >= cutoffTime);
 
   // WorkoutSummary を並列構築（null は除外）
-  const summaryResults = await Promise.all(
-    filteredByDate.map((w) => buildSummaryFromWorkout(w)),
-  );
-  const summaries = summaryResults.filter(
-    (s): s is WorkoutSummary => s !== null,
-  );
+  const summaryResults = await Promise.all(filteredByDate.map((w) => buildSummaryFromWorkout(w)));
+  const summaries = summaryResults.filter((s): s is WorkoutSummary => s !== null);
 
   // 種目名キーワードが含まれる場合は該当種目のみに絞り込む
   const allExerciseNames = Array.from(

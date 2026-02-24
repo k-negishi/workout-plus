@@ -30,7 +30,11 @@ export class MockAIService implements IAIService {
       return '今回のワークアウトお疲れ様でした！記録を確認しました。全体的に安定したパフォーマンスを発揮できていますね。特にコンパウンド種目の重量が着実に伸びています。次回はインターバルを少し短くしてみると、心肺機能の向上にもつながります。';
     }
 
-    if (lowerMessage.includes('提案') || lowerMessage.includes('メニュー') || lowerMessage.includes('next')) {
+    if (
+      lowerMessage.includes('提案') ||
+      lowerMessage.includes('メニュー') ||
+      lowerMessage.includes('next')
+    ) {
       return '履歴を分析した結果、次回のトレーニングとして以下を提案します：\n\n1. **ベンチプレス** 4セット×6-8レップ（前回より2.5kg増）\n2. **インクラインダンベルフライ** 3セット×12レップ\n3. **ケーブルクロスオーバー** 3セット×15レップ\n\n胸筋の疲労が蓄積しているため、次回は背中や脚を中心にすることも検討してください。';
     }
 

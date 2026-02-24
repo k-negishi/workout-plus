@@ -1,4 +1,4 @@
-import { act,renderHook } from '@testing-library/react-native';
+import { act, renderHook } from '@testing-library/react-native';
 
 import { useAIChat } from '../../hooks/useAIChat';
 import type { IAIService } from '../../types/index';
@@ -39,7 +39,7 @@ describe('useAIChat', () => {
       chat: jest.fn().mockReturnValue(
         new Promise<{ content: string }>((resolve) => {
           resolveChat = () => resolve({ content: 'ok' });
-        })
+        }),
       ),
     };
 
@@ -92,7 +92,7 @@ describe('useAIChat', () => {
       chat: jest.fn().mockReturnValue(
         new Promise<{ content: string }>((resolve) => {
           resolveChat = () => resolve({ content: 'ok' });
-        })
+        }),
       ),
     };
 
@@ -110,7 +110,9 @@ describe('useAIChat', () => {
     // 1回しか呼ばれないこと
     expect(service.chat).toHaveBeenCalledTimes(1);
 
-    await act(async () => { resolveChat(); });
+    await act(async () => {
+      resolveChat();
+    });
   });
 
   it('sendMessage 後に isLoading が false に戻ること', async () => {

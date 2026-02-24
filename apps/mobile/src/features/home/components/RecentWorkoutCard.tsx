@@ -51,9 +51,7 @@ function getIconBackgroundColor(muscleGroup?: string): string {
 
 /** 部位キー配列を日本語ラベルに変換して中黒区切りで返す */
 function formatMuscleGroups(groups: string[]): string {
-  return groups
-    .map((g) => MUSCLE_GROUP_LABELS[g as MuscleGroup] ?? g)
-    .join('・');
+  return groups.map((g) => MUSCLE_GROUP_LABELS[g as MuscleGroup] ?? g).join('・');
 }
 
 type RecentWorkoutCardProps = {
@@ -117,9 +115,7 @@ export function RecentWorkoutCard({
             {/* 日付: 補助情報として小さく表示 */}
             <Text style={styles.dateLabel}>{dateLabel}</Text>
             {/* 部位名: メイン情報として大きく表示 */}
-            {muscleLabel !== '' && (
-              <Text style={styles.muscleLabel}>{muscleLabel}</Text>
-            )}
+            {muscleLabel !== '' && <Text style={styles.muscleLabel}>{muscleLabel}</Text>}
           </View>
         </View>
 

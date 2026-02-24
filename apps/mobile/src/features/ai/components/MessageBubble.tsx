@@ -75,9 +75,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
       testID="message-bubble-container"
       style={isUser ? USER_BUBBLE_STYLE : ASSISTANT_BUBBLE_STYLE}
     >
-      <Text style={isUser ? USER_TEXT_STYLE : ASSISTANT_TEXT_STYLE}>
-        {message.content}
-      </Text>
+      <Text style={isUser ? USER_TEXT_STYLE : ASSISTANT_TEXT_STYLE}>{message.content}</Text>
     </View>
   );
 }

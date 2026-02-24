@@ -299,9 +299,7 @@ describe('runMigrations V5 → V6', () => {
     const execCalls = db.execAsync.mock.calls.map((call) => String(call[0]));
     const hasUpdateRowid = execCalls.some(
       (sql) =>
-        sql.includes('UPDATE exercises') &&
-        sql.includes('sort_order') &&
-        sql.includes('rowid'),
+        sql.includes('UPDATE exercises') && sql.includes('sort_order') && sql.includes('rowid'),
     );
     expect(hasUpdateRowid).toBe(true);
   });

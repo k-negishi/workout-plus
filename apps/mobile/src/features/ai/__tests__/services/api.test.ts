@@ -71,7 +71,11 @@ describe('APIAIService', () => {
 
     const service = new APIAIService({ baseUrl: BASE_URL, apiKey: API_KEY });
     await expect(
-      service.chat({ message: 'test', conversationHistory: emptyHistory, workoutHistory: emptyWorkoutHistory }),
+      service.chat({
+        message: 'test',
+        conversationHistory: emptyHistory,
+        workoutHistory: emptyWorkoutHistory,
+      }),
     ).rejects.toThrow(/認証エラー/);
   });
 
@@ -80,7 +84,11 @@ describe('APIAIService', () => {
 
     const service = new APIAIService({ baseUrl: BASE_URL, apiKey: API_KEY });
     await expect(
-      service.chat({ message: 'test', conversationHistory: emptyHistory, workoutHistory: emptyWorkoutHistory }),
+      service.chat({
+        message: 'test',
+        conversationHistory: emptyHistory,
+        workoutHistory: emptyWorkoutHistory,
+      }),
     ).rejects.toThrow();
   });
 
@@ -94,7 +102,11 @@ describe('APIAIService', () => {
 
     const service = new APIAIService({ baseUrl: BASE_URL, apiKey: API_KEY });
     await expect(
-      service.chat({ message: 'test', conversationHistory: emptyHistory, workoutHistory: emptyWorkoutHistory }),
+      service.chat({
+        message: 'test',
+        conversationHistory: emptyHistory,
+        workoutHistory: emptyWorkoutHistory,
+      }),
     ).resolves.toEqual({ content: 'ok' });
 
     AbortSignal.timeout = originalTimeout;
@@ -105,7 +117,11 @@ describe('APIAIService', () => {
 
     const service = new APIAIService({ baseUrl: BASE_URL, apiKey: API_KEY });
     await expect(
-      service.chat({ message: 'test', conversationHistory: emptyHistory, workoutHistory: emptyWorkoutHistory }),
+      service.chat({
+        message: 'test',
+        conversationHistory: emptyHistory,
+        workoutHistory: emptyWorkoutHistory,
+      }),
     ).rejects.toThrow();
   });
 

@@ -262,25 +262,19 @@ const ExerciseListHeader: React.FC<{
           onChangeText={onNameChange}
           autoFocus
         />
-        <Text className="text-[13px] font-semibold text-[#64748b] tracking-wide mb-1.5">
-          部位
-        </Text>
+        <Text className="text-[13px] font-semibold text-[#64748b] tracking-wide mb-1.5">部位</Text>
         <View className="flex-row flex-wrap gap-1.5 mb-3">
           {MUSCLE_GROUP_OPTIONS.map((opt) => (
             <TouchableOpacity
               key={opt.key}
               onPress={() => onMuscleGroupChange(opt.key)}
               className={`px-2.5 py-1 rounded-full border ${
-                newMuscleGroup === opt.key
-                  ? 'bg-[#E6F2FF] border-[#4D94FF]'
-                  : 'border-[#e2e8f0]'
+                newMuscleGroup === opt.key ? 'bg-[#E6F2FF] border-[#4D94FF]' : 'border-[#e2e8f0]'
               }`}
             >
               <Text
                 className={`text-[14px] ${
-                  newMuscleGroup === opt.key
-                    ? 'text-[#4D94FF] font-semibold'
-                    : 'text-[#64748b]'
+                  newMuscleGroup === opt.key ? 'text-[#4D94FF] font-semibold' : 'text-[#64748b]'
                 }`}
               >
                 {opt.label}
@@ -288,25 +282,19 @@ const ExerciseListHeader: React.FC<{
             </TouchableOpacity>
           ))}
         </View>
-        <Text className="text-[13px] font-semibold text-[#64748b] tracking-wide mb-1.5">
-          器具
-        </Text>
+        <Text className="text-[13px] font-semibold text-[#64748b] tracking-wide mb-1.5">器具</Text>
         <View className="flex-row flex-wrap gap-1.5 mb-3">
           {EQUIPMENT_OPTIONS.map((opt) => (
             <TouchableOpacity
               key={opt.key}
               onPress={() => onEquipmentChange(opt.key)}
               className={`px-2.5 py-1 rounded-full border ${
-                newEquipment === opt.key
-                  ? 'bg-[#E6F2FF] border-[#4D94FF]'
-                  : 'border-[#e2e8f0]'
+                newEquipment === opt.key ? 'bg-[#E6F2FF] border-[#4D94FF]' : 'border-[#e2e8f0]'
               }`}
             >
               <Text
                 className={`text-[14px] ${
-                  newEquipment === opt.key
-                    ? 'text-[#4D94FF] font-semibold'
-                    : 'text-[#64748b]'
+                  newEquipment === opt.key ? 'text-[#4D94FF] font-semibold' : 'text-[#64748b]'
                 }`}
               >
                 {opt.label}
@@ -361,10 +349,7 @@ export const ExercisePickerScreen: React.FC = () => {
 
   // フィルター適用後に表示されている種目（並び替えモーダルに渡す対象）
   // sections を平坦化して現在のフィルター条件での表示種目を取得する
-  const visibleExercises = useMemo(
-    () => sections.flatMap((section) => section.data),
-    [sections],
-  );
+  const visibleExercises = useMemo(() => sections.flatMap((section) => section.data), [sections]);
 
   // T039: インライン編集
   const [editingExerciseId, setEditingExerciseId] = useState<string | null>(null);

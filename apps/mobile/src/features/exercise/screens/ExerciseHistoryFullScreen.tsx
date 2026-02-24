@@ -22,7 +22,14 @@ import { useExerciseHistory } from '../hooks/useExerciseHistory';
 /** チェックアイコン（DaySummary と同じデザイン） */
 function CheckIcon() {
   return (
-    <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke={colors.success} strokeWidth={2}>
+    <Svg
+      width={14}
+      height={14}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={colors.success}
+      strokeWidth={2}
+    >
       <Polyline points="20 6 9 17 4 12" strokeLinecap="round" strokeLinejoin="round" />
     </Svg>
   );

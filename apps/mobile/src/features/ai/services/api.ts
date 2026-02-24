@@ -46,7 +46,9 @@ export class APIAIService implements IAIService {
 
     // AbortSignal.timeout() は Hermes 未実装のため AbortController で代替する
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => { controller.abort(); }, 30000);
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, 30000);
 
     try {
       const response = await fetch(`${this.baseUrl}/ai/chat`, {
@@ -65,7 +67,7 @@ export class APIAIService implements IAIService {
       });
 
       if (!response.ok) {
-        const errorData = await response.json() as { error?: string; code?: string };
+        const errorData = (await response.json()) as { error?: string; code?: string };
         const code = errorData.code ?? '';
 
         if (code === 'UNAUTHORIZED') {
@@ -74,7 +76,7 @@ export class APIAIService implements IAIService {
         throw new Error(errorData.error ?? 'AIサービスでエラーが発生しました。');
       }
 
-      const data = await response.json() as { message: string };
+      const data = (await response.json()) as { message: string };
       return { content: data.message };
     } finally {
       // 正常終了・エラー問わずタイマーをクリアしてリソースリークを防ぐ

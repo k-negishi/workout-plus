@@ -12,13 +12,7 @@
  *   - ChatInput（テキスト入力 + 送信ボタン、キーボード対応）
  */
 import React, { useCallback, useMemo, useRef } from 'react';
-import {
-  FlatList,
-  KeyboardAvoidingView,
-  Platform,
-  Text,
-  View,
-} from 'react-native';
+import { FlatList, KeyboardAvoidingView, Platform, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors } from '@/shared/constants/colors';
@@ -33,7 +27,6 @@ import {
   DEFAULT_QUICK_ACTIONS,
   type QuickAction,
 } from '../../features/ai/types/index';
-
 
 /**
  * AI 応答待ち中に表示するインジケーター
@@ -55,9 +48,7 @@ function TypingIndicator() {
         marginVertical: 4,
       }}
     >
-      <Text style={{ color: colors.textSecondary, fontSize: 15 }}>
-        考え中...
-      </Text>
+      <Text style={{ color: colors.textSecondary, fontSize: 15 }}>考え中...</Text>
     </View>
   );
 }
@@ -73,8 +64,7 @@ export function AIScreen() {
   // 依存配列を空にすることで、マウント時に1度だけ生成してそれ以降はキャッシュする。
   const service = useMemo(() => createAIService(), []);
 
-  const { messages, isLoading, sendMessage, sendQuickAction } =
-    useAIChat(service);
+  const { messages, isLoading, sendMessage, sendQuickAction } = useAIChat(service);
 
   // 最新メッセージへの自動スクロール用 ref
   const flatListRef = useRef<FlatList<ChatMessage>>(null);

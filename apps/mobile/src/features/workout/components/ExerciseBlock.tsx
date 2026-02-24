@@ -43,8 +43,26 @@ export type ExerciseBlockProps = {
  * ワークアウトのセット数は通常20以下のため、この範囲で十分
  */
 const CIRCLED_NUMBERS = [
-  '①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩',
-  '⑪', '⑫', '⑬', '⑭', '⑮', '⑯', '⑰', '⑱', '⑲', '⑳',
+  '①',
+  '②',
+  '③',
+  '④',
+  '⑤',
+  '⑥',
+  '⑦',
+  '⑧',
+  '⑨',
+  '⑩',
+  '⑪',
+  '⑫',
+  '⑬',
+  '⑭',
+  '⑮',
+  '⑯',
+  '⑰',
+  '⑱',
+  '⑲',
+  '⑳',
 ];
 
 /** セット番号を丸数字文字列に変換する */
@@ -101,9 +119,7 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
               paddingHorizontal: 8,
             }}
           >
-            <Text style={chipTextStyle}>
-              前回 {format(previousRecord.workoutDate, 'M/d')}
-            </Text>
+            <Text style={chipTextStyle}>前回 {format(previousRecord.workoutDate, 'M/d')}</Text>
             {previousRecord.sets.map((set, index) => (
               <Text key={set.id} style={chipTextStyle}>
                 {getCircledNumber(index + 1)} {set.weight ?? '-'}×{set.reps ?? '-'}

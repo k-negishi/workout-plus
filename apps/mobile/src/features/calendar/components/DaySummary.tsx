@@ -335,7 +335,6 @@ export function DaySummary({
           </View>
         ))}
       </View>
-
     </View>
   );
 }

@@ -191,10 +191,7 @@ export function calculateStats(sets: SetWithWorkout[], prs: PRForStats[]): Exerc
  * useExerciseHistoryのfetchData内で使用。テスト容易性のためエクスポート。
  */
 /** セット単位の推定1RMを計算するヘルパー（Epley式） */
-function computeSetEstimated1RM(
-  weight: number | null,
-  reps: number | null,
-): number | null {
+function computeSetEstimated1RM(weight: number | null, reps: number | null): number | null {
   if (weight == null || reps == null || weight <= 0 || reps <= 0) return null;
   if (reps === 1) return weight;
   return Math.round(weight * (1 + reps / 30));

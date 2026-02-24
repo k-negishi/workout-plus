@@ -1,8 +1,4 @@
-import type {
-  ChatMessage,
-  IAIService,
-  QuickAction,
-} from '../../types/index';
+import type { ChatMessage, IAIService, QuickAction } from '../../types/index';
 import { DEFAULT_QUICK_ACTIONS } from '../../types/index';
 
 /**

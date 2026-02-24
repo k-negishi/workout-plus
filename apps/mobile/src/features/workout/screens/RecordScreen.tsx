@@ -88,7 +88,11 @@ const ExerciseBlockWithPrevious: React.FC<{
   onMemoChange,
   onDeleteExercise,
 }) => {
-  const { previousRecord } = usePreviousRecord(exerciseId, currentWorkoutId, currentWorkoutCreatedAt);
+  const { previousRecord } = usePreviousRecord(
+    exerciseId,
+    currentWorkoutId,
+    currentWorkoutCreatedAt,
+  );
 
   if (!exerciseMeta) return null;
 
@@ -368,84 +372,86 @@ export const RecordScreen: React.FC = () => {
             hasExercises ? { paddingBottom: 120 } : { paddingBottom: 120, flexGrow: 1 }
           }
         >
-        {/* 種目未追加時の空状態表示 */}
-        {!hasExercises && (
-          <EmptyState
-            icon="barbell-outline"
-            title="種目を追加してワークアウトを開始しましょう"
-            actionLabel="+ 種目を追加"
-            onAction={handleAddExercise}
-          />
-        )}
+          {/* 種目未追加時の空状態表示 */}
+          {!hasExercises && (
+            <EmptyState
+              icon="barbell-outline"
+              title="種目を追加してワークアウトを開始しましょう"
+              actionLabel="+ 種目を追加"
+              onAction={handleAddExercise}
+            />
+          )}
 
-        {/* 種目ブロック一覧 */}
-        {store.currentExercises.map((exercise) => (
-          <ExerciseBlockWithPrevious
-            key={exercise.id}
-            exerciseId={exercise.exerciseId}
-            workoutExerciseId={exercise.id}
-            exerciseMeta={exerciseMap[exercise.exerciseId] ?? null}
-            sets={store.currentSets[exercise.id] ?? []}
-            currentWorkoutId={store.currentWorkout?.id ?? null}
-            currentWorkoutCreatedAt={store.currentWorkout?.createdAt ?? null}
-            memo={exercise.memo}
-            showPreviousRecord={!isEditMode}
-            onWeightChange={handleWeightChange}
-            onRepsChange={handleRepsChange}
-            onDeleteSet={handleDeleteSet}
-            onAddSet={handleAddSet}
-            onExerciseNamePress={handleExerciseNamePress}
-            onMemoChange={handleMemoChange}
-            onDeleteExercise={handleDeleteExercise}
-          />
-        ))}
+          {/* 種目ブロック一覧 */}
+          {store.currentExercises.map((exercise) => (
+            <ExerciseBlockWithPrevious
+              key={exercise.id}
+              exerciseId={exercise.exerciseId}
+              workoutExerciseId={exercise.id}
+              exerciseMeta={exerciseMap[exercise.exerciseId] ?? null}
+              sets={store.currentSets[exercise.id] ?? []}
+              currentWorkoutId={store.currentWorkout?.id ?? null}
+              currentWorkoutCreatedAt={store.currentWorkout?.createdAt ?? null}
+              memo={exercise.memo}
+              showPreviousRecord={!isEditMode}
+              onWeightChange={handleWeightChange}
+              onRepsChange={handleRepsChange}
+              onDeleteSet={handleDeleteSet}
+              onAddSet={handleAddSet}
+              onExerciseNamePress={handleExerciseNamePress}
+              onMemoChange={handleMemoChange}
+              onDeleteExercise={handleDeleteExercise}
+            />
+          ))}
 
-        {/* 種目追加ボタン（T09: solid border に変更） */}
-        <TouchableOpacity
-          onPress={handleAddExercise}
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-            marginHorizontal: 16,
-            marginTop: 16,
-            paddingVertical: 16,
-            borderWidth: 1,
-            borderStyle: 'solid',
-            borderColor: '#e2e8f0',
-            borderRadius: 8,
-            backgroundColor: '#ffffff',
-          }}
-          accessibilityLabel="種目を追加"
-        >
-          <Text style={{ fontSize: 15, fontWeight: '600', color: '#475569' }}>+ 種目を追加</Text>
-        </TouchableOpacity>
-
-        {/* ワークアウトメモ */}
-        <View style={{ marginHorizontal: 16, marginTop: 16 }}>
-          <Text style={{ fontSize: 14, color: '#64748b', marginBottom: 4 }}>ワークアウトメモ</Text>
-          <TextInput
+          {/* 種目追加ボタン（T09: solid border に変更） */}
+          <TouchableOpacity
+            onPress={handleAddExercise}
             style={{
-              backgroundColor: '#FFFFFF',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              marginHorizontal: 16,
+              marginTop: 16,
+              paddingVertical: 16,
               borderWidth: 1,
+              borderStyle: 'solid',
               borderColor: '#e2e8f0',
               borderRadius: 8,
-              padding: 12,
-              fontSize: 16,
-              color: '#475569',
-              minHeight: 60,
+              backgroundColor: '#ffffff',
             }}
-            placeholder="今日の体調、感想など"
-            placeholderTextColor="#94a3b8"
-            multiline
-            textAlignVertical="top"
-            defaultValue={store.currentWorkout?.memo ?? ''}
-            onEndEditing={(e) => {
-              void session.updateWorkoutMemo(e.nativeEvent.text);
-            }}
-          />
-        </View>
+            accessibilityLabel="種目を追加"
+          >
+            <Text style={{ fontSize: 15, fontWeight: '600', color: '#475569' }}>+ 種目を追加</Text>
+          </TouchableOpacity>
+
+          {/* ワークアウトメモ */}
+          <View style={{ marginHorizontal: 16, marginTop: 16 }}>
+            <Text style={{ fontSize: 14, color: '#64748b', marginBottom: 4 }}>
+              ワークアウトメモ
+            </Text>
+            <TextInput
+              style={{
+                backgroundColor: '#FFFFFF',
+                borderWidth: 1,
+                borderColor: '#e2e8f0',
+                borderRadius: 8,
+                padding: 12,
+                fontSize: 16,
+                color: '#475569',
+                minHeight: 60,
+              }}
+              placeholder="今日の体調、感想など"
+              placeholderTextColor="#94a3b8"
+              multiline
+              textAlignVertical="top"
+              defaultValue={store.currentWorkout?.memo ?? ''}
+              onEndEditing={(e) => {
+                void session.updateWorkoutMemo(e.nativeEvent.text);
+              }}
+            />
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>

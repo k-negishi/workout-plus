@@ -38,9 +38,7 @@ describe('MessageBubble', () => {
       render(<MessageBubble message={userMessage} />);
       // メッセージコンテナが右寄せになっていることを検証
       const bubble = screen.getByTestId('message-bubble-container');
-      expect(bubble.props.style).toMatchObject(
-        expect.objectContaining({ alignSelf: 'flex-end' }),
-      );
+      expect(bubble.props.style).toMatchObject(expect.objectContaining({ alignSelf: 'flex-end' }));
     });
 
     it('青背景（#4D94FF）のスタイルが適用されること', () => {
