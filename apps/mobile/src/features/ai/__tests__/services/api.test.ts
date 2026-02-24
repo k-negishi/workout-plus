@@ -83,6 +83,22 @@ describe('APIAIService', () => {
     ).rejects.toThrow();
   });
 
+  it('Hermes 環境（AbortSignal.timeout が undefined）でも動作すること', async () => {
+    // Hermes では AbortSignal.timeout スタティックメソッドが存在しない
+    const originalTimeout = AbortSignal.timeout;
+    // @ts-expect-error Hermes シミュレーション: timeout を undefined に差し替え
+    AbortSignal.timeout = undefined;
+
+    mockResponse(200, { message: 'ok' });
+
+    const service = new APIAIService({ baseUrl: BASE_URL, apiKey: API_KEY });
+    await expect(
+      service.chat({ message: 'test', conversationHistory: emptyHistory, workoutHistory: emptyWorkoutHistory }),
+    ).resolves.toEqual({ content: 'ok' });
+
+    AbortSignal.timeout = originalTimeout;
+  });
+
   it('ネットワークエラーが適切にハンドリングされること', async () => {
     mockFetch.mockRejectedValueOnce(new Error('Network Error'));
 

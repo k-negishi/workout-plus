@@ -46,33 +46,42 @@ export class APIAIService implements IAIService {
       content,
     }));
 
-    const { data, error } = await this.client.POST('/ai/chat', {
-      // x-api-key は OpenAPI spec で required header として定義されているため明示的に渡す
-      params: {
-        header: { 'x-api-key': this.apiKey },
-      },
-      body: {
-        message,
-        workoutHistory,
-        conversationHistory: conversationForAPI,
-      },
-      // TODO: ストリーミング対応時は fetch オプションで ReadableStream を使用
-      signal: AbortSignal.timeout(30000),
-    });
+    // AbortSignal.timeout() は Hermes エンジン未実装のため AbortController で代替する
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => { controller.abort(); }, 30000);
 
-    if (error) {
-      // openapi-fetch が 4xx/5xx を error として返す
-      const apiError = error as { error?: string; code?: string };
-      const code = apiError.code ?? '';
+    try {
+      const { data, error } = await this.client.POST('/ai/chat', {
+        // x-api-key は OpenAPI spec で required header として定義されているため明示的に渡す
+        params: {
+          header: { 'x-api-key': this.apiKey },
+        },
+        body: {
+          message,
+          workoutHistory,
+          conversationHistory: conversationForAPI,
+        },
+        // TODO: ストリーミング対応時は fetch オプションで ReadableStream を使用
+        signal: controller.signal,
+      });
 
-      if (code === 'UNAUTHORIZED') {
-        throw new Error('認証エラーが発生しました。アプリを再起動してください。');
+      if (error) {
+        // openapi-fetch が 4xx/5xx を error として返す
+        const apiError = error as { error?: string; code?: string };
+        const code = apiError.code ?? '';
+
+        if (code === 'UNAUTHORIZED') {
+          throw new Error('認証エラーが発生しました。アプリを再起動してください。');
+        }
+        throw new Error(
+          apiError.error ?? `AIサービスでエラーが発生しました。`,
+        );
       }
-      throw new Error(
-        apiError.error ?? `AIサービスでエラーが発生しました。`,
-      );
-    }
 
-    return { content: data.message };
+      return { content: data.message };
+    } finally {
+      // 正常終了・エラー問わずタイマーをクリアしてリソースリークを防ぐ
+      clearTimeout(timeoutId);
+    }
   }
 }
