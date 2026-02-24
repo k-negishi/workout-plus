@@ -1,0 +1,272 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "workout-plus API",
+    "version": "0.1.0",
+    "description": "workout-plus モバイルアプリのバックエンド API"
+  },
+  "servers": [
+    {
+      "url": "https://api.workout-plus.example.com",
+      "description": "本番"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "ChatResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "お疲れ様でした！今回のトレーニングは..."
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "ErrorCode": {
+        "type": "string",
+        "enum": [
+          "UNAUTHORIZED",
+          "BEDROCK_ERROR",
+          "VALIDATION_ERROR",
+          "INTERNAL_ERROR"
+        ]
+      },
+      "APIError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "Unauthorized: Invalid or missing API key"
+          },
+          "code": {
+            "$ref": "#/components/schemas/ErrorCode"
+          }
+        },
+        "required": [
+          "error",
+          "code"
+        ]
+      },
+      "WorkoutSet": {
+        "type": "object",
+        "properties": {
+          "weight": {
+            "type": "number",
+            "nullable": true,
+            "description": "重量（kg）。null は未記録",
+            "example": 80
+          },
+          "reps": {
+            "type": "integer",
+            "nullable": true,
+            "description": "レップ数。null は未記録",
+            "example": 8
+          }
+        },
+        "required": [
+          "weight",
+          "reps"
+        ]
+      },
+      "WorkoutExercise": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "ベンチプレス"
+          },
+          "muscleGroup": {
+            "type": "string",
+            "example": "chest"
+          },
+          "sets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkoutSet"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "muscleGroup",
+          "sets"
+        ]
+      },
+      "WorkoutSummary": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "description": "yyyy-MM-dd 形式",
+            "example": "2026-02-20"
+          },
+          "exercises": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkoutExercise"
+            }
+          },
+          "memo": {
+            "type": "string",
+            "nullable": true,
+            "example": "グッドセッション"
+          }
+        },
+        "required": [
+          "date",
+          "exercises",
+          "memo"
+        ]
+      },
+      "WorkoutHistoryContext": {
+        "type": "object",
+        "properties": {
+          "strategy": {
+            "type": "string",
+            "enum": [
+              "recent_months",
+              "exercise_specific",
+              "date_range"
+            ],
+            "example": "recent_months"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkoutSummary"
+            }
+          }
+        },
+        "required": [
+          "strategy",
+          "data"
+        ]
+      },
+      "ConversationMessage": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "assistant"
+            ],
+            "example": "user"
+          },
+          "content": {
+            "type": "string",
+            "example": "こんにちは"
+          }
+        },
+        "required": [
+          "role",
+          "content"
+        ]
+      },
+      "ChatRequest": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000,
+            "example": "今回のワークアウトを振り返って"
+          },
+          "workoutHistory": {
+            "$ref": "#/components/schemas/WorkoutHistoryContext"
+          },
+          "conversationHistory": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConversationMessage"
+            },
+            "description": "セッション内の会話履歴（最新N件）"
+          }
+        },
+        "required": [
+          "message",
+          "workoutHistory",
+          "conversationHistory"
+        ]
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/ai/chat": {
+      "post": {
+        "tags": [
+          "AI"
+        ],
+        "summary": "AI チャット",
+        "description": "トレーニング履歴を含めて Claude Haiku 4.5 に問い合わせる",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "X-API-Key 認証キー"
+            },
+            "required": true,
+            "name": "x-api-key",
+            "in": "header"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "AI からの返答",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChatResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "バリデーションエラー",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "認証エラー",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIError"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bedrock エラー",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/APIError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
