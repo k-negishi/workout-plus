@@ -40,3 +40,30 @@ import { registerRootComponent } from 'expo';
 ```
 
 > 注意: `Math.random` ベースのため暗号強度はない。ID 生成（ulid 等）用途に限る。
+
+## `AbortSignal.timeout()` は Hermes に未実装
+
+`AbortSignal.timeout(ms)` スタティックメソッドは Node.js・ブラウザには存在するが Hermes にない。
+
+**症状:**
+```
+TypeError: AbortSignal.timeout is not a function (it is undefined)
+```
+
+**対処:** `AbortController + setTimeout + try/finally` で代替する。
+
+```typescript
+// NG: Hermes でクラッシュ
+await fetch(url, { signal: AbortSignal.timeout(30000) });
+
+// OK: Hermes 互換
+const controller = new AbortController();
+const timeoutId = setTimeout(() => { controller.abort(); }, 30000);
+try {
+  await fetch(url, { signal: controller.signal });
+} finally {
+  clearTimeout(timeoutId); // 正常終了・エラー問わず必ずクリア
+}
+```
+
+> `finally` で `clearTimeout` を呼ばないとタイマーが残り続けてリソースリークになる。
