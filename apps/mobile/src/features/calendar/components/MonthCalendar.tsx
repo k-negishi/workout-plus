@@ -92,8 +92,8 @@ export function MonthCalendar({
       marks[dateStr] = {
         ...(marks[dateStr] ?? {}),
         selected: true,
-        selectedColor: '#93C5FD',
-        selectedTextColor: '#1D4ED8',
+        selectedColor: '#E6F2FF',
+        selectedTextColor: '#4D94FF',
       };
     }
 
