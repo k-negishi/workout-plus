@@ -72,9 +72,8 @@ jest.mock('@/database/repositories/workout', () => ({
 
 // Alert.alert のスパイ: 削除確認ダイアログは Alert.alert（ネイティブ）で実装している
 // jest.spyOn で呼び出しを検証し、ボタン onPress を手動実行して削除フローをシミュレートする
-import { Alert } from 'react-native';
-
 import { useRoute } from '@react-navigation/native';
+import { Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CalendarScreen } from '../CalendarScreen';
