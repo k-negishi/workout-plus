@@ -1,6 +1,7 @@
-import { OpenAPIHono } from '@hono/zod-openapi';
 import { swaggerUI } from '@hono/swagger-ui';
+import { OpenAPIHono } from '@hono/zod-openapi';
 import { cors } from 'hono/cors';
+
 import { errorHandler } from './middleware/errorHandler.js';
 import { registerRoutes } from './routes/index.js';
 
@@ -23,19 +24,20 @@ export function createApp(): OpenAPIHono {
 
   // CORS（モバイルアプリからのリクエストを許可）
   // TODO: 本番環境では origin を Expo アプリの bundle ID に絞る
-  app.use('*', cors({
-    origin: '*',
-    allowMethods: ['GET', 'POST', 'OPTIONS'],
-    allowHeaders: ['Content-Type', 'X-API-Key', 'Authorization'],
-  }));
+  app.use(
+    '*',
+    cors({
+      origin: '*',
+      allowMethods: ['GET', 'POST', 'OPTIONS'],
+      allowHeaders: ['Content-Type', 'X-API-Key', 'Authorization'],
+    }),
+  );
 
   // 共通エラーハンドラー
   app.onError(errorHandler);
 
   // ヘルスチェック（認証不要）
-  app.get('/health', (c) =>
-    c.json({ status: 'ok', timestamp: new Date().toISOString() }),
-  );
+  app.get('/health', (c) => c.json({ status: 'ok', timestamp: new Date().toISOString() }));
 
   // 全ルート登録
   registerRoutes(app);

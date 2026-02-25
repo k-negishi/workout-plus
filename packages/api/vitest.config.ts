@@ -1,6 +1,6 @@
-import { defineConfig } from 'vitest/config';
-import path from 'path';
 import fs from 'fs';
+import path from 'path';
+import { defineConfig } from 'vitest/config';
 
 /**
  * .js 拡張子で import された TypeScript ソースを解決するプラグイン

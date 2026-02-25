@@ -14,8 +14,15 @@ import { z } from '@hono/zod-openapi';
 
 export const WorkoutSetSchema = z
   .object({
-    weight: z.number().nullable().openapi({ example: 80, description: '重量（kg）。null は未記録' }),
-    reps: z.number().int().nullable().openapi({ example: 8, description: 'レップ数。null は未記録' }),
+    weight: z
+      .number()
+      .nullable()
+      .openapi({ example: 80, description: '重量（kg）。null は未記録' }),
+    reps: z
+      .number()
+      .int()
+      .nullable()
+      .openapi({ example: 8, description: 'レップ数。null は未記録' }),
   })
   .openapi('WorkoutSet');
 

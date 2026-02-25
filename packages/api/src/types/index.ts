@@ -4,11 +4,11 @@
  * 後方互換のためこのファイルから import できるように保持する。
  */
 export type {
+  APIError,
   ChatRequest,
   ChatResponse,
+  ConversationMessage,
+  ErrorCode,
   WorkoutHistoryContext,
   WorkoutSummary,
-  ConversationMessage,
-  APIError,
-  ErrorCode,
 } from '../schemas.js';

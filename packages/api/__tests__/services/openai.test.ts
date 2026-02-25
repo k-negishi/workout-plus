@@ -3,9 +3,10 @@
  *
  * OpenAI SDK の chat.completions.create() を vi.spyOn でモック化する。
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import OpenAI from 'openai';
-import { invokeModel, buildSystemPrompt } from '../../src/services/openai.js';
+import { beforeEach,describe, expect, it, vi } from 'vitest';
+
+import { buildSystemPrompt,invokeModel } from '../../src/services/openai.js';
 
 describe('buildSystemPrompt', () => {
   it('historyText が空のときベースプロンプトのみ返すこと', () => {

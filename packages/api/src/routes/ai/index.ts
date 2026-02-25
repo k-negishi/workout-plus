@@ -1,7 +1,8 @@
 import { OpenAPIHono } from '@hono/zod-openapi';
-import { chatRoute, handleAIChat } from './chat.js';
+
 import { apiKeyMiddleware } from '../../middleware/apiKey.js';
 import { createAPIError } from '../../middleware/errorHandler.js';
+import { chatRoute, handleAIChat } from './chat.js';
 
 /**
  * /ai ルートグループ

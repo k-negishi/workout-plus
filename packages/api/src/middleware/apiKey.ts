@@ -1,4 +1,5 @@
 import type { MiddlewareHandler } from 'hono';
+
 import { createAPIError } from './errorHandler.js';
 
 /**

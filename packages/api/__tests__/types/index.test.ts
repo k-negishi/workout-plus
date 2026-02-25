@@ -1,10 +1,11 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect,it } from 'vitest';
+
 import type {
+  APIError,
   ChatRequest,
   ChatResponse,
-  WorkoutHistoryContext,
   ConversationMessage,
-  APIError,
+  WorkoutHistoryContext,
 } from '../../src/types/index.js';
 
 describe('共通型定義', () => {

@@ -37,6 +37,13 @@ analyze → checklist
 ### 開発
 
 ```bash
+# API サーバーを起動（ローカル開発用）
+# 初回のみ: 環境変数を設定する
+cp packages/api/.env.example packages/api/.env
+# packages/api/.env を開いて OPENAI_API_KEY を入力してから起動
+pnpm --filter @workout-plus/api dev
+# → http://localhost:3000 で起動。Swagger UI: http://localhost:3000/ui
+
 # モバイルアプリを起動（Expo Go）
 pnpm --filter mobile start
 
@@ -89,6 +96,7 @@ workout-plus/
 ├── apps/
 │   └── mobile/          # Expo アプリ本体
 ├── packages/
+│   ├── api/             # バックエンド API サーバー（Hono + OpenAI）
 │   └── shared/          # 型定義・共通ロジック（将来用）
 ├── specs/               # 機能仕様書（speckit で管理）
 │   └── 001-workout-core-screens/

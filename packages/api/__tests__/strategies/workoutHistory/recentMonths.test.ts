@@ -1,6 +1,7 @@
-import { describe, it, expect } from 'vitest';
-import { RecentMonthsStrategy } from '../../../src/strategies/workoutHistory/recentMonths.js';
+import { describe, expect,it } from 'vitest';
+
 import type { WorkoutHistoryContext } from '../../../src/schemas.js';
+import { RecentMonthsStrategy } from '../../../src/strategies/workoutHistory/recentMonths.js';
 
 describe('RecentMonthsStrategy', () => {
   const strategy = new RecentMonthsStrategy();

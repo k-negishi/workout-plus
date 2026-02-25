@@ -22,6 +22,10 @@
     "apps/mobile/**/*.{ts,tsx}": [
       "pnpm --filter mobile lint --fix",
       "pnpm --filter mobile exec prettier --write"
+    ],
+    "packages/api/**/*.ts": [
+      "pnpm --filter @workout-plus/api lint --fix",
+      "pnpm --filter @workout-plus/api exec prettier --write"
     ]
   }
 }

@@ -9,8 +9,9 @@
  * CI でも実行し、型の乖離を防ぐ。
  */
 import { writeFileSync } from 'fs';
-import { resolve, dirname } from 'path';
+import { dirname,resolve } from 'path';
 import { fileURLToPath } from 'url';
+
 import { createApp } from '../src/app.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

@@ -30,11 +30,20 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: Lint
+      - name: Lint (mobile)
         run: pnpm --filter mobile lint
 
-      - name: Format check
+      - name: Format check (mobile)
         run: pnpm --filter mobile format:check
 
-      - name: Test
+      - name: Test (mobile)
         run: pnpm --filter mobile test:coverage
+
+      - name: Lint (API)
+        run: pnpm --filter @workout-plus/api lint
+
+      - name: Format check (API)
+        run: pnpm --filter @workout-plus/api format:check
+
+      - name: Test (API)
+        run: pnpm --filter @workout-plus/api test

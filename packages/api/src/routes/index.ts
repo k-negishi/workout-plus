@@ -1,4 +1,5 @@
 import type { OpenAPIHono } from '@hono/zod-openapi';
+
 import { createAIRouter } from './ai/index.js';
 
 /**

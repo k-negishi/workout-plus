@@ -1,5 +1,6 @@
-import { describe, it, expect, vi } from 'vitest';
 import { Hono } from 'hono';
+import { describe, expect, it, vi } from 'vitest';
+
 import { errorHandler } from '../../src/middleware/errorHandler.js';
 import type { APIError } from '../../src/types/index.js';
 

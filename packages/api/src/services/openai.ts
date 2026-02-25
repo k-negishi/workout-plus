@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
-import type { ConversationMessage } from '../schemas.js';
+
 import { createAPIError } from '../middleware/errorHandler.js';
+import type { ConversationMessage } from '../schemas.js';
 import type { IAIProvider } from './provider.js';
 
 /**
@@ -66,9 +67,7 @@ export async function invokeModel(
   // 推論モデル（gpt-5-mini, o1, o3 等）は max_completion_tokens を使用する
   // 非推論モデル（gpt-4o-mini 等）は max_tokens を使用する
   const isReasoningModel = MODEL_ID.startsWith('o') || MODEL_ID.includes('gpt-5');
-  const tokenParam = isReasoningModel
-    ? { max_completion_tokens: 4096 }
-    : { max_tokens: 1024 };
+  const tokenParam = isReasoningModel ? { max_completion_tokens: 4096 } : { max_tokens: 1024 };
 
   try {
     const response = await client.chat.completions.create({

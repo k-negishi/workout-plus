@@ -1,4 +1,5 @@
 import type { Context, ErrorHandler } from 'hono';
+
 import type { APIError, ErrorCode } from '../schemas.js';
 
 /**

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach,describe, expect, it, vi } from 'vitest';
 
 // provider.ts をモックして invoke を差し替える
 // これにより OpenAI クライアントを使わずにルートの動作を検証できる
@@ -9,6 +9,7 @@ vi.mock('../../../src/services/provider.js', () => ({
 }));
 
 import { testClient } from 'hono/testing';
+
 import { createApp } from '../../../src/app.js';
 
 describe('POST /ai/chat', () => {

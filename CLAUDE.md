@@ -38,10 +38,17 @@ specify → clarify → plan → tasks → [taskstoissues] → implement
 ```bash
 pnpm --filter mobile start       # Expo Go 起動
 pnpm --filter mobile ios         # iOS シミュレーター（--localhost 固定済み。LAN IP だとタイムアウトするため）
-pnpm lint                        # 全パッケージ Lint
+pnpm lint                        # 全パッケージ Lint（turbo 経由）
 pnpm --filter mobile test        # テスト実行
 pnpm --filter mobile test --coverage  # カバレッジ付き（目標 90%+）
 pnpm --filter mobile tsc --noEmit    # 型チェック
+
+# API サーバー
+pnpm --filter @workout-plus/api dev           # ローカルサーバー起動（http://localhost:3000）
+pnpm --filter @workout-plus/api lint          # Lint
+pnpm --filter @workout-plus/api format:check  # フォーマットチェック
+pnpm --filter @workout-plus/api test          # テスト
+pnpm --filter @workout-plus/api typecheck     # 型チェック
 ```
 
 ---

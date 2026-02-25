@@ -12,6 +12,7 @@
  *   AWS_PROFILE      ... AWS CLI プロファイル名（credential が設定済みの場合）
  */
 import { serve } from '@hono/node-server';
+
 import { createApp } from './app.js';
 
 const PORT = Number(process.env['PORT'] ?? 3000);
@@ -21,6 +22,10 @@ const app = createApp();
 serve({ fetch: app.fetch, port: PORT }, (info) => {
   console.log(`🚀 ローカルサーバー起動: http://localhost:${info.port}`);
   console.log(`📖 Swagger UI:          http://localhost:${info.port}/doc`);
-  console.log(`🔑 API_KEY_SECRET:      ${process.env['API_KEY_SECRET'] ? '設定済み' : '⚠️  未設定（X-API-Key 認証が通らない）'}`);
-  console.log(`☁️  AWS_REGION:         ${process.env['AWS_REGION'] ?? '⚠️  未設定（Bedrock が使えない）'}`);
+  console.log(
+    `🔑 API_KEY_SECRET:      ${process.env['API_KEY_SECRET'] ? '設定済み' : '⚠️  未設定（X-API-Key 認証が通らない）'}`,
+  );
+  console.log(
+    `☁️  AWS_REGION:         ${process.env['AWS_REGION'] ?? '⚠️  未設定（Bedrock が使えない）'}`,
+  );
 });
