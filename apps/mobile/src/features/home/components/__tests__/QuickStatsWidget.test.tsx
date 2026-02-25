@@ -97,16 +97,20 @@ describe('QuickStatsWidget - カラムラベル', () => {
     expect(labels).toHaveLength(2);
   });
 
-  it('「種目数」ラベルが2つ表示される（今月・今週）', () => {
+  it('「種目」ラベルが2つ表示される（今月・今週）（#157）', () => {
     render(<QuickStatsWidget {...defaultProps} />);
-    const labels = screen.getAllByText('種目数');
+    const labels = screen.getAllByText('種目');
     expect(labels).toHaveLength(2);
+    // 旧ラベル「種目数」は表示されない
+    expect(screen.queryByText('種目数')).toBeNull();
   });
 
-  it('「セット数」ラベルが2つ表示される（今月・今週）', () => {
+  it('「セット」ラベルが2つ表示される（今月・今週）（#157）', () => {
     render(<QuickStatsWidget {...defaultProps} />);
-    const labels = screen.getAllByText('セット数');
+    const labels = screen.getAllByText('セット');
     expect(labels).toHaveLength(2);
+    // 旧ラベル「セット数」は表示されない
+    expect(screen.queryByText('セット数')).toBeNull();
   });
 });
 

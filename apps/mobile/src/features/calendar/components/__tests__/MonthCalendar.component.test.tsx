@@ -2,15 +2,17 @@
  * MonthCalendar コンポーネントの動作テスト
  *
  * 純粋関数ロジックは MonthCalendar.test.ts でカバー済み。
- * このファイルでは「handleDayPress が正しく onDayPress を呼ぶか」という
- * コンポーネントレベルの振る舞いを検証する。
+ * このファイルでは「handleDayPress が正しく onDayPress を呼ぶか」と
+ * 「スワイプで月が切り替わるか」をコンポーネントレベルで検証する。
  *
  * react-native-calendars をモックして Calendar の onDayPress / current props を捕捉し、
  * 任意の操作をシミュレートできるようにする。
+ *
+ * react-native-gesture-handler の Gesture.Pan() は jest.mock でモックし、
+ * onEnd コールバックをテストから直接呼び出す。
  */
 import { act, render, waitFor } from '@testing-library/react-native';
 import React from 'react';
-import { PanResponder } from 'react-native';
 
 // ==========================================
 // react-native-calendars モック
@@ -39,21 +41,52 @@ jest.mock('react-native-calendars', () => ({
   },
 }));
 
+// ==========================================
+// react-native-gesture-handler モック
+// Gesture.Pan() の onEnd コールバックをテストから呼び出せるようにする
+//
+// ホイスティング対策: gestureStore はオブジェクトのプロパティとして保持し、
+// onEnd 内でプロパティ代入することで stale closure を回避する
+// ==========================================
+const gestureStore: {
+  onEnd: ((e: { translationX: number; translationY: number }) => void) | null;
+} = { onEnd: null };
+
+jest.mock('react-native-gesture-handler', () => {
+  // メソッドチェーン対応のモックジェスチャーオブジェクトを生成するファクトリ
+  // 各メソッドは自身を返すため .runOnJS().activeOffsetX().failOffsetY().onEnd() が動作する
+  const makeMockGesture = (): Record<string, unknown> => {
+    const g: Record<string, unknown> = {};
+    g['runOnJS'] = () => g;
+    g['activeOffsetX'] = () => g;
+    g['failOffsetY'] = () => g;
+    // onEnd: コールバックを gestureStore に保存（クロージャにより test 実行時に評価される）
+    g['onEnd'] = (cb: (e: { translationX: number; translationY: number }) => void) => {
+      gestureStore.onEnd = cb;
+      return g;
+    };
+    return g;
+  };
+
+  return {
+    Gesture: {
+      Pan: () => makeMockGesture(),
+    },
+    // GestureDetector は children をそのまま描画する no-op
+    GestureDetector: ({ children }: { children: React.ReactNode }) => children,
+  };
+});
+
 import { MonthCalendar } from '../MonthCalendar';
 
 // ==========================================
-// PanResponder ハンドラーキャプチャ用の型
+// handleDayPress テスト
 // ==========================================
-type GestureState = { dx: number; dy: number };
-type PanHandlers = {
-  onMoveShouldSetPanResponder?: (e: unknown, gs: GestureState) => boolean;
-  onPanResponderRelease?: (e: unknown, gs: GestureState) => void;
-};
-
 describe('MonthCalendar コンポーネント - handleDayPress', () => {
   beforeEach(() => {
     capturedOnDayPress = null;
     capturedCalendarProps = null;
+    gestureStore.onEnd = null;
     jest.clearAllMocks();
   });
 
@@ -118,30 +151,17 @@ describe('MonthCalendar コンポーネント - handleDayPress', () => {
   });
 });
 
-describe('MonthCalendar コンポーネント - フリックジェスチャー', () => {
-  // PanResponder.create に渡された config を捕捉するためのスパイ
-  let capturedPanHandlers: PanHandlers = {};
-  let panCreateSpy: jest.SpyInstance;
-
+// ==========================================
+// スワイプジェスチャー（Gesture.Pan）テスト
+// ==========================================
+describe('MonthCalendar コンポーネント - スワイプジェスチャー', () => {
   beforeEach(() => {
-    capturedPanHandlers = {};
     capturedCalendarProps = null;
+    gestureStore.onEnd = null;
     jest.clearAllMocks();
-
-    // PanResponder.create をスパイして handlers を捕捉する
-    // spyOn は render() よりも前に設定する必要がある
-    panCreateSpy = jest.spyOn(PanResponder, 'create').mockImplementation((config) => {
-      capturedPanHandlers = config as PanHandlers;
-      // panHandlers プロパティを返す（実際には何もしない）
-      return { panHandlers: {} } as ReturnType<typeof PanResponder.create>;
-    });
   });
 
-  afterEach(() => {
-    panCreateSpy.mockRestore();
-  });
-
-  it('右フリック（dx=100）で前月に移動する', async () => {
+  it('右スワイプ（translationX=100）で前月に移動する', async () => {
     const mockOnMonthChange = jest.fn();
     render(
       <MonthCalendar
@@ -154,10 +174,11 @@ describe('MonthCalendar コンポーネント - フリックジェスチャー',
 
     // 初期表示月は当月の1日（2026-02-01）
     expect(capturedCalendarProps?.current).toBe('2026-02-01');
+    expect(gestureStore.onEnd).not.toBeNull();
 
-    // 右フリック: 前月へ移動
+    // 右スワイプ: 前月へ移動
     act(() => {
-      capturedPanHandlers.onPanResponderRelease?.(null, { dx: 100, dy: 0 });
+      gestureStore.onEnd!({ translationX: 100, translationY: 0 });
     });
 
     // 前月（2026-01-01）に移動した
@@ -167,7 +188,7 @@ describe('MonthCalendar コンポーネント - フリックジェスチャー',
     expect(mockOnMonthChange).toHaveBeenCalledWith('2026-01-01');
   });
 
-  it('左フリック（dx=-100）で翌月に移動する（過去月から）', async () => {
+  it('左スワイプ（translationX=-100）で翌月に移動する（過去月から）', async () => {
     const mockOnMonthChange = jest.fn();
     render(
       <MonthCalendar
@@ -178,17 +199,17 @@ describe('MonthCalendar コンポーネント - フリックジェスチャー',
       />,
     );
 
-    // まず右フリックで先月へ移動する
+    // まず右スワイプで先月へ移動する
     act(() => {
-      capturedPanHandlers.onPanResponderRelease?.(null, { dx: 100, dy: 0 });
+      gestureStore.onEnd!({ translationX: 100, translationY: 0 });
     });
     await waitFor(() => {
       expect(capturedCalendarProps?.current).toBe('2026-01-01');
     });
 
-    // 左フリックで翌月（当月）に戻る
+    // 左スワイプで翌月（当月）に戻る
     act(() => {
-      capturedPanHandlers.onPanResponderRelease?.(null, { dx: -100, dy: 0 });
+      gestureStore.onEnd!({ translationX: -100, translationY: 0 });
     });
     await waitFor(() => {
       expect(capturedCalendarProps?.current).toBe('2026-02-01');
@@ -196,7 +217,7 @@ describe('MonthCalendar コンポーネント - フリックジェスチャー',
     expect(mockOnMonthChange).toHaveBeenLastCalledWith('2026-02-01');
   });
 
-  it('当月（2026-02）から左フリックしても未来月には移動しない', async () => {
+  it('当月（2026-02）から左スワイプしても未来月には移動しない', async () => {
     const mockOnMonthChange = jest.fn();
     render(
       <MonthCalendar
@@ -208,12 +229,11 @@ describe('MonthCalendar コンポーネント - フリックジェスチャー',
     );
 
     // 初期表示月は当月（2026-02-01）
-    const initialCurrent = capturedCalendarProps?.current;
-    expect(initialCurrent).toBe('2026-02-01');
+    expect(capturedCalendarProps?.current).toBe('2026-02-01');
 
-    // 左フリック: 翌月（未来）への移動を試みる
+    // 左スワイプ: 翌月（未来）への移動を試みる
     act(() => {
-      capturedPanHandlers.onPanResponderRelease?.(null, { dx: -100, dy: 0 });
+      gestureStore.onEnd!({ translationX: -100, translationY: 0 });
     });
 
     // current は変わらない（未来月への移動はブロックされる）
@@ -223,7 +243,7 @@ describe('MonthCalendar コンポーネント - フリックジェスチャー',
     expect(mockOnMonthChange).not.toHaveBeenCalled();
   });
 
-  it('移動量が小さい（dx=30）ときはフリックとして認識しない', async () => {
+  it('移動量が小さい（translationX=30）ときはスワイプとして認識しない', async () => {
     const mockOnMonthChange = jest.fn();
     render(
       <MonthCalendar
@@ -235,30 +255,10 @@ describe('MonthCalendar コンポーネント - フリックジェスチャー',
     );
 
     act(() => {
-      capturedPanHandlers.onPanResponderRelease?.(null, { dx: 30, dy: 0 });
+      gestureStore.onEnd!({ translationX: 30, translationY: 0 });
     });
 
     // current は変わらない
-    expect(capturedCalendarProps?.current).toBe('2026-02-01');
-    expect(mockOnMonthChange).not.toHaveBeenCalled();
-  });
-
-  it('縦スクロール（|dy| > |dx|）では月移動が発動しない', async () => {
-    const mockOnMonthChange = jest.fn();
-    render(
-      <MonthCalendar
-        trainingDates={[]}
-        selectedDate={null}
-        onDayPress={jest.fn()}
-        onMonthChange={mockOnMonthChange}
-      />,
-    );
-
-    // 縦方向の移動が支配的なジェスチャー
-    act(() => {
-      capturedPanHandlers.onPanResponderRelease?.(null, { dx: 30, dy: 80 });
-    });
-
     expect(capturedCalendarProps?.current).toBe('2026-02-01');
     expect(mockOnMonthChange).not.toHaveBeenCalled();
   });
@@ -271,7 +271,7 @@ describe('MonthCalendar コンポーネント - フリックジェスチャー',
       capturedCalendarProps?.onMonthChange?.({ dateString: '2025-12-01' });
     });
 
-    // その後フリックしても displayMonth が矢印ボタンの月を基準にして動く
+    // その後スワイプしても displayMonth が矢印ボタンの月を基準にして動く
     await waitFor(() => {
       expect(capturedCalendarProps?.current).toBe('2025-12-01');
     });

@@ -15,7 +15,8 @@ import {
   subMonths,
 } from 'date-fns';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { PanResponder, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 import type { DateData, MarkedDates } from 'react-native-calendars/src/types';
 
@@ -159,27 +160,29 @@ export function MonthCalendar({
     [setDisplayMonth],
   );
 
-  // フリックジェスチャーで前後月を移動する PanResponder
-  // displayMonth は ref 経由で参照するため依存配列は空でよい（stale closure なし）
-  const panResponder = useMemo(
+  // フリックジェスチャーで前後月を移動する Pan ジェスチャー
+  // react-native-gesture-handler を使う理由:
+  // PanResponder (RN 組み込み) は react-native-calendars 内部の TouchableOpacity が
+  // onStartShouldSetResponder: true で先にタッチを取得し、
+  // onResponderTerminationRequest: false で返さないため横スワイプを横取りできない。
+  // react-native-gesture-handler はネイティブ側でジェスチャーを処理するため
+  // RN の Touchable と共存して水平スワイプを確実に検知できる。
+  const swipeGesture = useMemo(
     () =>
-      PanResponder.create({
-        // キャプチャフェーズで水平スワイプを取得する（バブルフェーズの onMoveShouldSetPanResponder では
-        // react-native-calendars 内部の Touchable が先にタッチを奪うため動作しない）
-        // Capture 版は親→子の順で評価されるため、子が掴む前に横スワイプを横取りできる
-        onMoveShouldSetPanResponderCapture: (_, { dx, dy }) =>
-          Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10,
-        onPanResponderRelease: (_, { dx, dy }) => {
-          // 縦スクロールが支配的な場合は無視（onMoveShouldSetPanResponder の二重チェック）
-          if (Math.abs(dx) <= Math.abs(dy)) return;
-
-          if (dx > 50) {
-            // 右フリック: 前月へ
+      Gesture.Pan()
+        .runOnJS(true)
+        // 水平移動 10px 超で有効化（縦スクロールとの共存）
+        .activeOffsetX([-10, 10])
+        // 縦移動が先に 10px 超えたらジェスチャーを失敗扱いにする
+        .failOffsetY([-10, 10])
+        .onEnd(({ translationX }) => {
+          if (translationX > 50) {
+            // 右スワイプ: 前月へ
             const prev = format(subMonths(parseISO(displayMonthRef.current), 1), 'yyyy-MM-dd');
             setDisplayMonth(prev);
             onMonthChangeRef.current?.(prev);
-          } else if (dx < -50) {
-            // 左フリック: 翌月へ（当月より未来への移動は不可）
+          } else if (translationX < -50) {
+            // 左スワイプ: 翌月へ（当月より未来への移動は不可）
             const next = addMonths(parseISO(displayMonthRef.current), 1);
             if (!isAfter(next, startOfMonth(new Date()))) {
               const nextStr = format(next, 'yyyy-MM-dd');
@@ -187,16 +190,16 @@ export function MonthCalendar({
               onMonthChangeRef.current?.(nextStr);
             }
           }
-        },
-      }),
-    // PanResponder は一度だけ生成する（displayMonth は ref 経由で参照するため dep に不要）
+        }),
+    // ジェスチャーは一度だけ生成する（displayMonth は ref 経由で参照するため dep に不要）
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
 
   return (
-    // フリックジェスチャーを受け取るラッパー View
-    <View {...panResponder.panHandlers}>
+    // GestureDetector は直接 View 子要素を持つ必要があるため View でラップする
+    <GestureDetector gesture={swipeGesture}>
+      <View>
       <Calendar
         current={displayMonth}
         markedDates={markedDates}
@@ -241,6 +244,7 @@ export function MonthCalendar({
           borderRadius: 12,
         }}
       />
-    </View>
+      </View>
+    </GestureDetector>
   );
 }

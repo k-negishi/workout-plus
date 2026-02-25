@@ -383,7 +383,7 @@ describe('DaySummary - set 文言追加', () => {
     });
   };
 
-  it('セット行にセット番号と "set" 文言が表示される', async () => {
+  it('セット行にセット番号のみ表示され "set" 文言は含まれない（#158/#159）', async () => {
     // Given: ワークアウトデータあり
     setupMockWithWorkout();
 
@@ -394,13 +394,14 @@ describe('DaySummary - set 文言追加', () => {
       expect(screen.getByText('ベンチプレス')).toBeTruthy();
     });
 
-    // Then: "1 set" が表示される（セット行）
-    expect(screen.getByText('1 set')).toBeTruthy();
-    // "2 set" はサマリーカード（totalSets）とセット行（set_number 2）の両方に表示されるため getAllByText で検証
-    expect(screen.getAllByText('2 set').length).toBeGreaterThanOrEqual(1);
+    // Then: "reps" が各セット行に表示される（#159）
+    expect(screen.getAllByText(/reps/).length).toBeGreaterThanOrEqual(1);
+    // "N set" の形式は表示されない（#158/#159）
+    expect(screen.queryByText('1 set')).toBeNull();
+    expect(screen.queryByText('2 set')).toBeNull();
   });
 
-  it('サマリーカードのセット数に "set" 文言が表示される', async () => {
+  it('サマリーカードのセット数に "set" 文言が含まれない（#158）', async () => {
     // Given: ワークアウトデータあり（2セット）
     setupMockWithWorkout();
 
@@ -411,10 +412,12 @@ describe('DaySummary - set 文言追加', () => {
       expect(screen.getByText('ベンチプレス')).toBeTruthy();
     });
 
-    // Then: サマリーカードに「セット数」ラベルが表示され、"2 set" テキストが存在する
+    // Then: サマリーカードに「セット数」ラベルが表示され、数値のみ（"set" なし）
     expect(screen.getByText('セット数')).toBeTruthy();
-    // "2 set" はサマリーカードとセット行の両方に存在するため getAllByText で検証
-    expect(screen.getAllByText('2 set').length).toBe(2);
+    // "2" はサマリーカードのセット数とセット行の set_number 両方に出るため getAllByText で確認
+    expect(screen.getAllByText('2').length).toBeGreaterThanOrEqual(1);
+    // "2 set" は表示されない（#158）
+    expect(screen.queryByText('2 set')).toBeNull();
   });
 });
 
