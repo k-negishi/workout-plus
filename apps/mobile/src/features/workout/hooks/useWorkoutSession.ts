@@ -56,7 +56,8 @@ async function checkAndSavePRForExercise(
   workoutId: string,
   now: number,
 ): Promise<PRCheckResult[]> {
-  const exerciseSets = sets.filter((s) => s.weight != null && s.reps != null);
+  // reps=0 のセットは PR 判定から除外する（reps=0 は未実施扱い）
+  const exerciseSets = sets.filter((s) => s.weight != null && s.reps != null && s.reps > 0);
   if (exerciseSets.length === 0) return [];
 
   const existing = await PersonalRecordRepository.findByExerciseId(exerciseId);
@@ -463,11 +464,13 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
       const sessionTargetDate = useWorkoutSessionStore.getState().sessionTargetDate;
       const now = sessionTargetDate ? dateStringToMs(sessionTargetDate) : Date.now();
 
-      // weight と reps が両方 null のセットをDBから除外
+      // 不完全セット（片方 null、またはreps=0かつweight入力済み）をDBから除外
       for (const exercise of store.currentExercises) {
         const sets = store.currentSets[exercise.id] ?? [];
-        const nullSets = sets.filter((s) => s.weight == null && s.reps == null);
-        for (const s of nullSets) {
+        const incompleteSets = sets.filter(
+          (s) => s.weight == null || s.reps == null || (s.reps === 0 && s.weight != null),
+        );
+        for (const s of incompleteSets) {
           await SetRepository.delete(s.id);
         }
       }
