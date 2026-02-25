@@ -88,6 +88,9 @@ export function DaySummary({
 
   const fetchDayData = useCallback(async () => {
     setLoading(true);
+    // foundWorkoutId を finally で onWorkoutFound に渡すことで、
+    // ローディング完了と削除ボタン表示を同時にバッチ更新し、ちらつきを防ぐ
+    let foundWorkoutId: string | null = null;
     try {
       const db = await getDatabase();
       const date = parseISO(dateString);
@@ -105,16 +108,11 @@ export function DaySummary({
         setExerciseSets([]);
         setTotalSets(0);
         setTotalVolume(0);
-        // ワークアウトなし: 親に通知
-        onWorkoutFound?.(null);
-        setLoading(false);
         return;
       }
 
       const w = workouts[0]!;
       setWorkout(w);
-      // ワークアウト取得時: 親に workoutId を通知（削除ボタンの表示制御に使用）
-      onWorkoutFound?.(w.id);
 
       // 種目一覧を取得
       const exercises = await db.getAllAsync<WorkoutExerciseRow>(
@@ -166,9 +164,13 @@ export function DaySummary({
       setExerciseSets(exerciseData);
       setTotalSets(setsTotal);
       setTotalVolume(Math.round(volumeTotal));
+      foundWorkoutId = w.id;
     } catch (error) {
       console.error('日次データ取得エラー:', error);
     } finally {
+      // onWorkoutFound と setLoading を同じ finally で呼ぶことで React が
+      // 両者をバッチ処理し、削除ボタンとサマリーが同タイミングで現れる
+      onWorkoutFound?.(foundWorkoutId);
       setLoading(false);
     }
     // refreshKey を依存配列に含めることで、外部からのリフレッシュ（削除後の再取得など）に対応する
