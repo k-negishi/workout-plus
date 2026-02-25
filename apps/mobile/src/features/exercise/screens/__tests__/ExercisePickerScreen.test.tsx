@@ -1,9 +1,10 @@
 /**
- * ExercisePickerScreen テスト（Issue #116, #136）
+ * ExercisePickerScreen テスト（Issue #116, #136, #142）
  * - 追加済み種目に「追加済み」バッジが表示される
  * - 追加済み種目をタップしても session.addExercise が呼ばれない
  * - 未追加種目をタップすると session.addExercise が呼ばれる
  * - Issue #136: カスタム種目追加 FAB が画面右下に表示される
+ * - Issue #142: ヘッダースタイル統一（Ionicons chevron-back を使用）
  */
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
@@ -38,9 +39,29 @@ jest.mock('react-native-safe-area-context', () => ({
   }),
 }));
 
+// Issue #155: react-native-gesture-handler の Swipeable をモック
+// テスト環境では renderRightActions を即座に呼び出して右アクションを描画する
+jest.mock('react-native-gesture-handler', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const React = require('react');
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { View } = require('react-native');
+  return {
+    Swipeable: ({
+      children,
+      renderRightActions,
+    }: {
+      children: React.ReactNode;
+      renderRightActions?: () => React.ReactNode;
+    }) =>
+      React.createElement(View, null, children, renderRightActions ? renderRightActions() : null),
+  };
+});
+
 const mockGoBack = jest.fn();
+const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ goBack: mockGoBack }),
+  useNavigation: () => ({ goBack: mockGoBack, navigate: mockNavigate }),
   useRoute: () => ({ params: { mode: 'single' } }),
 }));
 
@@ -97,6 +118,7 @@ const TEST_SECTIONS = [
         equipment: 'barbell',
         isCustom: false,
         isFavorite: false,
+        isDeleted: false,
         createdAt: 1000,
         updatedAt: 1000,
         sortOrder: 1,
@@ -108,6 +130,7 @@ const TEST_SECTIONS = [
         equipment: 'barbell',
         isCustom: false,
         isFavorite: false,
+        isDeleted: false,
         createdAt: 1000,
         updatedAt: 1000,
         sortOrder: 2,
@@ -159,6 +182,39 @@ jest.mock('../../components/ExerciseReorderModal', () => ({
 }));
 
 import { ExercisePickerScreen } from '../ExercisePickerScreen';
+
+describe('ExercisePickerScreen - Issue #142: ヘッダースタイル統一', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseExerciseSearch.mockReturnValue(DEFAULT_SEARCH_STATE);
+  });
+
+  it('ヘッダーに testID "exercise-picker-header" が存在する', () => {
+    render(<ExercisePickerScreen />);
+
+    expect(screen.getByTestId('exercise-picker-header')).toBeTruthy();
+  });
+
+  it('戻るボタンが accessibilityLabel="戻る" で存在する', () => {
+    render(<ExercisePickerScreen />);
+
+    expect(screen.getByLabelText('戻る')).toBeTruthy();
+  });
+
+  it('戻るボタンを押すと goBack() が呼ばれる', () => {
+    render(<ExercisePickerScreen />);
+
+    fireEvent.press(screen.getByLabelText('戻る'));
+
+    expect(mockGoBack).toHaveBeenCalledTimes(1);
+  });
+
+  it('ヘッダータイトル「種目を選択」が表示される', () => {
+    render(<ExercisePickerScreen />);
+
+    expect(screen.getByText('種目を選択')).toBeTruthy();
+  });
+});
 
 describe('ExercisePickerScreen - 追加済み種目の表示と操作（Issue #116）', () => {
   beforeEach(() => {
@@ -276,5 +332,37 @@ describe('ExercisePickerScreen - カスタム種目追加 FAB（Issue #136）', 
 
     // FAB が消えている
     expect(screen.queryByLabelText('カスタム種目を追加')).toBeNull();
+  });
+});
+
+describe('ExercisePickerScreen - 左スワイプ「履歴」ボタン（Issue #155）', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseExerciseSearch.mockReturnValue(DEFAULT_SEARCH_STATE);
+  });
+
+  it('Swipeable の renderRightActions で「履歴」ボタンが描画される', () => {
+    render(<ExercisePickerScreen />);
+    // モックの Swipeable は renderRightActions を即座にレンダリングする
+    // 種目ごとに testID が付与されている
+    expect(screen.getByTestId('history-button-exercise-bench')).toBeTruthy();
+    expect(screen.getByTestId('history-button-exercise-squat')).toBeTruthy();
+  });
+
+  it('「履歴」ボタンタップで ExerciseHistory に navigate される', () => {
+    render(<ExercisePickerScreen />);
+    // スワイプ後の「履歴」ボタン（スクワット）をタップ
+    fireEvent.press(screen.getByTestId('history-button-exercise-squat'));
+    expect(mockNavigate).toHaveBeenCalledWith('ExerciseHistory', {
+      exerciseId: 'exercise-squat',
+      exerciseName: 'スクワット',
+    });
+  });
+
+  it('行タップによる種目選択は変更なし（single モード）', () => {
+    render(<ExercisePickerScreen />);
+    // スクワット（未追加）をタップ
+    fireEvent.press(screen.getByText('スクワット'));
+    expect(mockAddExercise).toHaveBeenCalledWith('exercise-squat');
   });
 });

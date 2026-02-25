@@ -41,6 +41,7 @@ export function toExercise(row: {
   equipment: string;
   is_custom: 0 | 1;
   is_favorite: 0 | 1;
+  is_deleted: 0 | 1;
   created_at: number;
   updated_at: number;
   sort_order: number;
@@ -52,6 +53,7 @@ export function toExercise(row: {
     equipment: row.equipment as Exercise['equipment'],
     isCustom: row.is_custom === 1,
     isFavorite: row.is_favorite === 1,
+    isDeleted: row.is_deleted === 1,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     sortOrder: row.sort_order,

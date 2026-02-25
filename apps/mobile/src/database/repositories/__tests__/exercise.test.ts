@@ -136,6 +136,104 @@ describe('ExerciseRepository.create（sort_order追加）', () => {
   });
 });
 
+describe('ExerciseRepository.findAll (is_deleted フィルタ)', () => {
+  it('クエリに is_deleted = 0 フィルタが含まれること', async () => {
+    const mockDb = createMockDb();
+    mockGetDatabase.mockResolvedValue(mockDb as never);
+    mockDb.getAllAsync.mockResolvedValue([]);
+
+    await ExerciseRepository.findAll();
+
+    const sql = String(mockDb.getAllAsync.mock.calls[0]?.[0] ?? '');
+    expect(sql).toMatch(/is_deleted\s*=\s*0/i);
+  });
+});
+
+describe('ExerciseRepository.findById', () => {
+  it('指定した ID の行を取得できること', async () => {
+    const mockDb = createMockDb();
+    mockGetDatabase.mockResolvedValue(mockDb as never);
+    const fakeRow = {
+      id: 'ex-abc',
+      name: 'テスト',
+      muscle_group: 'chest',
+      equipment: 'barbell',
+      is_custom: 1,
+      is_favorite: 0,
+      is_deleted: 0,
+      created_at: 1000,
+      updated_at: 1000,
+      sort_order: 1,
+    };
+    mockDb.getFirstAsync.mockResolvedValue(fakeRow);
+
+    const result = await ExerciseRepository.findById('ex-abc');
+
+    expect(result).toEqual(fakeRow);
+    expect(mockDb.getFirstAsync).toHaveBeenCalledWith(
+      expect.stringContaining('WHERE id = ?'),
+      ['ex-abc'],
+    );
+  });
+
+  it('存在しない ID の場合は null を返すこと', async () => {
+    const mockDb = createMockDb();
+    mockGetDatabase.mockResolvedValue(mockDb as never);
+    // getFirstAsync が null を返すケース
+    mockDb.getFirstAsync.mockResolvedValue(null);
+
+    const result = await ExerciseRepository.findById('not-exist');
+
+    expect(result).toBeNull();
+  });
+});
+
+describe('ExerciseRepository.softDelete', () => {
+  it('is_deleted = 1 に更新するクエリを実行すること', async () => {
+    const mockDb = createMockDb();
+    mockGetDatabase.mockResolvedValue(mockDb as never);
+
+    await ExerciseRepository.softDelete('ex-target');
+
+    const updateCall = mockDb.runAsync.mock.calls.find((call) =>
+      String(call[0]).includes('is_deleted = 1'),
+    );
+    expect(updateCall).toBeDefined();
+    // id パラメータが渡されていること
+    const params = updateCall![1] as unknown[];
+    expect(params).toContain('ex-target');
+  });
+});
+
+describe('ExerciseRepository.restore', () => {
+  it('is_deleted = 0 に更新するクエリを実行すること', async () => {
+    const mockDb = createMockDb();
+    mockGetDatabase.mockResolvedValue(mockDb as never);
+
+    await ExerciseRepository.restore('ex-target');
+
+    const updateCall = mockDb.runAsync.mock.calls.find((call) =>
+      String(call[0]).includes('is_deleted = 0'),
+    );
+    expect(updateCall).toBeDefined();
+    const params = updateCall![1] as unknown[];
+    expect(params).toContain('ex-target');
+  });
+});
+
+describe('ExerciseRepository.search (is_deleted フィルタ)', () => {
+  it('クエリに is_deleted = 0 フィルタが含まれること', async () => {
+    const mockDb = createMockDb();
+    mockGetDatabase.mockResolvedValue(mockDb as never);
+    mockDb.getAllAsync.mockResolvedValue([]);
+
+    await ExerciseRepository.search('テスト');
+
+    const sql = String(mockDb.getAllAsync.mock.calls[0]?.[0] ?? '');
+    expect(sql).toMatch(/is_deleted\s*=\s*0/i);
+  });
+});
+
 describe('ExerciseRepository.updateSortOrders', () => {
   it('渡したすべての id に対して UPDATE が実行されること', async () => {
     const mockDb = createMockDb();

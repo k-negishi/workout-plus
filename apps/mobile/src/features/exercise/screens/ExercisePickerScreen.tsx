@@ -2,13 +2,14 @@
  * T038: 種目選択画面（ExercisePickerScreen）
  * 通常ページとして種目を選択する（pushナビゲーション）
  * single モード: タップで即選択、multi モード: チェックボックス選択 + 一括追加
- * T039: カスタム種目編集フォーム内蔵
  * Issue #116: 追加済み種目にバッジ表示 + タップ無効化
+ * Issue #155: 左スワイプで「履歴」ボタン表示 → ExerciseHistoryFullScreen へ遷移
+ *             既存インライン編集（T039）を履歴画面へ移管し削除
  */
 import { Ionicons } from '@expo/vector-icons';
 import { type RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   FlatList,
   SectionList,
@@ -18,6 +19,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Swipeable } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ExerciseRepository } from '@/database/repositories/exercise';
@@ -103,27 +105,15 @@ const MUSCLE_GROUP_OPTIONS: Array<{ key: MuscleGroup; label: string }> = [
  */
 const ExerciseItemActions: React.FC<{
   isAdded: boolean;
-  isCustom: boolean;
   isFavorite: boolean;
-  onStartEdit: () => void;
   onToggleFavorite: () => void;
-}> = ({ isAdded, isCustom, isFavorite, onStartEdit, onToggleFavorite }) => (
+}> = ({ isAdded, isFavorite, onToggleFavorite }) => (
   <View className="flex-row items-center gap-1">
     {/* Issue #116: 追加済みバッジ */}
     {isAdded && (
       <View className="px-2 py-[3px] rounded-lg bg-[#E6FAF1]">
         <Text className="text-[13px] font-semibold text-[#10B981]">追加済み</Text>
       </View>
-    )}
-    {/* T039: カスタム種目の編集ボタン */}
-    {isCustom && (
-      <TouchableOpacity
-        onPress={onStartEdit}
-        className="w-7 h-7 items-center justify-center"
-        hitSlop={4}
-      >
-        <Text className="text-[16px] text-[#64748b] opacity-50">{'✎'}</Text>
-      </TouchableOpacity>
     )}
     {/* お気に入りボタン */}
     <TouchableOpacity
@@ -138,91 +128,6 @@ const ExerciseItemActions: React.FC<{
         {isFavorite ? '★' : '☆'}
       </Text>
     </TouchableOpacity>
-  </View>
-);
-
-/**
- * T039: インライン編集フォームコンポーネント
- * renderItem の complexity 削減のためコンポーネントに分離
- */
-const InlineEditForm: React.FC<{
-  editName: string;
-  editMuscleGroup: MuscleGroup;
-  editEquipment: Equipment;
-  onNameChange: (text: string) => void;
-  onMuscleGroupChange: (mg: MuscleGroup) => void;
-  onEquipmentChange: (eq: Equipment) => void;
-  onSave: () => void;
-  onCancel: () => void;
-}> = ({
-  editName,
-  editMuscleGroup,
-  editEquipment,
-  onNameChange,
-  onMuscleGroupChange,
-  onEquipmentChange,
-  onSave,
-  onCancel,
-}) => (
-  <View className="px-5 py-3 bg-[#f9fafb] border-b border-[#e2e8f0]">
-    <TextInput
-      className="bg-white border border-[#e2e8f0] rounded-lg px-3 py-2.5 text-[16px] text-[#475569] mb-3"
-      placeholder="種目名"
-      value={editName}
-      onChangeText={onNameChange}
-      autoFocus
-    />
-    <Text className="text-[13px] font-semibold text-[#64748b] tracking-wide mb-1.5">部位</Text>
-    <View className="flex-row flex-wrap gap-1.5 mb-3">
-      {MUSCLE_GROUP_OPTIONS.map((opt) => (
-        <TouchableOpacity
-          key={opt.key}
-          onPress={() => onMuscleGroupChange(opt.key)}
-          className={`px-2.5 py-1 rounded-full border ${
-            editMuscleGroup === opt.key ? 'bg-[#E6F2FF] border-[#4D94FF]' : 'border-[#e2e8f0]'
-          }`}
-        >
-          <Text
-            className={`text-[14px] ${
-              editMuscleGroup === opt.key ? 'text-[#4D94FF] font-semibold' : 'text-[#64748b]'
-            }`}
-          >
-            {opt.label}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-    <Text className="text-[13px] font-semibold text-[#64748b] tracking-wide mb-1.5">器具</Text>
-    <View className="flex-row flex-wrap gap-1.5 mb-3">
-      {EQUIPMENT_OPTIONS.map((opt) => (
-        <TouchableOpacity
-          key={opt.key}
-          onPress={() => onEquipmentChange(opt.key)}
-          className={`px-2.5 py-1 rounded-full border ${
-            editEquipment === opt.key ? 'bg-[#E6F2FF] border-[#4D94FF]' : 'border-[#e2e8f0]'
-          }`}
-        >
-          <Text
-            className={`text-[14px] ${
-              editEquipment === opt.key ? 'text-[#4D94FF] font-semibold' : 'text-[#64748b]'
-            }`}
-          >
-            {opt.label}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-    <View className="flex-row gap-2">
-      <TouchableOpacity
-        onPress={onSave}
-        className="flex-1 py-2.5 bg-[#4D94FF] rounded-lg items-center"
-      >
-        <Text className="text-[15px] font-semibold text-white">保存</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={onCancel} className="px-4 py-2.5 items-center">
-        <Text className="text-[15px] text-[#64748b]">キャンセル</Text>
-      </TouchableOpacity>
-    </View>
   </View>
 );
 
@@ -338,7 +243,7 @@ export const ExercisePickerScreen: React.FC = () => {
   // multi モードの選択状態
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  // T039: カスタム種目作成/編集フォーム
+  // カスタム種目作成フォームの表示状態
   const [isCreating, setIsCreating] = useState(false);
   const [newExerciseName, setNewExerciseName] = useState('');
   const [newMuscleGroup, setNewMuscleGroup] = useState<MuscleGroup>('chest');
@@ -351,11 +256,8 @@ export const ExercisePickerScreen: React.FC = () => {
   // sections を平坦化して現在のフィルター条件での表示種目を取得する
   const visibleExercises = useMemo(() => sections.flatMap((section) => section.data), [sections]);
 
-  // T039: インライン編集
-  const [editingExerciseId, setEditingExerciseId] = useState<string | null>(null);
-  const [editName, setEditName] = useState('');
-  const [editMuscleGroup, setEditMuscleGroup] = useState<MuscleGroup>('chest');
-  const [editEquipment, setEditEquipment] = useState<Equipment>('barbell');
+  // Issue #155: 現在開いているスワイプ行を管理（他の行タップで閉じるため）
+  const openedSwipeableRef = useRef<Swipeable | null>(null);
 
   /** single モード: 種目を選択する */
   const handleSelectExercise = useCallback(
@@ -397,7 +299,7 @@ export const ExercisePickerScreen: React.FC = () => {
     await ExerciseRepository.toggleFavorite(exerciseId);
   }, []);
 
-  /** T039: カスタム種目を作成する */
+  /** カスタム種目を作成する */
   const handleCreateCustom = useCallback(async () => {
     if (!newExerciseName.trim()) return;
 
@@ -420,29 +322,6 @@ export const ExercisePickerScreen: React.FC = () => {
     }
   }, [newExerciseName, newMuscleGroup, newEquipment, mode, session, navigation]);
 
-  /** T039: 種目編集を開始する */
-  const handleStartEdit = useCallback((exercise: Exercise) => {
-    setEditingExerciseId(exercise.id);
-    setEditName(exercise.name);
-    setEditMuscleGroup(exercise.muscleGroup);
-    setEditEquipment(exercise.equipment);
-  }, []);
-
-  /** T039: 種目編集を保存する */
-  const handleSaveEdit = useCallback(async () => {
-    if (!editingExerciseId || !editName.trim()) return;
-    try {
-      await ExerciseRepository.update(editingExerciseId, {
-        name: editName.trim(),
-        muscle_group: editMuscleGroup,
-        equipment: editEquipment,
-      });
-      setEditingExerciseId(null);
-    } catch {
-      showErrorToast('種目の更新に失敗しました');
-    }
-  }, [editingExerciseId, editName, editMuscleGroup, editEquipment]);
-
   /** 閉じる */
   const handleClose = useCallback(() => {
     navigation.goBack();
@@ -462,6 +341,18 @@ export const ExercisePickerScreen: React.FC = () => {
     [loadExercises],
   );
 
+  /**
+   * Issue #155: 種目履歴画面へ遷移する
+   * スワイプボタンのタップ時に呼び出す
+   */
+  const handleNavigateToHistory = useCallback(
+    (exerciseId: string, exerciseName: string) => {
+      openedSwipeableRef.current?.close();
+      navigation.navigate('ExerciseHistory', { exerciseId, exerciseName });
+    },
+    [navigation],
+  );
+
   const sectionData = sections.map((section) => ({
     title: section.title,
     data: section.data,
@@ -469,22 +360,51 @@ export const ExercisePickerScreen: React.FC = () => {
 
   return (
     <View className="flex-1 bg-white">
-      {/* ページヘッダー（通常pushナビゲーション） */}
+      {/* Issue #142: 白ヘッダー（統一スタイル）
+          背景白・下ボーダー・Ionicons 戻るボタン（左）・タイトル（中央）・並び替えボタン（右）
+          paddingTop は insets.top のみ（+12 を廃止してヘッダー内の paddingBottom: 12 で吸収） */}
       <View
-        className="flex-row items-center px-4 pb-3 border-b border-[#e2e8f0]"
-        style={{ paddingTop: insets.top + 12 }}
+        testID="exercise-picker-header"
+        style={{
+          backgroundColor: '#FFFFFF',
+          paddingTop: insets.top,
+          paddingBottom: 12,
+          paddingHorizontal: 16,
+          flexDirection: 'row',
+          alignItems: 'center',
+          borderBottomWidth: 1,
+          borderBottomColor: '#e2e8f0',
+        }}
       >
-        <TouchableOpacity onPress={handleClose} className="w-8 h-8 items-center justify-center">
-          <Text className="text-[24px] text-[#475569]">{'‹'}</Text>
+        {/* 戻るボタン: テキスト「‹」から Ionicons chevron-back に変更 */}
+        <TouchableOpacity
+          onPress={handleClose}
+          accessibilityLabel="戻る"
+          style={{ width: 40, alignItems: 'flex-start' }}
+        >
+          <Ionicons name="chevron-back" size={24} color="#475569" />
         </TouchableOpacity>
-        <Text className="flex-1 text-center text-[18px] font-bold text-[#334155]">種目を選択</Text>
+
+        {/* タイトル: fontSize 17 / fontWeight '600' に統一 */}
+        <Text
+          style={{
+            flex: 1,
+            textAlign: 'center',
+            fontSize: 17,
+            fontWeight: '600',
+            color: '#334155',
+          }}
+        >
+          種目を選択
+        </Text>
+
         {/* Issue #141: 並び替えボタン（部位フィルター選択時のみ有効）
             全て表示中は全種目をフラットに並び替えても意味がないため disabled にする */}
         <TouchableOpacity
           testID="reorder-button"
           onPress={() => setIsReorderModalVisible(true)}
           disabled={selectedCategory === null}
-          className="w-8 h-8 items-center justify-center"
+          style={{ width: 40, alignItems: 'flex-end' }}
           accessibilityLabel="並び替え"
         >
           <Text className={`text-[20px] ${getReorderButtonColor(selectedCategory === null)}`}>
@@ -561,12 +481,31 @@ export const ExercisePickerScreen: React.FC = () => {
         )}
         renderItem={({ item }) => {
           const isSelected = selectedIds.has(item.id);
-          const isEditing = editingExerciseId === item.id;
           // Issue #116: 追加済み判定
           const isAdded = addedExerciseIds.has(item.id);
 
           return (
-            <View>
+            // Issue #155: Swipeable で各行をラップし、左スワイプで「履歴」ボタンを表示
+            <Swipeable
+              ref={(ref) => {
+                // 別の行が開かれた場合に前の行を閉じる
+                if (ref && openedSwipeableRef.current !== ref) {
+                  openedSwipeableRef.current?.close();
+                  openedSwipeableRef.current = ref;
+                }
+              }}
+              renderRightActions={() => (
+                <TouchableOpacity
+                  testID={`history-button-${item.id}`}
+                  onPress={() => handleNavigateToHistory(item.id, item.name)}
+                  style={swipeStyles.historyButton}
+                >
+                  <Text style={swipeStyles.historyButtonIcon}>{'📊'}</Text>
+                  <Text style={swipeStyles.historyButtonText}>履歴</Text>
+                </TouchableOpacity>
+              )}
+              overshootRight={false}
+            >
               <TouchableOpacity
                 onPress={() => handleSelectExercise(item)}
                 // Issue #116: 追加済み種目はタップ無効 + 半透明
@@ -607,27 +546,11 @@ export const ExercisePickerScreen: React.FC = () => {
                 {/* アクションボタン群（コンポーネントに分離して complexity を削減） */}
                 <ExerciseItemActions
                   isAdded={isAdded}
-                  isCustom={item.isCustom}
                   isFavorite={item.isFavorite}
-                  onStartEdit={() => handleStartEdit(item)}
                   onToggleFavorite={() => handleToggleFavorite(item.id)}
                 />
               </TouchableOpacity>
-
-              {/* T039: インライン編集フォーム（コンポーネントに分離して complexity を削減） */}
-              {isEditing && (
-                <InlineEditForm
-                  editName={editName}
-                  editMuscleGroup={editMuscleGroup}
-                  editEquipment={editEquipment}
-                  onNameChange={setEditName}
-                  onMuscleGroupChange={setEditMuscleGroup}
-                  onEquipmentChange={setEditEquipment}
-                  onSave={handleSaveEdit}
-                  onCancel={() => setEditingExerciseId(null)}
-                />
-              )}
-            </View>
+            </Swipeable>
           );
         }}
         ListHeaderComponent={
@@ -703,6 +626,25 @@ export const ExercisePickerScreen: React.FC = () => {
     </View>
   );
 };
+
+/** Issue #155: スワイプ「履歴」ボタンスタイル */
+const swipeStyles = StyleSheet.create({
+  historyButton: {
+    width: 72,
+    backgroundColor: '#E6F2FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  historyButtonIcon: {
+    fontSize: 18,
+  },
+  historyButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#4D94FF',
+    marginTop: 2,
+  },
+});
 
 /** Issue #136: FAB スタイル（absolute 配置は StyleSheet で確実に効かせる） */
 const fabStyles = StyleSheet.create({

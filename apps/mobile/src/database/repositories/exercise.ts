@@ -18,41 +18,52 @@ type CreateExerciseParams = {
 type UpdateExerciseParams = Partial<Pick<ExerciseRow, 'name' | 'muscle_group' | 'equipment'>>;
 
 export const ExerciseRepository = {
-  /** 全種目を取得する（ユーザー定義の並び順） */
+  /** 全種目を取得する（ユーザー定義の並び順、論理削除済みを除く） */
   async findAll(): Promise<ExerciseRow[]> {
     const db = await getDatabase();
-    return db.getAllAsync<ExerciseRow>('SELECT * FROM exercises ORDER BY sort_order ASC');
+    return db.getAllAsync<ExerciseRow>(
+      'SELECT * FROM exercises WHERE is_deleted = 0 ORDER BY sort_order ASC',
+    );
   },
 
-  /** 部位カテゴリで種目を検索する */
+  /** 部位カテゴリで種目を検索する（論理削除済みを除く） */
   async findByCategory(muscleGroup: MuscleGroup): Promise<ExerciseRow[]> {
     const db = await getDatabase();
     return db.getAllAsync<ExerciseRow>(
-      'SELECT * FROM exercises WHERE muscle_group = ? ORDER BY name',
+      'SELECT * FROM exercises WHERE muscle_group = ? AND is_deleted = 0 ORDER BY name',
       [muscleGroup],
     );
   },
 
-  /** お気に入り種目を取得する */
+  /** お気に入り種目を取得する（論理削除済みを除く） */
   async findFavorites(): Promise<ExerciseRow[]> {
     const db = await getDatabase();
     return db.getAllAsync<ExerciseRow>(
-      'SELECT * FROM exercises WHERE is_favorite = 1 ORDER BY name',
+      'SELECT * FROM exercises WHERE is_favorite = 1 AND is_deleted = 0 ORDER BY name',
     );
   },
 
-  /** カスタム種目を取得する */
+  /** カスタム種目を取得する（論理削除済みを除く） */
   async findCustom(): Promise<ExerciseRow[]> {
     const db = await getDatabase();
-    return db.getAllAsync<ExerciseRow>('SELECT * FROM exercises WHERE is_custom = 1 ORDER BY name');
+    return db.getAllAsync<ExerciseRow>(
+      'SELECT * FROM exercises WHERE is_custom = 1 AND is_deleted = 0 ORDER BY name',
+    );
   },
 
-  /** 名前で種目を検索する（部分一致） */
+  /** 名前で種目を検索する（部分一致、論理削除済みを除く） */
   async search(query: string): Promise<ExerciseRow[]> {
     const db = await getDatabase();
-    return db.getAllAsync<ExerciseRow>('SELECT * FROM exercises WHERE name LIKE ? ORDER BY name', [
-      `%${query}%`,
-    ]);
+    return db.getAllAsync<ExerciseRow>(
+      'SELECT * FROM exercises WHERE name LIKE ? AND is_deleted = 0 ORDER BY name',
+      [`%${query}%`],
+    );
+  },
+
+  /** IDで種目を1件取得する（論理削除済みも含む。履歴画面等で isCustom 確認に使用） */
+  async findById(id: string): Promise<ExerciseRow | null> {
+    const db = await getDatabase();
+    return db.getFirstAsync<ExerciseRow>('SELECT * FROM exercises WHERE id = ?', [id]) ?? null;
   },
 
   /** カスタム種目を作成する */
@@ -69,8 +80,8 @@ export const ExerciseRepository = {
     const sortOrder = (maxRow?.max_sort ?? 0) + 1;
 
     await db.runAsync(
-      `INSERT INTO exercises (id, name, muscle_group, equipment, is_custom, is_favorite, created_at, updated_at, sort_order)
-       VALUES (?, ?, ?, ?, 1, 0, ?, ?, ?)`,
+      `INSERT INTO exercises (id, name, muscle_group, equipment, is_custom, is_favorite, is_deleted, created_at, updated_at, sort_order)
+       VALUES (?, ?, ?, ?, 1, 0, 0, ?, ?, ?)`,
       // DBカラム名は snake_case のまま。params は camelCase で受け取る
       [id, params.name, params.muscleGroup, params.equipment, now, now, sortOrder],
     );
@@ -130,5 +141,29 @@ export const ExerciseRepository = {
       `UPDATE exercises SET is_favorite = CASE WHEN is_favorite = 0 THEN 1 ELSE 0 END, updated_at = ? WHERE id = ?`,
       [Date.now(), id],
     );
+  },
+
+  /**
+   * カスタム種目を論理削除する（is_deleted = 1 に更新）
+   * 過去のワークアウト記録（workout_exercises）は保持するため物理削除しない
+   */
+  async softDelete(id: string): Promise<void> {
+    const db = await getDatabase();
+    await db.runAsync('UPDATE exercises SET is_deleted = 1, updated_at = ? WHERE id = ?', [
+      Date.now(),
+      id,
+    ]);
+  },
+
+  /**
+   * 論理削除された種目を復元する（is_deleted = 0 に更新）
+   * UI は将来対応予定。メソッドのみ実装しておく。
+   */
+  async restore(id: string): Promise<void> {
+    const db = await getDatabase();
+    await db.runAsync('UPDATE exercises SET is_deleted = 0, updated_at = ? WHERE id = ?', [
+      Date.now(),
+      id,
+    ]);
   },
 };

@@ -14,6 +14,7 @@ function makeExercise(overrides: Partial<Exercise> & { id: string; name: string 
     equipment: 'barbell',
     isCustom: false,
     isFavorite: false,
+    isDeleted: false,
     createdAt: now,
     updatedAt: now,
     sortOrder: 0,

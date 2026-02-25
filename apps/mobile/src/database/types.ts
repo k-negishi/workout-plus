@@ -41,6 +41,8 @@ export type ExerciseRow = {
   is_custom: 0 | 1;
   /** 0: 通常、1: お気に入り */
   is_favorite: 0 | 1;
+  /** 0: 通常、1: 論理削除済み（カスタム種目のみ対象） */
+  is_deleted: 0 | 1;
   created_at: number;
   updated_at: number;
   /** ユーザー定義の並び順。ExerciseReorderModal で変更可能 */

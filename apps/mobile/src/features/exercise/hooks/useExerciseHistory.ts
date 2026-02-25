@@ -6,6 +6,7 @@ import { format, startOfWeek, subMonths } from 'date-fns';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { getDatabase } from '@/database/client';
+import { ExerciseRepository } from '@/database/repositories/exercise';
 import type { PRRow } from '@/database/types';
 
 /** 統計サマリー */
@@ -259,11 +260,17 @@ export function useExerciseHistory(exerciseId: string) {
   const [prHistory, setPRHistory] = useState<PRHistoryItem[]>([]);
   const [allHistory, setAllHistory] = useState<SessionHistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
+  // isCustom: 種目の編集・削除UIを表示するかどうかの判定に使用
+  const [isCustom, setIsCustom] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
       const db = await getDatabase();
+
+      // 種目の isCustom を取得（編集・削除UIの表示判定に使用）
+      const exerciseRow = await ExerciseRepository.findById(exerciseId);
+      setIsCustom(exerciseRow?.is_custom === 1);
 
       // 完了済みワークアウトの全セットを取得
       const sets = await db.getAllAsync<SetWithWorkout>(
@@ -337,7 +344,7 @@ export function useExerciseHistory(exerciseId: string) {
   }, [fetchData]);
 
   return useMemo(
-    () => ({ stats, weeklyData, prHistory, allHistory, loading, refetch: fetchData }),
-    [stats, weeklyData, prHistory, allHistory, loading, fetchData],
+    () => ({ stats, weeklyData, prHistory, allHistory, loading, isCustom, refetch: fetchData }),
+    [stats, weeklyData, prHistory, allHistory, loading, isCustom, fetchData],
   );
 }

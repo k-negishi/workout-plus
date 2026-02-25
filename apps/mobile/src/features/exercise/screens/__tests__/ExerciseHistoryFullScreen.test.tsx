@@ -5,9 +5,11 @@
  * - 戻るボタン動作
  * - exerciseName の表示
  * - ローディング状態の表示
+ * - Issue #142: ヘッダースタイルの統一検証（Ionicons chevron-back）
  */
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
+import { Alert } from 'react-native';
 
 // --- モック定義 ---
 
@@ -57,6 +59,8 @@ jest.mock('date-fns/locale', () => ({
 // loading 状態をテストごとに切り替えられるよう変数で管理する
 // jest.mock のファクトリはホイストされるため、変数は let で宣言し参照渡しする
 let mockLoading = false;
+// isCustom をテストごとに差し替え可能にする
+let mockIsCustom = false;
 // allHistory をテストごとに差し替え可能にする
 let mockAllHistory: Array<{
   workoutId: string;
@@ -90,7 +94,22 @@ jest.mock('../../hooks/useExerciseHistory', () => ({
     get loading() {
       return mockLoading;
     },
+    get isCustom() {
+      return mockIsCustom;
+    },
   }),
+}));
+
+// ExerciseRepository モック（編集・削除テスト用）
+const mockFindById = jest.fn();
+const mockSoftDelete = jest.fn();
+const mockUpdate = jest.fn();
+jest.mock('@/database/repositories/exercise', () => ({
+  ExerciseRepository: {
+    findById: (...args: unknown[]) => mockFindById(...args),
+    softDelete: (...args: unknown[]) => mockSoftDelete(...args),
+    update: (...args: unknown[]) => mockUpdate(...args),
+  },
 }));
 
 import { ExerciseHistoryFullScreen } from '../ExerciseHistoryFullScreen';
@@ -98,8 +117,12 @@ import { ExerciseHistoryFullScreen } from '../ExerciseHistoryFullScreen';
 describe('ExerciseHistoryFullScreen', () => {
   beforeEach(() => {
     mockGoBack.mockClear();
+    mockFindById.mockClear();
+    mockSoftDelete.mockClear();
+    mockUpdate.mockClear();
     // 各テスト前にローディング状態と履歴をリセット
     mockLoading = false;
+    mockIsCustom = false;
     mockAllHistory = [];
   });
 
@@ -115,9 +138,29 @@ describe('ExerciseHistoryFullScreen', () => {
 
   it('戻るボタンを押すと goBack() が呼ばれる', () => {
     render(<ExerciseHistoryFullScreen />);
-    // 「戻る」テキストを持つ Pressable をタップ
-    fireEvent.press(screen.getByText('戻る'));
+    // Issue #142: accessibilityLabel="戻る" のボタンをタップ
+    fireEvent.press(screen.getByLabelText('戻る'));
     expect(mockGoBack).toHaveBeenCalledTimes(1);
+  });
+
+  describe('Issue #142: ヘッダースタイル統一', () => {
+    it('ヘッダーに testID "exercise-history-header" が存在する', () => {
+      render(<ExerciseHistoryFullScreen />);
+
+      expect(screen.getByTestId('exercise-history-header')).toBeTruthy();
+    });
+
+    it('戻るボタンが accessibilityLabel="戻る" で存在する', () => {
+      render(<ExerciseHistoryFullScreen />);
+
+      expect(screen.getByLabelText('戻る')).toBeTruthy();
+    });
+
+    it('ヘッダーに種目名タイトルが testID "exercise-history-header-title" で表示される', () => {
+      render(<ExerciseHistoryFullScreen />);
+
+      expect(screen.getByTestId('exercise-history-header-title')).toBeTruthy();
+    });
   });
 
   it('loading=true のとき 統計カードが表示されない（ActivityIndicator のみ）', () => {
@@ -141,6 +184,59 @@ describe('ExerciseHistoryFullScreen', () => {
       ];
       render(<ExerciseHistoryFullScreen />);
       expect(screen.getByText('2月18日(水)')).toBeTruthy();
+    });
+  });
+
+  describe('Issue #155: カスタム種目の編集・削除UI', () => {
+    it('プリセット種目（isCustom=false）は ✎ 🗑 アイコンが表示されない', () => {
+      mockIsCustom = false;
+      render(<ExerciseHistoryFullScreen />);
+      expect(screen.queryByTestId('edit-button')).toBeNull();
+      expect(screen.queryByTestId('delete-button')).toBeNull();
+    });
+
+    it('カスタム種目（isCustom=true）は ✎ 🗑 アイコンが表示される', () => {
+      mockIsCustom = true;
+      render(<ExerciseHistoryFullScreen />);
+      expect(screen.getByTestId('edit-button')).toBeTruthy();
+      expect(screen.getByTestId('delete-button')).toBeTruthy();
+    });
+
+    it('✎ タップで編集フォームが開く', async () => {
+      mockIsCustom = true;
+      // findById がフォームの初期値設定に使われる
+      mockFindById.mockResolvedValue({
+        id: 'ex-1',
+        name: 'ベンチプレス',
+        muscle_group: 'chest',
+        equipment: 'barbell',
+        is_custom: 1,
+        is_favorite: 0,
+        is_deleted: 0,
+        created_at: 1000,
+        updated_at: 1000,
+        sort_order: 1,
+      });
+      render(<ExerciseHistoryFullScreen />);
+      const editBtn = screen.getByTestId('edit-button');
+      fireEvent.press(editBtn);
+      // フォームが表示されるまで待機
+      await screen.findByText('保存');
+      expect(screen.getByText('キャンセル')).toBeTruthy();
+    });
+
+    it('🗑 タップで Alert.alert が呼ばれる', () => {
+      mockIsCustom = true;
+      const alertSpy = jest.spyOn(Alert, 'alert');
+      render(<ExerciseHistoryFullScreen />);
+      const deleteBtn = screen.getByTestId('delete-button');
+      fireEvent.press(deleteBtn);
+      expect(alertSpy).toHaveBeenCalledWith(
+        'ベンチプレスを削除しますか？',
+        '削除後も過去のワークアウト記録は残ります。',
+        expect.any(Array),
+      );
+      alertSpy.mockRestore();
     });
   });
 

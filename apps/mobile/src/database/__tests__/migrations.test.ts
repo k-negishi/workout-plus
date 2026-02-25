@@ -215,13 +215,13 @@ describe('runMigrations V4 → V5', () => {
     expect(updatedIds).toContain('workout-b');
   });
 
-  it('バージョン 5 からは V6 マイグレーションが実行されること', async () => {
+  it('バージョン 5 からは V6, V7 マイグレーションが実行されること', async () => {
     const db = createMockDb(5);
 
     await runMigrations(db as unknown as SQLiteDatabase);
 
-    // v5 → v6 マイグレーションが実行される（LATEST_VERSION = 6 のため）
-    expect(db.withTransactionAsync).toHaveBeenCalledTimes(1);
+    // v5 → v6 → v7 の 2 回マイグレーションが実行される（LATEST_VERSION = 7 のため）
+    expect(db.withTransactionAsync).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -325,8 +325,8 @@ describe('runMigrations V5 → V6', () => {
     expect(hasAlterTable).toBe(false);
   });
 
-  it('既にバージョン 6 の場合はマイグレーションをスキップすること', async () => {
-    let schemaVersion = 6;
+  it('既にバージョン 7（最新）の場合はマイグレーションをスキップすること', async () => {
+    let schemaVersion = 7;
     const db = {
       getFirstAsync: jest.fn(async (sql: string) => {
         if (sql === 'PRAGMA user_version') return { user_version: schemaVersion };
@@ -347,5 +347,75 @@ describe('runMigrations V5 → V6', () => {
 
     expect(db.withTransactionAsync).not.toHaveBeenCalled();
     expect(db.execAsync).not.toHaveBeenCalled();
+  });
+});
+
+describe('runMigrations V6 → V7', () => {
+  it('is_deleted カラムが追加されること', async () => {
+    let schemaVersion = 6;
+    const db = {
+      getFirstAsync: jest.fn(async (sql: string) => {
+        if (sql === 'PRAGMA user_version') return { user_version: schemaVersion };
+        return null;
+      }),
+      getAllAsync: jest.fn(async (sql: string) => {
+        // PRAGMA table_info: is_deleted が未存在の状態をシミュレート
+        if (sql === 'PRAGMA table_info(exercises)') {
+          return [{ name: 'id' }, { name: 'name' }, { name: 'sort_order' }] as { name: string }[];
+        }
+        return [];
+      }),
+      execAsync: jest.fn(async (sql: string) => {
+        const match = sql.match(/PRAGMA user_version = (\d+)/);
+        if (match?.[1] != null) schemaVersion = parseInt(match[1], 10);
+      }),
+      runAsync: jest.fn(async () => {}),
+      withTransactionAsync: jest.fn(async (cb: () => Promise<void>) => {
+        await cb();
+      }),
+    } as unknown as jest.Mocked<SQLiteDatabase>;
+
+    await runMigrations(db as unknown as SQLiteDatabase);
+
+    // ALTER TABLE exercises ADD COLUMN is_deleted が実行されていること
+    const execCalls = db.execAsync.mock.calls.map((call) => String(call[0]));
+    const hasAlterTable = execCalls.some(
+      (sql) => sql.includes('ALTER TABLE exercises') && sql.includes('is_deleted'),
+    );
+    expect(hasAlterTable).toBe(true);
+  });
+
+  it('is_deleted カラムが既に存在する場合は ALTER TABLE を実行しないこと（冪等性）', async () => {
+    let schemaVersion = 6;
+    const db = {
+      getFirstAsync: jest.fn(async (sql: string) => {
+        if (sql === 'PRAGMA user_version') return { user_version: schemaVersion };
+        return null;
+      }),
+      getAllAsync: jest.fn(async (sql: string) => {
+        // is_deleted が既に存在する状態をシミュレート
+        if (sql === 'PRAGMA table_info(exercises)') {
+          return [{ name: 'is_deleted' }] as { name: string }[];
+        }
+        return [];
+      }),
+      execAsync: jest.fn(async (sql: string) => {
+        const match = sql.match(/PRAGMA user_version = (\d+)/);
+        if (match?.[1] != null) schemaVersion = parseInt(match[1], 10);
+      }),
+      runAsync: jest.fn(async () => {}),
+      withTransactionAsync: jest.fn(async (cb: () => Promise<void>) => {
+        await cb();
+      }),
+    } as unknown as jest.Mocked<SQLiteDatabase>;
+
+    await runMigrations(db as unknown as SQLiteDatabase);
+
+    // ALTER TABLE は実行されないはず
+    const execCalls = db.execAsync.mock.calls.map((call) => String(call[0]));
+    const hasAlterTable = execCalls.some(
+      (sql) => sql.includes('ALTER TABLE exercises') && sql.includes('is_deleted'),
+    );
+    expect(hasAlterTable).toBe(false);
   });
 });

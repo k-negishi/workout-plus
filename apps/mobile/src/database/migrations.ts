@@ -9,7 +9,7 @@ import { ALL_CREATE_TABLES, CREATE_INDEXES } from './schema';
 import { generateDevWorkoutSeedSQL, generateSeedSQL } from './seed';
 
 /** 現在の最新スキーマバージョン */
-const LATEST_VERSION = 6;
+const LATEST_VERSION = 7;
 
 /**
  * 現在のスキーマバージョンを取得する
@@ -193,6 +193,23 @@ async function migrateV5ToV6(db: SQLiteDatabase): Promise<void> {
   await db.execAsync('UPDATE exercises SET sort_order = rowid WHERE sort_order = 0');
 }
 
+/**
+ * バージョン 6 → 7: exercises テーブルに is_deleted カラムを追加
+ *
+ * is_deleted は論理削除フラグ。カスタム種目を UI から削除した場合に 1 を設定する。
+ * 過去のワークアウト記録（workout_exercises）は残すため、物理削除でなく論理削除を採用する。
+ *
+ * 冪等性: PRAGMA table_info で存在チェックし ALTER TABLE の重複実行を防ぐ。
+ */
+async function migrateV6ToV7(db: SQLiteDatabase): Promise<void> {
+  // is_deleted カラムが未存在の場合のみ追加する
+  const tableInfo = await db.getAllAsync<{ name: string }>('PRAGMA table_info(exercises)');
+  const hasIsDeleted = tableInfo.some((col) => col.name === 'is_deleted');
+  if (!hasIsDeleted) {
+    await db.execAsync('ALTER TABLE exercises ADD COLUMN is_deleted INTEGER NOT NULL DEFAULT 0');
+  }
+}
+
 /** マイグレーション関数の型 */
 type Migration = (db: SQLiteDatabase) => Promise<void>;
 
@@ -204,6 +221,7 @@ const MIGRATIONS: Record<number, Migration> = {
   4: migrateV3ToV4,
   5: migrateV4ToV5,
   6: migrateV5ToV6,
+  7: migrateV6ToV7,
 };
 
 /**
