@@ -55,12 +55,7 @@ describe('TimerBar - Issue #150: discarded 状態の再生ボタン', () => {
   });
 
   it('timerStatus が not_started のとき、再生ボタンが disabled でない', () => {
-    render(
-      <TimerBar
-        {...discardedProps}
-        timerStatus={TimerStatus.NOT_STARTED}
-      />,
-    );
+    render(<TimerBar {...discardedProps} timerStatus={TimerStatus.NOT_STARTED} />);
     const playButton = screen.getByLabelText('開始');
     // not_started では disabled でないことを確認する
     expect(playButton.props.accessibilityState?.disabled).not.toBe(true);

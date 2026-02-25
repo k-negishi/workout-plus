@@ -267,21 +267,17 @@ export function ExerciseHistoryFullScreen() {
    * 過去のワークアウト記録は保持するため softDelete（論理削除）を使用
    */
   const handleDelete = useCallback(() => {
-    Alert.alert(
-      `${displayName}を削除しますか？`,
-      '削除後も過去のワークアウト記録は残ります。',
-      [
-        { text: 'キャンセル', style: 'cancel' },
-        {
-          text: '削除',
-          style: 'destructive',
-          onPress: async () => {
-            await ExerciseRepository.softDelete(exerciseId);
-            navigation.goBack();
-          },
+    Alert.alert(`${displayName}を削除しますか？`, '削除後も過去のワークアウト記録は残ります。', [
+      { text: 'キャンセル', style: 'cancel' },
+      {
+        text: '削除',
+        style: 'destructive',
+        onPress: async () => {
+          await ExerciseRepository.softDelete(exerciseId);
+          navigation.goBack();
         },
-      ],
-    );
+      },
+    ]);
   }, [displayName, exerciseId, navigation]);
 
   if (loading) {
@@ -336,7 +332,15 @@ export function ExerciseHistoryFullScreen() {
 
         {/* Issue #155: カスタム種目のみ編集・削除アイコンを表示 */}
         {isCustom ? (
-          <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center', width: 72, justifyContent: 'flex-end' }}>
+          <View
+            style={{
+              flexDirection: 'row',
+              gap: 4,
+              alignItems: 'center',
+              width: 72,
+              justifyContent: 'flex-end',
+            }}
+          >
             <Pressable
               testID="edit-button"
               onPress={handleStartEdit}

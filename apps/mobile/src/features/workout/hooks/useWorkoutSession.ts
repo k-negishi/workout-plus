@@ -496,10 +496,7 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
       const now = sessionTargetDate ? dateStringToMs(sessionTargetDate) : Date.now();
 
       // 不完全セットおよび空種目をDBから除外し、有効種目IDを取得
-      const validExerciseIds = await cleanupExerciseSets(
-        store.currentExercises,
-        store.currentSets,
-      );
+      const validExerciseIds = await cleanupExerciseSets(store.currentExercises, store.currentSets);
 
       // ステータスを completed に更新
       await WorkoutRepository.update(store.currentWorkout.id, {

@@ -100,8 +100,8 @@ describe('completeWorkout: 不完全セット除外フィルタ（FR-001〜FR-00
     store.addExercise(mockExercise);
 
     const sets = [
-      makeSet('set-incomplete', null, 10),  // weight=null → 削除対象
-      makeSet('set-valid', 80, 10, 2),       // 完全 → 残す
+      makeSet('set-incomplete', null, 10), // weight=null → 削除対象
+      makeSet('set-valid', 80, 10, 2), // 完全 → 残す
     ];
     store.setSetsForExercise('we-1', sets);
 
@@ -126,8 +126,8 @@ describe('completeWorkout: 不完全セット除外フィルタ（FR-001〜FR-00
     store.addExercise(mockExercise);
 
     const sets = [
-      makeSet('set-incomplete', 80, null),  // reps=null → 削除対象
-      makeSet('set-valid', 80, 10, 2),       // 完全 → 残す
+      makeSet('set-incomplete', 80, null), // reps=null → 削除対象
+      makeSet('set-valid', 80, 10, 2), // 完全 → 残す
     ];
     store.setSetsForExercise('we-1', sets);
 
@@ -151,8 +151,8 @@ describe('completeWorkout: 不完全セット除外フィルタ（FR-001〜FR-00
     store.addExercise(mockExercise);
 
     const sets = [
-      makeSet('set-zero-reps', 80, 0),      // reps=0, weight入力済み → 削除対象
-      makeSet('set-valid', 80, 10, 2),       // 完全 → 残す
+      makeSet('set-zero-reps', 80, 0), // reps=0, weight入力済み → 削除対象
+      makeSet('set-valid', 80, 10, 2), // 完全 → 残す
     ];
     store.setSetsForExercise('we-1', sets);
 
@@ -170,7 +170,7 @@ describe('completeWorkout: 不完全セット除外フィルタ（FR-001〜FR-00
    */
   it('weight=0・reps=10 の自重セットは削除されない（FR-005 後退防止）', async () => {
     const sets = [
-      makeSet('set-bodyweight', 0, 10),  // 自重種目 → 残す
+      makeSet('set-bodyweight', 0, 10), // 自重種目 → 残す
     ];
 
     const incompleteSets = sets.filter(isIncompleteSet);
@@ -187,7 +187,7 @@ describe('completeWorkout: 不完全セット除外フィルタ（FR-001〜FR-00
    */
   it('weight=null・reps=null の両方nullセットも引き続き削除される（FR-006 後退防止）', async () => {
     const sets = [
-      makeSet('set-both-null', null, null),  // 既存の削除対象
+      makeSet('set-both-null', null, null), // 既存の削除対象
       makeSet('set-valid', 80, 10, 2),
     ];
 
@@ -204,10 +204,7 @@ describe('completeWorkout: 不完全セット除外フィルタ（FR-001〜FR-00
    * 完全なセット（weight入力済み・reps>0）は削除されない
    */
   it('weight=80・reps=10 の完全なセットは削除されない（SC-004）', async () => {
-    const sets = [
-      makeSet('set-valid-1', 80, 10),
-      makeSet('set-valid-2', 70, 8, 2),
-    ];
+    const sets = [makeSet('set-valid-1', 80, 10), makeSet('set-valid-2', 70, 8, 2)];
 
     const incompleteSets = sets.filter(isIncompleteSet);
     for (const s of incompleteSets) {
@@ -222,11 +219,11 @@ describe('completeWorkout: 不完全セット除外フィルタ（FR-001〜FR-00
    */
   it('完全セットと不完全セットが混在する場合、不完全なものだけ削除される', async () => {
     const sets = [
-      makeSet('set-1-valid', 80, 10, 1),   // 完全
+      makeSet('set-1-valid', 80, 10, 1), // 完全
       makeSet('set-2-no-reps', 70, null, 2), // reps=null → 削除
-      makeSet('set-3-zero-reps', 60, 0, 3),  // reps=0 → 削除
+      makeSet('set-3-zero-reps', 60, 0, 3), // reps=0 → 削除
       makeSet('set-4-no-weight', null, 8, 4), // weight=null → 削除
-      makeSet('set-5-bodyweight', 0, 12, 5),  // 自重 → 完全
+      makeSet('set-5-bodyweight', 0, 12, 5), // 自重 → 完全
     ];
 
     const incompleteSets = sets.filter(isIncompleteSet);
@@ -259,9 +256,7 @@ describe('checkAndSavePRForExercise: reps=0 セットの PR 判定除外（FR-00
   }
 
   it('reps=0・weight=80 のセットはPR判定対象にならない（FR-004, SC-002）', () => {
-    const sets = [
-      makeSet('set-zero-reps', 80, 0),
-    ];
+    const sets = [makeSet('set-zero-reps', 80, 0)];
 
     // 修正後: reps > 0 条件で除外される
     const validSets = sets.filter(isValidForPR);
@@ -270,8 +265,8 @@ describe('checkAndSavePRForExercise: reps=0 セットの PR 判定除外（FR-00
 
   it('reps=0 セットと正常セットが混在する場合、正常セットのみがPR判定対象になる（SC-002）', () => {
     const sets = [
-      makeSet('set-zero-reps', 80, 0),   // reps=0 → PR判定対象外
-      makeSet('set-valid', 70, 10, 2),    // 正常 → PR判定対象
+      makeSet('set-zero-reps', 80, 0), // reps=0 → PR判定対象外
+      makeSet('set-valid', 70, 10, 2), // 正常 → PR判定対象
     ];
 
     const validSets = sets.filter(isValidForPR);
@@ -285,19 +280,14 @@ describe('checkAndSavePRForExercise: reps=0 セットの PR 判定除外（FR-00
   });
 
   it('reps=0 のみのセット群はPR判定対象がゼロになる', () => {
-    const sets = [
-      makeSet('set-1', 80, 0),
-      makeSet('set-2', 90, 0, 2),
-    ];
+    const sets = [makeSet('set-1', 80, 0), makeSet('set-2', 90, 0, 2)];
 
     const validSets = sets.filter(isValidForPR);
     expect(validSets).toHaveLength(0);
   });
 
   it('reps > 0 の自重セット（weight=0, reps=10）はPR判定対象になる（FR-005）', () => {
-    const sets = [
-      makeSet('set-bodyweight', 0, 10),
-    ];
+    const sets = [makeSet('set-bodyweight', 0, 10)];
 
     const validSets = sets.filter(isValidForPR);
     // weight=0 でも reps > 0 なら PR 判定対象
@@ -305,18 +295,14 @@ describe('checkAndSavePRForExercise: reps=0 セットの PR 判定除外（FR-00
   });
 
   it('weight=null のセットはPR判定対象にならない', () => {
-    const sets = [
-      makeSet('set-no-weight', null, 10),
-    ];
+    const sets = [makeSet('set-no-weight', null, 10)];
 
     const validSets = sets.filter(isValidForPR);
     expect(validSets).toHaveLength(0);
   });
 
   it('reps=null のセットはPR判定対象にならない', () => {
-    const sets = [
-      makeSet('set-no-reps', 80, null),
-    ];
+    const sets = [makeSet('set-no-reps', 80, null)];
 
     const validSets = sets.filter(isValidForPR);
     expect(validSets).toHaveLength(0);
@@ -339,8 +325,8 @@ describe('completeWorkout: 有効セットが0件の種目を自動削除', () =
    */
   it('全セットが不完全な種目は WorkoutExerciseRepository.delete が呼ばれる', async () => {
     const sets = [
-      makeSet('set-1', 80, null),     // reps=null → 不完全
-      makeSet('set-2', null, 10, 2),  // weight=null → 不完全
+      makeSet('set-1', 80, null), // reps=null → 不完全
+      makeSet('set-2', null, 10, 2), // weight=null → 不完全
     ];
 
     // completeWorkout のロジックをシミュレート
@@ -362,7 +348,7 @@ describe('completeWorkout: 有効セットが0件の種目を自動削除', () =
    */
   it('有効セットが1件以上ある種目は WorkoutExerciseRepository.delete が呼ばれない', async () => {
     const sets = [
-      makeSet('set-valid', 80, 10),          // 完全 → 残す
+      makeSet('set-valid', 80, 10), // 完全 → 残す
       makeSet('set-incomplete', 80, null, 2), // 不完全 → セットのみ削除
     ];
 
@@ -404,7 +390,7 @@ describe('completeWorkout: 有効セットが0件の種目を自動削除', () =
    */
   it('reps=0 のみのセットからなる種目は WorkoutExerciseRepository.delete が呼ばれる', async () => {
     const sets = [
-      makeSet('set-1', 80, 0),    // reps=0, weight有り → 不完全
+      makeSet('set-1', 80, 0), // reps=0, weight有り → 不完全
       makeSet('set-2', 90, 0, 2), // reps=0, weight有り → 不完全
     ];
 

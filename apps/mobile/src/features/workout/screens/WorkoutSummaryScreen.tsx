@@ -229,166 +229,166 @@ export const WorkoutSummaryScreen: React.FC = () => {
         <View style={{ width: 40 }} />
       </View>
 
-    <ScrollView
-      className="flex-1"
-      style={{ backgroundColor: colors.background }}
-      contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
-    >
-      {/* 完了アイコン + タイトル */}
-      <View className="items-center mb-6" style={{ paddingTop: 16 }}>
-        <View
-          className="w-12 h-12 rounded-full items-center justify-center mb-3"
-          style={{ backgroundColor: '#D1FAE5' }}
-        >
-          <Text className="text-[24px]" style={{ color: colors.success }}>
-            {'\u2713'}
-          </Text>
-        </View>
-        <Text className="text-[24px] font-bold" style={{ color: colors.textPrimary }}>
-          ワークアウト完了
-        </Text>
-      </View>
-
-      {/* メインカード */}
-      <View
-        className="bg-white rounded-xl p-5 mb-4 items-center"
-        style={{ borderWidth: 1, borderColor: colors.border }}
+      <ScrollView
+        className="flex-1"
+        style={{ backgroundColor: colors.background }}
+        contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
       >
-        <Text className="text-[14px] mb-2" style={{ color: colors.textSecondary }}>
-          所要時間
-        </Text>
-        <Text className="text-[16px] font-semibold" style={{ color: colors.textPrimary }}>
-          {timerStatus === 'discarded' ? '―' : formatDuration(elapsedSeconds)}
-        </Text>
-      </View>
-
-      {/* 統計グリッド */}
-      <View className="flex-row flex-wrap gap-3 mb-4">
-        <View
-          className="flex-1 min-w-[45%] bg-white rounded-lg p-4 items-center"
-          style={{ borderWidth: 1, borderColor: colors.border }}
-        >
-          <Text className="text-[20px] font-bold" style={{ color: colors.textPrimary }}>
-            {totalVolume.toLocaleString()}
-            <Text className="text-[12px] font-normal" style={{ color: colors.textSecondary }}>
-              {' '}
-              kg
+        {/* 完了アイコン + タイトル */}
+        <View className="items-center mb-6" style={{ paddingTop: 16 }}>
+          <View
+            className="w-12 h-12 rounded-full items-center justify-center mb-3"
+            style={{ backgroundColor: '#D1FAE5' }}
+          >
+            <Text className="text-[24px]" style={{ color: colors.success }}>
+              {'\u2713'}
             </Text>
-          </Text>
-          <Text className="text-[12px] mt-1" style={{ color: colors.textSecondary }}>
-            総ボリューム
-          </Text>
-        </View>
-        <View
-          className="flex-1 min-w-[45%] bg-white rounded-lg p-4 items-center"
-          style={{ borderWidth: 1, borderColor: colors.border }}
-        >
-          <Text className="text-[20px] font-bold" style={{ color: colors.textPrimary }}>
-            {exerciseCount}
-            <Text className="text-[12px] font-normal" style={{ color: colors.textSecondary }}>
-              {' '}
-              種目
-            </Text>
-          </Text>
-          <Text className="text-[12px] mt-1" style={{ color: colors.textSecondary }}>
-            種目数
+          </View>
+          <Text className="text-[24px] font-bold" style={{ color: colors.textPrimary }}>
+            ワークアウト完了
           </Text>
         </View>
-        <View
-          className="flex-1 min-w-[45%] bg-white rounded-lg p-4 items-center"
-          style={{ borderWidth: 1, borderColor: colors.border }}
-        >
-          <Text className="text-[20px] font-bold" style={{ color: colors.textPrimary }}>
-            {setCount}
-            <Text className="text-[12px] font-normal" style={{ color: colors.textSecondary }}>
-              {' '}
-              セット
-            </Text>
-          </Text>
-          <Text className="text-[12px] mt-1" style={{ color: colors.textSecondary }}>
-            セット数
-          </Text>
-        </View>
-      </View>
 
-      {/* PR セクション */}
-      {prItems.length > 0 && (
-        <View className="mb-4">
-          <Text className="text-[14px] font-semibold mb-2" style={{ color: colors.textPrimary }}>
-            新記録達成
-          </Text>
-          {prItems.map((pr, index) => (
-            <View
-              key={`pr-${index}`}
-              className="flex-row justify-between items-center bg-white rounded-lg px-4 py-3 mb-2"
-              style={{ borderWidth: 1, borderColor: colors.border }}
-            >
-              <View>
-                <Text className="text-[14px] font-semibold" style={{ color: colors.textPrimary }}>
-                  {pr.exerciseName}
-                </Text>
-                <Text className="text-[12px]" style={{ color: colors.textSecondary }}>
-                  {pr.label}
-                </Text>
-              </View>
-              <View className="px-2 py-[2px] rounded-lg" style={{ backgroundColor: '#FEF3C7' }}>
-                <Text className="text-[11px] font-bold" style={{ color: colors.warning }}>
-                  NEW
-                </Text>
-              </View>
-            </View>
-          ))}
-        </View>
-      )}
-
-      {/* 種目別サマリー */}
-      <View className="mb-6">
-        <Text className="text-[14px] font-semibold mb-2" style={{ color: colors.textPrimary }}>
-          種目別サマリー
-        </Text>
+        {/* メインカード */}
         <View
-          className="bg-white rounded-lg overflow-hidden"
+          className="bg-white rounded-xl p-5 mb-4 items-center"
           style={{ borderWidth: 1, borderColor: colors.border }}
         >
-          {exerciseSummaries.map((summary, index) => (
-            <View
-              key={summary.exerciseId}
-              className="flex-row justify-between items-center px-4 py-3"
-              style={
-                index < exerciseSummaries.length - 1
-                  ? { borderBottomWidth: 1, borderBottomColor: colors.border }
-                  : undefined
-              }
-            >
-              <Text className="text-[14px] font-semibold" style={{ color: colors.textPrimary }}>
-                {summary.name}
+          <Text className="text-[14px] mb-2" style={{ color: colors.textSecondary }}>
+            所要時間
+          </Text>
+          <Text className="text-[16px] font-semibold" style={{ color: colors.textPrimary }}>
+            {timerStatus === 'discarded' ? '―' : formatDuration(elapsedSeconds)}
+          </Text>
+        </View>
+
+        {/* 統計グリッド */}
+        <View className="flex-row flex-wrap gap-3 mb-4">
+          <View
+            className="flex-1 min-w-[45%] bg-white rounded-lg p-4 items-center"
+            style={{ borderWidth: 1, borderColor: colors.border }}
+          >
+            <Text className="text-[20px] font-bold" style={{ color: colors.textPrimary }}>
+              {totalVolume.toLocaleString()}
+              <Text className="text-[12px] font-normal" style={{ color: colors.textSecondary }}>
+                {' '}
+                kg
               </Text>
-              <View className="flex-row items-center gap-2">
-                <Text className="text-[14px]" style={{ color: colors.textSecondary }}>
-                  {summary.setCount}セット
-                </Text>
-                <Text className="text-[14px]" style={{ color: colors.textSecondary }}>
-                  {'\u2022'}
-                </Text>
-                <Text className="text-[14px] font-semibold" style={{ color: colors.textPrimary }}>
-                  {summary.volume.toLocaleString()}kg
-                </Text>
-              </View>
-            </View>
-          ))}
+            </Text>
+            <Text className="text-[12px] mt-1" style={{ color: colors.textSecondary }}>
+              総ボリューム
+            </Text>
+          </View>
+          <View
+            className="flex-1 min-w-[45%] bg-white rounded-lg p-4 items-center"
+            style={{ borderWidth: 1, borderColor: colors.border }}
+          >
+            <Text className="text-[20px] font-bold" style={{ color: colors.textPrimary }}>
+              {exerciseCount}
+              <Text className="text-[12px] font-normal" style={{ color: colors.textSecondary }}>
+                {' '}
+                種目
+              </Text>
+            </Text>
+            <Text className="text-[12px] mt-1" style={{ color: colors.textSecondary }}>
+              種目数
+            </Text>
+          </View>
+          <View
+            className="flex-1 min-w-[45%] bg-white rounded-lg p-4 items-center"
+            style={{ borderWidth: 1, borderColor: colors.border }}
+          >
+            <Text className="text-[20px] font-bold" style={{ color: colors.textPrimary }}>
+              {setCount}
+              <Text className="text-[12px] font-normal" style={{ color: colors.textSecondary }}>
+                {' '}
+                セット
+              </Text>
+            </Text>
+            <Text className="text-[12px] mt-1" style={{ color: colors.textSecondary }}>
+              セット数
+            </Text>
+          </View>
         </View>
-      </View>
 
-      {/* ホームに戻るボタン */}
-      <TouchableOpacity
-        onPress={handleGoHome}
-        className="rounded-lg py-4 items-center mt-6"
-        style={{ backgroundColor: colors.primary }}
-        accessibilityLabel="ホームに戻る"
-      >
-        <Text className="text-[16px] font-semibold text-white">ホームに戻る</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        {/* PR セクション */}
+        {prItems.length > 0 && (
+          <View className="mb-4">
+            <Text className="text-[14px] font-semibold mb-2" style={{ color: colors.textPrimary }}>
+              新記録達成
+            </Text>
+            {prItems.map((pr, index) => (
+              <View
+                key={`pr-${index}`}
+                className="flex-row justify-between items-center bg-white rounded-lg px-4 py-3 mb-2"
+                style={{ borderWidth: 1, borderColor: colors.border }}
+              >
+                <View>
+                  <Text className="text-[14px] font-semibold" style={{ color: colors.textPrimary }}>
+                    {pr.exerciseName}
+                  </Text>
+                  <Text className="text-[12px]" style={{ color: colors.textSecondary }}>
+                    {pr.label}
+                  </Text>
+                </View>
+                <View className="px-2 py-[2px] rounded-lg" style={{ backgroundColor: '#FEF3C7' }}>
+                  <Text className="text-[11px] font-bold" style={{ color: colors.warning }}>
+                    NEW
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
+
+        {/* 種目別サマリー */}
+        <View className="mb-6">
+          <Text className="text-[14px] font-semibold mb-2" style={{ color: colors.textPrimary }}>
+            種目別サマリー
+          </Text>
+          <View
+            className="bg-white rounded-lg overflow-hidden"
+            style={{ borderWidth: 1, borderColor: colors.border }}
+          >
+            {exerciseSummaries.map((summary, index) => (
+              <View
+                key={summary.exerciseId}
+                className="flex-row justify-between items-center px-4 py-3"
+                style={
+                  index < exerciseSummaries.length - 1
+                    ? { borderBottomWidth: 1, borderBottomColor: colors.border }
+                    : undefined
+                }
+              >
+                <Text className="text-[14px] font-semibold" style={{ color: colors.textPrimary }}>
+                  {summary.name}
+                </Text>
+                <View className="flex-row items-center gap-2">
+                  <Text className="text-[14px]" style={{ color: colors.textSecondary }}>
+                    {summary.setCount}セット
+                  </Text>
+                  <Text className="text-[14px]" style={{ color: colors.textSecondary }}>
+                    {'\u2022'}
+                  </Text>
+                  <Text className="text-[14px] font-semibold" style={{ color: colors.textPrimary }}>
+                    {summary.volume.toLocaleString()}kg
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* ホームに戻るボタン */}
+        <TouchableOpacity
+          onPress={handleGoHome}
+          className="rounded-lg py-4 items-center mt-6"
+          style={{ backgroundColor: colors.primary }}
+          accessibilityLabel="ホームに戻る"
+        >
+          <Text className="text-[16px] font-semibold text-white">ホームに戻る</Text>
+        </TouchableOpacity>
+      </ScrollView>
     </View>
   );
 };

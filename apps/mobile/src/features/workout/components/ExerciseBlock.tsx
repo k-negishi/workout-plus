@@ -102,14 +102,10 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
 
   /** 削除確認モーダルを表示してから onDeleteExercise を呼ぶ（Issue #148） */
   const handleDeleteExercise = () => {
-    Alert.alert(
-      'この種目を削除しますか？',
-      '入力済みのセットもすべて削除されます',
-      [
-        { text: 'キャンセル', style: 'cancel' },
-        { text: '削除する', style: 'destructive', onPress: onDeleteExercise },
-      ],
-    );
+    Alert.alert('この種目を削除しますか？', '入力済みのセットもすべて削除されます', [
+      { text: 'キャンセル', style: 'cancel' },
+      { text: '削除する', style: 'destructive', onPress: onDeleteExercise },
+    ]);
   };
 
   return (

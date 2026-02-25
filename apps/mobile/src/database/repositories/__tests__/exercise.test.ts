@@ -170,10 +170,9 @@ describe('ExerciseRepository.findById', () => {
     const result = await ExerciseRepository.findById('ex-abc');
 
     expect(result).toEqual(fakeRow);
-    expect(mockDb.getFirstAsync).toHaveBeenCalledWith(
-      expect.stringContaining('WHERE id = ?'),
-      ['ex-abc'],
-    );
+    expect(mockDb.getFirstAsync).toHaveBeenCalledWith(expect.stringContaining('WHERE id = ?'), [
+      'ex-abc',
+    ]);
   });
 
   it('存在しない ID の場合は null を返すこと', async () => {

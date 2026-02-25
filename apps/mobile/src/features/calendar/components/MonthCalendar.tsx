@@ -74,9 +74,7 @@ export function MonthCalendar({
 
   // 表示月を内部状態で管理する（矢印ボタン・スワイプで更新される）
   // startOfMonth で月の初日に正規化することで一貫した値を返す
-  const [displayMonth, setDisplayMonth] = useState(
-    format(startOfMonth(new Date()), 'yyyy-MM-dd'),
-  );
+  const [displayMonth, setDisplayMonth] = useState(format(startOfMonth(new Date()), 'yyyy-MM-dd'));
 
   // 親コンポーネントの onMonthChange コールバックを ref で保持（stale closure 対策）
   const onMonthChangeRef = useRef(onMonthChange);

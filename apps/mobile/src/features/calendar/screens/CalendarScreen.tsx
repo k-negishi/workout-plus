@@ -222,7 +222,6 @@ export function CalendarScreen() {
         {/* タブバーのスペーサー */}
         <View style={{ height: 100 }} />
       </ScrollView>
-
     </View>
   );
 }
