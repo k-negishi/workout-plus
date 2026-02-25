@@ -70,25 +70,9 @@ jest.mock('@/database/repositories/workout', () => ({
   },
 }));
 
-// ConfirmDialog: visible prop を testID 付き要素で検証できるようモック化する
-jest.mock('@/shared/components/ConfirmDialog', () => ({
-  ConfirmDialog: (props: Record<string, unknown>) => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { View, Text, Pressable } = require('react-native');
-    if (!props['visible']) return null;
-    return (
-      <View testID="confirm-dialog">
-        <Text testID="confirm-dialog-title">{props['title'] as string}</Text>
-        <Pressable testID="confirm-dialog-confirm-button" onPress={props['onConfirm'] as () => void}>
-          <Text>{props['confirmLabel'] as string}</Text>
-        </Pressable>
-        <Pressable testID="confirm-dialog-cancel-button" onPress={props['onCancel'] as () => void}>
-          <Text>{props['cancelLabel'] as string}</Text>
-        </Pressable>
-      </View>
-    );
-  },
-}));
+// Alert.alert のスパイ: 削除確認ダイアログは Alert.alert（ネイティブ）で実装している
+// jest.spyOn で呼び出しを検証し、ボタン onPress を手動実行して削除フローをシミュレートする
+import { Alert } from 'react-native';
 
 import { useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -110,6 +94,8 @@ describe('CalendarScreen', () => {
     mockGetAllAsync.mockResolvedValue([]);
     mockWorkoutRepositoryDelete.mockResolvedValue(undefined);
     mockWorkoutRepositoryFindCompletedByDate.mockResolvedValue(null);
+    // Alert.alert をスパイ化してネイティブ UI をテスト可能にする
+    jest.spyOn(Alert, 'alert').mockImplementation(() => {});
   });
 
   describe('SafeArea', () => {
@@ -236,42 +222,42 @@ describe('CalendarScreen', () => {
       });
     }
 
-    it('削除ボタンをタップすると確認ダイアログが表示される', async () => {
+    it('削除ボタンをタップすると Alert.alert が呼ばれる', async () => {
       (useRoute as jest.Mock).mockReturnValue({ params: undefined });
       render(<CalendarScreen />);
 
       await simulateWorkoutFound('workout-id-abc');
 
-      // 削除ボタンをタップする
       fireEvent.press(screen.getByTestId('delete-workout-button'));
 
-      // 確認ダイアログが表示されること
-      await waitFor(() => {
-        expect(screen.getByTestId('confirm-dialog')).toBeTruthy();
-      });
-      expect(screen.getByTestId('confirm-dialog-title')).toBeTruthy();
+      // Alert.alert が「ワークアウトを削除」タイトルで呼ばれること
+      expect(Alert.alert).toHaveBeenCalledWith(
+        'ワークアウトを削除',
+        'このワークアウトを削除してよろしいですか？',
+        expect.any(Array),
+      );
     });
 
-    it('確認ダイアログで削除を確定すると WorkoutRepository.delete が呼ばれる', async () => {
+    it('確認 Alert で削除を確定すると WorkoutRepository.delete が呼ばれる', async () => {
       (useRoute as jest.Mock).mockReturnValue({ params: undefined });
       render(<CalendarScreen />);
 
       await simulateWorkoutFound('workout-id-delete-test');
 
-      // 削除ボタンをタップしてダイアログを開く
       fireEvent.press(screen.getByTestId('delete-workout-button'));
 
-      await waitFor(() => {
-        expect(screen.getByTestId('confirm-dialog-confirm-button')).toBeTruthy();
+      // Alert.alert の第3引数からボタン配列を取得し、destructive ボタンの onPress を呼ぶ
+      const buttons = (Alert.alert as jest.Mock).mock.calls[0][2] as Array<{
+        text: string;
+        style: string;
+        onPress?: () => Promise<void>;
+      }>;
+      const deleteButton = buttons.find((b) => b.style === 'destructive');
+      await act(async () => {
+        await deleteButton?.onPress?.();
       });
 
-      // 確認ボタンをタップして削除を実行する
-      fireEvent.press(screen.getByTestId('confirm-dialog-confirm-button'));
-
-      // WorkoutRepository.delete が正しい ID で呼ばれること
-      await waitFor(() => {
-        expect(mockWorkoutRepositoryDelete).toHaveBeenCalledWith('workout-id-delete-test');
-      });
+      expect(mockWorkoutRepositoryDelete).toHaveBeenCalledWith('workout-id-delete-test');
     });
 
     it('削除後に fetchTrainingDates が再呼び出しされる（refreshKey インクリメントで DaySummary も再取得される）', async () => {
@@ -280,16 +266,18 @@ describe('CalendarScreen', () => {
 
       await simulateWorkoutFound('workout-id-refresh-test');
 
-      // 削除フローを実行する
       fireEvent.press(screen.getByTestId('delete-workout-button'));
 
-      await waitFor(() => {
-        expect(screen.getByTestId('confirm-dialog-confirm-button')).toBeTruthy();
+      const buttons = (Alert.alert as jest.Mock).mock.calls[0][2] as Array<{
+        text: string;
+        style: string;
+        onPress?: () => Promise<void>;
+      }>;
+      const deleteButton = buttons.find((b) => b.style === 'destructive');
+      await act(async () => {
+        await deleteButton?.onPress?.();
       });
 
-      fireEvent.press(screen.getByTestId('confirm-dialog-confirm-button'));
-
-      // WorkoutRepository.delete が呼ばれること
       await waitFor(() => {
         expect(mockWorkoutRepositoryDelete).toHaveBeenCalledTimes(1);
       });
@@ -301,26 +289,17 @@ describe('CalendarScreen', () => {
       });
     });
 
-    it('キャンセルボタンをタップするとダイアログが閉じ、WorkoutRepository.delete は呼ばれない', async () => {
+    it('キャンセルを選択すると WorkoutRepository.delete は呼ばれない', async () => {
       (useRoute as jest.Mock).mockReturnValue({ params: undefined });
       render(<CalendarScreen />);
 
       await simulateWorkoutFound('workout-id-cancel-test');
 
-      // 削除ボタンをタップしてダイアログを開く
       fireEvent.press(screen.getByTestId('delete-workout-button'));
 
-      await waitFor(() => {
-        expect(screen.getByTestId('confirm-dialog-cancel-button')).toBeTruthy();
-      });
-
-      // キャンセルボタンをタップする
-      fireEvent.press(screen.getByTestId('confirm-dialog-cancel-button'));
-
-      // ダイアログが閉じ、delete は呼ばれないこと
-      await waitFor(() => {
-        expect(screen.queryByTestId('confirm-dialog')).toBeNull();
-      });
+      // Alert が呼ばれること
+      expect(Alert.alert).toHaveBeenCalled();
+      // delete は呼ばれないこと（キャンセルボタンの onPress は呼んでいない）
       expect(mockWorkoutRepositoryDelete).not.toHaveBeenCalled();
     });
   });

@@ -17,7 +17,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getDatabase } from '@/database/client';
 import { WorkoutRepository } from '@/database/repositories/workout';
 import type { WorkoutRow } from '@/database/types';
-import { ConfirmDialog } from '@/shared/components/ConfirmDialog';
 import type { CalendarStackParamList } from '@/types';
 
 import { DaySummary } from '../components/DaySummary';
@@ -33,9 +32,6 @@ export function CalendarScreen() {
   const [loading, setLoading] = useState(true);
   const [trainingDates, setTrainingDates] = useState<Date[]>([]);
   const [selectedDate, setSelectedDate] = useState<string>(format(new Date(), 'yyyy-MM-dd'));
-  // 削除ダイアログ制御
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
   // DaySummary の再取得トリガー（インクリメントするとデータを再フェッチする）
   const [refreshKey, setRefreshKey] = useState(0);
   // 選択日のワークアウトID（DaySummary から通知される。削除ボタンの表示制御に使用）
@@ -89,32 +85,31 @@ export function CalendarScreen() {
   );
 
   /**
-   * 削除ボタンタップ: ダイアログを表示する（実際の削除は handleConfirmDelete で行う）
+   * 削除ボタンタップ: ネイティブ Alert で確認後に削除実行
+   * カスタム Modal は flexDirection: 'row' のレイアウト不安定が起きるため Alert.alert を使用
    */
-  const handleDeleteWorkout = useCallback((workoutId: string) => {
-    setDeleteTargetId(workoutId);
-    setShowDeleteDialog(true);
-  }, []);
-
-  /**
-   * 削除ダイアログで「削除」を確定したとき: WorkoutRepository.delete を実行し、
-   * カレンダーとサマリーを更新する
-   */
-  const handleConfirmDelete = useCallback(async () => {
-    if (!deleteTargetId) return;
-    try {
-      await WorkoutRepository.delete(deleteTargetId);
-      setShowDeleteDialog(false);
-      setDeleteTargetId(null);
-      // DaySummary を再フェッチさせる
-      setRefreshKey((prev) => prev + 1);
-      // カレンダーのトレーニング日マーキングも更新
-      void fetchTrainingDates();
-    } catch (error) {
-      console.error('ワークアウト削除エラー:', error);
-      Alert.alert('エラー', 'ワークアウトの削除に失敗しました');
-    }
-  }, [deleteTargetId, fetchTrainingDates]);
+  const handleDeleteWorkout = useCallback(
+    (workoutId: string) => {
+      Alert.alert('ワークアウトを削除', 'このワークアウトを削除してよろしいですか？', [
+        { text: 'キャンセル', style: 'cancel' },
+        {
+          text: '削除',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await WorkoutRepository.delete(workoutId);
+              setRefreshKey((prev) => prev + 1);
+              void fetchTrainingDates();
+            } catch (error) {
+              console.error('ワークアウト削除エラー:', error);
+              Alert.alert('エラー', 'ワークアウトの削除に失敗しました');
+            }
+          },
+        },
+      ]);
+    },
+    [fetchTrainingDates],
+  );
 
   /**
    * T11: 記録・編集ボタンのハンドラー
@@ -219,20 +214,6 @@ export function CalendarScreen() {
         <View style={{ height: 100 }} />
       </ScrollView>
 
-      {/* ワークアウト削除確認ダイアログ */}
-      <ConfirmDialog
-        visible={showDeleteDialog}
-        title="ワークアウトを削除"
-        message="このワークアウトを削除してよろしいですか？"
-        confirmLabel="削除"
-        cancelLabel="キャンセル"
-        destructive
-        onConfirm={() => void handleConfirmDelete()}
-        onCancel={() => {
-          setShowDeleteDialog(false);
-          setDeleteTargetId(null);
-        }}
-      />
     </View>
   );
 }
