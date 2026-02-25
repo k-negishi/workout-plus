@@ -36,6 +36,8 @@ export function CalendarScreen() {
   const [refreshKey, setRefreshKey] = useState(0);
   // 選択日のワークアウトID（DaySummary から通知される。削除ボタンの表示制御に使用）
   const [currentWorkoutId, setCurrentWorkoutId] = useState<string | null>(null);
+  // DaySummary のロード完了フラグ（false の間はボタンを非表示にしてちらつきを防ぐ）
+  const [daySummaryLoaded, setDaySummaryLoaded] = useState(false);
 
   // トレーニング日のデータ取得
   const fetchTrainingDates = useCallback(async () => {
@@ -67,11 +69,18 @@ export function CalendarScreen() {
     }
   }, [route.params?.targetDate]);
 
-  // 日付タップ: ローカル状態のみ更新（T07: store.calendarSelectedDate は FloatingRecordButton 廃止により不要）
-  // 日付切り替え時は currentWorkoutId をリセットし、削除ボタンを非表示にする
+  // 日付タップ: 日付・currentWorkoutId・daySummaryLoaded をリセット
+  // DaySummary が読み込み完了するまでボタンを隠すことでちらつきを防ぐ
   const handleDayPress = useCallback((dateString: string) => {
     setSelectedDate(dateString);
     setCurrentWorkoutId(null);
+    setDaySummaryLoaded(false);
+  }, []);
+
+  // DaySummary のロード完了通知: currentWorkoutId をセットし、ボタン表示を解放する
+  const handleWorkoutFound = useCallback((workoutId: string | null) => {
+    setCurrentWorkoutId(workoutId);
+    setDaySummaryLoaded(true);
   }, []);
 
   /**
@@ -168,12 +177,12 @@ export function CalendarScreen() {
           key={selectedDate}
           dateString={selectedDate}
           onNavigateToExerciseHistory={handleNavigateToExerciseHistory}
-          onWorkoutFound={setCurrentWorkoutId}
+          onWorkoutFound={handleWorkoutFound}
           refreshKey={refreshKey}
         />
 
-        {/* T11: 記録・編集ボタン（未来日付は非表示） */}
-        {!isFutureDate && (
+        {/* T11: 記録・編集ボタン（未来日付・DaySummaryロード中は非表示） */}
+        {!isFutureDate && daySummaryLoaded && (
           <TouchableOpacity
             testID="record-or-edit-button"
             onPress={() => void handleRecordOrEdit()}

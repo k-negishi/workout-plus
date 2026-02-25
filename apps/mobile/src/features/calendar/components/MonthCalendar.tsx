@@ -2,21 +2,18 @@
  * MonthCalendar - カレンダーコンポーネント
  * react-native-calendarsを使用
  * トレーニング日: 青ドットマーカー(#4D94FF)
- * 前後月ナビゲーション、フリックジェスチャー対応、未来日タップ無効
+ * 前後月ナビゲーション、enableSwipeMonths対応、未来日タップ無効
+ *
+ * スワイプ実装について:
+ * react-native-gesture-handler の Gesture.Pan() を外側からラップする方式は iOS で動作しない。
+ * 理由: GestureDetector がネイティブ側でタッチを先取りし、Calendar 内部の
+ * GestureRecognizer (react-native-swipe-gestures) が起動できなくなるため。
+ * Calendar 標準の enableSwipeMonths={true} を使うことで、ライブラリが内部で
+ * 正しくスワイプを処理する（maxDate・onMonthChange も自動的に尊重される）。
  */
-import {
-  addMonths,
-  format,
-  isAfter,
-  isBefore,
-  parseISO,
-  startOfDay,
-  startOfMonth,
-  subMonths,
-} from 'date-fns';
+import { format, isBefore, startOfDay, startOfMonth } from 'date-fns';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 import type { DateData, MarkedDates } from 'react-native-calendars/src/types';
 
@@ -75,23 +72,15 @@ export function MonthCalendar({
 }: MonthCalendarProps) {
   const today = format(new Date(), 'yyyy-MM-dd');
 
-  // 表示月を内部状態で管理する（フリックおよび矢印ボタンで更新される）
-  // startOfMonth で月の初日に正規化することで addMonths/subMonths が一貫した値を返す
-  const [displayMonth, _setDisplayMonth] = useState(format(startOfMonth(new Date()), 'yyyy-MM-dd'));
-
-  // PanResponder コールバック内で displayMonth の最新値を参照するための ref
-  // stale closure を防ぐため state と並行して管理する
-  const displayMonthRef = useRef(displayMonth);
+  // 表示月を内部状態で管理する（矢印ボタン・スワイプで更新される）
+  // startOfMonth で月の初日に正規化することで一貫した値を返す
+  const [displayMonth, setDisplayMonth] = useState(
+    format(startOfMonth(new Date()), 'yyyy-MM-dd'),
+  );
 
   // 親コンポーネントの onMonthChange コールバックを ref で保持（stale closure 対策）
   const onMonthChangeRef = useRef(onMonthChange);
   onMonthChangeRef.current = onMonthChange;
-
-  // displayMonth を state と ref の両方に反映するヘルパー
-  const setDisplayMonth = useCallback((newMonth: string) => {
-    displayMonthRef.current = newMonth;
-    _setDisplayMonth(newMonth);
-  }, []);
 
   // マーキングデータを生成
   const markedDates: MarkedDates = useMemo(() => {
@@ -103,7 +92,6 @@ export function MonthCalendar({
       marks[dateStr] = {
         ...(marks[dateStr] ?? {}),
         selected: true,
-        // #E6F2FF（旧）より濃くして視認性向上（Issue #162）
         selectedColor: '#93C5FD',
         selectedTextColor: '#1D4ED8',
       };
@@ -151,60 +139,24 @@ export function MonthCalendar({
     [onDayPress],
   );
 
-  // 矢印ボタンの月変更ハンドラ: displayMonthRef と state を同期して常に最新の基準月を保つ
-  const handleMonthChange = useCallback(
-    (month: DateData) => {
-      setDisplayMonth(month.dateString);
-      onMonthChangeRef.current?.(month.dateString);
-    },
-    [setDisplayMonth],
-  );
-
-  // フリックジェスチャーで前後月を移動する Pan ジェスチャー
-  // react-native-gesture-handler を使う理由:
-  // PanResponder (RN 組み込み) は react-native-calendars 内部の TouchableOpacity が
-  // onStartShouldSetResponder: true で先にタッチを取得し、
-  // onResponderTerminationRequest: false で返さないため横スワイプを横取りできない。
-  // react-native-gesture-handler はネイティブ側でジェスチャーを処理するため
-  // RN の Touchable と共存して水平スワイプを確実に検知できる。
-  const swipeGesture = useMemo(
-    () =>
-      Gesture.Pan()
-        .runOnJS(true)
-        // 水平移動 10px 超で有効化（縦スクロールとの共存）
-        .activeOffsetX([-10, 10])
-        // 縦移動が先に 10px 超えたらジェスチャーを失敗扱いにする
-        .failOffsetY([-10, 10])
-        .onEnd(({ translationX }) => {
-          if (translationX > 50) {
-            // 右スワイプ: 前月へ
-            const prev = format(subMonths(parseISO(displayMonthRef.current), 1), 'yyyy-MM-dd');
-            setDisplayMonth(prev);
-            onMonthChangeRef.current?.(prev);
-          } else if (translationX < -50) {
-            // 左スワイプ: 翌月へ（当月より未来への移動は不可）
-            const next = addMonths(parseISO(displayMonthRef.current), 1);
-            if (!isAfter(next, startOfMonth(new Date()))) {
-              const nextStr = format(next, 'yyyy-MM-dd');
-              setDisplayMonth(nextStr);
-              onMonthChangeRef.current?.(nextStr);
-            }
-          }
-        }),
-    // ジェスチャーは一度だけ生成する（displayMonth は ref 経由で参照するため dep に不要）
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
-  );
+  // 矢印ボタン・スワイプの月変更ハンドラ
+  // enableSwipeMonths={true} により Calendar 内部のスワイプも onMonthChange を呼ぶ
+  const handleMonthChange = useCallback((month: DateData) => {
+    setDisplayMonth(month.dateString);
+    onMonthChangeRef.current?.(month.dateString);
+  }, []);
 
   return (
-    // GestureDetector は直接 View 子要素を持つ必要があるため View でラップする
-    <GestureDetector gesture={swipeGesture}>
-      <View>
+    <View>
       <Calendar
         current={displayMonth}
         markedDates={markedDates}
         onDayPress={handleDayPress}
         onMonthChange={handleMonthChange}
+        // react-native-calendars 内蔵のスワイプ機能を有効化（iOS/Android 両対応）
+        // 内部実装: GestureRecognizer (react-native-swipe-gestures) で Calendar をラップ
+        // → onPressLeft/Right を呼ぶため maxDate・onMonthChange が自動的に尊重される
+        enableSwipeMonths={true}
         firstDay={1}
         maxDate={today}
         // 「2月 2026」→「2026年2月」形式にする（Issue #161）
@@ -244,7 +196,6 @@ export function MonthCalendar({
           borderRadius: 12,
         }}
       />
-      </View>
-    </GestureDetector>
+    </View>
   );
 }
