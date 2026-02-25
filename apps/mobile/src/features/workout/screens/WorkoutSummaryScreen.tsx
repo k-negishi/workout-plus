@@ -1,7 +1,9 @@
 /**
  * ワークアウトサマリー画面（WorkoutSummaryScreen）
  * 完了後の統計情報、PR、種目別サマリーを表示する
+ * Issue #142: 白ヘッダー（戻るボタン + タイトル + 下ボーダー）を追加
  */
+import { Ionicons } from '@expo/vector-icons';
 import { type RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useEffect, useState } from 'react';
@@ -184,13 +186,56 @@ export const WorkoutSummaryScreen: React.FC = () => {
   }
 
   return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      {/* Issue #142: 白ヘッダー（統一スタイル）
+          背景白・下ボーダー・戻るボタン（左）・タイトル（中央）・スペーサー（右） */}
+      <View
+        testID="summary-header"
+        style={{
+          backgroundColor: '#FFFFFF',
+          paddingTop: insets.top,
+          paddingBottom: 12,
+          paddingHorizontal: 16,
+          flexDirection: 'row',
+          alignItems: 'center',
+          borderBottomWidth: 1,
+          borderBottomColor: '#e2e8f0',
+        }}
+      >
+        {/* 戻るボタン: スタックのルートに戻る */}
+        <TouchableOpacity
+          onPress={handleGoHome}
+          accessibilityLabel="戻る"
+          style={{ width: 40, alignItems: 'flex-start' }}
+        >
+          <Ionicons name="chevron-back" size={24} color="#475569" />
+        </TouchableOpacity>
+
+        {/* タイトル: 中央寄せ */}
+        <Text
+          testID="summary-header-title"
+          style={{
+            flex: 1,
+            textAlign: 'center',
+            fontSize: 17,
+            fontWeight: '600',
+            color: '#334155',
+          }}
+        >
+          ワークアウト完了
+        </Text>
+
+        {/* 右スペーサー: 戻るボタンとバランスを取る */}
+        <View style={{ width: 40 }} />
+      </View>
+
     <ScrollView
       className="flex-1"
       style={{ backgroundColor: colors.background }}
       contentContainerStyle={{ padding: 20, paddingBottom: 120 }}
     >
-      {/* ヘッダー */}
-      <View className="items-center mb-6" style={{ paddingTop: insets.top + 16 }}>
+      {/* 完了アイコン + タイトル */}
+      <View className="items-center mb-6" style={{ paddingTop: 16 }}>
         <View
           className="w-12 h-12 rounded-full items-center justify-center mb-3"
           style={{ backgroundColor: '#D1FAE5' }}
@@ -344,5 +389,6 @@ export const WorkoutSummaryScreen: React.FC = () => {
         <Text className="text-[16px] font-semibold text-white">ホームに戻る</Text>
       </TouchableOpacity>
     </ScrollView>
+    </View>
   );
 };

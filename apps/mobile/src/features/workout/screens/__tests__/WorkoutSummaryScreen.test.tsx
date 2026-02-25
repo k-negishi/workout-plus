@@ -1,6 +1,7 @@
 /**
  * WorkoutSummaryScreen テスト
  * - PR セクションの条件付きレンダリング（T030）
+ * - Issue #142: ヘッダースタイルの統一検証
  */
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
@@ -99,6 +100,54 @@ describe('WorkoutSummaryScreen', () => {
     jest.clearAllMocks();
   });
 
+  describe('Issue #142: ヘッダースタイル統一', () => {
+    it('白ヘッダーが testID "summary-header" で存在する', async () => {
+      setupDefaultMocks({ withPRs: false });
+
+      render(<WorkoutSummaryScreen />);
+
+      // ヘッダータイトルとコンテンツ内の両方に「ワークアウト完了」が存在するため testID で待機
+      await screen.findByTestId('summary-header-title');
+
+      // 白ヘッダーが存在することを検証（testID で特定）
+      expect(screen.getByTestId('summary-header')).toBeTruthy();
+    });
+
+    it('戻るボタン（accessibilityLabel="戻る"）が存在する', async () => {
+      setupDefaultMocks({ withPRs: false });
+
+      render(<WorkoutSummaryScreen />);
+
+      // ヘッダータイトルとコンテンツ内の両方に「ワークアウト完了」が存在するため testID で待機
+      await screen.findByTestId('summary-header-title');
+
+      expect(screen.getByLabelText('戻る')).toBeTruthy();
+    });
+
+    it('戻るボタンを押すと popToTop() が呼ばれる', async () => {
+      setupDefaultMocks({ withPRs: false });
+
+      render(<WorkoutSummaryScreen />);
+
+      // ヘッダータイトルとコンテンツ内の両方に「ワークアウト完了」が存在するため testID で待機
+      await screen.findByTestId('summary-header-title');
+
+      // 戻るボタン（accessibilityLabel）でタップ
+      fireEvent.press(screen.getByLabelText('戻る'));
+
+      expect(mockPopToTop).toHaveBeenCalledTimes(1);
+    });
+
+    it('ヘッダーにタイトルテキスト「ワークアウト完了」が表示される', async () => {
+      setupDefaultMocks({ withPRs: false });
+
+      render(<WorkoutSummaryScreen />);
+
+      // testID "summary-header-title" でタイトルを特定
+      await screen.findByTestId('summary-header-title');
+    });
+  });
+
   describe('PR セクション', () => {
     it('personalRecords が空のとき「新記録達成」セクションが非表示', async () => {
       setupDefaultMocks({ withPRs: false });
@@ -106,7 +155,8 @@ describe('WorkoutSummaryScreen', () => {
       render(<WorkoutSummaryScreen />);
 
       // データ読み込み完了を待つ（findByText は要素が現れるまで待機する）
-      await screen.findByText('ワークアウト完了');
+      // ヘッダータイトルとコンテンツ内の両方に「ワークアウト完了」が存在するため testID で待機
+      await screen.findByTestId('summary-header-title');
 
       // 「新記録達成」テキストが存在しないことを検証（不在チェックには queryBy を使う）
       expect(screen.queryByText('新記録達成')).toBeNull();
@@ -118,7 +168,8 @@ describe('WorkoutSummaryScreen', () => {
       render(<WorkoutSummaryScreen />);
 
       // データ読み込み完了を待つ
-      await screen.findByText('ワークアウト完了');
+      // ヘッダータイトルとコンテンツ内の両方に「ワークアウト完了」が存在するため testID で待機
+      await screen.findByTestId('summary-header-title');
 
       // 「新記録達成」テキストが存在することを検証（presence チェックは findBy/getBy を使う）
       await screen.findByText('新記録達成');
@@ -136,7 +187,8 @@ describe('WorkoutSummaryScreen', () => {
 
       render(<WorkoutSummaryScreen />);
 
-      await screen.findByText('ワークアウト完了');
+      // ヘッダータイトルとコンテンツ内の両方に「ワークアウト完了」が存在するため testID で待機
+      await screen.findByTestId('summary-header-title');
 
       fireEvent.press(screen.getByText('ホームに戻る'));
 
@@ -151,7 +203,8 @@ describe('WorkoutSummaryScreen', () => {
 
       render(<WorkoutSummaryScreen />);
 
-      await screen.findByText('ワークアウト完了');
+      // ヘッダータイトルとコンテンツ内の両方に「ワークアウト完了」が存在するため testID で待機
+      await screen.findByTestId('summary-header-title');
 
       // 存在確認は getBy 系、不在確認は queryBy 系
       expect(screen.getByText('―')).toBeTruthy();
@@ -163,7 +216,8 @@ describe('WorkoutSummaryScreen', () => {
 
       render(<WorkoutSummaryScreen />);
 
-      await screen.findByText('ワークアウト完了');
+      // ヘッダータイトルとコンテンツ内の両方に「ワークアウト完了」が存在するため testID で待機
+      await screen.findByTestId('summary-header-title');
 
       expect(screen.getByText('30分')).toBeTruthy();
     });
