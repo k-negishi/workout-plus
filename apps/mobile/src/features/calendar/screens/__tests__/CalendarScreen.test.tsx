@@ -4,8 +4,10 @@
  * - SafeArea 対応（useSafeAreaInsets）
  * - トレーニング日インジケーター（dot）の検証
  * - targetDate パラメータ対応（T6）
+ * - Issue #152: 日付変更時に currentWorkoutId がリセットされること
+ * - Issue #153: 削除機能（ConfirmDialog 表示・WorkoutRepository.delete 呼び出し・refreshKey 更新）
  */
-import { render, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import React from 'react';
 
 // SafeArea のモック（jest.mock はホイストされるため内部で jest.fn を定義）
@@ -47,8 +49,45 @@ jest.mock('../../components/MonthCalendar', () => ({
   },
 }));
 
+// DaySummary: onWorkoutFound を親に渡せるよう props を外部変数に保存するモック
+// factory 内で外部変数への参照は mock プレフィックスが必要なため変数名を合わせる
+let mockDaySummaryCapturedProps: Record<string, unknown> = {};
 jest.mock('../../components/DaySummary', () => ({
-  DaySummary: () => null,
+  DaySummary: (mockProps: Record<string, unknown>) => {
+    // 最新の props を外部変数に保存し、テストから onWorkoutFound を直接呼べるようにする
+    mockDaySummaryCapturedProps = mockProps;
+    return null;
+  },
+}));
+
+// WorkoutRepository のモック: delete と findCompletedByDate を差し替え可能にする
+const mockWorkoutRepositoryDelete = jest.fn().mockResolvedValue(undefined);
+const mockWorkoutRepositoryFindCompletedByDate = jest.fn().mockResolvedValue(null);
+jest.mock('@/database/repositories/workout', () => ({
+  WorkoutRepository: {
+    delete: (...args: unknown[]) => mockWorkoutRepositoryDelete(...args),
+    findCompletedByDate: (...args: unknown[]) => mockWorkoutRepositoryFindCompletedByDate(...args),
+  },
+}));
+
+// ConfirmDialog: visible prop を testID 付き要素で検証できるようモック化する
+jest.mock('@/shared/components/ConfirmDialog', () => ({
+  ConfirmDialog: (props: Record<string, unknown>) => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { View, Text, Pressable } = require('react-native');
+    if (!props['visible']) return null;
+    return (
+      <View testID="confirm-dialog">
+        <Text testID="confirm-dialog-title">{props['title'] as string}</Text>
+        <Pressable testID="confirm-dialog-confirm-button" onPress={props['onConfirm'] as () => void}>
+          <Text>{props['confirmLabel'] as string}</Text>
+        </Pressable>
+        <Pressable testID="confirm-dialog-cancel-button" onPress={props['onCancel'] as () => void}>
+          <Text>{props['cancelLabel'] as string}</Text>
+        </Pressable>
+      </View>
+    );
+  },
 }));
 
 import { useRoute } from '@react-navigation/native';
@@ -60,6 +99,7 @@ describe('CalendarScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     capturedMonthCalendarProps = {};
+    mockDaySummaryCapturedProps = {};
     // clearAllMocks で返り値がリセットされるため再設定
     (useSafeAreaInsets as jest.Mock).mockReturnValue({
       top: 44,
@@ -68,6 +108,8 @@ describe('CalendarScreen', () => {
       right: 0,
     });
     mockGetAllAsync.mockResolvedValue([]);
+    mockWorkoutRepositoryDelete.mockResolvedValue(undefined);
+    mockWorkoutRepositoryFindCompletedByDate.mockResolvedValue(null);
   });
 
   describe('SafeArea', () => {
@@ -112,6 +154,174 @@ describe('CalendarScreen', () => {
         // '2026-01-15' ではないこと（targetDate が無視されていること）
         expect(selected).not.toBe('2026-01-15');
       });
+    });
+  });
+
+  describe('Issue #152: 日付変更時の currentWorkoutId リセット', () => {
+    it('日付タップ時に currentWorkoutId が null にリセットされ、削除ボタンが非表示になる', async () => {
+      (useRoute as jest.Mock).mockReturnValue({ params: undefined });
+      render(<CalendarScreen />);
+
+      // DaySummary の onWorkoutFound 経由でワークアウトIDをセットする
+      // capturedProps は render 後に設定されるため waitFor で待つ
+      await waitFor(() => {
+        expect(mockDaySummaryCapturedProps['onWorkoutFound']).toBeDefined();
+      });
+
+      // act() でラップして React の state 更新を正しく処理させる
+      await act(async () => {
+        const onWorkoutFound = mockDaySummaryCapturedProps['onWorkoutFound'] as (
+          workoutId: string | null,
+        ) => void;
+        onWorkoutFound('workout-id-1');
+      });
+
+      // 削除ボタンが表示されていることを確認する
+      await waitFor(() => {
+        expect(screen.getByTestId('delete-workout-button')).toBeTruthy();
+      });
+
+      // MonthCalendar の onDayPress を act() でラップして呼び出す
+      // act() なしだと React の state 更新（setSelectedDate/setCurrentWorkoutId）が保留になる
+      await act(async () => {
+        const onDayPress = capturedMonthCalendarProps['onDayPress'] as (date: string) => void;
+        onDayPress('2026-02-01');
+      });
+
+      // 日付変更後は currentWorkoutId がリセットされ、削除ボタンが非表示になること
+      await waitFor(() => {
+        expect(screen.queryByTestId('delete-workout-button')).toBeNull();
+      });
+    });
+
+    it('DaySummary に渡される dateString が日付変更後に更新されること', async () => {
+      (useRoute as jest.Mock).mockReturnValue({ params: undefined });
+      render(<CalendarScreen />);
+
+      // 初期状態の DaySummary の dateString を取得する
+      await waitFor(() => {
+        expect(mockDaySummaryCapturedProps['dateString']).toBeDefined();
+      });
+      const initialDateString = mockDaySummaryCapturedProps['dateString'] as string;
+
+      // 日付を変更する
+      const onDayPress = capturedMonthCalendarProps['onDayPress'] as (date: string) => void;
+      onDayPress('2026-03-01');
+
+      // 変更後の dateString が更新されること
+      await waitFor(() => {
+        expect(mockDaySummaryCapturedProps['dateString']).toBe('2026-03-01');
+      });
+
+      // 変更前と異なる日付になっていることを確認（key の変化で再マウントが発生する前提）
+      expect(mockDaySummaryCapturedProps['dateString']).not.toBe(initialDateString);
+    });
+  });
+
+  describe('Issue #153: ワークアウト削除機能', () => {
+    /**
+     * DaySummary の onWorkoutFound を呼び出してワークアウト ID を親にセットするヘルパー
+     * DaySummary モックが捕捉した props 経由で親コンポーネントのコールバックを実行する
+     */
+    async function simulateWorkoutFound(workoutId: string) {
+      await waitFor(() => {
+        expect(mockDaySummaryCapturedProps['onWorkoutFound']).toBeDefined();
+      });
+      const onWorkoutFound = mockDaySummaryCapturedProps['onWorkoutFound'] as (
+        wid: string | null,
+      ) => void;
+      onWorkoutFound(workoutId);
+      await waitFor(() => {
+        expect(screen.getByTestId('delete-workout-button')).toBeTruthy();
+      });
+    }
+
+    it('削除ボタンをタップすると確認ダイアログが表示される', async () => {
+      (useRoute as jest.Mock).mockReturnValue({ params: undefined });
+      render(<CalendarScreen />);
+
+      await simulateWorkoutFound('workout-id-abc');
+
+      // 削除ボタンをタップする
+      fireEvent.press(screen.getByTestId('delete-workout-button'));
+
+      // 確認ダイアログが表示されること
+      await waitFor(() => {
+        expect(screen.getByTestId('confirm-dialog')).toBeTruthy();
+      });
+      expect(screen.getByTestId('confirm-dialog-title')).toBeTruthy();
+    });
+
+    it('確認ダイアログで削除を確定すると WorkoutRepository.delete が呼ばれる', async () => {
+      (useRoute as jest.Mock).mockReturnValue({ params: undefined });
+      render(<CalendarScreen />);
+
+      await simulateWorkoutFound('workout-id-delete-test');
+
+      // 削除ボタンをタップしてダイアログを開く
+      fireEvent.press(screen.getByTestId('delete-workout-button'));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('confirm-dialog-confirm-button')).toBeTruthy();
+      });
+
+      // 確認ボタンをタップして削除を実行する
+      fireEvent.press(screen.getByTestId('confirm-dialog-confirm-button'));
+
+      // WorkoutRepository.delete が正しい ID で呼ばれること
+      await waitFor(() => {
+        expect(mockWorkoutRepositoryDelete).toHaveBeenCalledWith('workout-id-delete-test');
+      });
+    });
+
+    it('削除後に fetchTrainingDates が再呼び出しされる（refreshKey インクリメントで DaySummary も再取得される）', async () => {
+      (useRoute as jest.Mock).mockReturnValue({ params: undefined });
+      render(<CalendarScreen />);
+
+      await simulateWorkoutFound('workout-id-refresh-test');
+
+      // 削除フローを実行する
+      fireEvent.press(screen.getByTestId('delete-workout-button'));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('confirm-dialog-confirm-button')).toBeTruthy();
+      });
+
+      fireEvent.press(screen.getByTestId('confirm-dialog-confirm-button'));
+
+      // WorkoutRepository.delete が呼ばれること
+      await waitFor(() => {
+        expect(mockWorkoutRepositoryDelete).toHaveBeenCalledTimes(1);
+      });
+
+      // 削除後に fetchTrainingDates が再呼び出しされること
+      // 初回レンダー時に1回 + 削除後に1回 = 合計2回以上呼ばれること
+      await waitFor(() => {
+        expect(mockGetAllAsync).toHaveBeenCalledTimes(2);
+      });
+    });
+
+    it('キャンセルボタンをタップするとダイアログが閉じ、WorkoutRepository.delete は呼ばれない', async () => {
+      (useRoute as jest.Mock).mockReturnValue({ params: undefined });
+      render(<CalendarScreen />);
+
+      await simulateWorkoutFound('workout-id-cancel-test');
+
+      // 削除ボタンをタップしてダイアログを開く
+      fireEvent.press(screen.getByTestId('delete-workout-button'));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('confirm-dialog-cancel-button')).toBeTruthy();
+      });
+
+      // キャンセルボタンをタップする
+      fireEvent.press(screen.getByTestId('confirm-dialog-cancel-button'));
+
+      // ダイアログが閉じ、delete は呼ばれないこと
+      await waitFor(() => {
+        expect(screen.queryByTestId('confirm-dialog')).toBeNull();
+      });
+      expect(mockWorkoutRepositoryDelete).not.toHaveBeenCalled();
     });
   });
 

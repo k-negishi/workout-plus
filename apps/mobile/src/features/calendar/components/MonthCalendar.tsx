@@ -15,7 +15,7 @@ import {
   subMonths,
 } from 'date-fns';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { PanResponder, View } from 'react-native';
+import { PanResponder, Text, View } from 'react-native';
 import { Calendar, LocaleConfig } from 'react-native-calendars';
 import type { DateData, MarkedDates } from 'react-native-calendars/src/types';
 
@@ -102,8 +102,9 @@ export function MonthCalendar({
       marks[dateStr] = {
         ...(marks[dateStr] ?? {}),
         selected: true,
-        selectedColor: '#E6F2FF',
-        selectedTextColor: '#4D94FF',
+        // #E6F2FF（旧）より濃くして視認性向上（Issue #162）
+        selectedColor: '#93C5FD',
+        selectedTextColor: '#1D4ED8',
       };
     }
 
@@ -163,9 +164,10 @@ export function MonthCalendar({
   const panResponder = useMemo(
     () =>
       PanResponder.create({
-        // 水平方向の移動が垂直方向より大きい場合のみ PanResponder がタッチを取得する
-        // → ScrollView の縦スクロールとの共存を実現する
-        onMoveShouldSetPanResponder: (_, { dx, dy }) =>
+        // キャプチャフェーズで水平スワイプを取得する（バブルフェーズの onMoveShouldSetPanResponder では
+        // react-native-calendars 内部の Touchable が先にタッチを奪うため動作しない）
+        // Capture 版は親→子の順で評価されるため、子が掴む前に横スワイプを横取りできる
+        onMoveShouldSetPanResponderCapture: (_, { dx, dy }) =>
           Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10,
         onPanResponderRelease: (_, { dx, dy }) => {
           // 縦スクロールが支配的な場合は無視（onMoveShouldSetPanResponder の二重チェック）
@@ -202,6 +204,15 @@ export function MonthCalendar({
         onMonthChange={handleMonthChange}
         firstDay={1}
         maxDate={today}
+        // 「2月 2026」→「2026年2月」形式にする（Issue #161）
+        renderHeader={(date) => {
+          const d = date instanceof Date ? date : new Date(String(date));
+          return (
+            <Text style={{ fontSize: 20, fontWeight: '700', color: '#334155' }}>
+              {d.getFullYear()}年{d.getMonth() + 1}月
+            </Text>
+          );
+        }}
         theme={{
           // ヘッダー
           monthTextColor: '#334155',

@@ -167,7 +167,10 @@ export function CalendarScreen() {
         />
 
         {/* 選択日のサマリー */}
+        {/* key={selectedDate}: 日付変更時に再マウントさせ、loading=true から始まるようにする */}
+        {/* これにより旧データが一瞬表示される（ちらつき）を防ぐ */}
         <DaySummary
+          key={selectedDate}
           dateString={selectedDate}
           onNavigateToExerciseHistory={handleNavigateToExerciseHistory}
           onWorkoutFound={setCurrentWorkoutId}
