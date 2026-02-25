@@ -8,40 +8,19 @@
  * - カラムヘッダー行（Set / kg / rep / 1RM）
  * - 「+ セットを追加」テキストリンク
  * - 種目削除ボタン
+ * - Issue #147: メモ入力がリセットされない
+ * - Issue #148: 種目削除時に確認モーダルを表示
+ * - Issue #151: 種目名の文字色が #4D94FF
+ * - Issue #146: FlatList → map 変換（ちらつき修正）
  */
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
+import { Alert } from 'react-native';
 
 import type { Exercise, WorkoutSet } from '@/types';
 
 import type { PreviousRecord } from '../../hooks/usePreviousRecord';
 import { ExerciseBlock, type ExerciseBlockProps } from '../ExerciseBlock';
-
-// FlatList のテスト環境向けモック（仮想化を無効化してアイテムを直接レンダリング）
-// jest.mock のファクトリは巻き上げられるため jest.requireActual を使用
-jest.mock('react-native/Libraries/Lists/FlatList', () => {
-  const { View } = jest.requireActual<typeof import('react-native')>('react-native');
-  return {
-    __esModule: true,
-    default: ({
-      data,
-      renderItem,
-      keyExtractor,
-    }: {
-      data: unknown[];
-      renderItem: (info: { item: unknown; index: number }) => React.ReactElement;
-      keyExtractor?: (item: unknown, index: number) => string;
-    }) => (
-      <View>
-        {data.map((item: unknown, index: number) => (
-          <View key={keyExtractor ? keyExtractor(item, index) : String(index)}>
-            {renderItem({ item, index })}
-          </View>
-        ))}
-      </View>
-    ),
-  };
-});
 
 /** テスト用定数 */
 const EXERCISE_ID = 'e1';
@@ -56,6 +35,7 @@ const mockExercise: Exercise = {
   equipment: 'barbell',
   isCustom: false,
   isFavorite: false,
+  isDeleted: false,
   createdAt: 1000,
   updatedAt: 1000,
   sortOrder: 1,
@@ -135,6 +115,18 @@ describe('ExerciseBlock', () => {
     jest.clearAllMocks();
   });
 
+  // ---- Issue #146: FlatList → map 変換（ちらつき修正）----
+
+  describe('セットリスト（Issue #146 FlatList → map）', () => {
+    it('セットが map でレンダリングされ、FlatList モックなしでも SetRow が表示される', () => {
+      render(<ExerciseBlock {...createDefaultProps()} />);
+      // FlatList を使わず map でレンダリングするため、セット番号がそのまま表示されるはず
+      // mockSets には setNumber: 1, 2 があるため、それぞれの SetRow が表示される
+      const setRowContainers = screen.getAllByTestId('set-row-container');
+      expect(setRowContainers).toHaveLength(2);
+    });
+  });
+
   // ---- Issue #138 前回セットインラインチップ ----
 
   describe('部位ラベル（Issue #138）', () => {
@@ -196,8 +188,13 @@ describe('ExerciseBlock', () => {
   // ---- 種目削除ボタン ----
 
   describe('種目削除ボタン', () => {
-    it('削除ボタンタップで onDeleteExercise が1回呼ばれる', () => {
+    it('削除ボタンタップで Alert が表示され、「削除する」を押すと onDeleteExercise が1回呼ばれる', () => {
       const mockOnDeleteExercise = jest.fn();
+      // Issue #148: 確認モーダル経由で削除するため、「削除する」を即時実行するモックを設定
+      jest.spyOn(Alert, 'alert').mockImplementation((_title, _message, buttons) => {
+        const destructiveButton = buttons?.find((b) => b.style === 'destructive');
+        destructiveButton?.onPress?.();
+      });
       render(<ExerciseBlock {...createDefaultProps({ onDeleteExercise: mockOnDeleteExercise })} />);
 
       fireEvent.press(screen.getByLabelText(`${EXERCISE_NAME}を削除`));
@@ -277,6 +274,99 @@ describe('ExerciseBlock', () => {
 
       const memoInput = screen.getByPlaceholderText('メモ（フォーム、体感など）');
       expect(memoInput.props.value).toBe('前回の感想');
+    });
+  });
+
+  // ---- Issue #147 メモ入力リセットバグ修正 ----
+
+  describe('メモ入力リセット防止（Issue #147）', () => {
+    it('メモに文字を入力すると入力値が表示され続ける（リセットされない）', () => {
+      // memo=null の状態でレンダリング（初期状態では空）
+      render(<ExerciseBlock {...createDefaultProps({ memo: null })} />);
+
+      const memoInput = screen.getByPlaceholderText('メモ（フォーム、体感など）');
+      // テキストを入力する
+      fireEvent.changeText(memoInput, 'フォーム意識で丁寧に');
+
+      // 入力後も値が保持されていること（ローカル state により保持）
+      expect(memoInput.props.value).toBe('フォーム意識で丁寧に');
+    });
+  });
+
+  // ---- Issue #148 種目削除確認モーダル ----
+
+  describe('種目削除確認モーダル（Issue #148）', () => {
+    it('✕ ボタンを押すと Alert.alert が呼ばれる', () => {
+      const alertSpy = jest.spyOn(Alert, 'alert');
+      const mockOnDeleteExercise = jest.fn();
+      render(<ExerciseBlock {...createDefaultProps({ onDeleteExercise: mockOnDeleteExercise })} />);
+
+      fireEvent.press(screen.getByLabelText(`${EXERCISE_NAME}を削除`));
+
+      expect(alertSpy).toHaveBeenCalledTimes(1);
+      expect(alertSpy).toHaveBeenCalledWith(
+        'この種目を削除しますか？',
+        '入力済みのセットもすべて削除されます',
+        expect.arrayContaining([
+          expect.objectContaining({ text: 'キャンセル', style: 'cancel' }),
+          expect.objectContaining({ text: '削除する', style: 'destructive' }),
+        ]),
+      );
+    });
+
+    it('✕ ボタンを押しただけでは onDeleteExercise が呼ばれない', () => {
+      // Alert.alert をモックして何も実行しない（ボタンを押さない状態を再現）
+      jest.spyOn(Alert, 'alert').mockImplementation(() => {
+        // 何もしない: ユーザーがまだボタンを押していない状態
+      });
+      const mockOnDeleteExercise = jest.fn();
+      render(<ExerciseBlock {...createDefaultProps({ onDeleteExercise: mockOnDeleteExercise })} />);
+
+      fireEvent.press(screen.getByLabelText(`${EXERCISE_NAME}を削除`));
+
+      // Alert が表示されるが、まだ onDeleteExercise は呼ばれていない
+      expect(mockOnDeleteExercise).not.toHaveBeenCalled();
+    });
+
+    it('Alert で「削除する」を押すと onDeleteExercise が呼ばれる', () => {
+      const mockOnDeleteExercise = jest.fn();
+      // Alert.alert をモックして「削除する」ボタンの onPress を即時実行させる
+      jest.spyOn(Alert, 'alert').mockImplementation((_title, _message, buttons) => {
+        // 「削除する」ボタン（destructive）の onPress を呼ぶ
+        const destructiveButton = buttons?.find((b) => b.style === 'destructive');
+        destructiveButton?.onPress?.();
+      });
+      render(<ExerciseBlock {...createDefaultProps({ onDeleteExercise: mockOnDeleteExercise })} />);
+
+      fireEvent.press(screen.getByLabelText(`${EXERCISE_NAME}を削除`));
+
+      expect(mockOnDeleteExercise).toHaveBeenCalledTimes(1);
+    });
+
+    it('Alert で「キャンセル」を押すと onDeleteExercise が呼ばれない', () => {
+      const mockOnDeleteExercise = jest.fn();
+      // Alert.alert をモックして「キャンセル」ボタンの onPress を即時実行させる
+      jest.spyOn(Alert, 'alert').mockImplementation((_title, _message, buttons) => {
+        // 「キャンセル」ボタンの onPress を呼ぶ（通常 undefined だが安全に処理）
+        const cancelButton = buttons?.find((b) => b.style === 'cancel');
+        cancelButton?.onPress?.();
+      });
+      render(<ExerciseBlock {...createDefaultProps({ onDeleteExercise: mockOnDeleteExercise })} />);
+
+      fireEvent.press(screen.getByLabelText(`${EXERCISE_NAME}を削除`));
+
+      expect(mockOnDeleteExercise).not.toHaveBeenCalled();
+    });
+  });
+
+  // ---- Issue #151 種目名カラー ----
+
+  describe('種目名カラー（Issue #151）', () => {
+    it('種目名テキストが #4D94FF カラーで表示される', () => {
+      render(<ExerciseBlock {...createDefaultProps()} />);
+
+      const exerciseNameText = screen.getByText(EXERCISE_NAME);
+      expect(exerciseNameText.props.style).toMatchObject({ color: '#4D94FF' });
     });
   });
 });

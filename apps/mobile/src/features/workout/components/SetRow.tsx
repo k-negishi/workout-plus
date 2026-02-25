@@ -79,6 +79,7 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
 
         {/* 重量入力（decimal-pad: 小数点入力を許可） */}
         <TextInput
+          testID="weight-input"
           style={{
             flex: 1,
             backgroundColor: '#FAFBFC',
@@ -91,8 +92,6 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
             color: '#334155',
             textAlign: 'center',
           }}
-          placeholder="0"
-          placeholderTextColor="#94a3b8"
           keyboardType="decimal-pad"
           value={set.weight != null ? String(set.weight) : ''}
           onChangeText={handleWeightChangeText}
@@ -103,6 +102,7 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
 
         {/* レップ数入力（number-pad: 整数のみ） */}
         <TextInput
+          testID="reps-input"
           style={{
             flex: 1,
             backgroundColor: '#FAFBFC',
@@ -115,8 +115,6 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
             color: '#334155',
             textAlign: 'center',
           }}
-          placeholder="0"
-          placeholderTextColor="#94a3b8"
           keyboardType="number-pad"
           value={set.reps != null ? String(set.reps) : ''}
           onChangeText={handleRepsChangeText}

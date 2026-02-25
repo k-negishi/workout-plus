@@ -1,10 +1,14 @@
 /**
  * 種目ブロックコンポーネント（Issue #138 前回セットインラインチップ形式）
  * バッジ形式を廃止し、前回の各セット内容（kg×rep）を常時インライン表示に変更
+ *
+ * Issue #146: FlatList → map に置き換えてちらつきを修正
+ * scrollEnabled={false} の FlatList は ScrollView 内で再レンダリング時にちらつく原因になる。
+ * セット数は通常 10 以下と少ないため、仮想化のオーバーヘッドを避けて map で直接レンダリングする。
  */
 import { format } from 'date-fns';
 import React from 'react';
-import { FlatList, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import type { Exercise, WorkoutSet } from '@/types';
 
@@ -91,6 +95,23 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
   onMemoChange,
   onDeleteExercise,
 }) => {
+  // Issue #147: ローカル state でメモを管理する
+  // memo prop（DB から来る値）は初期値にのみ使用し、以降はローカル state で保持する
+  // こうすることで再レンダリング時に memo prop が null に戻っても入力値がリセットされない
+  const [localMemo, setLocalMemo] = React.useState(memo ?? '');
+
+  /** 削除確認モーダルを表示してから onDeleteExercise を呼ぶ（Issue #148） */
+  const handleDeleteExercise = () => {
+    Alert.alert(
+      'この種目を削除しますか？',
+      '入力済みのセットもすべて削除されます',
+      [
+        { text: 'キャンセル', style: 'cancel' },
+        { text: '削除する', style: 'destructive', onPress: onDeleteExercise },
+      ],
+    );
+  };
+
   return (
     // カード外枠: 白背景・細ボーダー・角丸・内側パディング・下マージン
     <View className="bg-white border border-[#e2e8f0] rounded-lg p-4 mb-3">
@@ -102,9 +123,9 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
           marginBottom: 12,
         }}
       >
-        {/* 種目名（タップで種目履歴へ遷移） */}
+        {/* 種目名（タップで種目履歴へ遷移）Issue #151: ハイパーリンクカラーに統一 */}
         <TouchableOpacity onPress={() => onExerciseNamePress(exercise.id)}>
-          <Text style={{ fontSize: 16, fontWeight: '600', color: '#334155' }}>{exercise.name}</Text>
+          <Text style={{ fontSize: 16, fontWeight: '600', color: '#4D94FF' }}>{exercise.name}</Text>
         </TouchableOpacity>
 
         {/* 前回記録チップ: flex:1 で残りスペースを占有し右詰め折り返し */}
@@ -131,9 +152,9 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
           <View style={{ flex: 1 }} />
         )}
 
-        {/* 削除ボタン */}
+        {/* 削除ボタン: Issue #148 確認モーダルを経由して削除 */}
         <TouchableOpacity
-          onPress={onDeleteExercise}
+          onPress={handleDeleteExercise}
           accessibilityLabel={`${exercise.name}を削除`}
           style={{ padding: 4 }}
         >
@@ -197,21 +218,18 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
         <View style={{ width: 20 }} />
       </View>
 
-      {/* セットリスト: gap を 12px に拡大してセット間の行間を広げる（Issue #128） */}
+      {/* セットリスト: Issue #146 FlatList を map に置き換えてちらつきを修正
+          セット数は通常10以下と少なく、仮想化の恩恵がないため map で直接レンダリングする */}
       <View testID="set-list-container" style={{ gap: 12 }}>
-        <FlatList
-          data={sets}
-          keyExtractor={(item) => item.id}
-          scrollEnabled={false}
-          renderItem={({ item }) => (
-            <SetRow
-              set={item}
-              onWeightChange={onWeightChange}
-              onRepsChange={onRepsChange}
-              onDelete={onDeleteSet}
-            />
-          )}
-        />
+        {sets.map((item) => (
+          <SetRow
+            key={item.id}
+            set={item}
+            onWeightChange={onWeightChange}
+            onRepsChange={onRepsChange}
+            onDelete={onDeleteSet}
+          />
+        ))}
       </View>
 
       {/* 「+ セットを追加」: 背景・ボーダーなしのテキストリンク */}
@@ -223,15 +241,19 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
         <Text style={{ fontSize: 14, fontWeight: '600', color: '#4D94FF' }}>+ セットを追加</Text>
       </TouchableOpacity>
 
-      {/* 種目メモ */}
+      {/* 種目メモ: Issue #147 ローカル state で管理してリセットを防止 */}
       <View className="flex-row items-center mt-2 gap-2">
         <Text className="text-[14px] text-[#64748b]">{'\u270E'}</Text>
         <TextInput
           className="flex-1 text-[15px] text-[#475569] py-1"
           placeholder="メモ（フォーム、体感など）"
           placeholderTextColor="#94a3b8"
-          value={memo ?? ''}
-          onChangeText={onMemoChange}
+          value={localMemo}
+          onChangeText={(text) => {
+            // ローカル state を更新して表示に即時反映し、親にも通知する
+            setLocalMemo(text);
+            onMemoChange?.(text);
+          }}
         />
       </View>
     </View>
