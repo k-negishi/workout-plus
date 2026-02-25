@@ -246,7 +246,7 @@ export function DaySummary({
         {/* セット数（3番目） */}
         <View style={{ flex: 1, alignItems: 'center', gap: 4 }}>
           <Text style={{ fontSize: 13, color: '#64748b' }}>セット数</Text>
-          <Text style={{ fontSize: 16, fontWeight: '600', color: '#334155' }}>{totalSets} set</Text>
+          <Text style={{ fontSize: 16, fontWeight: '600', color: '#334155' }}>{totalSets}</Text>
         </View>
         <View style={{ width: 1, height: 28, backgroundColor: '#e2e8f0' }} />
         {/* 総ボリューム（4番目・最後）: 派生指標のため末尾に配置 */}
@@ -311,9 +311,9 @@ export function DaySummary({
                   }}
                 >
                   <CheckIcon />
-                  <Text style={{ fontSize: 15, color: '#64748b' }}>{set.setNumber} set</Text>
+                  <Text style={{ fontSize: 15, color: '#64748b' }}>{set.setNumber}</Text>
                   <Text style={{ fontSize: 16, fontWeight: '600', flex: 1, color: '#334155' }}>
-                    {set.weight ?? '-'}kg × {set.reps ?? '-'}
+                    {set.weight ?? '-'}kg × {set.reps ?? '-'} reps
                   </Text>
                   {set.estimated1RM != null ? (
                     <Text style={{ fontSize: 13, color: '#64748b' }}>

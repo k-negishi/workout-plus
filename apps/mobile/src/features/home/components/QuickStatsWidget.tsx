@@ -108,7 +108,7 @@ function StatCard({
           >
             {exerciseCount}
           </Text>
-          <Text style={{ fontSize: 12, color: colors.textSecondary }}>種目数</Text>
+          <Text style={{ fontSize: 12, color: colors.textSecondary }}>種目</Text>
         </View>
 
         {/* 縦区切り線 */}
@@ -133,7 +133,7 @@ function StatCard({
           >
             {setCount}
           </Text>
-          <Text style={{ fontSize: 12, color: colors.textSecondary }}>セット数</Text>
+          <Text style={{ fontSize: 12, color: colors.textSecondary }}>セット</Text>
         </View>
       </View>
     </View>
