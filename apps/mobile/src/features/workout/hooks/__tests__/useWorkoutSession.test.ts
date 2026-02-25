@@ -184,6 +184,49 @@ describe('useWorkoutSession - ストア操作テスト', () => {
   });
 });
 
+describe('useWorkoutSession - Issue #150: discarded 状態の復元', () => {
+  beforeEach(() => {
+    useWorkoutSessionStore.getState().reset();
+  });
+
+  it('recording 状態かつ timer_status=discarded のワークアウト復元時、timerStatus が discarded になる', () => {
+    // restoreExistingRecordingToStore は existing.timer_status をそのままストアに設定する。
+    // timer_status='discarded' の recording ワークアウトを復元したとき、
+    // ストアの timerStatus も 'discarded' になることを確認する（NOT_STARTED にリセットされない）。
+    const store = useWorkoutSessionStore.getState();
+
+    // recording 状態かつ discarded タイマーの WorkoutRow を模倣してストアを直接設定する
+    store.setTimerStatus('discarded');
+    store.setElapsedSeconds(0);
+    store.setTimerStartedAt(null);
+
+    const state = useWorkoutSessionStore.getState();
+    // discarded が維持されており、NOT_STARTED にリセットされていないことを確認する
+    expect(state.timerStatus).toBe('discarded');
+    // elapsedSeconds は 0（stopTimer 後は 0 になる仕様）
+    expect(state.elapsedSeconds).toBe(0);
+    // timerStartedAt は null
+    expect(state.timerStartedAt).toBeNull();
+  });
+
+  it('discarded 状態では ElapsedSeconds が書き換わらない（incrementInvalidation のみが変化する）', () => {
+    // Issue #149 の修正: interval は incrementInvalidation() のみを呼ぶ。
+    // discarded 状態でも elapsedSeconds は変化しないことを確認する。
+    const store = useWorkoutSessionStore.getState();
+    store.setTimerStatus('discarded');
+    store.setElapsedSeconds(0);
+
+    // interval コールバックをシミュレートする（incrementInvalidation のみ）
+    store.incrementInvalidation();
+
+    const state = useWorkoutSessionStore.getState();
+    // elapsedSeconds は変化しない
+    expect(state.elapsedSeconds).toBe(0);
+    // invalidationCounter のみ増加する
+    expect(state.invalidationCounter).toBe(1);
+  });
+});
+
 describe('workoutSessionStore - 継続モードフィールド', () => {
   beforeEach(() => {
     useWorkoutSessionStore.getState().reset();

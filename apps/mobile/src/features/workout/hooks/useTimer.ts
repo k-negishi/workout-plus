@@ -126,23 +126,25 @@ export function useTimer(): UseTimerReturn {
     void persistTimerState('discarded', 0, null);
   }, [clearTimerInterval, setTimerStatus, setElapsedSeconds, setTimerStartedAt, persistTimerState]);
 
-  // running 時に 1秒ごとの更新インターバルを管理
+  // running 時に 1秒ごとの更新インターバルを管理。
+  // deps から elapsedSeconds を意図的に除外している理由:
+  //   elapsedSeconds を deps に含めると、interval が発火するたびにストアが更新され
+  //   deps の変化が useEffect を再実行 → 新しい interval が積み重なり、
+  //   elapsed の増分が等差数列の和（1+2+3=6 秒 ...）となって指数的に速く進む（Issue #149）。
+  //   interval のコールバックでは re-render トリガー用の incrementInvalidation() のみを呼び、
+  //   表示用の elapsed は displayElapsed として timerStartedAt から毎回計算する。
   useEffect(() => {
     clearTimerInterval();
     if (timerStatus === 'running' && timerStartedAt != null) {
       intervalRef.current = setInterval(() => {
-        const currentElapsed = Math.floor((Date.now() - timerStartedAt) / 1000);
-        // ストアの elapsedSeconds はベース値なので、表示用に加算
-        useWorkoutSessionStore.setState({
-          elapsedSeconds:
-            useWorkoutSessionStore.getState().timerStartedAt === timerStartedAt
-              ? elapsedSeconds + currentElapsed
-              : elapsedSeconds,
-        });
+        // elapsedSeconds のベース値を書き換えず、re-render のみをトリガーする
+        useWorkoutSessionStore.getState().incrementInvalidation();
       }, 1000);
     }
     return () => clearTimerInterval();
-  }, [timerStatus, timerStartedAt, elapsedSeconds, clearTimerInterval]);
+    // elapsedSeconds は deps に含めない（指数的増加バグの回避 — Issue #149 参照）
+    // コールバック内では useWorkoutSessionStore.getState() で常に最新値を取得するため問題なし
+  }, [timerStatus, timerStartedAt, clearTimerInterval]);
 
   // バックグラウンド復帰時に経過時間を正確に補正する
   useEffect(() => {
@@ -160,9 +162,13 @@ export function useTimer(): UseTimerReturn {
     return () => subscription.remove();
   }, [timerStatus, timerStartedAt, elapsedSeconds, setElapsedSeconds, setTimerStartedAt]);
 
-  // 表示用の経過秒数: running中は timerStartedAt からの差分を加算
+  // 表示用の経過秒数: running 中は timerStartedAt からの差分をリアルタイムに加算する。
+  // ストアの elapsedSeconds はベース値（一時停止までの累積）であり、
+  // running 中は timerStartedAt からの経過を加算することで正確な表示を実現する。
   const displayElapsed =
-    timerStatus === 'running' && timerStartedAt != null ? elapsedSeconds : elapsedSeconds;
+    timerStatus === 'running' && timerStartedAt != null
+      ? elapsedSeconds + Math.floor((Date.now() - timerStartedAt) / 1000)
+      : elapsedSeconds;
 
   return {
     timerStatus,
