@@ -500,7 +500,7 @@ export const ExercisePickerScreen: React.FC = () => {
                   onPress={() => handleNavigateToHistory(item.id, item.name)}
                   style={swipeStyles.historyButton}
                 >
-                  <Text style={swipeStyles.historyButtonIcon}>{'📊'}</Text>
+                  <Ionicons name="stats-chart-outline" size={22} color="#4D94FF" />
                   <Text style={swipeStyles.historyButtonText}>履歴</Text>
                 </TouchableOpacity>
               )}
@@ -634,9 +634,6 @@ const swipeStyles = StyleSheet.create({
     backgroundColor: '#E6F2FF',
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  historyButtonIcon: {
-    fontSize: 18,
   },
   historyButtonText: {
     fontSize: 13,

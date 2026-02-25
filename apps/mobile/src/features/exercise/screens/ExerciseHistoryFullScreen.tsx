@@ -336,26 +336,28 @@ export function ExerciseHistoryFullScreen() {
 
         {/* Issue #155: カスタム種目のみ編集・削除アイコンを表示 */}
         {isCustom ? (
-          <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center', width: 40, justifyContent: 'flex-end' }}>
+          <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center', width: 72, justifyContent: 'flex-end' }}>
             <Pressable
               testID="edit-button"
               onPress={handleStartEdit}
               hitSlop={8}
               accessibilityLabel="種目を編集"
+              style={{ padding: 6 }}
             >
-              <Text style={{ fontSize: 18, color: colors.textSecondary }}>{'✎'}</Text>
+              <Ionicons name="create-outline" size={22} color={colors.textSecondary} />
             </Pressable>
             <Pressable
               testID="delete-button"
               onPress={handleDelete}
               hitSlop={8}
               accessibilityLabel="種目を削除"
+              style={{ padding: 6 }}
             >
-              <Text style={{ fontSize: 18, color: '#EF4444' }}>{'🗑'}</Text>
+              <Ionicons name="trash-outline" size={22} color="#EF4444" />
             </Pressable>
           </View>
         ) : (
-          <View style={{ width: 40 }} />
+          <View style={{ width: 72 }} />
         )}
       </View>
 
