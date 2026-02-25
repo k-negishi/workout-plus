@@ -498,6 +498,22 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
       // 不完全セットおよび空種目をDBから除外し、有効種目IDを取得
       const validExerciseIds = await cleanupExerciseSets(store.currentExercises, store.currentSets);
 
+      // 有効種目が0件の場合はワークアウト自体を破棄する
+      // 理由: 空記録を保存しないこと + workouts.workout_date UNIQUE制約の回避
+      // （当日すでに完了済みワークアウトがある状態で update(completed) するとエラーになる）
+      if (validExerciseIds.size === 0) {
+        const elapsedSeconds = store.elapsedSeconds;
+        await WorkoutRepository.delete(store.currentWorkout.id);
+        store.reset();
+        return {
+          totalVolume: 0,
+          exerciseCount: 0,
+          setCount: 0,
+          elapsedSeconds,
+          newPRs: [],
+        };
+      }
+
       // ステータスを completed に更新
       await WorkoutRepository.update(store.currentWorkout.id, {
         status: 'completed',

@@ -10,6 +10,11 @@
  * - renderHook で実際のフックを描画し completeWorkout() を呼ぶ
  * - WorkoutRepository.delete / update の呼び出しを検証する
  * - 有効セットが残る場合は従来通り update が呼ばれることも確認する（後退防止）
+ *
+ * ファイル形式が .tsx である理由:
+ * - .test.ts は "logic" jest プロジェクト（babel-jest のみ）で動作するが、
+ *   renderHook は @testing-library/react-native を要求し React Native のトランスフォームが必要。
+ * - .test.tsx は "components" jest プロジェクト（jest-expo）で動作し RN トランスフォームが有効。
  */
 import { renderHook } from '@testing-library/react-native';
 import { act } from 'react';
@@ -29,6 +34,11 @@ jest.mock('@/database/repositories/workout');
 jest.mock('@/database/repositories/pr');
 jest.mock('@/shared/components/Toast', () => ({
   showErrorToast: jest.fn(),
+}));
+// database/client は全リポジトリをモック済みのため呼ばれないが、
+// expo-sqlite の ESM parse エラーを防ぐためスタブ化する
+jest.mock('@/database/client', () => ({
+  getDatabase: jest.fn(),
 }));
 
 const mockWorkoutDelete = WorkoutRepository.delete as jest.MockedFunction<
@@ -97,6 +107,7 @@ function setupStoreWithSets(sets: WorkoutSet[]): void {
 describe('completeWorkout: 有効種目が0件の場合はワークアウトを破棄する（UNIQUE制約回避）', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    useWorkoutSessionStore.getState().reset();
     mockWorkoutDelete.mockResolvedValue(undefined);
     mockWorkoutUpdate.mockResolvedValue(undefined);
     mockSetDelete.mockResolvedValue(undefined);
@@ -161,7 +172,7 @@ describe('completeWorkout: 有効種目が0件の場合はワークアウトを�
   });
 
   /**
-   * 破棄時は exerciseCount=0 のサマリーを返す（エラーを投げない）
+   * 破棄時はエラーを投げず exerciseCount=0 のサマリーを返す
    */
   it('completeWorkout が成功し exerciseCount=0 のサマリーを返す（エラーなし）', async () => {
     setupStoreWithSets([makeSet('s1', null, null)]);
