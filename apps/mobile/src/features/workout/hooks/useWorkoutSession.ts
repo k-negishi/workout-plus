@@ -10,6 +10,7 @@ import { getDatabase } from '@/database/client';
 import { PersonalRecordRepository } from '@/database/repositories/pr';
 import { SetRepository } from '@/database/repositories/set';
 import { WorkoutRepository } from '@/database/repositories/workout';
+import { WorkoutExerciseRepository } from '@/database/repositories/workoutExercise';
 import type { WorkoutRow } from '@/database/types';
 import { showErrorToast } from '@/shared/components/Toast';
 import { useWorkoutSessionStore } from '@/stores/workoutSessionStore';
@@ -178,6 +179,36 @@ async function restoreExistingRecordingToStore(
     const sets = await SetRepository.findByWorkoutExerciseId(ex.id);
     store.setSetsForExercise(ex.id, sets);
   }
+}
+
+/**
+ * 種目リストの不完全セットをDBから削除し、有効セットが0件になった種目もDBから除外する。
+ * completeWorkout の cyclomatic complexity を抑制するためモジュールレベルに分離。
+ *
+ * @returns 有効セットが残った種目IDのSet
+ */
+async function cleanupExerciseSets(
+  exercises: WorkoutExercise[],
+  currentSets: Record<string, WorkoutSet[]>,
+): Promise<Set<string>> {
+  const validExerciseIds = new Set<string>();
+  for (const exercise of exercises) {
+    const sets = currentSets[exercise.id] ?? [];
+    const incompleteSets = sets.filter(
+      (s) => s.weight == null || s.reps == null || (s.reps === 0 && s.weight != null),
+    );
+    for (const s of incompleteSets) {
+      await SetRepository.delete(s.id);
+    }
+    if (sets.length > incompleteSets.length) {
+      // 有効セットが残る種目は記録対象として保持
+      validExerciseIds.add(exercise.id);
+    } else {
+      // 有効セットが0件になった種目はDBから除外する（空種目削除）
+      await WorkoutExerciseRepository.delete(exercise.id);
+    }
+  }
+  return validExerciseIds;
 }
 
 /** フックの戻り値型 */
@@ -464,16 +495,11 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
       const sessionTargetDate = useWorkoutSessionStore.getState().sessionTargetDate;
       const now = sessionTargetDate ? dateStringToMs(sessionTargetDate) : Date.now();
 
-      // 不完全セット（片方 null、またはreps=0かつweight入力済み）をDBから除外
-      for (const exercise of store.currentExercises) {
-        const sets = store.currentSets[exercise.id] ?? [];
-        const incompleteSets = sets.filter(
-          (s) => s.weight == null || s.reps == null || (s.reps === 0 && s.weight != null),
-        );
-        for (const s of incompleteSets) {
-          await SetRepository.delete(s.id);
-        }
-      }
+      // 不完全セットおよび空種目をDBから除外し、有効種目IDを取得
+      const validExerciseIds = await cleanupExerciseSets(
+        store.currentExercises,
+        store.currentSets,
+      );
 
       // ステータスを completed に更新
       await WorkoutRepository.update(store.currentWorkout.id, {
@@ -487,6 +513,9 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
       const newPRs: PRCheckResult[] = [];
 
       for (const exercise of store.currentExercises) {
+        // 削除済み種目（有効セットが0件だったもの）はスキップ
+        if (!validExerciseIds.has(exercise.id)) continue;
+
         const sets = store.currentSets[exercise.id] ?? [];
         const exerciseSets = sets.filter((s) => s.weight != null && s.reps != null);
         totalSetCount += exerciseSets.length;
@@ -504,7 +533,7 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
 
       const summaryData: WorkoutSummaryData = {
         totalVolume,
-        exerciseCount: store.currentExercises.length,
+        exerciseCount: validExerciseIds.size,
         setCount: totalSetCount,
         elapsedSeconds: store.elapsedSeconds,
         newPRs,
