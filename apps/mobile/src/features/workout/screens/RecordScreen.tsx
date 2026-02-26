@@ -17,7 +17,7 @@ import type {
 } from '@react-navigation/native-stack';
 import { format, parseISO } from 'date-fns';
 import { ja } from 'date-fns/locale';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -337,13 +337,6 @@ export const RecordScreen: React.FC = () => {
   /** recording モード判定: status='recording' のときのみ TimerBar と完了ボタンを表示する */
   const isRecordingMode = store.currentWorkout?.status === 'recording';
 
-  /**
-   * ワークアウトメモの現在値。
-   * optional chaining と nullish coalescing を useMemo 内に閉じ込めて
-   * RecordScreen 本体の cyclomatic complexity を抑制する。
-   */
-  const workoutMemo = useMemo(() => store.currentWorkout?.memo ?? '', [store.currentWorkout]);
-
   // ヘッダーに表示する日付ラベル: 過去日付記録なら選択日、当日なら今日の日付
   const headerDateString = targetDate ?? format(new Date(), 'yyyy-MM-dd');
   const headerDateLabel = format(parseISO(headerDateString), 'M月d日のワークアウト', {
@@ -494,7 +487,7 @@ export const RecordScreen: React.FC = () => {
               placeholderTextColor="#94a3b8"
               multiline
               textAlignVertical="top"
-              defaultValue={workoutMemo}
+              defaultValue={store.currentWorkout?.memo ?? ''}
               onEndEditing={(e) => {
                 void session.updateWorkoutMemo(e.nativeEvent.text);
               }}

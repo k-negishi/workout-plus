@@ -37,9 +37,10 @@ export default [
       'simple-import-sort/imports': 'error',
       'simple-import-sort/exports': 'error',
       'no-console': ['warn', { allow: ['warn', 'error'] }],
-      // 循環的複雑度の制限
-      complexity: ['error', 10],
       // SonarJS バグパターン検出
+      // cognitive-complexity を複雑度ゲートとして採用。
+      // 標準 complexity ルールは JSX の && や ?. も 1 分岐としてカウントするため
+      // React コンポーネントで誤検知が多く廃止した。
       'sonarjs/no-duplicate-string': 'warn',
       'sonarjs/cognitive-complexity': ['error', 15],
       // React Hooks: フック呼び出し規則（条件分岐内での呼び出し等を禁止）
