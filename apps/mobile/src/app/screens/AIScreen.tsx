@@ -171,7 +171,8 @@ export function AIScreen() {
         {isLoading && <TypingIndicator />}
 
         {/* チャット入力エリア: AI ローディング中は無効化 */}
-        <View style={{ paddingBottom: insets.bottom }}>
+        {/* BottomTab 配下のため insets.bottom は TabBar が吸収する。ここでは不要（Issue #185） */}
+        <View testID="chat-input-wrapper">
           <ChatInput onSend={handleSend} disabled={isLoading} />
         </View>
       </View>

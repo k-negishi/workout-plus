@@ -129,6 +129,17 @@ describe('AIScreen', () => {
     });
   });
 
+  it('入力エリアのラッパーに不要な paddingBottom が設定されていないこと（Issue #185）', () => {
+    render(<AIScreen />);
+    // ChatInput を包む View の testID で取得
+    const inputWrapper = screen.getByTestId('chat-input-wrapper');
+    const style = inputWrapper.props.style;
+    // BottomTab 配下では insets.bottom は TabBar が吸収するため、
+    // 入力エリアに paddingBottom を設定すると二重余白になる
+    // style が undefined または paddingBottom が含まれていないことを検証
+    expect(style?.paddingBottom).toBeUndefined();
+  });
+
   it('クイックアクションをタップするとメッセージが送信されること', async () => {
     mockChat.mockResolvedValueOnce({ content: 'クイックアクション返答' });
     render(<AIScreen />);
