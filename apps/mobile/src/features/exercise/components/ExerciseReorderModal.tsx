@@ -87,11 +87,16 @@ export function ExerciseReorderModal({
     onSave(orderedItems);
   }, [orderedItems, onSave]);
 
-  /** リスト各行のレンダリング */
+  /** リスト各行のレンダリング
+   * Issue #183: 行全体を Pressable にして onLongPress={drag} を設定
+   * 当たり判定を ☰ アイコンだけでなく行全体に拡大する
+   */
   /* istanbul ignore next -- ドラッグ操作（drag コールバック）はネイティブ依存 */
   const renderItem = useCallback(
     ({ item, drag, isActive }: RenderItemParams<Exercise>) => (
-      <View
+      <Pressable
+        testID={`reorder-row-${item.id}`}
+        onLongPress={drag}
         style={{
           flexDirection: 'row',
           alignItems: 'center',
@@ -102,11 +107,9 @@ export function ExerciseReorderModal({
           backgroundColor: getRowBackgroundColor(isActive),
         }}
       >
-        {/* ドラッグハンドル（ロングプレスでドラッグ開始） */}
-        <Pressable
+        {/* ドラッグハンドルアイコン（視覚的なインジケーター） */}
+        <View
           testID={`drag-handle-${item.id}`}
-          onLongPress={drag}
-          hitSlop={8}
           style={{
             paddingHorizontal: 12,
             paddingVertical: 8,
@@ -120,7 +123,7 @@ export function ExerciseReorderModal({
           >
             ☰
           </Text>
-        </Pressable>
+        </View>
 
         {/* 種目情報 */}
         <View style={{ flex: 1 }}>
@@ -176,7 +179,7 @@ export function ExerciseReorderModal({
             </View>
           </View>
         </View>
-      </View>
+      </Pressable>
     ),
     [],
   );

@@ -3,6 +3,7 @@
  *
  * - visible=true のとき全種目が表示される
  * - 各種目行にドラッグハンドル（testID: drag-handle-{id}）が表示される
+ * - 行全体がロングプレスでドラッグ開始できる（当たり判定拡大）
  * - 「キャンセル」タップで onClose が呼ばれる
  * - 「保存」タップで onSave に現在の順序が渡される
  * - visible=false のときは描画されない
@@ -13,6 +14,9 @@ import React from 'react';
 // react-native-draggable-flatlist のモック
 // ドラッグ操作はネイティブAPIに依存するためユニットテストでは除外し、
 // 描画・ボタン操作のみ検証する
+// 各行の drag 関数を保持し、テストからアクセスできるようにする
+const mockDragFunctions: Record<string, jest.Mock> = {};
+
 jest.mock('react-native-draggable-flatlist', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const React = require('react');
@@ -26,20 +30,23 @@ jest.mock('react-native-draggable-flatlist', () => {
     renderItem,
     keyExtractor,
   }: {
-    data: unknown[];
+    data: Array<{ id: string }>;
     renderItem: (info: { item: unknown; drag: () => void; isActive: boolean }) => React.ReactNode;
     keyExtractor?: (item: unknown) => string;
   }) {
     return React.createElement(
       View,
       null,
-      data.map((item, index) =>
-        React.createElement(
+      data.map((item, index) => {
+        const drag = jest.fn();
+        // 各行の drag 関数を item.id で保持する
+        mockDragFunctions[item.id] = drag;
+        return React.createElement(
           View,
           { key: keyExtractor ? keyExtractor(item) : String(index) },
-          renderItem({ item, drag: jest.fn(), isActive: false }),
-        ),
-      ),
+          renderItem({ item, drag, isActive: false }),
+        );
+      }),
     );
   }
 
@@ -126,6 +133,10 @@ describe('ExerciseReorderModal', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // 各行の drag 関数をリセット
+    for (const key of Object.keys(mockDragFunctions)) {
+      delete mockDragFunctions[key];
+    }
   });
 
   it('visible=true のとき全種目名が表示される', () => {
@@ -157,6 +168,23 @@ describe('ExerciseReorderModal', () => {
     for (const ex of exercises) {
       expect(screen.getByTestId(`drag-handle-${ex.id}`)).toBeTruthy();
     }
+  });
+
+  it('行全体がロングプレスでドラッグ開始できる（当たり判定拡大）', () => {
+    render(
+      <ExerciseReorderModal
+        visible={true}
+        exercises={makeExercises()}
+        onSave={mockOnSave}
+        onClose={mockOnClose}
+      />,
+    );
+
+    // 各行の testID で行全体を取得し、ロングプレスで drag が呼ばれることを検証
+    const row = screen.getByTestId('reorder-row-ex-1');
+    fireEvent(row, 'onLongPress');
+
+    expect(mockDragFunctions['ex-1']).toHaveBeenCalledTimes(1);
   });
 
   it('「キャンセル」タップで onClose が呼ばれる', () => {
