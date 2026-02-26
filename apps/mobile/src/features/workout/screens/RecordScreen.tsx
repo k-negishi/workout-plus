@@ -335,7 +335,7 @@ export const RecordScreen: React.FC = () => {
           style={{
             flex: 1,
             textAlign: 'center',
-            fontSize: 16,
+            fontSize: 17,
             fontWeight: '600',
             color: '#ffffff',
           }}

@@ -71,6 +71,18 @@ describe('AIScreen', () => {
     expect(screen.getByText('AI アシスタント')).toBeTruthy();
   });
 
+  it('ヘッダータイトルが中央揃えで表示されること（Issue #168: トンマナ統一）', () => {
+    render(<AIScreen />);
+    const title = screen.getByTestId('ai-header-title');
+    expect(title.props.style).toEqual(expect.objectContaining({ textAlign: 'center' }));
+  });
+
+  it('ヘッダータイトルの fontSize が 17 であること（Issue #168: トンマナ統一）', () => {
+    render(<AIScreen />);
+    const title = screen.getByTestId('ai-header-title');
+    expect(title.props.style).toEqual(expect.objectContaining({ fontSize: 17 }));
+  });
+
   it('ウェルカムメッセージが初期表示されること', () => {
     render(<AIScreen />);
     // useAIChat が初期メッセージとしてウェルカムメッセージを挿入する

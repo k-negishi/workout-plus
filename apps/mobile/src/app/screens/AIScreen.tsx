@@ -116,10 +116,10 @@ export function AIScreen() {
           paddingTop: insets.top,
         }}
       >
-        {/* ヘッダー: タイトルのみのシンプルフラットデザイン */}
+        {/* ヘッダー: 他画面と統一（中央揃え・fontSize 17・#334155）Issue #168 */}
         <View
           style={{
-            paddingHorizontal: 20,
+            paddingHorizontal: 16,
             paddingVertical: 12,
             borderBottomWidth: 1,
             borderBottomColor: colors.border,
@@ -127,10 +127,12 @@ export function AIScreen() {
           }}
         >
           <Text
+            testID="ai-header-title"
             style={{
-              fontSize: 18,
+              fontSize: 17,
               fontWeight: '600',
-              color: '#475569',
+              color: '#334155',
+              textAlign: 'center',
             }}
           >
             AI アシスタント
