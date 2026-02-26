@@ -303,6 +303,67 @@ describe('CalendarScreen', () => {
     });
   });
 
+  describe('Issue #167: 月変更時の自動日付選択', () => {
+    it('月変更コールバックが呼ばれると selectedDate がその月の1日に更新される', async () => {
+      (useRoute as jest.Mock).mockReturnValue({ params: undefined });
+      render(<CalendarScreen />);
+
+      // MonthCalendar が描画されるまで待機
+      await waitFor(() => {
+        expect(capturedMonthCalendarProps['onMonthChange']).toBeDefined();
+      });
+
+      // MonthCalendar の onMonthChange コールバックを手動で呼ぶ（2026-02-01 = 2月の1日）
+      await act(async () => {
+        const onMonthChange = capturedMonthCalendarProps['onMonthChange'] as (
+          dateString: string,
+        ) => void;
+        onMonthChange('2026-02-01');
+      });
+
+      // selectedDate が月の1日（2026-02-01）に更新されること
+      await waitFor(() => {
+        const selected = capturedMonthCalendarProps['selectedDate'] as string;
+        expect(selected).toBe('2026-02-01');
+      });
+    });
+
+    it('月変更時に daySummaryLoaded がリセットされ DaySummary が再ロードされる', async () => {
+      (useRoute as jest.Mock).mockReturnValue({ params: undefined });
+      render(<CalendarScreen />);
+
+      await waitFor(() => {
+        expect(mockDaySummaryCapturedProps['onWorkoutFound']).toBeDefined();
+      });
+
+      // DaySummary の onWorkoutFound で workoutId をセット
+      await act(async () => {
+        const onWorkoutFound = mockDaySummaryCapturedProps['onWorkoutFound'] as (
+          workoutId: string | null,
+        ) => void;
+        onWorkoutFound('workout-id-1');
+      });
+
+      // 削除ボタンが表示されること（daySummaryLoaded = true の確認）
+      await waitFor(() => {
+        expect(screen.getByTestId('delete-workout-button')).toBeTruthy();
+      });
+
+      // 月変更コールバックを呼ぶ
+      await act(async () => {
+        const onMonthChange = capturedMonthCalendarProps['onMonthChange'] as (
+          dateString: string,
+        ) => void;
+        onMonthChange('2026-01-01');
+      });
+
+      // 月変更後は currentWorkoutId がリセットされ削除ボタンが非表示になること
+      await waitFor(() => {
+        expect(screen.queryByTestId('delete-workout-button')).toBeNull();
+      });
+    });
+  });
+
   describe('トレーニング日インジケーター', () => {
     it('トレーニングのある日付データが MonthCalendar に trainingDates として渡される', async () => {
       // DB から完了済みワークアウトが返る状態を設定

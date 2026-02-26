@@ -77,6 +77,14 @@ export function CalendarScreen() {
     setDaySummaryLoaded(false);
   }, []);
 
+  // Issue #167: 月変更時に新しい月の1日を自動選択する
+  // MonthCalendar から渡される dateString はその月の1日（yyyy-MM-dd 形式）
+  const handleMonthChange = useCallback((dateString: string) => {
+    setSelectedDate(dateString);
+    setCurrentWorkoutId(null);
+    setDaySummaryLoaded(false);
+  }, []);
+
   // DaySummary のロード完了通知: currentWorkoutId をセットし、ボタン表示を解放する
   const handleWorkoutFound = useCallback((workoutId: string | null) => {
     setCurrentWorkoutId(workoutId);
@@ -168,13 +176,13 @@ export function CalendarScreen() {
           trainingDates={trainingDates}
           selectedDate={selectedDate}
           onDayPress={handleDayPress}
+          onMonthChange={handleMonthChange}
         />
 
         {/* 選択日のサマリー */}
-        {/* key={selectedDate}: 日付変更時に再マウントさせ、loading=true から始まるようにする */}
-        {/* これにより旧データが一瞬表示される（ちらつき）を防ぐ */}
+        {/* key を外してリマウントを回避。旧データのちらつきは DaySummary 内部の */}
+        {/* fetchDayData 先頭 setLoading(true) で防止する */}
         <DaySummary
-          key={selectedDate}
           dateString={selectedDate}
           onNavigateToExerciseHistory={handleNavigateToExerciseHistory}
           onWorkoutFound={handleWorkoutFound}

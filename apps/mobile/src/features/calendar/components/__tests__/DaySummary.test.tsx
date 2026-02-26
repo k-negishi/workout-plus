@@ -65,14 +65,28 @@ describe('DaySummary - 種目名タップ', () => {
           },
         ]);
       }
-      // workout_exercises クエリ
+      // workout_exercises JOIN exercises クエリ（最適化後）: exercise_name を含む
       if (sql.includes('FROM workout_exercises')) {
         return Promise.resolve([
-          { id: 'we-1', workout_id: 'workout-1', exercise_id: 'ex-bench', display_order: 1 },
-          { id: 'we-2', workout_id: 'workout-1', exercise_id: 'ex-squat', display_order: 2 },
+          {
+            id: 'we-1',
+            workout_id: 'workout-1',
+            exercise_id: 'ex-bench',
+            display_order: 1,
+            memo: null,
+            exercise_name: 'ベンチプレス',
+          },
+          {
+            id: 'we-2',
+            workout_id: 'workout-1',
+            exercise_id: 'ex-squat',
+            display_order: 2,
+            memo: null,
+            exercise_name: 'スクワット',
+          },
         ]);
       }
-      // sets クエリ
+      // sets クエリ（IN 句形式）
       if (sql.includes('FROM sets')) {
         return Promise.resolve([
           {
@@ -86,17 +100,6 @@ describe('DaySummary - 種目名タップ', () => {
         ]);
       }
       return Promise.resolve([]);
-    });
-
-    // exercises クエリ: 種目名を返す
-    mockGetFirstAsync.mockImplementation((_sql: string, params: unknown[]) => {
-      if (params[0] === 'ex-bench') {
-        return Promise.resolve({ id: 'ex-bench', name: 'ベンチプレス' });
-      }
-      if (params[0] === 'ex-squat') {
-        return Promise.resolve({ id: 'ex-squat', name: 'スクワット' });
-      }
-      return Promise.resolve(null);
     });
   };
 
@@ -194,9 +197,17 @@ describe('DaySummary - 削除ボタン', () => {
           },
         ]);
       }
+      // workout_exercises JOIN exercises クエリ（最適化後）: exercise_name を含む
       if (sql.includes('FROM workout_exercises')) {
         return Promise.resolve([
-          { id: 'we-1', workout_id: 'workout-delete-1', exercise_id: 'ex-bench', display_order: 1 },
+          {
+            id: 'we-1',
+            workout_id: 'workout-delete-1',
+            exercise_id: 'ex-bench',
+            display_order: 1,
+            memo: null,
+            exercise_name: 'ベンチプレス',
+          },
         ]);
       }
       if (sql.includes('FROM sets')) {
@@ -213,13 +224,6 @@ describe('DaySummary - 削除ボタン', () => {
       }
       return Promise.resolve([]);
     });
-
-    mockGetFirstAsync.mockImplementation((_sql: string, params: unknown[]) => {
-      if (params[0] === 'ex-bench') {
-        return Promise.resolve({ id: 'ex-bench', name: 'ベンチプレス' });
-      }
-      return Promise.resolve(null);
-    });
   };
 
   /**
@@ -227,7 +231,6 @@ describe('DaySummary - 削除ボタン', () => {
    */
   const setupMockWithNoWorkout = () => {
     mockGetAllAsync.mockResolvedValue([]);
-    mockGetFirstAsync.mockResolvedValue(null);
   };
 
   it('ワークアウトがある場合に onWorkoutFound が workoutId 付きで呼ばれる', async () => {
@@ -279,12 +282,12 @@ describe('DaySummary - 日付ヘッダー（T5: タップ遷移なし）', () =>
           },
         ]);
       }
+      // 種目なし（日付ヘッダーのみ表示確認のため）
       if (sql.includes('FROM workout_exercises')) {
         return Promise.resolve([]);
       }
       return Promise.resolve([]);
     });
-    mockGetFirstAsync.mockResolvedValue(null);
   };
 
   it('日付ヘッダーに ChevronRight アイコンが表示されない', async () => {
@@ -341,6 +344,7 @@ describe('DaySummary - set 文言追加', () => {
           },
         ]);
       }
+      // workout_exercises JOIN exercises クエリ（最適化後）: exercise_name を含む
       if (sql.includes('FROM workout_exercises')) {
         return Promise.resolve([
           {
@@ -349,6 +353,7 @@ describe('DaySummary - set 文言追加', () => {
             exercise_id: 'ex-bench',
             display_order: 1,
             memo: null,
+            exercise_name: 'ベンチプレス',
           },
         ]);
       }
@@ -373,13 +378,6 @@ describe('DaySummary - set 文言追加', () => {
         ]);
       }
       return Promise.resolve([]);
-    });
-
-    mockGetFirstAsync.mockImplementation((_sql: string, params: unknown[]) => {
-      if (params[0] === 'ex-bench') {
-        return Promise.resolve({ id: 'ex-bench', name: 'ベンチプレス' });
-      }
-      return Promise.resolve(null);
     });
   };
 
@@ -446,6 +444,7 @@ describe('DaySummary - メモ表示', () => {
           },
         ]);
       }
+      // workout_exercises JOIN exercises クエリ（最適化後）: exercise_name を含む
       if (sql.includes('FROM workout_exercises')) {
         return Promise.resolve([
           {
@@ -454,6 +453,7 @@ describe('DaySummary - メモ表示', () => {
             exercise_id: 'ex-bench',
             display_order: 1,
             memo: 'グリップ幅を少し広めに',
+            exercise_name: 'ベンチプレス',
           },
         ]);
       }
@@ -470,13 +470,6 @@ describe('DaySummary - メモ表示', () => {
         ]);
       }
       return Promise.resolve([]);
-    });
-
-    mockGetFirstAsync.mockImplementation((_sql: string, params: unknown[]) => {
-      if (params[0] === 'ex-bench') {
-        return Promise.resolve({ id: 'ex-bench', name: 'ベンチプレス' });
-      }
-      return Promise.resolve(null);
     });
   };
 
@@ -497,6 +490,7 @@ describe('DaySummary - メモ表示', () => {
           },
         ]);
       }
+      // workout_exercises JOIN exercises クエリ（最適化後）: exercise_name を含む
       if (sql.includes('FROM workout_exercises')) {
         return Promise.resolve([
           {
@@ -505,6 +499,7 @@ describe('DaySummary - メモ表示', () => {
             exercise_id: 'ex-bench',
             display_order: 1,
             memo: null,
+            exercise_name: 'ベンチプレス',
           },
         ]);
       }
@@ -521,13 +516,6 @@ describe('DaySummary - メモ表示', () => {
         ]);
       }
       return Promise.resolve([]);
-    });
-
-    mockGetFirstAsync.mockImplementation((_sql: string, params: unknown[]) => {
-      if (params[0] === 'ex-bench') {
-        return Promise.resolve({ id: 'ex-bench', name: 'ベンチプレス' });
-      }
-      return Promise.resolve(null);
     });
   };
 

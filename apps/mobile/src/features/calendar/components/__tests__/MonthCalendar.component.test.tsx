@@ -147,6 +147,46 @@ describe('MonthCalendar - カスタムヘッダー', () => {
 });
 
 // ==========================================
+// 2重ジャンプ防止テスト
+// 矢印ボタン押下中に onMomentumScrollEnd が来ても月変更は1回だけ
+// ==========================================
+describe('MonthCalendar - アニメーション中の多重発火防止', () => {
+  it('矢印ボタン押下中に onMomentumScrollEnd が発火しても月は1回しか変わらない', async () => {
+    const mockOnMonthChange = jest.fn();
+    render(
+      <MonthCalendar
+        trainingDates={[]}
+        selectedDate={null}
+        onDayPress={jest.fn()}
+        onMonthChange={mockOnMonthChange}
+      />,
+    );
+
+    // 矢印ボタンを押す（isAnimatingRef.current = true が同期でセットされるべき）
+    fireEvent.press(screen.getByTestId('prev-month-button'));
+
+    // アニメーション中に onMomentumScrollEnd が発火するシミュレーション
+    // （pagingEnabled ScrollView が scrollTo animated:true に反応するケース）
+    fireEvent(screen.getByTestId('month-calendar-scroll'), 'momentumScrollEnd', {
+      nativeEvent: { contentOffset: { x: 0 } },
+    });
+
+    // すべてのタイマーを進める
+    act(() => {
+      jest.runAllTimers();
+    });
+
+    // 2ヶ月送り（12月）ではなく1ヶ月送り（1月）であること
+    await waitFor(() => {
+      expect(screen.getByText('2026年1月')).toBeTruthy();
+    });
+    // onMonthChange が1回だけ呼ばれる（2回は NG）
+    expect(mockOnMonthChange).toHaveBeenCalledTimes(1);
+    expect(mockOnMonthChange).toHaveBeenCalledWith('2026-01-01');
+  });
+});
+
+// ==========================================
 // スクロール（スワイプ）テスト
 // React Native テスト環境では Dimensions.get('window').width = 750
 // ==========================================
@@ -331,5 +371,35 @@ describe('MonthCalendar - Calendar パネル設定', () => {
     for (const instance of mockCalendarInstances) {
       expect(instance.enableSwipeMonths).toBe(false);
     }
+  });
+});
+
+// ==========================================
+// Issue #171: 初期表示フラッシュ防止テスト
+// 初期 containerWidth を親のパディング分差し引いて設定し、
+// onLayout 計測前のサイズずれによるフラッシュを防ぐ
+// ==========================================
+describe('MonthCalendar - 初期表示フラッシュ防止 (#171)', () => {
+  it('初期 containerWidth が Dimensions.width - PARENT_HORIZONTAL_PADDING になる', () => {
+    render(<MonthCalendar trainingDates={[]} selectedDate={null} onDayPress={jest.fn()} />);
+    const scrollView = screen.getByTestId('month-calendar-scroll');
+
+    // テスト環境の Dimensions.get('window').width = 750
+    // PARENT_HORIZONTAL_PADDING = 40 → 初期幅 = 710
+    // contentOffset.x が 710（中央パネル）であることで初期幅を間接検証
+    expect(scrollView.props.contentOffset).toEqual({ x: 710, y: 0 });
+  });
+
+  it('onLayout で実測幅に更新される', () => {
+    render(<MonthCalendar trainingDates={[]} selectedDate={null} onDayPress={jest.fn()} />);
+    const container = screen.getByTestId('calendar-container');
+
+    // onLayout で実測幅を通知
+    fireEvent(container, 'layout', {
+      nativeEvent: { layout: { width: 353, height: 400 } },
+    });
+
+    const scrollView = screen.getByTestId('month-calendar-scroll');
+    expect(scrollView.props.contentOffset).toEqual({ x: 353, y: 0 });
   });
 });

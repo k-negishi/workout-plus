@@ -7,12 +7,12 @@
  */
 import { format, parseISO } from 'date-fns';
 import { ja } from 'date-fns/locale';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import { Polyline, Svg } from 'react-native-svg';
 
 import { getDatabase } from '@/database/client';
-import type { ExerciseRow, SetRow, WorkoutExerciseRow, WorkoutRow } from '@/database/types';
+import type { SetRow, WorkoutExerciseRow, WorkoutRow } from '@/database/types';
 
 /** チェックアイコン */
 function CheckIcon() {
@@ -76,6 +76,20 @@ export function DaySummary({
   const [totalSets, setTotalSets] = useState(0);
   const [totalVolume, setTotalVolume] = useState(0);
 
+  // dateString 変更時に旧データを即座にクリアして、1フレームのちらつきを防ぐ
+  // key={selectedDate} によるリマウントを廃止したため、この ref で前回値を追跡する
+  const prevDateRef = useRef(dateString);
+  if (prevDateRef.current !== dateString) {
+    prevDateRef.current = dateString;
+    // レンダー中に同期的に state をリセット（React のレンダー中 setState パターン）
+    // これにより useEffect を待たずに即座にローディング表示に切り替わる
+    setLoading(true);
+    setWorkout(null);
+    setExerciseSets([]);
+    setTotalSets(0);
+    setTotalVolume(0);
+  }
+
   // 日付ラベル
   const dateLabel = (() => {
     try {
@@ -114,9 +128,14 @@ export function DaySummary({
       const w = workouts[0]!;
       setWorkout(w);
 
-      // 種目一覧を取得
-      const exercises = await db.getAllAsync<WorkoutExerciseRow>(
-        'SELECT * FROM workout_exercises WHERE workout_id = ? ORDER BY display_order',
+      // 種目と種目名を JOIN で一括取得（N+1 を1クエリに削減）
+      type WorkoutExerciseWithName = WorkoutExerciseRow & { exercise_name: string };
+      const exercises = await db.getAllAsync<WorkoutExerciseWithName>(
+        `SELECT we.*, e.name AS exercise_name
+         FROM workout_exercises we
+         JOIN exercises e ON we.exercise_id = e.id
+         WHERE we.workout_id = ?
+         ORDER BY we.display_order`,
         [w.id],
       );
 
@@ -124,41 +143,47 @@ export function DaySummary({
       let volumeTotal = 0;
       const exerciseData: ExerciseSetData[] = [];
 
-      for (const we of exercises) {
-        // 種目名を取得
-        const exercise = await db.getFirstAsync<ExerciseRow>(
-          'SELECT * FROM exercises WHERE id = ?',
-          [we.exercise_id],
+      if (exercises.length > 0) {
+        // 全セットを IN 句で一括取得（種目数N回を1クエリに削減）
+        const workoutExerciseIds = exercises.map((e) => e.id);
+        const placeholders = workoutExerciseIds.map(() => '?').join(', ');
+        const allSets = await db.getAllAsync<SetRow>(
+          `SELECT * FROM sets WHERE workout_exercise_id IN (${placeholders}) ORDER BY workout_exercise_id, set_number`,
+          workoutExerciseIds,
         );
 
-        // セットを取得
-        const sets = await db.getAllAsync<SetRow>(
-          'SELECT * FROM sets WHERE workout_exercise_id = ? ORDER BY set_number',
-          [we.id],
-        );
+        // セットを workout_exercise_id ごとにグループ化
+        const setsByExercise = new Map<string, SetRow[]>();
+        for (const s of allSets) {
+          const list = setsByExercise.get(s.workout_exercise_id) ?? [];
+          list.push(s);
+          setsByExercise.set(s.workout_exercise_id, list);
+        }
 
-        setsTotal += sets.length;
+        for (const we of exercises) {
+          const sets = setsByExercise.get(we.id) ?? [];
+          setsTotal += sets.length;
 
-        const setData = sets.map((s) => {
-          if (s.weight != null && s.reps != null) {
-            volumeTotal += s.weight * s.reps;
-          }
-          return {
-            setNumber: s.set_number,
-            weight: s.weight,
-            reps: s.reps,
-            estimated1RM: s.estimated_1rm,
-          };
-        });
+          const setData = sets.map((s) => {
+            if (s.weight != null && s.reps != null) {
+              volumeTotal += s.weight * s.reps;
+            }
+            return {
+              setNumber: s.set_number,
+              weight: s.weight,
+              reps: s.reps,
+              estimated1RM: s.estimated_1rm,
+            };
+          });
 
-        exerciseData.push({
-          workoutExerciseId: we.id,
-          // exercise_id は WorkoutExerciseRow から取得（ExerciseHistory 遷移時に使用）
-          exerciseId: we.exercise_id,
-          exerciseName: exercise?.name ?? '不明な種目',
-          memo: we.memo,
-          sets: setData,
-        });
+          exerciseData.push({
+            workoutExerciseId: we.id,
+            exerciseId: we.exercise_id,
+            exerciseName: we.exercise_name,
+            memo: we.memo,
+            sets: setData,
+          });
+        }
       }
 
       setExerciseSets(exerciseData);
@@ -183,7 +208,7 @@ export function DaySummary({
 
   if (loading) {
     return (
-      <View style={{ marginTop: 20, alignItems: 'center', paddingVertical: 32 }}>
+      <View style={{ marginTop: 0, alignItems: 'center', paddingVertical: 32 }}>
         <ActivityIndicator size="small" color="#4D94FF" />
       </View>
     );
@@ -192,7 +217,7 @@ export function DaySummary({
   // ワークアウトなし
   if (!workout) {
     return (
-      <View style={{ marginTop: 20 }}>
+      <View style={{ marginTop: 0 }}>
         <View style={{ paddingVertical: 12, marginBottom: 12 }}>
           <Text style={{ fontSize: 16, fontWeight: '600', color: '#334155' }}>{dateLabel}</Text>
         </View>
@@ -204,7 +229,7 @@ export function DaySummary({
   }
 
   return (
-    <View style={{ marginTop: 20 }}>
+    <View style={{ marginTop: 0 }}>
       {/* 日付ヘッダー: T5 でタップ遷移を廃止し、非インタラクティブな View に変更 */}
       <View
         testID="date-header"
