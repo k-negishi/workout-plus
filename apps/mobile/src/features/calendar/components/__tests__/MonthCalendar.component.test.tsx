@@ -82,9 +82,7 @@ describe('MonthCalendar - カスタムヘッダー', () => {
 
     const nextButton = screen.getByTestId('next-month-button');
     // Pressable の disabled は accessibilityState.disabled または aria-disabled で表れる
-    expect(
-      nextButton.props.accessibilityState?.disabled ?? nextButton.props.disabled,
-    ).toBe(true);
+    expect(nextButton.props.accessibilityState?.disabled ?? nextButton.props.disabled).toBe(true);
   });
 
   it('当月表示中に → ボタンを押しても月が変わらない (#164-C1)', () => {

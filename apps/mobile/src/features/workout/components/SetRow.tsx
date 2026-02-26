@@ -70,8 +70,7 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
       const filtered = text.replace(/[^0-9.]/g, '');
       // 小数点の重複を防ぐ（例: "6..5" → "6.5"）
       const parts = filtered.split('.');
-      const cleaned =
-        parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : filtered;
+      const cleaned = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : filtered;
       setWeightText(cleaned);
       onWeightChange(set.id, parseInputToNumber(cleaned));
     },

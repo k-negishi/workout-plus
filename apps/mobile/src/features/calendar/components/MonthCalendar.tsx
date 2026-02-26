@@ -45,12 +45,32 @@ import type { DateData, MarkedDates } from 'react-native-calendars/src/types';
 // 日本語ロケール設定
 LocaleConfig.locales['ja'] = {
   monthNames: [
-    '1月', '2月', '3月', '4月', '5月', '6月',
-    '7月', '8月', '9月', '10月', '11月', '12月',
+    '1月',
+    '2月',
+    '3月',
+    '4月',
+    '5月',
+    '6月',
+    '7月',
+    '8月',
+    '9月',
+    '10月',
+    '11月',
+    '12月',
   ],
   monthNamesShort: [
-    '1月', '2月', '3月', '4月', '5月', '6月',
-    '7月', '8月', '9月', '10月', '11月', '12月',
+    '1月',
+    '2月',
+    '3月',
+    '4月',
+    '5月',
+    '6月',
+    '7月',
+    '8月',
+    '9月',
+    '10月',
+    '11月',
+    '12月',
   ],
   dayNames: ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日'],
   dayNamesShort: ['日', '月', '火', '水', '木', '金', '土'],
@@ -85,9 +105,7 @@ export function MonthCalendar({
   const [displayMonth, setDisplayMonth] = useState(todayMonth);
 
   // onLayout で取得したコンテナ幅。初期値は Dimensions で除算ゼロを防ぐ
-  const [containerWidth, setContainerWidth] = useState(
-    () => Dimensions.get('window').width,
-  );
+  const [containerWidth, setContainerWidth] = useState(() => Dimensions.get('window').width);
 
   // アニメーション中の多重発火防止フラグ
   const [isAnimating, setIsAnimating] = useState(false);
@@ -277,9 +295,7 @@ export function MonthCalendar({
           accessibilityLabel="翌月"
           accessibilityRole="button"
         >
-          <Text style={[styles.arrowText, isNextMonthDisabled && styles.arrowDisabled]}>
-            ›
-          </Text>
+          <Text style={[styles.arrowText, isNextMonthDisabled && styles.arrowDisabled]}>›</Text>
         </Pressable>
       </View>
 
