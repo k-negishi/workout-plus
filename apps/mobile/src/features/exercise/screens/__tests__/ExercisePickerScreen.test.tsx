@@ -335,6 +335,90 @@ describe('ExercisePickerScreen - カスタム種目追加 FAB（Issue #136）', 
   });
 });
 
+describe('ExercisePickerScreen - お気に入りトグルの即時反映（Issue #186）', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseExerciseSearch.mockReturnValue(DEFAULT_SEARCH_STATE);
+  });
+
+  it('お気に入りボタンを押すとloadExercisesが呼ばれてリストが再取得される', async () => {
+    const mockLoadExercises = jest.fn().mockResolvedValue(undefined);
+    mockUseExerciseSearch.mockReturnValue({
+      ...DEFAULT_SEARCH_STATE,
+      loadExercises: mockLoadExercises,
+    });
+
+    render(<ExercisePickerScreen />);
+
+    // スクワット（未追加種目）のお気に入りボタンをタップ
+    const favoriteButtons = screen.getAllByLabelText('お気に入りに追加');
+    // スクワットのお気に入りボタンをタップ（ベンチプレスも isFavorite: false なので2つある）
+    fireEvent.press(favoriteButtons[0]!);
+
+    // DB更新後にloadExercisesが呼ばれることを確認
+    // handleToggleFavoriteはasyncなのでmicrotask完了を待つ
+    await screen.findByText('スクワット');
+    expect(mockLoadExercises).toHaveBeenCalledTimes(1);
+  });
+
+  it('お気に入り解除時もloadExercisesが呼ばれる', async () => {
+    const mockLoadExercises = jest.fn().mockResolvedValue(undefined);
+    // お気に入り登録済みの種目を含むセクション
+    const sectionsWithFavorite = [
+      {
+        title: 'お気に入り',
+        data: [
+          {
+            id: 'exercise-bench',
+            name: 'ベンチプレス',
+            muscleGroup: 'chest',
+            equipment: 'barbell',
+            isCustom: false,
+            isFavorite: true,
+            isDeleted: false,
+            createdAt: 1000,
+            updatedAt: 1000,
+            sortOrder: 1,
+          },
+        ],
+      },
+      {
+        title: 'テスト種目',
+        data: [
+          {
+            id: 'exercise-squat',
+            name: 'スクワット',
+            muscleGroup: 'legs',
+            equipment: 'barbell',
+            isCustom: false,
+            isFavorite: false,
+            isDeleted: false,
+            createdAt: 1000,
+            updatedAt: 1000,
+            sortOrder: 2,
+          },
+        ],
+      },
+    ];
+
+    mockUseExerciseSearch.mockReturnValue({
+      ...DEFAULT_SEARCH_STATE,
+      sections: sectionsWithFavorite,
+      allExercises: sectionsWithFavorite.flatMap((s) => s.data),
+      loadExercises: mockLoadExercises,
+    });
+
+    render(<ExercisePickerScreen />);
+
+    // お気に入り解除ボタン（ベンチプレスは isFavorite: true）をタップ
+    const unfavoriteButton = screen.getByLabelText('お気に入り解除');
+    fireEvent.press(unfavoriteButton);
+
+    await screen.findByText('ベンチプレス');
+    expect(mockLoadExercises).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('ExercisePickerScreen - 左スワイプ「履歴」ボタン（Issue #155）', () => {
   beforeEach(() => {
     jest.clearAllMocks();

@@ -295,10 +295,14 @@ export const ExercisePickerScreen: React.FC = () => {
     navigation.goBack();
   }, [selectedIds, session, navigation]);
 
-  /** お気に入りトグル */
-  const handleToggleFavorite = useCallback(async (exerciseId: string) => {
-    await ExerciseRepository.toggleFavorite(exerciseId);
-  }, []);
+  /** お気に入りトグル: DB更新後にリストを再取得してUIを即時反映する */
+  const handleToggleFavorite = useCallback(
+    async (exerciseId: string) => {
+      await ExerciseRepository.toggleFavorite(exerciseId);
+      await loadExercises();
+    },
+    [loadExercises],
+  );
 
   /** カスタム種目を作成する */
   const handleCreateCustom = useCallback(async () => {
