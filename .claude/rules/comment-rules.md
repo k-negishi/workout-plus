@@ -53,4 +53,5 @@ const behavior = Platform.OS === 'ios' ? 'padding' : 'height';
 ```
 
 ## その他
-`Issue #165: テストコードの lint エラー修正` のようなコミットメッセージは git log でわかるため、コメントには書かない。
+### 禁止事項
+`Issue #165: テストコードの lint エラー修正` のようなIssue番号を載せるコミットメッセージ禁止。 git log でわかるため、コメントには書かない。

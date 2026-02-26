@@ -48,6 +48,8 @@ allowed-tools: Read, Write, Bash
 <detail>
 - <file path 1>
 - <file path 2>
+
+Co-Authored-By: <モデル名> <noreply@anthropic.com>
 ```
 
 - `summary` は 30〜60 文字目安
