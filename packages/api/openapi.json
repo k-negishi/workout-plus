@@ -202,7 +202,7 @@
           "AI"
         ],
         "summary": "AI チャット",
-        "description": "トレーニング履歴を含めて Claude Haiku 4.5 に問い合わせる",
+        "description": "トレーニング履歴を含めて GPT-5 mini に問い合わせる",
         "parameters": [
           {
             "schema": {
