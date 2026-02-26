@@ -17,7 +17,7 @@ import type {
 } from '@react-navigation/native-stack';
 import { format, parseISO } from 'date-fns';
 import { ja } from 'date-fns/locale';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -41,6 +41,42 @@ import { TimerBar } from '../components/TimerBar';
 import { usePreviousRecord } from '../hooks/usePreviousRecord';
 import { useTimer } from '../hooks/useTimer';
 import { useWorkoutSession } from '../hooks/useWorkoutSession';
+
+/**
+ * ワークアウト完了処理をモジュールレベルに分離して RecordScreen の複雑度を下げる。
+ * 有効種目 0 件時はワークアウトを破棄して goBack、1件以上はサマリーへ遷移する。
+ */
+async function performCompleteWorkout({
+  currentExercisesCount,
+  currentWorkoutId,
+  completeWorkout,
+  goBack,
+  navigateToSummary,
+}: {
+  currentExercisesCount: number;
+  currentWorkoutId: string | undefined;
+  completeWorkout: () => Promise<{ exerciseCount: number }>;
+  goBack: () => void;
+  navigateToSummary: (workoutId: string) => void;
+}): Promise<void> {
+  if (currentExercisesCount === 0) return;
+  try {
+    const summary = await completeWorkout();
+    // 有効種目が 0 件の場合はワークアウトを破棄して前画面へ戻る
+    // （WorkoutSummary に遷移すると削除済みIDを参照してエラーになるため）
+    if (summary.exerciseCount === 0) {
+      showSuccessToast('記録がないため破棄しました');
+      goBack();
+      return;
+    }
+    showSuccessToast('ワークアウトを記録しました');
+    if (currentWorkoutId) {
+      navigateToSummary(currentWorkoutId);
+    }
+  } catch {
+    // エラートーストはuseWorkoutSession内で表示済み
+  }
+}
 
 /**
  * T09: HomeStackParamList の Record 画面 Props
@@ -196,20 +232,18 @@ export const RecordScreen: React.FC = () => {
   }, [navigation]);
 
   /** ワークアウト完了 */
-  const handleComplete = useCallback(async () => {
-    if (store.currentExercises.length === 0) return;
-    try {
-      const completedWorkoutId = store.currentWorkout?.id;
-      await session.completeWorkout();
-      showSuccessToast('ワークアウトを記録しました');
-      if (completedWorkoutId) {
+  const handleComplete = useCallback(
+    () =>
+      performCompleteWorkout({
+        currentExercisesCount: store.currentExercises.length,
+        currentWorkoutId: store.currentWorkout?.id,
+        completeWorkout: session.completeWorkout,
+        goBack: navigation.goBack,
         // T09: RecordStack 廃止後は現在のスタック内の WorkoutSummary に遷移
-        navigation.replace('WorkoutSummary', { workoutId: completedWorkoutId });
-      }
-    } catch {
-      // エラートーストはuseWorkoutSession内で表示済み
-    }
-  }, [session, store.currentWorkout, store.currentExercises.length, navigation]);
+        navigateToSummary: (id) => navigation.replace('WorkoutSummary', { workoutId: id }),
+      }),
+    [session.completeWorkout, store.currentWorkout, store.currentExercises.length, navigation],
+  );
 
   /** タイマー計測停止（ワークアウトは継続） */
   const handleStopTimer = useCallback(() => {
@@ -300,6 +334,16 @@ export const RecordScreen: React.FC = () => {
 
   const hasExercises = store.currentExercises.length > 0;
 
+  /** recording モード判定: status='recording' のときのみ TimerBar と完了ボタンを表示する */
+  const isRecordingMode = store.currentWorkout?.status === 'recording';
+
+  /**
+   * ワークアウトメモの現在値。
+   * optional chaining と nullish coalescing を useMemo 内に閉じ込めて
+   * RecordScreen 本体の cyclomatic complexity を抑制する。
+   */
+  const workoutMemo = useMemo(() => store.currentWorkout?.memo ?? '', [store.currentWorkout]);
+
   // ヘッダーに表示する日付ラベル: 過去日付記録なら選択日、当日なら今日の日付
   const headerDateString = targetDate ?? format(new Date(), 'yyyy-MM-dd');
   const headerDateLabel = format(parseISO(headerDateString), 'M月d日のワークアウト', {
@@ -347,17 +391,19 @@ export const RecordScreen: React.FC = () => {
         <View style={{ width: 40 }} />
       </View>
 
-      {/* タイマーバー（上部固定） */}
-      <TimerBar
-        timerStatus={timer.timerStatus}
-        elapsedSeconds={timer.elapsedSeconds}
-        onStart={timer.startTimer}
-        onPause={timer.pauseTimer}
-        onResume={timer.resumeTimer}
-        onStopTimer={handleStopTimer}
-        onComplete={handleComplete}
-        isCompleteDisabled={!hasExercises}
-      />
+      {/* タイマーバー: recording モード（新規登録・再開）のみ表示する */}
+      {isRecordingMode && (
+        <TimerBar
+          timerStatus={timer.timerStatus}
+          elapsedSeconds={timer.elapsedSeconds}
+          onStart={timer.startTimer}
+          onPause={timer.pauseTimer}
+          onResume={timer.resumeTimer}
+          onStopTimer={handleStopTimer}
+          onComplete={handleComplete}
+          isCompleteDisabled={!hasExercises}
+        />
+      )}
 
       {/* Issue #134: キーボード被り対策 - iOS では padding、Android では height で回避 */}
       <KeyboardAvoidingView
@@ -448,7 +494,7 @@ export const RecordScreen: React.FC = () => {
               placeholderTextColor="#94a3b8"
               multiline
               textAlignVertical="top"
-              defaultValue={store.currentWorkout?.memo ?? ''}
+              defaultValue={workoutMemo}
               onEndEditing={(e) => {
                 void session.updateWorkoutMemo(e.nativeEvent.text);
               }}

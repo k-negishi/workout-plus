@@ -23,14 +23,14 @@ describe('TimerBar - ボタン文言', () => {
     isCompleteDisabled: false,
   };
 
-  it('終了ボタンが「終了」と表示される', () => {
+  it('完了ボタンが「完了」と表示される', () => {
     render(<TimerBar {...defaultProps} />);
-    expect(screen.getByText('終了')).toBeTruthy();
+    expect(screen.getByText('完了')).toBeTruthy();
   });
 
-  it('終了ボタンのaccessibilityLabelが「ワークアウトを終了」である', () => {
+  it('完了ボタンのaccessibilityLabelが「ワークアウトを完了」である', () => {
     render(<TimerBar {...defaultProps} />);
-    expect(screen.getByLabelText('ワークアウトを終了')).toBeTruthy();
+    expect(screen.getByLabelText('ワークアウトを完了')).toBeTruthy();
   });
 });
 

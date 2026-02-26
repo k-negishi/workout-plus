@@ -167,9 +167,9 @@ export const TimerBar: React.FC<TimerBarProps> = ({
           borderRadius: 8,
           backgroundColor: isCompleteDisabled ? '#d1d5db' : '#10B981',
         }}
-        accessibilityLabel="ワークアウトを終了"
+        accessibilityLabel="ワークアウトを完了"
       >
-        <Text style={{ fontSize: 16, fontWeight: '600', color: '#FFFFFF' }}>終了</Text>
+        <Text style={{ fontSize: 16, fontWeight: '600', color: '#FFFFFF' }}>完了</Text>
       </TouchableOpacity>
     </View>
   );

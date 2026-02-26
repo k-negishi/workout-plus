@@ -5,8 +5,9 @@
  * - ExerciseHistory navigation（T034）
  * - T09: workoutId params での編集モード起動テスト
  * - T09: 編集モードで前回記録バッジが非表示のテスト
+ * - UX統一設計: status による TimerBar 表示制御・handleComplete 空記録時 goBack
  */
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import React from 'react';
 import { Alert } from 'react-native';
 
@@ -50,7 +51,7 @@ const mockStartSession = jest.fn().mockResolvedValue(undefined);
 
 jest.mock('@/stores/workoutSessionStore', () => ({
   useWorkoutSessionStore: jest.fn(() => ({
-    currentWorkout: { id: 'w1', memo: '' },
+    currentWorkout: { id: 'w1', memo: '', status: 'recording' as const },
     currentExercises: [],
     currentSets: {},
     timerStatus: 'not_started' as const,
@@ -87,11 +88,12 @@ jest.mock('../../hooks/useTimer', () => ({
   }),
 }));
 
+const mockCompleteWorkout = jest.fn();
 const mockDiscardWorkout = jest.fn().mockResolvedValue(undefined);
 jest.mock('../../hooks/useWorkoutSession', () => ({
   useWorkoutSession: () => ({
     startSession: mockStartSession,
-    completeWorkout: jest.fn().mockResolvedValue(undefined),
+    completeWorkout: mockCompleteWorkout,
     discardWorkout: mockDiscardWorkout,
     updateSet: jest.fn().mockResolvedValue(undefined),
     deleteSet: jest.fn().mockResolvedValue(undefined),
@@ -132,6 +134,24 @@ describe('RecordScreen', () => {
     mockGetAllAsync.mockResolvedValue([]);
     mockRunAsync.mockResolvedValue(undefined);
     mockStartSession.mockResolvedValue(undefined);
+    mockCompleteWorkout.mockResolvedValue({
+      exerciseCount: 1,
+      setCount: 2,
+      totalVolume: 800,
+      elapsedSeconds: 300,
+      newPRs: [],
+    });
+    // clearAllMocks は mockReturnValue 実装をリセットしないため、各テスト開始時に
+    // recording モード（TimerBar 表示）のデフォルト状態を明示的に設定する
+    mockUseWorkoutSessionStore.mockReturnValue({
+      currentWorkout: { id: 'w1', memo: '', status: 'recording' as const },
+      currentExercises: [],
+      currentSets: {},
+      timerStatus: 'not_started' as const,
+      elapsedSeconds: 0,
+      continuationBaseExerciseIds: null,
+      setContinuationBaseExerciseIds: jest.fn(),
+    } as ReturnType<typeof useWorkoutSessionStore>);
   });
 
   afterEach(() => {
@@ -433,6 +453,128 @@ describe('RecordScreen', () => {
       mockRouteParams = { targetDate: '2026-01-15' };
       render(<RecordScreen />);
       expect(mockStartSession).toHaveBeenCalledWith({ targetDate: '2026-01-15' });
+    });
+  });
+
+  describe('UX統一設計: status による TimerBar 表示制御', () => {
+    it('status=recording の場合、TimerBar の完了ボタンが表示される', () => {
+      mockUseWorkoutSessionStore.mockReturnValue({
+        currentWorkout: { id: 'w1', memo: '', status: 'recording' as const },
+        currentExercises: [],
+        currentSets: {},
+        timerStatus: 'not_started' as const,
+        elapsedSeconds: 0,
+        continuationBaseExerciseIds: null,
+        setContinuationBaseExerciseIds: jest.fn(),
+      } as ReturnType<typeof useWorkoutSessionStore>);
+
+      render(<RecordScreen />);
+      expect(screen.getByLabelText('ワークアウトを完了')).toBeTruthy();
+    });
+
+    it('status=completed の場合、TimerBar が表示されない（完了ボタンなし）', () => {
+      mockUseWorkoutSessionStore.mockReturnValue({
+        currentWorkout: { id: 'w1', memo: '', status: 'completed' as const },
+        currentExercises: [],
+        currentSets: {},
+        timerStatus: 'not_started' as const,
+        elapsedSeconds: 0,
+        continuationBaseExerciseIds: null,
+        setContinuationBaseExerciseIds: jest.fn(),
+      } as ReturnType<typeof useWorkoutSessionStore>);
+
+      render(<RecordScreen />);
+      expect(screen.queryByLabelText('ワークアウトを完了')).toBeNull();
+    });
+
+    it('status=undefined（ローディング中）の場合、TimerBar が表示されない', () => {
+      mockUseWorkoutSessionStore.mockReturnValue({
+        currentWorkout: null,
+        currentExercises: [],
+        currentSets: {},
+        timerStatus: 'not_started' as const,
+        elapsedSeconds: 0,
+        continuationBaseExerciseIds: null,
+        setContinuationBaseExerciseIds: jest.fn(),
+      } as ReturnType<typeof useWorkoutSessionStore>);
+
+      render(<RecordScreen />);
+      expect(screen.queryByLabelText('ワークアウトを完了')).toBeNull();
+    });
+  });
+
+  describe('UX統一設計: handleComplete 有効種目 0 件時の goBack', () => {
+    it('completeWorkout が exerciseCount=0 を返す場合、goBack が呼ばれ WorkoutSummary に遷移しない', async () => {
+      mockCompleteWorkout.mockResolvedValueOnce({
+        exerciseCount: 0,
+        setCount: 0,
+        totalVolume: 0,
+        elapsedSeconds: 0,
+        newPRs: [],
+      });
+
+      // 種目あり（guard を通過させる） + recording モード（ボタンを表示する）
+      mockUseWorkoutSessionStore.mockReturnValue({
+        currentWorkout: { id: 'w1', memo: '', status: 'recording' as const },
+        currentExercises: [
+          {
+            id: 'we1',
+            exerciseId: 'e1',
+            workoutId: 'w1',
+            displayOrder: 0,
+            memo: null,
+            createdAt: 1000,
+          },
+        ],
+        currentSets: { we1: [] },
+        timerStatus: 'not_started' as const,
+        elapsedSeconds: 0,
+        continuationBaseExerciseIds: null,
+        setContinuationBaseExerciseIds: jest.fn(),
+      } as ReturnType<typeof useWorkoutSessionStore>);
+
+      render(<RecordScreen />);
+      fireEvent.press(screen.getByLabelText('ワークアウトを完了'));
+
+      await waitFor(() => expect(mockGoBack).toHaveBeenCalledTimes(1));
+      expect(mockReplace).not.toHaveBeenCalled();
+    });
+
+    it('completeWorkout が exerciseCount>0 を返す場合、WorkoutSummary に遷移し goBack は呼ばれない', async () => {
+      mockCompleteWorkout.mockResolvedValueOnce({
+        exerciseCount: 1,
+        setCount: 2,
+        totalVolume: 800,
+        elapsedSeconds: 300,
+        newPRs: [],
+      });
+
+      mockUseWorkoutSessionStore.mockReturnValue({
+        currentWorkout: { id: 'w1', memo: '', status: 'recording' as const },
+        currentExercises: [
+          {
+            id: 'we1',
+            exerciseId: 'e1',
+            workoutId: 'w1',
+            displayOrder: 0,
+            memo: null,
+            createdAt: 1000,
+          },
+        ],
+        currentSets: { we1: [] },
+        timerStatus: 'not_started' as const,
+        elapsedSeconds: 0,
+        continuationBaseExerciseIds: null,
+        setContinuationBaseExerciseIds: jest.fn(),
+      } as ReturnType<typeof useWorkoutSessionStore>);
+
+      render(<RecordScreen />);
+      fireEvent.press(screen.getByLabelText('ワークアウトを完了'));
+
+      await waitFor(() =>
+        expect(mockReplace).toHaveBeenCalledWith('WorkoutSummary', { workoutId: 'w1' }),
+      );
+      expect(mockGoBack).not.toHaveBeenCalled();
     });
   });
 });

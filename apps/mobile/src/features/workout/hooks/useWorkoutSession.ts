@@ -194,9 +194,9 @@ async function cleanupExerciseSets(
   const validExerciseIds = new Set<string>();
   for (const exercise of exercises) {
     const sets = currentSets[exercise.id] ?? [];
-    const incompleteSets = sets.filter(
-      (s) => s.weight == null || s.reps == null || (s.reps === 0 && s.weight != null),
-    );
+    // 有効セット定義: weight != null AND reps != null AND reps > 0
+    // reps=0 は weight の有無に関わらず「未実施」として除外する
+    const incompleteSets = sets.filter((s) => s.weight == null || s.reps == null || s.reps === 0);
     for (const s of incompleteSets) {
       await SetRepository.delete(s.id);
     }
