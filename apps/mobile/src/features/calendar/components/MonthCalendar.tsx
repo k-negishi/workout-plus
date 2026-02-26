@@ -308,7 +308,11 @@ export const MonthCalendar = React.memo(function MonthCalendar({
   const headerTitle = `${displayMonth.getFullYear()}年${displayMonth.getMonth() + 1}月`;
 
   return (
-    <View onLayout={handleLayout} testID="calendar-container" style={{ marginBottom: -12 }}>
+    <View
+      onLayout={handleLayout}
+      testID="calendar-container"
+      style={{ marginBottom: -16, overflow: 'hidden' }}
+    >
       {/* カスタムヘッダー: 月名 + 矢印ボタン */}
       <View style={styles.header}>
         <Pressable
