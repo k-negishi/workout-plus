@@ -118,6 +118,20 @@ export const MonthCalendar = React.memo(function MonthCalendar({
 
   const scrollViewRef = useRef<ScrollView>(null);
 
+  // ScrollView の最大計測高を保持し、月ごとの高さ差を吸収する
+  // 一度計測した最大高は下がらない（ラチェット方式）ため、
+  // 全月でサマリーの位置が一定になる
+  const maxScrollHeightRef = useRef(0);
+  const [scrollMinHeight, setScrollMinHeight] = useState(0);
+
+  const handleScrollViewLayout = useCallback((event: LayoutChangeEvent) => {
+    const { height } = event.nativeEvent.layout;
+    if (height > maxScrollHeightRef.current) {
+      maxScrollHeightRef.current = height;
+      setScrollMinHeight(height);
+    }
+  }, []);
+
   // アニメーション中の同期ガード（ref）
   // isAnimating state は React のバッチ更新で commit が遅れるため、
   // scrollTo() の直後に onMomentumScrollEnd が発火すると stale な false を読む。
@@ -351,8 +365,11 @@ export const MonthCalendar = React.memo(function MonthCalendar({
           // ページ変更処理中はスクロールを無効化して多重発火を防ぐ
           scrollEnabled={!isAnimating}
           onMomentumScrollEnd={handleMomentumScrollEnd}
+          onLayout={handleScrollViewLayout}
           // 初期位置を中央（index 1）に設定
           contentOffset={{ x: containerWidth, y: 0 }}
+          // 最大計測高で固定し、月ごとの高さ差によるサマリー位置のズレを防ぐ
+          style={scrollMinHeight > 0 ? { minHeight: scrollMinHeight } : undefined}
           testID="month-calendar-scroll"
         >
           {months.map((month, index) => (
