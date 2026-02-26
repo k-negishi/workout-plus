@@ -100,12 +100,16 @@ describe('useExerciseSearch セクション計算ロジック', () => {
       expect(favSection!.data.map((e) => e.name)).toContain('スクワット');
     });
 
-    it('カスタム種目が「マイ種目」セクションに分類される', () => {
+    it('カスタム種目は「マイ種目」セクションとして独立せず、カテゴリ別セクションに含まれる', () => {
       const sections = computeSections(testExercises, '', null);
+      // 「マイ種目」セクションは表示されない
       const customSection = sections.find((s) => s.title === 'マイ種目');
-      expect(customSection).toBeDefined();
-      expect(customSection!.data).toHaveLength(1);
-      expect(customSection!.data[0]!.name).toBe('カスタム種目');
+      expect(customSection).toBeUndefined();
+      // カスタム種目（shoulders）は「肩の種目」セクションに含まれる
+      const shouldersSection = sections.find((s) => s.title === '肩の種目');
+      expect(shouldersSection).toBeDefined();
+      expect(shouldersSection!.data).toHaveLength(1);
+      expect(shouldersSection!.data[0]!.name).toBe('カスタム種目');
     });
 
     it('お気に入りセクションが最初に来る', () => {
@@ -113,10 +117,10 @@ describe('useExerciseSearch セクション計算ロジック', () => {
       expect(sections[0]!.title).toBe('お気に入り');
     });
 
-    it('残りの種目がカテゴリ別セクションに分類される', () => {
+    it('残りの種目がカテゴリ別セクションに分類される（カスタム種目も含む）', () => {
       const sections = computeSections(testExercises, '', null);
 
-      // お気に入りでもカスタムでもない胸の種目: インクラインダンベルプレスのみ
+      // お気に入りでない胸の種目: インクラインダンベルプレスのみ（カスタムも含まれる想定だが胸はカスタムなし）
       const chestSection = sections.find((s) => s.title === '胸の種目');
       expect(chestSection).toBeDefined();
       expect(chestSection!.data).toHaveLength(1);
@@ -126,6 +130,12 @@ describe('useExerciseSearch セクション計算ロジック', () => {
       const backSection = sections.find((s) => s.title === '背中の種目');
       expect(backSection).toBeDefined();
       expect(backSection!.data).toHaveLength(2);
+
+      // 肩の種目: カスタム種目が含まれる
+      const shouldersSection = sections.find((s) => s.title === '肩の種目');
+      expect(shouldersSection).toBeDefined();
+      expect(shouldersSection!.data).toHaveLength(1);
+      expect(shouldersSection!.data[0]!.isCustom).toBe(true);
     });
 
     it('データなしでは空配列を返す', () => {
@@ -205,22 +215,24 @@ describe('useExerciseSearch セクション計算ロジック', () => {
   });
 
   describe('セクション順序', () => {
-    it('カテゴリセクションは chest → back → biceps 順で並ぶ', () => {
-      // testExercises: chest=インクライン, back=デッドリフト+ラット, biceps=バーベルカール
-      // (shoulders=カスタム種目→マイ種目、legs=スクワット→お気に入り のためカテゴリセクションに出ない)
+    it('カテゴリセクションは chest → back → shoulders → biceps 順で並ぶ', () => {
+      // testExercises: chest=インクライン, back=デッドリフト+ラット, shoulders=カスタム種目, biceps=バーベルカール
+      // (legs=スクワット→お気に入り のためカテゴリセクションに出ない)
       const sections = computeSections(testExercises, '', null);
-      const categorySections = sections.filter(
-        (s) => s.title !== 'お気に入り' && s.title !== 'マイ種目',
-      );
+      // お気に入りセクション以外を取得
+      const categorySections = sections.filter((s) => s.title !== 'お気に入り');
       const chestIdx = categorySections.findIndex((s) => s.title === '胸の種目');
       const backIdx = categorySections.findIndex((s) => s.title === '背中の種目');
+      const shouldersIdx = categorySections.findIndex((s) => s.title === '肩の種目');
       const bicepsIdx = categorySections.findIndex((s) => s.title === '二頭の種目');
 
       expect(chestIdx).toBeGreaterThanOrEqual(0);
       expect(backIdx).toBeGreaterThanOrEqual(0);
+      expect(shouldersIdx).toBeGreaterThanOrEqual(0);
       expect(bicepsIdx).toBeGreaterThanOrEqual(0);
       expect(chestIdx).toBeLessThan(backIdx);
-      expect(backIdx).toBeLessThan(bicepsIdx);
+      expect(backIdx).toBeLessThan(shouldersIdx);
+      expect(shouldersIdx).toBeLessThan(bicepsIdx);
     });
 
     it('空のカテゴリセクションは表示されない', () => {

@@ -102,6 +102,7 @@ const MUSCLE_GROUP_OPTIONS: Array<{ key: MuscleGroup; label: string }> = [
 /**
  * Issue #116: 種目アクションボタン群コンポーネント
  * renderItem の complexity 削減のためコンポーネントに分離
+ * Issue #166: スターを Ionicons に変更して視認性を向上
  */
 const ExerciseItemActions: React.FC<{
   isAdded: boolean;
@@ -115,18 +116,18 @@ const ExerciseItemActions: React.FC<{
         <Text className="text-[13px] font-semibold text-[#10B981]">追加済み</Text>
       </View>
     )}
-    {/* お気に入りボタン */}
+    {/* お気に入りボタン: Ionicons でサイズ・コントラストを確保 */}
     <TouchableOpacity
       onPress={onToggleFavorite}
-      className="w-7 h-7 items-center justify-center"
+      className="w-8 h-8 items-center justify-center"
       hitSlop={4}
       accessibilityLabel={isFavorite ? 'お気に入り解除' : 'お気に入りに追加'}
     >
-      <Text
-        className={`text-[17px] ${isFavorite ? 'text-[#F59E0B]' : 'text-[#64748b] opacity-50'}`}
-      >
-        {isFavorite ? '★' : '☆'}
-      </Text>
+      <Ionicons
+        name={isFavorite ? 'star' : 'star-outline'}
+        size={20}
+        color={isFavorite ? '#F59E0B' : '#CBD5E1'}
+      />
     </TouchableOpacity>
   </View>
 );
@@ -474,9 +475,34 @@ export const ExercisePickerScreen: React.FC = () => {
           />
         }
         renderSectionHeader={({ section }) => (
-          <View className="flex-row justify-between items-center px-5 pt-3 pb-2">
-            <Text className="text-[15px] font-semibold text-[#334155]">{section.title}</Text>
-            <Text className="text-[14px] text-[#64748b]">{section.data.length}件</Text>
+          /* Issue #166: 背景色・文字色・サイズで種目行と明確に差別化 */
+          <View
+            style={{
+              backgroundColor: '#F8FAFC',
+              paddingHorizontal: 20,
+              paddingVertical: 8,
+              borderTopWidth: 1,
+              borderTopColor: '#e2e8f0',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+              {/* お気に入りセクションにはスターアイコンを前置して視認性を高める */}
+              {section.title === 'お気に入り' && <Ionicons name="star" size={13} color="#F59E0B" />}
+              <Text
+                style={{
+                  fontSize: 12,
+                  fontWeight: '700',
+                  color: '#94a3b8',
+                  letterSpacing: 0.3,
+                }}
+              >
+                {section.title}
+              </Text>
+            </View>
+            <Text style={{ fontSize: 11, color: '#cbd5e1' }}>{section.data.length}件</Text>
           </View>
         )}
         renderItem={({ item }) => {

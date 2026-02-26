@@ -106,11 +106,8 @@ export function computeSections(
   // お気に入りセクション
   const favorites = filtered.filter((e) => e.isFavorite);
 
-  // マイ種目セクション（カスタム作成かつお気に入り以外）
-  const custom = filtered.filter((e) => e.isCustom && !e.isFavorite);
-
-  // カテゴリ別（お気に入り・マイ種目以外）
-  const remaining = filtered.filter((e) => !e.isFavorite && !e.isCustom);
+  // カテゴリ別（お気に入り以外）—— カスタム種目もカテゴリに含める
+  const remaining = filtered.filter((e) => !e.isFavorite);
 
   // カテゴリでグルーピング
   const byCategory = new Map<MuscleGroup, Exercise[]>();
@@ -124,10 +121,6 @@ export function computeSections(
 
   if (favorites.length > 0) {
     result.push({ title: 'お気に入り', data: favorites });
-  }
-
-  if (custom.length > 0) {
-    result.push({ title: 'マイ種目', data: custom });
   }
 
   for (const cat of CATEGORY_ORDER) {
