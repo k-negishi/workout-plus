@@ -87,3 +87,21 @@ Babel 変換されずにクラッシュする。
 ```
 
 **判断基準**: RN の API に一切触れないロジックのみなら `.ts`、それ以外は `.tsx`。
+
+---
+
+## 4. `pnpm --filter` 経由のテスト実行で引数が壊れる
+
+`pnpm --filter mobile test -- --testPathPattern='xxx'` はパースが
+pnpm → package.json scripts → jest の3段階を経るため、パターンが正しく渡らないことがある。
+
+```bash
+# NG: pnpm filter 経由だと "No tests found" になるケースあり
+pnpm --filter mobile test -- --testPathPattern='calendar'
+
+# OK: apps/mobile に移動して npx jest を直接実行
+cd apps/mobile && npx jest --testPathPattern='calendar'
+```
+
+特に `--no-coverage` 等のハイフン付きオプションはパースで壊れやすい。
+テストが見つからないエラーが出たら、まず `npx jest` 直接実行を試す。

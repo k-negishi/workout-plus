@@ -117,6 +117,49 @@ Each rule file contains:
 - Correct code example with explanation
 - Additional context and references
 
+### 9. React レンダー最適化 (HIGH)
+
+日付タップ→サマリー表示の遅延調査（2026-02-26）で確立したパターン。
+
+#### `useMemo` 依存配列の参照安定化
+
+毎レンダーで新しい値を生成する式を `useMemo` の依存配列に入れると、memo が毎回無効化される。
+
+```typescript
+// NG: format() が毎レンダーで新しい文字列を生成 → markedDates が毎回再計算
+const today = format(new Date(), 'yyyy-MM-dd');
+const markedDates = useMemo(() => { ... }, [trainingDates, selectedDate, today]);
+
+// OK: today 自体を useMemo で安定化
+const today = useMemo(() => format(new Date(), 'yyyy-MM-dd'), []);
+const markedDates = useMemo(() => { ... }, [trainingDates, selectedDate, today]);
+```
+
+#### `React.memo` と `useMemo` の連携
+
+`React.memo` でコンポーネントをラップしても、内部の `useMemo` が壊れていると子コンポーネント（`react-native-calendars` の Calendar 等）の再レンダーは防げない。
+
+**手順**: useMemo の依存配列を先に安定化 → その後に React.memo をかける。逆順だと効果が出ない。
+
+#### `key={prop}` リマウントの代替: レンダー中の同期 setState
+
+`key={prop}` はコンポーネントの完全な破棄→再生成を引き起こす。旧データのちらつき防止が目的なら、`useRef` + レンダー中 setState で代替できる。
+
+```typescript
+// NG: key でリマウント（DOM 破棄→再生成、エフェクト再実行のコストが高い）
+<DaySummary key={selectedDate} dateString={selectedDate} />
+
+// OK: useRef で前回値を追跡し、変わっていれば同期的にクリア
+const prevDateRef = useRef(dateString);
+if (prevDateRef.current !== dateString) {
+  prevDateRef.current = dateString;
+  setLoading(true);
+  setData(null);
+}
+```
+
+React のレンダー中 setState は合法（再レンダーをトリガー）で、`useEffect` を待たずに即座にデータクリアできる。
+
 ## Full Compiled Document
 
 For the complete guide with all rules expanded: `AGENTS.md`

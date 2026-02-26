@@ -73,7 +73,7 @@ pnpm --filter @workout-plus/api typecheck     # 型チェック
 - 引き算のデザイン、実用性とクリーンさ最優先
 - メインカラー: #4D94FF（#0066FFは濃すぎるため廃止）
 - 黒文字は真っ黒を避け #475569（濃いグレー）で
-- 
+- UI/UX にこだわり抜いたアプリであり、アイコンのサイズや配置が適当すぎる、文字の大きさがバラバラ、余白が不均一などは避けること
 
 ## Active Technologies
 - TypeScript 5.x / React Native 0.81.5 (Expo SDK 52) + @react-navigation/bottom-tabs v7, NativeWind v4, react-native-calendars, expo-sqlite ~15.2.0, react-native-svg (003-wireframe-ui-fix)

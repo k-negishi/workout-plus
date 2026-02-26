@@ -51,3 +51,6 @@ const behavior = Platform.OS === 'ios' ? 'padding' : 'height';
 // TODO(Kei): パフォーマンス改善 - FlatList のキーが頻繁に変わり再レンダーが多い
 // FIXME: Android 13 以下で Modal のアニメーションがカクつく (#42)
 ```
+
+## その他
+`Issue #165: テストコードの lint エラー修正` のようなコミットメッセージは git log でわかるため、コメントには書かない。
