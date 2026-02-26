@@ -182,4 +182,61 @@ describe('SetRow', () => {
     fireEvent.changeText(repsInput, '10');
     expect(defaultProps.onRepsChange).toHaveBeenCalledWith('1', 10);
   });
+
+  // ────────────────────────────────────────────────────────────
+  // IME フィルタリング（Issue #165: iOS 日本語入力対応）
+  // ────────────────────────────────────────────────────────────
+
+  it('重量フィールドに日本語文字 "あ" を入力しても onWeightChange は呼ばれないこと（空文字扱い）', () => {
+    render(<SetRow {...defaultProps} />);
+    const weightInput = screen.getByTestId('weight-input');
+    // 日本語 IME が数字なしの文字列を onChangeText に渡した場合
+    fireEvent.changeText(weightInput, 'あ');
+    // 数値が取れないため onWeightChange(id, null) が呼ばれる
+    expect(defaultProps.onWeightChange).toHaveBeenCalledWith('1', null);
+  });
+
+  it('重量フィールドに "1あ0" を入力すると数値部分 10 が親に通知されること', () => {
+    render(<SetRow {...defaultProps} />);
+    const weightInput = screen.getByTestId('weight-input');
+    // 日本語 IME が数字と日本語文字を混在させた場合（例: IME が割り込む）
+    fireEvent.changeText(weightInput, '1あ0');
+    expect(defaultProps.onWeightChange).toHaveBeenCalledWith('1', 10);
+  });
+
+  it('重量フィールドに "6..5" を入力すると小数点重複が除去されて 6.5 が親に通知されること', () => {
+    render(<SetRow {...defaultProps} />);
+    const weightInput = screen.getByTestId('weight-input');
+    fireEvent.changeText(weightInput, '6..5');
+    expect(defaultProps.onWeightChange).toHaveBeenCalledWith('1', 6.5);
+  });
+
+  it('レップフィールドに "1あ0" を入力すると数値部分 10 が親に通知されること', () => {
+    render(<SetRow {...defaultProps} />);
+    const repsInput = screen.getByTestId('reps-input');
+    fireEvent.changeText(repsInput, '1あ0');
+    expect(defaultProps.onRepsChange).toHaveBeenCalledWith('1', 10);
+  });
+
+  // ────────────────────────────────────────────────────────────
+  // onBlur 正規化（Issue #165: フォーカス離脱時の表示リセット）
+  // ────────────────────────────────────────────────────────────
+
+  it('重量フィールドの onBlur 後、表示値が親の set.weight (100) に戻ること', () => {
+    render(<SetRow {...defaultProps} set={mockSetFilled} />);
+    const weightInput = screen.getByTestId('weight-input');
+    // 途中まで入力した後にフォーカスを外す
+    fireEvent.changeText(weightInput, '9');
+    fireEvent(weightInput, 'blur');
+    // 親の set.weight = 100 に戻る
+    expect(weightInput.props.value).toBe('100');
+  });
+
+  it('レップフィールドの onBlur 後、表示値が親の set.reps (5) に戻ること', () => {
+    render(<SetRow {...defaultProps} set={mockSetFilled} />);
+    const repsInput = screen.getByTestId('reps-input');
+    fireEvent.changeText(repsInput, '2');
+    fireEvent(repsInput, 'blur');
+    expect(repsInput.props.value).toBe('5');
+  });
 });
