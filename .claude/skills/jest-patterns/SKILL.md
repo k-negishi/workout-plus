@@ -1,0 +1,89 @@
+---
+name: jest-patterns
+description: Jest テスト記述パターン集。require/import の使い分け、spyOn のリストア、.test.ts vs .test.tsx の Jest プロジェクト分離など、よく踏む落とし穴と解法を提供する。テスト実装時・レビュー時に参照する。
+allowed-tools: Read, Write, Edit, Bash
+---
+
+# Jest テストパターン
+
+Jest テスト記述でよく踏む落とし穴と解法のリファレンス。
+
+---
+
+## 1. テスト本体内の `require()` は使わない
+
+`jest.spyOn` などでテスト本体内に `require()` を書くと
+`@typescript-eslint/no-require-imports` ESLint エラーになる。
+
+```typescript
+// NG: テスト内 require() は ESLint エラー
+it('Alert が呼ばれる', () => {
+  const alertSpy = jest.spyOn(require('react-native').Alert, 'alert');
+});
+
+// OK: ファイル先頭で import してから spyOn
+import { Alert } from 'react-native';
+
+it('Alert が呼ばれる', () => {
+  const alertSpy = jest.spyOn(Alert, 'alert');
+  alertSpy.mockRestore();
+});
+```
+
+`jest.mock()` の **factory 内** は `require()` が必要なケースがあるため許容される。
+テスト関数内とは区別すること。
+
+```typescript
+// OK: jest.mock() factory 内の require() は許容される（ホイスティング対応のため）
+jest.mock('react-native-gesture-handler', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  return { Swipeable: ({ children }) => React.createElement(View, null, children) };
+});
+```
+
+---
+
+## 2. `jest.spyOn` のリストア漏れを防ぐ
+
+リストア漏れは後続テストへの副作用を引き起こす。
+必ず `mockRestore()` するか `afterEach` で一括リストアする。
+
+```typescript
+// パターン A: テスト内で手動リストア
+it('Alert が呼ばれる', () => {
+  const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation(() => {});
+  // ... テスト ...
+  alertSpy.mockRestore();
+});
+
+// パターン B: afterEach で一括リストア（スパイが複数ある場合に推奨）
+afterEach(() => {
+  jest.restoreAllMocks();
+});
+```
+
+---
+
+## 3. `.test.ts` vs `.test.tsx`: Jest プロジェクトの使い分け
+
+このプロジェクトの Jest は 2 プロジェクト構成になっている:
+
+| 拡張子 | Jest project | トランスフォーム | 用途 |
+|--------|-------------|-----------------|------|
+| `.test.ts` | "logic" | babel-jest のみ | 純粋なロジック（DB・ストア・ユーティリティ） |
+| `.test.tsx` | "components" | jest-expo（RN 対応） | RN コンポーネント・フックのテスト |
+
+`@testing-library/react-native` の API（`renderHook`, `render`, `fireEvent` 等）を
+使うテストは **必ず `.test.tsx`** にする。`.test.ts` で呼ぶと RN の ESM 構文が
+Babel 変換されずにクラッシュする。
+
+```typescript
+// NG: .test.ts で renderHook を使うと
+// SyntaxError: Cannot use import statement outside a module
+//   ↑ react-native/index.js の `import typeof ...` が変換されない
+
+// OK: .test.tsx にする → "components" jest project が RN を変換してくれる
+```
+
+**判断基準**: RN の API に一切触れないロジックのみなら `.ts`、それ以外は `.tsx`。

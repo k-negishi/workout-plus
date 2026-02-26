@@ -105,6 +105,25 @@ git add <file1> <file2>
 git add -p <file>
 ```
 
+> **⚠️ 一括フォーマット後の git add に注意**
+>
+> `prettier --write` や `eslint --fix` 実行後、`git add` するときは
+> 未トラックのファイルを誤って混入させないよう以下を確認する:
+>
+> ```bash
+> # 1. 実際に変更されたファイルだけ確認（未トラックは ? で表示される）
+> git status --short
+>
+> # 2. ステージ後も内容を確認してからコミット
+> git diff --stat --cached
+> ```
+>
+> **失敗パターン**: `prettier --write` で "(unchanged)" だったファイルでも、
+> 未トラック状態のファイルを明示的に `git add <path>` で指定すると
+> 新規ファイルとして誤コミットされる。
+> `renderHook` を `.test.ts`（logic project）で動かしてしまうなど、
+> ファイル拡張子を間違えたファイルを誤コミットすると CI テストが落ちる原因になる。
+
 6. コミット実行
 
 ```bash
