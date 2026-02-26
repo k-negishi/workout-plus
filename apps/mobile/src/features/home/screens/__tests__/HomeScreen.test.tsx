@@ -375,3 +375,57 @@ describe('HomeScreen 当日完了済みボタンテキスト', () => {
     expect(screen.queryByText('本日のワークアウトを記録')).toBeNull();
   });
 });
+
+describe('HomeScreen 順調バッジ', () => {
+  it('今週ワークアウトがあるとき「順調」バッジが表示される', async () => {
+    // 今週のワークアウトを1件用意する
+    const now = Date.now();
+    mockGetAllAsync.mockImplementation((query: string) => {
+      if (query.includes("FROM workouts WHERE status = 'completed'")) {
+        return Promise.resolve([
+          {
+            id: 'w-ontrack',
+            status: 'completed',
+            created_at: now - 86400000,
+            started_at: now - 86400000,
+            completed_at: now - 86400000,
+            timer_status: 'not_started',
+            elapsed_seconds: 1800,
+            timer_started_at: null,
+            memo: null,
+          },
+        ]);
+      }
+      if (query.includes('FROM workout_exercises')) {
+        return Promise.resolve([]);
+      }
+      // fetchPeriodStats のクエリ用
+      if (query.includes('COUNT')) {
+        return Promise.resolve(null);
+      }
+      return Promise.resolve([]);
+    });
+
+    // fetchPeriodStats が getFirstAsync を使うため、カウント結果を返す
+    mockGetFirstAsync.mockResolvedValue({ count: 0 });
+
+    render(<HomeScreen />);
+    await screen.findByText('今月のトレーニング');
+
+    // 順調バッジが表示される（WeeklyGoalsWidget にも「順調」テキストがあるため testID で特定）
+    const badge = screen.getByTestId('on-track-badge');
+    expect(badge).toBeTruthy();
+    expect(within(badge).getByText('順調')).toBeTruthy();
+  });
+
+  it('今週ワークアウトがないとき「順調」バッジは表示されない', async () => {
+    // ワークアウト0件
+    mockGetAllAsync.mockResolvedValue([]);
+
+    render(<HomeScreen />);
+    await screen.findByText('今月のトレーニング');
+
+    // 順調バッジが表示されない
+    expect(screen.queryByTestId('on-track-badge')).toBeNull();
+  });
+});

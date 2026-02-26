@@ -26,6 +26,7 @@ import type { ExerciseRow, SetRow, WorkoutExerciseRow, WorkoutRow } from '@/data
 import { colors } from '@/shared/constants/colors';
 import type { HomeStackParamList, MainTabParamList, TimerStatus } from '@/types';
 
+import { OnTrackBadge } from '../components/OnTrackBadge';
 import { QuickStatsWidget } from '../components/QuickStatsWidget';
 import { RecentWorkoutCard } from '../components/RecentWorkoutCard';
 import { StreakCard } from '../components/StreakCard';
@@ -367,9 +368,12 @@ export function HomeScreen() {
               marginBottom: 16,
             }}
           >
-            <Text style={{ fontSize: 22, fontWeight: '700', color: colors.primary }}>
-              Workout Plus
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <Text style={{ fontSize: 22, fontWeight: '700', color: colors.primary }}>
+                Workout Plus
+              </Text>
+              <OnTrackBadge weeklyWorkouts={weeklyWorkouts} />
+            </View>
             {/* 設定ボタン: タップ時アクションは将来対応 */}
             <TouchableOpacity
               testID="settings-button"
