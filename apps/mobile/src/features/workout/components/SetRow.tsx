@@ -3,8 +3,12 @@
  *
  * NumericInput（ステッパー付き）から素の TextInput に変更することで、
  * 入力操作をシンプルにし、行全体の枠線を取り除いて軽量なデザインにする。
+ *
+ * Issue #165: iOS 日本語入力（IME）対応
+ * controlled TextInput（value prop）は iOS の IME marked text と競合するため、
+ * ローカル state でテキストをバッファリングし、フィルタリング後の数値のみ親へ通知する。
  */
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import type { WorkoutSet } from '@/types';
@@ -41,21 +45,69 @@ export type SetRowProps = {
 };
 
 export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChange, onDelete }) => {
-  /** 重量テキスト変更ハンドラー：文字列 → number | null に変換して親へ渡す */
+  /**
+   * ローカルテキスト state（Issue #165: iOS IME 対応）
+   *
+   * value prop を親の set.weight/set.reps に直接紐づけると、
+   * onChangeText → Zustand 更新 → re-render → value 再設定 のサイクルで
+   * iOS の IME marked text がリセットされる。
+   * ローカル state を挟むことで re-render が TextInput の表示値に影響しない。
+   */
+  const [weightText, setWeightText] = useState<string>(
+    set.weight != null ? String(set.weight) : '',
+  );
+  const [repsText, setRepsText] = useState<string>(set.reps != null ? String(set.reps) : '');
+
+  /**
+   * 重量テキスト変更ハンドラー。
+   *
+   * 日本語 IME が混入させた文字を除去してからローカル state を更新し、
+   * 有効な数値のみ親へ通知する。
+   */
   const handleWeightChangeText = useCallback(
     (text: string) => {
-      onWeightChange(set.id, parseInputToNumber(text));
+      // 数値と小数点以外を除去（日本語文字・記号を排除）
+      const filtered = text.replace(/[^0-9.]/g, '');
+      // 小数点の重複を防ぐ（例: "6..5" → "6.5"）
+      const parts = filtered.split('.');
+      const cleaned =
+        parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : filtered;
+      setWeightText(cleaned);
+      onWeightChange(set.id, parseInputToNumber(cleaned));
     },
     [set.id, onWeightChange],
   );
 
-  /** レップ数テキスト変更ハンドラー：文字列 → number | null に変換して親へ渡す */
+  /**
+   * 重量フィールドの blur ハンドラー。
+   *
+   * フォーカスを外したとき、親の set.weight に表示を正規化する。
+   * ユーザーが途中まで入力した状態でフォーカスを外しても
+   * 保存済みの値に戻ることを保証する。
+   */
+  const handleWeightBlur = useCallback(() => {
+    setWeightText(set.weight != null ? String(set.weight) : '');
+  }, [set.weight]);
+
+  /**
+   * レップ数テキスト変更ハンドラー。
+   *
+   * 整数のみ受け付ける（小数点・日本語文字を排除）。
+   */
   const handleRepsChangeText = useCallback(
     (text: string) => {
-      onRepsChange(set.id, parseInputToNumber(text));
+      // 数字以外を除去（小数点も不要）
+      const cleaned = text.replace(/[^0-9]/g, '');
+      setRepsText(cleaned);
+      onRepsChange(set.id, parseInputToNumber(cleaned));
     },
     [set.id, onRepsChange],
   );
+
+  /** レップフィールドの blur ハンドラー。フォーカス離脱時に親の set.reps に戻す */
+  const handleRepsBlur = useCallback(() => {
+    setRepsText(set.reps != null ? String(set.reps) : '');
+  }, [set.reps]);
 
   /** 推定1RM（null なら "-" 表示） */
   const estimated1RM = computeEstimated1RM(set.weight, set.reps);
@@ -93,8 +145,9 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
             textAlign: 'center',
           }}
           keyboardType="decimal-pad"
-          value={set.weight != null ? String(set.weight) : ''}
+          value={weightText}
           onChangeText={handleWeightChangeText}
+          onBlur={handleWeightBlur}
         />
 
         {/* 区切り文字: "x"（乗算の意味を持つ小文字） */}
@@ -116,8 +169,9 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
             textAlign: 'center',
           }}
           keyboardType="number-pad"
-          value={set.reps != null ? String(set.reps) : ''}
+          value={repsText}
           onChangeText={handleRepsChangeText}
+          onBlur={handleRepsBlur}
         />
 
         {/* 推定1RM: prefix "1RM" を廃止し数値のみ表示。未計算時は "-" */}
