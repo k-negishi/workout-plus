@@ -29,7 +29,6 @@ import {
 } from 'date-fns';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
-  Dimensions,
   type LayoutChangeEvent,
   type NativeScrollEvent,
   type NativeSyntheticEvent,
@@ -81,12 +80,7 @@ LocaleConfig.defaultLocale = 'ja';
 // 矢印ボタンのスクロールアニメーション時間（ScrollView の animated: true のデフォルトに合わせる）
 const ANIMATION_DURATION_MS = 300;
 
-// 親 CalendarScreen の px-5（paddingHorizontal: 20 × 2）。
-// 初期 containerWidth を Dimensions.get('window').width からこの分を差し引くことで、
-// onLayout 計測前のフラッシュ（一瞬大きく表示→縮小）を防ぐ (#171)
-const PARENT_HORIZONTAL_PADDING = 40;
-
-type MonthCalendarProps = {
+export type MonthCalendarProps = {
   /** トレーニングした日付のリスト */
   trainingDates: Date[];
   /** 選択中の日付 */
@@ -110,12 +104,9 @@ export const MonthCalendar = React.memo(function MonthCalendar({
   // 現在表示中の月（Date オブジェクトで管理して計算を簡略化）
   const [displayMonth, setDisplayMonth] = useState(todayMonth);
 
-  // onLayout で取得したコンテナ幅。
-  // 親 CalendarScreen の px-5（paddingHorizontal: 20px × 2）を差し引いた値で初期化し、
-  // onLayout 計測までのフラッシュ（一瞬大きく表示→縮小）を防ぐ (#171)
-  const [containerWidth, setContainerWidth] = useState(
-    () => Dimensions.get('window').width - PARENT_HORIZONTAL_PADDING,
-  );
+  // onLayout で取得したコンテナ幅。初期値 0 で、onLayout 計測後に正確な値をセットする。
+  // 計測完了まで ScrollView を描画しないことで、サイズずれフラッシュを防ぐ (#171)
+  const [containerWidth, setContainerWidth] = useState(0);
 
   // アニメーション中の多重発火防止フラグ
   const [isAnimating, setIsAnimating] = useState(false);
@@ -207,18 +198,16 @@ export const MonthCalendar = React.memo(function MonthCalendar({
     [onDayPress],
   );
 
-  // ScrollView を中央（index 1）にリセットする
-  // - 呼び出し側（handlePrev/Next/MomentumScrollEnd）が先に onMonthChange を呼んでいるため
-  //   ここでは呼ばない。これにより setDisplayMonth + onMonthChange が同一レンダーにバッチされ、
-  //   1日の青丸が即座に表示される（中間レンダーで「選択なし」が見えなくなる）
-  // - monthChangeKey をインクリメントすることで Calendar を強制リマウントし、
-  //   react-native-calendars が current 変更後に markedDates を反映しない問題を回避する
+  // ScrollView を中央（index 1）にスナップしてアニメーション状態をリセットする。
+  // setDisplayMonth・setMonthChangeKey・onMonthChange は呼び出し側が担い、
+  // このコールバックはスクロール位置とフラグのみ管理する。
+  // setTimeout(0) は setDisplayMonth の React commit を待ってから scrollTo するために必要
+  // （commit 前だと months[] が古く、中央パネルが意図しない月になる）
   const resetToCenter = useCallback(() => {
     setTimeout(() => {
       scrollViewRef.current?.scrollTo({ x: containerWidthRef.current, animated: false });
       setIsAnimating(false);
       isAnimatingRef.current = false;
-      setMonthChangeKey((prev) => prev + 1);
     }, 0);
   }, []);
 
@@ -234,13 +223,13 @@ export const MonthCalendar = React.memo(function MonthCalendar({
       const index = Math.round(x / cw);
 
       if (index === 0) {
-        // 前月方向: isAnimatingRef をセットして二重スワイプを防ぐ
         isAnimatingRef.current = true;
         const newMonth = subMonths(displayMonthRef.current, 1);
-        // setDisplayMonth と onMonthChange を同一同期ブロックで呼ぶことで
-        // React 18 の自動バッチングにより同一レンダーで確定し、1日の青丸が即座に表示される
+        // setDisplayMonth・onMonthChange・setMonthChangeKey を同一同期ブロックで呼ぶことで
+        // React 18 の自動バッチングにより1回のレンダーで確定し、1日の青丸が即座に表示される
         setDisplayMonth(newMonth);
         onMonthChangeRef.current?.(format(startOfMonth(newMonth), 'yyyy-MM-dd'));
+        setMonthChangeKey((prev) => prev + 1);
         resetToCenter();
       } else if (index === 2) {
         // 翌月方向: 当月以降はブロック
@@ -252,6 +241,7 @@ export const MonthCalendar = React.memo(function MonthCalendar({
         const newMonth = addMonths(displayMonthRef.current, 1);
         setDisplayMonth(newMonth);
         onMonthChangeRef.current?.(format(startOfMonth(newMonth), 'yyyy-MM-dd'));
+        setMonthChangeKey((prev) => prev + 1);
         resetToCenter();
       }
       // index === 1: 中央のまま（何もしない）
@@ -259,46 +249,49 @@ export const MonthCalendar = React.memo(function MonthCalendar({
     [isNextMonthDisabled, resetToCenter],
   );
 
-  // 前月ボタン: ScrollView を左（index 0）にアニメーションし、完了後に月を更新
+  // 前月ボタン: アニメーション開始前に onMonthChange を即座に呼ぶ
+  //
+  // なぜ開始前か:
+  // onMonthChange を先に呼ぶと CalendarScreen が selectedDate を新しい月の1日に更新し、
+  // markedDates が即座に再計算される。これにより:
+  //   - 前月（スライドアウト中）の青丸が消える
+  //   - 新しい月（スライドイン中）の1日が青丸付きで表示される
+  // アニメーション完了後は setDisplayMonth + setMonthChangeKey のみ処理する
   const handlePrevMonth = useCallback(() => {
-    // isAnimatingRef.current を同期チェック（state より確実）
     if (isAnimatingRef.current) return;
-    // scrollTo() より前に ref をセットすることで、
-    // animated scroll が onMomentumScrollEnd をトリガーしても即座にブロックできる
+    const newMonth = subMonths(displayMonthRef.current, 1);
+    // アニメーション前に親へ通知 → markedDates が即座に更新され、アニメーション中から正しい状態に
+    onMonthChangeRef.current?.(format(startOfMonth(newMonth), 'yyyy-MM-dd'));
     isAnimatingRef.current = true;
     setIsAnimating(true);
 
-    // index 0（前月パネル）へスクロールアニメーション
     scrollViewRef.current?.scrollTo({ x: 0, animated: true });
 
-    // アニメーション完了後に displayMonth + onMonthChange を同一バッチで更新する
-    // scrollTo({ animated: true }) は onMomentumScrollEnd を発火しないため setTimeout で待機
     setTimeout(() => {
-      const newMonth = subMonths(displayMonthRef.current, 1);
-      // setDisplayMonth と onMonthChange を同一同期ブロックで呼ぶ
-      // → React 18 自動バッチングで同一レンダーに統合 → 1日の青丸が即座に表示される
+      // setDisplayMonth + setMonthChangeKey を同一バッチで処理
+      // → months[] 更新と Calendar リマウントが1レンダーで完結
       setDisplayMonth(newMonth);
-      onMonthChangeRef.current?.(format(startOfMonth(newMonth), 'yyyy-MM-dd'));
+      setMonthChangeKey((prev) => prev + 1);
       resetToCenter();
     }, ANIMATION_DURATION_MS);
   }, [resetToCenter]);
 
-  // 翌月ボタン: ScrollView を右（index 2）にアニメーションし、完了後に月を更新
+  // 翌月ボタン: 同じく開始前に onMonthChange を呼ぶ
   const handleNextMonth = useCallback(() => {
     if (isAnimatingRef.current || isNextMonthDisabled) return;
+    const newMonth = addMonths(displayMonthRef.current, 1);
+    onMonthChangeRef.current?.(format(startOfMonth(newMonth), 'yyyy-MM-dd'));
     isAnimatingRef.current = true;
     setIsAnimating(true);
 
-    // index 2（翌月パネル）へスクロールアニメーション
     scrollViewRef.current?.scrollTo({
       x: containerWidthRef.current * 2,
       animated: true,
     });
 
     setTimeout(() => {
-      const newMonth = addMonths(displayMonthRef.current, 1);
       setDisplayMonth(newMonth);
-      onMonthChangeRef.current?.(format(startOfMonth(newMonth), 'yyyy-MM-dd'));
+      setMonthChangeKey((prev) => prev + 1);
       resetToCenter();
     }, ANIMATION_DURATION_MS);
   }, [isNextMonthDisabled, resetToCenter]);
@@ -342,59 +335,63 @@ export const MonthCalendar = React.memo(function MonthCalendar({
         </Pressable>
       </View>
 
-      {/* 3パネルScrollView: [前月][当月][翌月] */}
-      <ScrollView
-        ref={scrollViewRef}
-        horizontal
-        pagingEnabled
-        showsHorizontalScrollIndicator={false}
-        // ページ変更処理中はスクロールを無効化して多重発火を防ぐ
-        scrollEnabled={!isAnimating}
-        onMomentumScrollEnd={handleMomentumScrollEnd}
-        // 初期位置を中央（index 1）に設定
-        contentOffset={{ x: containerWidth, y: 0 }}
-        testID="month-calendar-scroll"
-      >
-        {months.map((month, index) => (
-          <View key={index} style={{ width: containerWidth }}>
-            <Calendar
-              key={monthChangeKey}
-              current={format(startOfMonth(month), 'yyyy-MM-dd')}
-              markedDates={markedDates}
-              onDayPress={handleDayPress}
-              // 内部矢印・ヘッダーは非表示（カスタムヘッダーが担う）
-              hideArrows={true}
-              renderHeader={() => null}
-              // スワイプは ScrollView が担うため無効化
-              enableSwipeMonths={false}
-              firstDay={1}
-              maxDate={today}
-              // 全月で6行表示を強制し、月ごとの高さ差をなくす
-              showSixWeeks={true}
-              theme={{
-                // 曜日ヘッダー
-                textSectionTitleColor: '#64748b',
-                textDayHeaderFontSize: 11,
-                textDayHeaderFontWeight: '600',
-                // 日付セル
-                dayTextColor: '#475569',
-                textDayFontSize: 13,
-                todayTextColor: '#4D94FF',
-                todayBackgroundColor: 'transparent',
-                // 選択状態
-                selectedDayBackgroundColor: '#4D94FF',
-                selectedDayTextColor: '#FFFFFF',
-                // 無効状態
-                textDisabledColor: '#cbd5e1',
-                // 背景
-                backgroundColor: '#f9fafb',
-                calendarBackground: '#f9fafb',
-              }}
-              style={{ borderRadius: 12 }}
-            />
-          </View>
-        ))}
-      </ScrollView>
+      {/* 3パネルScrollView: onLayout で幅計測完了後にマウントする (#171)
+          計測前は描画しないことで、初期幅と実測幅のずれによるフラッシュを原理的に防止する。
+          ヘッダーは常に表示されるため体感的な遅延はない（onLayout は最初のフレームで発火する） */}
+      {containerWidth > 0 && (
+        <ScrollView
+          ref={scrollViewRef}
+          horizontal
+          pagingEnabled
+          showsHorizontalScrollIndicator={false}
+          // ページ変更処理中はスクロールを無効化して多重発火を防ぐ
+          scrollEnabled={!isAnimating}
+          onMomentumScrollEnd={handleMomentumScrollEnd}
+          // 初期位置を中央（index 1）に設定
+          contentOffset={{ x: containerWidth, y: 0 }}
+          testID="month-calendar-scroll"
+        >
+          {months.map((month, index) => (
+            <View key={index} style={{ width: containerWidth }}>
+              <Calendar
+                key={monthChangeKey}
+                current={format(startOfMonth(month), 'yyyy-MM-dd')}
+                markedDates={markedDates}
+                onDayPress={handleDayPress}
+                // 内部矢印・ヘッダーは非表示（カスタムヘッダーが担う）
+                hideArrows={true}
+                renderHeader={() => null}
+                // スワイプは ScrollView が担うため無効化
+                enableSwipeMonths={false}
+                firstDay={1}
+                maxDate={today}
+                // 全月で6行表示を強制し、月ごとの高さ差をなくす
+                showSixWeeks={true}
+                theme={{
+                  // 曜日ヘッダー
+                  textSectionTitleColor: '#64748b',
+                  textDayHeaderFontSize: 11,
+                  textDayHeaderFontWeight: '600',
+                  // 日付セル
+                  dayTextColor: '#475569',
+                  textDayFontSize: 13,
+                  todayTextColor: '#4D94FF',
+                  todayBackgroundColor: 'transparent',
+                  // 選択状態
+                  selectedDayBackgroundColor: '#4D94FF',
+                  selectedDayTextColor: '#FFFFFF',
+                  // 無効状態
+                  textDisabledColor: '#cbd5e1',
+                  // 背景
+                  backgroundColor: '#f9fafb',
+                  calendarBackground: '#f9fafb',
+                }}
+                style={{ borderRadius: 12 }}
+              />
+            </View>
+          ))}
+        </ScrollView>
+      )}
     </View>
   );
 });
