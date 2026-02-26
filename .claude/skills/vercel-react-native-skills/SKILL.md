@@ -160,6 +160,44 @@ if (prevDateRef.current !== dateString) {
 
 React のレンダー中 setState は合法（再レンダーをトリガー）で、`useEffect` を待たずに即座にデータクリアできる。
 
+#### イベントハンドラ内の同フレーム読み取りフラグは `useRef` で持つ
+
+`useState` の更新は非同期（次レンダーで反映）。
+「フラグを立てた直後に別のイベントハンドラが同フレームで読む」場面では `useRef` を使う。
+
+典型例: `scrollTo(animated: true)` を呼んだ直後に `onMomentumScrollEnd` が発火するケース。
+
+```typescript
+// NG: setIsAnimating(true) は次 render まで反映されない
+//     → scrollTo() 後の onMomentumScrollEnd が stale な false を読んで二重発火する
+const [isAnimating, setIsAnimating] = useState(false);
+
+const handlePress = () => {
+  setIsAnimating(true);              // まだ反映されていない
+  scrollViewRef.current?.scrollTo({ x: 0, animated: true });
+};
+
+const handleMomentumScrollEnd = () => {
+  if (isAnimating) return;           // stale false → ガードが効かない
+  // ... 処理が二重に走る
+};
+
+// OK: useRef は current への代入が即座に反映される
+const isAnimatingRef = useRef(false);
+
+const handlePress = () => {
+  isAnimatingRef.current = true;     // 即座に反映
+  scrollViewRef.current?.scrollTo({ x: 0, animated: true });
+};
+
+const handleMomentumScrollEnd = () => {
+  if (isAnimatingRef.current) return; // 正しくガードできる
+};
+```
+
+**判断基準**: フラグが「UI の表示制御」に使われるなら `useState`、
+「同フレーム内の処理ガード（命令的ロジック）」に使われるなら `useRef`。
+
 ## Full Compiled Document
 
 For the complete guide with all rules expanded: `AGENTS.md`
