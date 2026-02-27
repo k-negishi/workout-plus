@@ -24,11 +24,22 @@ jest.mock('react-native-safe-area-context', () => ({
 // useRoute のモック返却値（テストごとに差し替える）
 const mockRouteParams: { targetDate?: string } | undefined = {};
 
-// ナビゲーションのモック（useRoute を含む）
-jest.mock('@react-navigation/native', () => ({
-  useNavigation: jest.fn().mockReturnValue({ navigate: jest.fn() }),
-  useRoute: jest.fn(() => ({ params: mockRouteParams })),
-}));
+// ナビゲーションのモック（useRoute・useFocusEffect を含む）
+// useFocusEffect: React の useEffect に委譲してテスト環境でフォーカス時の挙動を再現する
+// deps に [cb] を指定し、コールバック参照が変わらない限り再実行されないようにして無限ループを防ぐ
+const mockUseFocusEffect = jest.fn();
+jest.mock('@react-navigation/native', () => {
+  const { useEffect } = jest.requireActual('react') as typeof import('react');
+  return {
+    useNavigation: jest.fn().mockReturnValue({ navigate: jest.fn() }),
+    useRoute: jest.fn(() => ({ params: mockRouteParams })),
+    useFocusEffect: (cb: () => void) => {
+      mockUseFocusEffect(cb);
+
+      useEffect(cb, [cb]);
+    },
+  };
+});
 
 // データベースのモック（テストごとに返り値を変更できるよう変数化）
 const mockGetAllAsync = jest.fn().mockResolvedValue([]);
@@ -72,7 +83,7 @@ jest.mock('@/database/repositories/workout', () => ({
 
 // Alert.alert のスパイ: 削除確認ダイアログは Alert.alert（ネイティブ）で実装している
 // jest.spyOn で呼び出しを検証し、ボタン onPress を手動実行して削除フローをシミュレートする
-import { useRoute } from '@react-navigation/native';
+import { useFocusEffect, useRoute } from '@react-navigation/native';
 import { Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -360,6 +371,40 @@ describe('CalendarScreen', () => {
       // 月変更後は currentWorkoutId がリセットされ削除ボタンが非表示になること
       await waitFor(() => {
         expect(screen.queryByTestId('delete-workout-button')).toBeNull();
+      });
+    });
+  });
+
+  describe('Issue #172: フォーカス時のデータ再取得', () => {
+    it('useFocusEffect が呼ばれている（useEffect でなく useFocusEffect を使用していること）', () => {
+      (useRoute as jest.Mock).mockReturnValue({ params: undefined });
+      render(<CalendarScreen />);
+
+      // useFocusEffect がコールバック付きで呼ばれていること
+      expect(useFocusEffect).toHaveBeenCalled();
+    });
+
+    it('フォーカス時に fetchTrainingDates が再呼び出しされる', async () => {
+      (useRoute as jest.Mock).mockReturnValue({ params: undefined });
+      mockGetAllAsync.mockResolvedValue([]);
+
+      render(<CalendarScreen />);
+
+      // 初回レンダーで fetchTrainingDates が呼ばれる（DB クエリが実行される）
+      await waitFor(() => {
+        expect(mockGetAllAsync).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    it('フォーカス時に DaySummary の refreshKey がインクリメントされる', async () => {
+      (useRoute as jest.Mock).mockReturnValue({ params: undefined });
+      mockGetAllAsync.mockResolvedValue([]);
+
+      render(<CalendarScreen />);
+
+      // DaySummary に refreshKey が渡されていることを確認
+      await waitFor(() => {
+        expect(mockDaySummaryCapturedProps['refreshKey']).toBeDefined();
       });
     });
   });

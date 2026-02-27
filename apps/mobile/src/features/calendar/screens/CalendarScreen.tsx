@@ -7,7 +7,7 @@
  * T07: calendarSelectedDate の store 連携を削除（FloatingRecordButton 廃止につき不要）
  */
 import type { RouteProp } from '@react-navigation/native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { format, isAfter, parseISO } from 'date-fns';
 import { useCallback, useEffect, useState } from 'react';
@@ -56,9 +56,15 @@ export function CalendarScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchTrainingDates();
-  }, [fetchTrainingDates]);
+  // BottomTab 配下のためフォーカス時にデータを再取得する（Issue #172）
+  // useEffect では初回マウント時しか実行されず、タブ切替で戻ってきた際に最新データが反映されない
+  useFocusEffect(
+    useCallback(() => {
+      void fetchTrainingDates();
+      // DaySummary のデータも再取得するために refreshKey をインクリメント（Issue #176）
+      setRefreshKey((prev) => prev + 1);
+    }, [fetchTrainingDates]),
+  );
 
   // T6: targetDate パラメータが渡された場合、選択日付をその値に更新する
   // ホーム画面などから特定の日付を指定してカレンダーを開くユースケースに対応
