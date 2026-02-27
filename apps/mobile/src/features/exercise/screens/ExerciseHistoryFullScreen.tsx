@@ -84,14 +84,6 @@ function formatPRValue(prType: string, value: number): string {
   }
 }
 
-/** 重量を表示用にフォーマット */
-function formatVolume(kg: number): string {
-  if (kg >= 1000) {
-    return `${(kg / 1000).toFixed(1)}t`;
-  }
-  return `${kg.toLocaleString()}kg`;
-}
-
 /** 曜日ラベル */
 const DAY_OF_WEEK = ['日', '月', '火', '水', '木', '金', '土'] as const;
 
@@ -381,24 +373,23 @@ export function ExerciseHistoryFullScreen() {
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="px-4 pt-5">
-          {/* === T058: 統計サマリー (6項目グリッド) === */}
+          {/* === T058: 統計サマリー (5項目・2列グリッド) ===
+              Issue #188: 項目を5つに絞り、視認性向上のため2列表示に変更 */}
           <View className="flex-row flex-wrap" style={{ gap: 8 }}>
-            <StatCard label="最大重量" value={`${stats.maxWeight}`} unit="kg" />
-            <StatCard
-              label="最大ボリューム"
-              value={`${stats.maxVolume.toLocaleString()}`}
-              unit="kg"
-            />
-            <StatCard label="平均重量" value={`${stats.averageWeight}`} unit="kg" />
-            {/* 「総トレ回数」→「総セット数」に変更 (#113) */}
-            <StatCard label="総セット数" value={`${stats.totalSets}`} unit="セット" />
-            <StatCard label="総ボリューム" value={formatVolume(stats.totalVolume)} />
-            {/* 「最終PR」→「最高RM」に変更: Epley式による推定1RMを表示 (#114) */}
+            {/* 最高重量: 全セット中の最大重量 */}
+            <StatCard label="最高重量" value={`${stats.maxWeight}`} unit="kg" />
+            {/* 最高1RM: Epley式による推定1RM（データなしは「-」表示） */}
             {stats.maxEstimated1RM > 0 ? (
-              <StatCard label="最高RM" value={`${Math.round(stats.maxEstimated1RM)}`} unit="kg" />
+              <StatCard label="最高1RM" value={`${Math.round(stats.maxEstimated1RM)}`} unit="kg" />
             ) : (
-              <StatCard label="最高RM" value="-" />
+              <StatCard label="最高1RM" value="-" />
             )}
+            {/* 最高rep数: 全セット中の最大レップ数（単位なし） */}
+            <StatCard label="最高rep数" value={`${stats.maxReps}`} />
+            {/* 総ワークアウト回数: この種目を実施したワークアウト数（単位なし） */}
+            <StatCard label="総ワークアウト回数" value={`${stats.totalSessions}`} />
+            {/* 総セット: 全ワークアウト合算のセット数（単位なし） */}
+            <StatCard label="総セット" value={`${stats.totalSets}`} />
           </View>
 
           {/* === T059: 重量推移チャート === */}
@@ -521,9 +512,10 @@ export function ExerciseHistoryFullScreen() {
                       <Text style={{ fontSize: 15, color: colors.textSecondary, width: 14 }}>
                         {set.setNumber}
                       </Text>
+                      {/* 重量×rep数: 視認性向上のため 16px→18px に拡大 */}
                       <Text
                         style={{
-                          fontSize: 16,
+                          fontSize: 18,
                           fontWeight: '600',
                           flex: 1,
                           color: '#334155',
@@ -548,7 +540,11 @@ export function ExerciseHistoryFullScreen() {
   );
 }
 
-/** 統計サマリー個別カード */
+/**
+ * 統計サマリー個別カード。
+ * Issue #188: 5項目・2列グリッド対応のため width を 48% に拡大し、
+ * 数値の視認性向上のため value フォントを 22px・label を 13px に拡大。
+ */
 function StatCard({ label, value, unit }: { label: string; value: string; unit?: string }) {
   return (
     <View
@@ -556,19 +552,17 @@ function StatCard({ label, value, unit }: { label: string; value: string; unit?:
       style={{
         borderWidth: 1,
         borderColor: colors.border,
-        width: '31%',
-        minWidth: 100,
+        // 2列グリッド: gap=8 を考慮して 48% で左右ぴったり並ぶ
+        width: '48%',
       }}
     >
-      <Text style={{ fontSize: 11, color: colors.textSecondary }}>{label}</Text>
-      <View className="flex-row items-end mt-1">
-        <Text className="text-lg font-bold" style={{ color: colors.textPrimary }}>
-          {value}
-        </Text>
+      {/* ラベル: 11px→13px に拡大して読みやすくする */}
+      <Text style={{ fontSize: 13, color: colors.textSecondary }}>{label}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'flex-end', marginTop: 4 }}>
+        {/* 値: 18px（text-lg）→ 22px に拡大して一覧性を高める */}
+        <Text style={{ fontSize: 22, fontWeight: '700', color: colors.textPrimary }}>{value}</Text>
         {unit ? (
-          <Text className="text-xs ml-0.5" style={{ color: colors.textSecondary }}>
-            {unit}
-          </Text>
+          <Text style={{ fontSize: 13, marginLeft: 2, color: colors.textSecondary }}>{unit}</Text>
         ) : null}
       </View>
     </View>

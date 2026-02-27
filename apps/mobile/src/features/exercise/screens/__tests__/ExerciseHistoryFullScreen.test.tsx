@@ -79,6 +79,7 @@ jest.mock('../../hooks/useExerciseHistory', () => ({
     stats: {
       maxWeight: 100,
       maxVolume: 3000,
+      maxReps: 12,
       averageWeight: 80,
       totalSessions: 10,
       totalVolume: 30000,
@@ -133,7 +134,51 @@ describe('ExerciseHistoryFullScreen', () => {
 
   it('統計カード（最大重量）が表示される', () => {
     render(<ExerciseHistoryFullScreen />);
-    expect(screen.getByText('最大重量')).toBeTruthy();
+    expect(screen.getByText('最高重量')).toBeTruthy();
+  });
+
+  describe('Issue #188: 統計カード5項目表示', () => {
+    it('最高重量カードが値と単位「kg」付きで表示される', () => {
+      render(<ExerciseHistoryFullScreen />);
+      expect(screen.getByText('最高重量')).toBeTruthy();
+      // stats.maxWeight = 100
+      expect(screen.getByText('100')).toBeTruthy();
+    });
+
+    it('最高1RMカードが値と単位「kg」付きで表示される', () => {
+      render(<ExerciseHistoryFullScreen />);
+      expect(screen.getByText('最高1RM')).toBeTruthy();
+      // stats.maxEstimated1RM = 116 → Math.round(116) = 116
+      expect(screen.getByText('116')).toBeTruthy();
+    });
+
+    it('最高rep数カードが単位なしで表示される', () => {
+      render(<ExerciseHistoryFullScreen />);
+      expect(screen.getByText('最高rep数')).toBeTruthy();
+      // stats.maxReps = 12
+      expect(screen.getByText('12')).toBeTruthy();
+    });
+
+    it('総ワークアウト回数カードが単位なしで表示される', () => {
+      render(<ExerciseHistoryFullScreen />);
+      expect(screen.getByText('総ワークアウト回数')).toBeTruthy();
+      // stats.totalSessions = 10
+      expect(screen.getByText('10')).toBeTruthy();
+    });
+
+    it('総セットカードが単位なしで表示される', () => {
+      render(<ExerciseHistoryFullScreen />);
+      expect(screen.getByText('総セット')).toBeTruthy();
+      // stats.totalSets = 50
+      expect(screen.getByText('50')).toBeTruthy();
+    });
+
+    it('旧統計項目（最大ボリューム・平均重量・総ボリューム）は表示されない', () => {
+      render(<ExerciseHistoryFullScreen />);
+      expect(screen.queryByText('最大ボリューム')).toBeNull();
+      expect(screen.queryByText('平均重量')).toBeNull();
+      expect(screen.queryByText('総ボリューム')).toBeNull();
+    });
   });
 
   it('戻るボタンを押すと goBack() が呼ばれる', () => {
@@ -167,7 +212,7 @@ describe('ExerciseHistoryFullScreen', () => {
     mockLoading = true;
     render(<ExerciseHistoryFullScreen />);
     // ローディング中は統計カードが表示されないことを検証
-    expect(screen.queryByText('最大重量')).toBeNull();
+    expect(screen.queryByText('最高重量')).toBeNull();
   });
 
   describe('日付表示', () => {
