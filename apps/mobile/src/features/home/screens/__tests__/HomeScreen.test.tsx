@@ -122,6 +122,8 @@ beforeEach(() => {
   mockFindRecording.mockResolvedValue(null);
   mockFindTodayCompleted.mockResolvedValue(null);
   mockNavigate.mockClear();
+  // データ取得が useFocusEffect に統合されたため、コールバックをデフォルトで実行する
+  mockUseFocusEffect.mockImplementation((cb: () => void) => cb());
 });
 
 describe('HomeScreen SafeArea', () => {

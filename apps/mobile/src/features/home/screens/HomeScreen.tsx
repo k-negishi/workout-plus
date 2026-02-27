@@ -16,7 +16,7 @@ import {
   startOfWeek,
   subWeeks,
 } from 'date-fns';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -169,80 +169,77 @@ export function HomeScreen() {
   /** 当日完了済みワークアウトの有無（ボタンテキスト切替用） */
   const [hasTodayCompleted, setHasTodayCompleted] = useState(false);
 
-  // データ取得
-  const fetchData = useCallback(async () => {
-    try {
-      const db = await getDatabase();
-
-      // 完了済みワークアウトを全件取得
-      const workouts = await db.getAllAsync<WorkoutRow>(
-        "SELECT * FROM workouts WHERE status = 'completed' ORDER BY completed_at DESC",
-      );
-
-      if (workouts.length === 0) {
-        setWorkoutSummaries([]);
-        setTrainingDates([]);
-        setLoading(false);
-        return;
-      }
-
-      // トレーニング日付リスト（StreakCard 用）
-      const dates = workouts
-        .filter((w) => w.completed_at != null)
-        .map((w) => new Date(w.completed_at!));
-      setTrainingDates(dates);
-
-      // 各ワークアウトの詳細を取得（最新3件分）— helper で複雑度を分散
-      const recentWorkouts = workouts.slice(0, 3);
-      const summaries = await Promise.all(recentWorkouts.map((w) => buildWorkoutSummary(db, w)));
-      setWorkoutSummaries(summaries);
-
-      // ダッシュボード統計を SQL 集計で取得する。
-      // workoutSummaries は最新3件しか持たないため、月次・週次の正確な集計には SQL が必要。
-      const now = new Date();
-      const monthStartMs = startOfMonth(now).getTime();
-      const monthEndMs = endOfMonth(now).getTime();
-      const weekStartMs = startOfWeek(now, { weekStartsOn: 1 }).getTime();
-      const weekEndMs = endOfWeek(now, { weekStartsOn: 1 }).getTime();
-
-      const [monthlyStats, weeklyStats] = await Promise.all([
-        fetchPeriodStats(db, monthStartMs, monthEndMs),
-        fetchPeriodStats(db, weekStartMs, weekEndMs),
-      ]);
-
-      setDashboardStats({
-        monthlyExerciseCount: monthlyStats.exerciseCount,
-        monthlySetCount: monthlyStats.setCount,
-        weeklyExerciseCount: weeklyStats.exerciseCount,
-        weeklySetCount: weeklyStats.setCount,
-      });
-    } catch (error) {
-      console.error('ホーム画面データ取得エラー:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
   /**
-   * T10: 画面フォーカス時に記録中セッションを確認する。
+   * 画面フォーカス時にすべてのデータを取得する。
    * useFocusEffect を使う理由: BottomTab 画面はアンマウントされないため、
-   * 他の画面から戻ってきた際に useEffect([], []) では再実行されない。
+   * 他のタブでワークアウトを完了・編集して戻ってきた際に useEffect では再実行されない。
+   * ワークアウトサマリー・統計・記録中ステータスを一括で更新する。
    */
   useFocusEffect(
     useCallback(() => {
-      const checkStatus = async () => {
-        const [recording, todayCompleted] = await Promise.all([
-          WorkoutRepository.findRecording(),
-          WorkoutRepository.findTodayCompleted(),
-        ]);
-        setIsRecording(recording !== null);
-        setHasTodayCompleted(todayCompleted !== null);
+      const fetchData = async () => {
+        try {
+          const db = await getDatabase();
+
+          // 記録中セッション・当日完了チェック（ボタン表示制御用）
+          const [recording, todayCompleted] = await Promise.all([
+            WorkoutRepository.findRecording(),
+            WorkoutRepository.findTodayCompleted(),
+          ]);
+          setIsRecording(recording !== null);
+          setHasTodayCompleted(todayCompleted !== null);
+
+          // 完了済みワークアウトを全件取得
+          const workouts = await db.getAllAsync<WorkoutRow>(
+            "SELECT * FROM workouts WHERE status = 'completed' ORDER BY completed_at DESC",
+          );
+
+          if (workouts.length === 0) {
+            setWorkoutSummaries([]);
+            setTrainingDates([]);
+            setLoading(false);
+            return;
+          }
+
+          // トレーニング日付リスト（StreakCard 用）
+          const dates = workouts
+            .filter((w) => w.completed_at != null)
+            .map((w) => new Date(w.completed_at!));
+          setTrainingDates(dates);
+
+          // 各ワークアウトの詳細を取得（最新3件分）— helper で複雑度を分散
+          const recentWorkouts = workouts.slice(0, 3);
+          const summaries = await Promise.all(
+            recentWorkouts.map((w) => buildWorkoutSummary(db, w)),
+          );
+          setWorkoutSummaries(summaries);
+
+          // ダッシュボード統計を SQL 集計で取得する。
+          // workoutSummaries は最新3件しか持たないため、月次・週次の正確な集計には SQL が必要。
+          const now = new Date();
+          const monthStartMs = startOfMonth(now).getTime();
+          const monthEndMs = endOfMonth(now).getTime();
+          const weekStartMs = startOfWeek(now, { weekStartsOn: 1 }).getTime();
+          const weekEndMs = endOfWeek(now, { weekStartsOn: 1 }).getTime();
+
+          const [monthlyStats, weeklyStats] = await Promise.all([
+            fetchPeriodStats(db, monthStartMs, monthEndMs),
+            fetchPeriodStats(db, weekStartMs, weekEndMs),
+          ]);
+
+          setDashboardStats({
+            monthlyExerciseCount: monthlyStats.exerciseCount,
+            monthlySetCount: monthlyStats.setCount,
+            weeklyExerciseCount: weeklyStats.exerciseCount,
+            weeklySetCount: weeklyStats.setCount,
+          });
+        } catch (error) {
+          console.error('ホーム画面データ取得エラー:', error);
+        } finally {
+          setLoading(false);
+        }
       };
-      void checkStatus();
+      void fetchData();
     }, []),
   );
 
