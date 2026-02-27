@@ -21,6 +21,45 @@ jest.mock('@react-navigation/native', () => ({
 `useFocusEffect` を no-op にすると「フォーカス時の副作用」は動かないが、
 これらはほとんどのケースで別途モック済みのフック（`useWorkoutSession` 等）が担うため問題ない。
 
+### 【応用】コールバックを実際に実行しつつ呼び出しを検証する
+
+副作用（データ取得など）の動作もテストしたい場合は、wrapper パターンを使う。
+
+```typescript
+const mockUseFocusEffect = jest.fn();
+
+jest.mock('@react-navigation/native', () => {
+  const { useEffect } = jest.requireActual('react') as typeof import('react');
+  return {
+    useNavigation: jest.fn().mockReturnValue({ navigate: jest.fn() }),
+    useRoute: jest.fn(() => ({ params: mockRouteParams })),
+    useFocusEffect: (cb: () => void) => {
+      mockUseFocusEffect(cb); // 呼び出しをキャプチャ
+      useEffect(cb, [cb]);    // コールバックを実際に実行
+    },
+  };
+});
+```
+
+**⚠️ アサーションは必ず `mockUseFocusEffect` を使う**
+
+```typescript
+expect(mockUseFocusEffect).toHaveBeenCalled(); // ✅
+
+// import した useFocusEffect に .toHaveBeenCalled() を使うと必ず失敗する
+// expect(useFocusEffect).toHaveBeenCalled();
+// → "received value must be a mock or spy function"
+// wrapper 関数は jest.fn() ではないため spy メソッドが使えない
+```
+
+**⚠️ wrapper パターンに変えたら import も整理する**
+
+```typescript
+// useFocusEffect を import から削除しないと lint エラー（no-unused-vars）
+// import { useFocusEffect, useRoute } from '@react-navigation/native'; // ❌
+import { useRoute } from '@react-navigation/native';                     // ✅
+```
+
 ## `useFocusEffect` + `useRef` 初期化制御パターン
 
 タブナビゲーター配下の画面では `useEffect(fn, [])` の代わりに `useFocusEffect` を使う。
