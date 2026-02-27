@@ -159,8 +159,9 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
       </View>
 
       {/* カラムヘッダー行: Set / kg / (x スペーサー) / rep / 1RM / (削除スペーサー）
-          Issue #174: フォント1段階拡大、kg/rep幅をSetRowの固定幅72pxに合わせる */}
-      <View style={{ flexDirection: 'row', gap: 8, paddingLeft: 8, paddingBottom: 8 }}>
+          Issue #174: フォント1段階拡大、kg/rep幅をSetRowの固定幅72pxに合わせる
+          Issue #190: paddingLeft を削除して SetRow 行とのアライメントを統一 */}
+      <View testID="column-header-row" style={{ flexDirection: 'row', gap: 8, paddingBottom: 8 }}>
         {/* Set: セット番号列幅 32px */}
         <Text
           style={{
@@ -199,10 +200,10 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
         >
           rep
         </Text>
-        {/* 1RM: 推定1RM表示列幅 48px */}
+        {/* 1RM: SetRow の 1RM 列（flex:1）と幅を合わせて残りスペースを吸収する */}
         <Text
           style={{
-            width: 48,
+            flex: 1,
             fontSize: 12,
             fontWeight: '600',
             color: '#64748b',

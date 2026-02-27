@@ -359,6 +359,23 @@ describe('ExerciseBlock', () => {
     });
   });
 
+  // ---- Issue #190: 右スペース解消 - レイアウト修正 ----
+
+  describe('カラムヘッダー行レイアウト（Issue #190）', () => {
+    it('カラムヘッダー行に paddingLeft が設定されていないこと（SetRow との8ptズレ修正）', () => {
+      render(<ExerciseBlock {...createDefaultProps()} />);
+      const headerRow = screen.getByTestId('column-header-row');
+      // paddingLeft: 8 が削除され未設定であることを確認する
+      expect(headerRow.props.style?.paddingLeft).toBeFalsy();
+    });
+
+    it('1RM ヘッダーに flex: 1 が設定されていること（SetRow の1RM列と幅一致）', () => {
+      render(<ExerciseBlock {...createDefaultProps()} />);
+      const rmHeader = screen.getByText('1RM');
+      expect(rmHeader.props.style).toMatchObject({ flex: 1 });
+    });
+  });
+
   // ---- Issue #151 種目名カラー ----
 
   describe('種目名カラー（Issue #151）', () => {

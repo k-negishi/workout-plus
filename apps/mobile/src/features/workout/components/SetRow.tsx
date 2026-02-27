@@ -149,8 +149,8 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
           onBlur={handleWeightBlur}
         />
 
-        {/* 区切り文字: "x"（乗算の意味を持つ小文字） */}
-        <Text style={{ fontSize: 15, color: '#64748b' }}>x</Text>
+        {/* 区切り文字: "x"（乗算の意味を持つ小文字）カラムヘッダーの16px スペーサーと幅を合わせる */}
+        <Text style={{ width: 16, fontSize: 15, color: '#64748b', textAlign: 'center' }}>x</Text>
 
         {/* レップ数入力（number-pad: 整数のみ）Issue #174: 幅縮小・フォント拡大 */}
         <TextInput
@@ -173,10 +173,10 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
           onBlur={handleRepsBlur}
         />
 
-        {/* 推定1RM: prefix "1RM" を廃止し数値のみ表示。未計算時は "-" */}
+        {/* 推定1RM: 残りの横幅を flex:1 で吸収して右空きをなくす。未計算時は "-" */}
         <Text
           style={{
-            width: 48,
+            flex: 1,
             fontSize: 14,
             color: '#64748b',
             textAlign: 'center',

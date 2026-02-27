@@ -219,6 +219,23 @@ describe('SetRow', () => {
   });
 
   // ────────────────────────────────────────────────────────────
+  // Issue #190: 右スペース解消 - レイアウト修正
+  // ────────────────────────────────────────────────────────────
+
+  it('"x" 区切り文字に width: 16 が設定されていること（カラムヘッダースペーサーと幅一致）', () => {
+    render(<SetRow {...defaultProps} />);
+    const xText = screen.getByText('x');
+    expect(xText.props.style).toMatchObject({ width: 16 });
+  });
+
+  it('1RM テキストに flex: 1 が設定されていること（右空き解消）', () => {
+    render(<SetRow {...defaultProps} />);
+    // weight=null のとき 1RM 表示は "-"
+    const rmText = screen.getByText('-');
+    expect(rmText.props.style).toMatchObject({ flex: 1 });
+  });
+
+  // ────────────────────────────────────────────────────────────
   // onBlur 正規化（Issue #165: フォーカス離脱時の表示リセット）
   // ────────────────────────────────────────────────────────────
 
