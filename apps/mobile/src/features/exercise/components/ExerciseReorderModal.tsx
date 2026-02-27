@@ -192,7 +192,9 @@ export function ExerciseReorderModal({
             flex: 1,
             backgroundColor: colors.background,
             paddingTop: insets.top,
-            paddingBottom: insets.bottom,
+            // paddingBottom は insets.bottom をフッター側で管理するため、ここでは設定しない
+            // フッターに直接 paddingBottom: insets.bottom + 16 を設定し、
+            // SafeArea の余白がボタンの下に確保されることを保証する
           }}
         >
           {/* ヘッダー */}
@@ -233,13 +235,18 @@ export function ExerciseReorderModal({
             />
           </View>
 
-          {/* フッター: キャンセル・保存ボタン */}
+          {/* フッター: キャンセル・保存ボタン
+              Issue #189: paddingBottom に insets.bottom を加算してホームインジケーター領域と重ならないようにする
+              外側コンテナの paddingBottom は削除し、フッター自体で SafeArea を管理することでボタンが隠れるバグを修正 */}
           <View
+            testID="reorder-footer"
             style={{
               flexDirection: 'row',
               gap: 12,
               paddingHorizontal: 16,
-              paddingVertical: 16,
+              paddingTop: 16,
+              // ホームインジケーター（insets.bottom）の分を加算して、ボタンが SafeArea に隠れないようにする
+              paddingBottom: insets.bottom + 16,
               borderTopWidth: 1,
               borderTopColor: colors.border,
               backgroundColor: colors.white,

@@ -166,7 +166,6 @@ const ExerciseListHeader: React.FC<{
           placeholder="種目名を入力"
           value={newExerciseName}
           onChangeText={onNameChange}
-          autoFocus
         />
         <Text className="text-[13px] font-semibold text-[#64748b] tracking-wide mb-1.5">部位</Text>
         <View className="flex-row flex-wrap gap-1.5 mb-3">
@@ -279,8 +278,11 @@ export const ExercisePickerScreen: React.FC = () => {
         });
       } else {
         // single モード: 即選択
-        await session.addExercise(exercise.id);
+        // goBack() を先に呼んでから addExercise を実行する。
+        // await してから goBack() すると画面遷移が遅れて UX が悪化するため、
+        // 非同期保存はバックグラウンドで実行する。
         navigation.goBack();
+        void session.addExercise(exercise.id);
       }
     },
     // addedExerciseIds を deps に含める: Set の変化でコールバックを再生成し stale closure を防ぐ

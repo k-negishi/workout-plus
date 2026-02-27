@@ -1,10 +1,12 @@
 /**
- * ExercisePickerScreen テスト（Issue #116, #136, #142）
+ * ExercisePickerScreen テスト（Issue #116, #136, #142, #180, #184）
  * - 追加済み種目に「追加済み」バッジが表示される
  * - 追加済み種目をタップしても session.addExercise が呼ばれない
  * - 未追加種目をタップすると session.addExercise が呼ばれる
  * - Issue #136: カスタム種目追加 FAB が画面右下に表示される
  * - Issue #142: ヘッダースタイル統一（Ionicons chevron-back を使用）
+ * - Issue #184: 種目タップ後 goBack() が即座に呼ばれる（addExercise 完了を待たない）
+ * - Issue #180: FAB タップ後のフォーム表示でスクロールが起きない（autoFocus なし）
  */
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import React from 'react';
@@ -448,5 +450,55 @@ describe('ExercisePickerScreen - 左スワイプ「履歴」ボタン（Issue #1
     // スクワット（未追加）をタップ
     fireEvent.press(screen.getByText('スクワット'));
     expect(mockAddExercise).toHaveBeenCalledWith('exercise-squat');
+  });
+});
+
+describe('ExercisePickerScreen - 種目タップ後の即時画面遷移（Issue #184）', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseExerciseSearch.mockReturnValue(DEFAULT_SEARCH_STATE);
+  });
+
+  it('種目タップ後 addExercise の完了を待たずに goBack() が即座に呼ばれる', () => {
+    // addExercise を解決しない Promise にして「未完了の非同期処理」を模倣する
+    // goBack() が addExercise 完了前に呼ばれることを検証する
+    mockAddExercise.mockReturnValue(new Promise(() => {}));
+
+    render(<ExercisePickerScreen />);
+    fireEvent.press(screen.getByText('スクワット'));
+
+    // addExercise はまだ解決していないが、goBack() は同期的に呼ばれるはず
+    expect(mockGoBack).toHaveBeenCalledTimes(1);
+  });
+
+  it('addExercise は goBack() 後もバックグラウンドで呼ばれる', () => {
+    mockAddExercise.mockResolvedValue(undefined);
+
+    render(<ExercisePickerScreen />);
+    fireEvent.press(screen.getByText('スクワット'));
+
+    // goBack() が呼ばれていることを確認
+    expect(mockGoBack).toHaveBeenCalledTimes(1);
+    // addExercise も呼ばれていることを確認（バックグラウンド実行）
+    expect(mockAddExercise).toHaveBeenCalledWith('exercise-squat');
+  });
+});
+
+describe('ExercisePickerScreen - FAB タップ後のスクロール抑制（Issue #180）', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseExerciseSearch.mockReturnValue(DEFAULT_SEARCH_STATE);
+  });
+
+  it('FAB タップ後に表示されるフォームの TextInput に autoFocus が設定されていない', () => {
+    render(<ExercisePickerScreen />);
+
+    // FAB をタップしてフォームを表示
+    fireEvent.press(screen.getByLabelText('カスタム種目を追加'));
+
+    // フォーム内の TextInput（種目名入力欄）を取得する
+    // autoFocus が true だとソフトウェアキーボード起動によるスクロールが発生する
+    const textInput = screen.getByPlaceholderText('種目名を入力');
+    expect(textInput.props.autoFocus).toBeFalsy();
   });
 });
