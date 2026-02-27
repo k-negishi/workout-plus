@@ -3,8 +3,8 @@
  * 経過時間表示、開始/停止、中止ボタンを含む上部固定バー
  * SafeArea 対応済み（T019 確認）— 親の RecordScreen が insets.top を適用するため本コンポーネントでは不要
  */
-import React, { useCallback } from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 import { TimerStatus } from '@/types';
 
@@ -25,6 +25,31 @@ function formatTime(totalSeconds: number): string {
 }
 
 /**
+ * 「MM:SS」または「HH:MM:SS」形式の文字列を秒数に変換する。
+ * 不正な入力の場合は null を返す。
+ */
+export function parseTimeInput(input: string): number | null {
+  const trimmed = input.trim();
+  if (!trimmed) return null;
+
+  const parts = trimmed.split(':').map(Number);
+  // 全パートが有効な数値であることを確認
+  if (parts.some((p) => isNaN(p) || p < 0)) return null;
+
+  if (parts.length === 2) {
+    // MM:SS 形式
+    const [minutes, seconds] = parts;
+    return minutes! * 60 + seconds!;
+  }
+  if (parts.length === 3) {
+    // HH:MM:SS 形式
+    const [hours, minutes, seconds] = parts;
+    return hours! * 3600 + minutes! * 60 + seconds!;
+  }
+  return null;
+}
+
+/**
  * タイマー状態に応じた再生ボタンのスタイルを返す。
  * TimerBar の cyclomatic complexity を下げるため外部ヘルパーに分離。
  */
@@ -41,8 +66,12 @@ export type TimerBarProps = {
   onStart: () => void;
   onPause: () => void;
   onResume: () => void;
+  /** discarded 状態から 0:00 でタイマーを再開する（Issue #175） */
+  onResetAndStart: () => void;
   onStopTimer: () => void;
   onComplete: () => void;
+  /** 経過秒数を手動でセットする（Issue #175） */
+  onManualTimeSet: (seconds: number) => void;
   /** 終了ボタンの無効化（種目0件時） */
   isCompleteDisabled?: boolean;
 };
@@ -53,10 +82,16 @@ export const TimerBar: React.FC<TimerBarProps> = ({
   onStart,
   onPause,
   onResume,
+  onResetAndStart,
   onStopTimer,
   onComplete,
+  onManualTimeSet,
   isCompleteDisabled = false,
 }) => {
+  // 手入力モードの状態管理
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState('');
+
   /** 再生/一時停止ボタンのハンドラー */
   const handleToggle = useCallback(() => {
     switch (timerStatus) {
@@ -70,17 +105,35 @@ export const TimerBar: React.FC<TimerBarProps> = ({
         onResume();
         break;
       case 'discarded':
+        // Issue #175: discarded 状態でも 0:00 から再開可能
+        onResetAndStart();
         break;
     }
-  }, [timerStatus, onStart, onPause, onResume]);
+  }, [timerStatus, onStart, onPause, onResume, onResetAndStart]);
 
-  /** 再生/一時停止ボタンのラベル */
+  /** 手入力モードを開始する（paused/discarded 時のみ） */
+  const handleStartEditing = useCallback(() => {
+    setEditText(formatTime(elapsedSeconds));
+    setIsEditing(true);
+  }, [elapsedSeconds]);
+
+  /** 手入力を確定する */
+  const handleSubmitEditing = useCallback(() => {
+    const seconds = parseTimeInput(editText);
+    if (seconds != null) {
+      onManualTimeSet(seconds);
+    }
+    setIsEditing(false);
+  }, [editText, onManualTimeSet]);
+
   const isTimerDiscarded = timerStatus === 'discarded';
   const toggleLabel = timerStatus === 'running' ? '||' : '\u25B6';
   const elapsedLabel = isTimerDiscarded ? '時間なし' : formatTime(elapsedSeconds);
   const elapsedLabelColor = isTimerDiscarded ? '#94a3b8' : '#334155';
-  // isTimerDiscarded の条件分岐を外部ヘルパーに委譲してcomplexityを抑制
   const playButtonStyle = resolvePlayButtonStyle(isTimerDiscarded);
+
+  // 手入力可能: paused または discarded（running/not_started は不可）
+  const canEdit = timerStatus === 'paused' || timerStatus === 'discarded';
 
   return (
     <View
@@ -99,10 +152,9 @@ export const TimerBar: React.FC<TimerBarProps> = ({
         経過時間
       </Text>
 
-      {/* 再生/一時停止ボタン */}
+      {/* 再生/一時停止ボタン: discarded でも有効（Issue #175） */}
       <TouchableOpacity
         onPress={handleToggle}
-        disabled={isTimerDiscarded}
         style={{
           width: 24,
           height: 24,
@@ -126,18 +178,60 @@ export const TimerBar: React.FC<TimerBarProps> = ({
         </Text>
       )}
 
-      {/* 経過時間表示 */}
-      <Text
-        style={{
-          marginLeft: 'auto',
-          fontSize: 18,
-          fontWeight: '700',
-          color: elapsedLabelColor,
-          fontVariant: ['tabular-nums'],
-        }}
-      >
-        {elapsedLabel}
-      </Text>
+      {/* 経過時間表示 / 手入力（Issue #175） */}
+      {isEditing ? (
+        <TextInput
+          style={{
+            marginLeft: 'auto',
+            fontSize: 18,
+            fontWeight: '700',
+            color: '#334155',
+            fontVariant: ['tabular-nums'],
+            minWidth: 80,
+            textAlign: 'right',
+            borderBottomWidth: 1,
+            borderBottomColor: '#4D94FF',
+            paddingVertical: 0,
+          }}
+          value={editText}
+          onChangeText={setEditText}
+          onSubmitEditing={handleSubmitEditing}
+          onBlur={handleSubmitEditing}
+          keyboardType="numbers-and-punctuation"
+          autoFocus
+          selectTextOnFocus
+          accessibilityLabel="経過時間の手入力"
+        />
+      ) : canEdit ? (
+        <TouchableOpacity
+          onPress={handleStartEditing}
+          style={{ marginLeft: 'auto' }}
+          accessibilityLabel="経過時間を編集"
+        >
+          <Text
+            style={{
+              fontSize: 18,
+              fontWeight: '700',
+              color: elapsedLabelColor,
+              fontVariant: ['tabular-nums'],
+            }}
+          >
+            {elapsedLabel}
+          </Text>
+        </TouchableOpacity>
+      ) : (
+        <Text
+          style={{
+            marginLeft: 'auto',
+            fontSize: 18,
+            fontWeight: '700',
+            color: elapsedLabelColor,
+            fontVariant: ['tabular-nums'],
+          }}
+        >
+          {elapsedLabel}
+        </Text>
+      )}
 
       {/* 中止ボタン */}
       {!isTimerDiscarded && (

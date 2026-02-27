@@ -83,7 +83,7 @@ jest.mock('@/database/repositories/workout', () => ({
 
 // Alert.alert のスパイ: 削除確認ダイアログは Alert.alert（ネイティブ）で実装している
 // jest.spyOn で呼び出しを検証し、ボタン onPress を手動実行して削除フローをシミュレートする
-import { useFocusEffect, useRoute } from '@react-navigation/native';
+import { useRoute } from '@react-navigation/native';
 import { Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -380,8 +380,9 @@ describe('CalendarScreen', () => {
       (useRoute as jest.Mock).mockReturnValue({ params: undefined });
       render(<CalendarScreen />);
 
-      // useFocusEffect がコールバック付きで呼ばれていること
-      expect(useFocusEffect).toHaveBeenCalled();
+      // モック関数 mockUseFocusEffect がコールバック付きで呼ばれていること
+      // （useFocusEffect はカスタムラッパー関数なので jest.fn() の mockUseFocusEffect を使う）
+      expect(mockUseFocusEffect).toHaveBeenCalled();
     });
 
     it('フォーカス時に fetchTrainingDates が再呼び出しされる', async () => {

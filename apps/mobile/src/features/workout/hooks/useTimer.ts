@@ -26,6 +26,10 @@ export type UseTimerReturn = {
   resetTimer: () => void;
   /** タイマー計測を破棄する（ワークアウトは継続） */
   stopTimer: () => void;
+  /** discarded 状態から 0:00 でタイマーを再開する（Issue #175） */
+  resetAndStartTimer: () => void;
+  /** 経過秒数を手動でセットする（paused/discarded 時のみ有効、Issue #175） */
+  setManualTime: (seconds: number) => void;
 };
 
 /**
@@ -126,6 +130,30 @@ export function useTimer(): UseTimerReturn {
     void persistTimerState('discarded', 0, null);
   }, [clearTimerInterval, setTimerStatus, setElapsedSeconds, setTimerStartedAt, persistTimerState]);
 
+  /** discarded 状態から 0:00 でタイマーを再開する（Issue #175） */
+  const resetAndStartTimer = useCallback(() => {
+    const now = Date.now();
+    setTimerStatus('running');
+    setElapsedSeconds(0);
+    setTimerStartedAt(now);
+    void persistTimerState('running', 0, now);
+  }, [setTimerStatus, setElapsedSeconds, setTimerStartedAt, persistTimerState]);
+
+  /** 経過秒数を手動でセットする（paused/discarded 時のみ有効、Issue #175） */
+  const setManualTime = useCallback(
+    (seconds: number) => {
+      // discarded 状態の場合は paused に遷移して値をセットする
+      const newStatus = timerStatus === 'discarded' ? 'paused' : timerStatus;
+      if (newStatus === 'paused') {
+        setTimerStatus('paused');
+        setElapsedSeconds(seconds);
+        setTimerStartedAt(null);
+        void persistTimerState('paused', seconds, null);
+      }
+    },
+    [timerStatus, setTimerStatus, setElapsedSeconds, setTimerStartedAt, persistTimerState],
+  );
+
   // running 時に 1秒ごとの更新インターバルを管理。
   // deps から elapsedSeconds を意図的に除外している理由:
   //   elapsedSeconds を deps に含めると、interval が発火するたびにストアが更新され
@@ -178,5 +206,7 @@ export function useTimer(): UseTimerReturn {
     resumeTimer,
     resetTimer,
     stopTimer,
+    resetAndStartTimer,
+    setManualTime,
   };
 }

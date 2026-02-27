@@ -213,4 +213,59 @@ describe('useTimer - 状態遷移テスト', () => {
       expect(state.timerStartedAt).toBeNull();
     });
   });
+
+  describe('Issue #175: discarded → 再開で 0:00 から再開', () => {
+    it('discarded から running へ遷移し、elapsed=0 / timerStartedAt が新しい値になる', () => {
+      const store = useWorkoutSessionStore.getState();
+
+      // discarded 状態にする
+      store.setTimerStatus('discarded');
+      store.setElapsedSeconds(0);
+      store.setTimerStartedAt(null);
+
+      // resetAndStart の期待動作: 0:00 から running を開始する
+      const now = Date.now();
+      store.setTimerStatus('running');
+      store.setElapsedSeconds(0);
+      store.setTimerStartedAt(now);
+
+      const state = useWorkoutSessionStore.getState();
+      expect(state.timerStatus).toBe('running');
+      expect(state.elapsedSeconds).toBe(0);
+      expect(state.timerStartedAt).toBe(now);
+    });
+  });
+
+  describe('Issue #175: 手入力で経過秒数を直接セット', () => {
+    it('paused 状態で経過秒数を手入力できる', () => {
+      const store = useWorkoutSessionStore.getState();
+      store.setTimerStatus('paused');
+      store.setElapsedSeconds(30);
+      store.setTimerStartedAt(null);
+
+      // setManualTime の期待動作: 指定した秒数をセットする
+      store.setElapsedSeconds(90); // 1:30 を手入力
+
+      const state = useWorkoutSessionStore.getState();
+      expect(state.timerStatus).toBe('paused');
+      expect(state.elapsedSeconds).toBe(90);
+      expect(state.timerStartedAt).toBeNull();
+    });
+
+    it('discarded 状態で経過秒数を手入力すると paused に遷移する', () => {
+      const store = useWorkoutSessionStore.getState();
+      store.setTimerStatus('discarded');
+      store.setElapsedSeconds(0);
+      store.setTimerStartedAt(null);
+
+      // setManualTime の期待動作: discarded → paused に遷移して秒数をセット
+      store.setTimerStatus('paused');
+      store.setElapsedSeconds(300); // 5:00 を手入力
+
+      const state = useWorkoutSessionStore.getState();
+      expect(state.timerStatus).toBe('paused');
+      expect(state.elapsedSeconds).toBe(300);
+      expect(state.timerStartedAt).toBeNull();
+    });
+  });
 });
