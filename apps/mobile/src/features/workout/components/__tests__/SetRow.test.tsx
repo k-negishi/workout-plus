@@ -222,17 +222,30 @@ describe('SetRow', () => {
   // Issue #190: 右スペース解消 - レイアウト修正
   // ────────────────────────────────────────────────────────────
 
+  it('セット番号テキストが textAlign: center であること（ヘッダー "Set" と中央揃えを統一）', () => {
+    render(<SetRow {...defaultProps} />);
+    // setNumber=1 → "1" テキスト
+    const setNumberText = screen.getByText('1');
+    expect(setNumberText.props.style).toMatchObject({ textAlign: 'center' });
+  });
+
   it('"x" 区切り文字に width: 16 が設定されていること（カラムヘッダースペーサーと幅一致）', () => {
     render(<SetRow {...defaultProps} />);
     const xText = screen.getByText('x');
     expect(xText.props.style).toMatchObject({ width: 16 });
   });
 
-  it('1RM テキストに flex: 1 が設定されていること（右空き解消）', () => {
+  it('1RM テキストに width: 48 が設定されていること（コンパクト固定幅）', () => {
     render(<SetRow {...defaultProps} />);
     // weight=null のとき 1RM 表示は "-"
     const rmText = screen.getByText('-');
-    expect(rmText.props.style).toMatchObject({ flex: 1 });
+    expect(rmText.props.style).toMatchObject({ width: 48 });
+  });
+
+  it('削除ボタンが flex: 1 を持ち右スペースを吸収すること', () => {
+    render(<SetRow {...defaultProps} />);
+    const deleteButton = screen.getByLabelText('セット1を削除');
+    expect(deleteButton.props.style).toMatchObject({ flex: 1 });
   });
 
   // ────────────────────────────────────────────────────────────

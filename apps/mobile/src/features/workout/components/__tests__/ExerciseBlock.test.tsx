@@ -369,10 +369,16 @@ describe('ExerciseBlock', () => {
       expect(headerRow.props.style?.paddingLeft).toBeFalsy();
     });
 
-    it('1RM ヘッダーに flex: 1 が設定されていること（SetRow の1RM列と幅一致）', () => {
+    it('1RM ヘッダーに width: 48 が設定されていること（SetRow の1RM列と幅一致）', () => {
       render(<ExerciseBlock {...createDefaultProps()} />);
       const rmHeader = screen.getByText('1RM');
-      expect(rmHeader.props.style).toMatchObject({ flex: 1 });
+      expect(rmHeader.props.style).toMatchObject({ width: 48 });
+    });
+
+    it('Set ヘッダーが textAlign: center であること（SetRow のセット番号と中央揃えを統一）', () => {
+      render(<ExerciseBlock {...createDefaultProps()} />);
+      const setHeader = screen.getByText('Set');
+      expect(setHeader.props.style).toMatchObject({ textAlign: 'center' });
     });
   });
 

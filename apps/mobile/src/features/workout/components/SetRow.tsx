@@ -116,13 +116,13 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
     <View testID="set-row-container" style={{ paddingVertical: 4 }}>
       {/* 行本体: 枠線・背景なしの軽量レイアウト */}
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        {/* セット番号: 幅32・左揃えで視認性を確保 */}
+        {/* セット番号: 幅32・中央揃えでヘッダー "Set" と位置を一致させる */}
         <Text
           style={{
             width: 32,
             fontSize: 15,
             color: '#64748b',
-            textAlign: 'left',
+            textAlign: 'center',
           }}
         >
           {set.setNumber}
@@ -173,10 +173,10 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
           onBlur={handleRepsBlur}
         />
 
-        {/* 推定1RM: 残りの横幅を flex:1 で吸収して右空きをなくす。未計算時は "-" */}
+        {/* 推定1RM: 固定幅48でコンパクトに表示。未計算時は "-" */}
         <Text
           style={{
-            flex: 1,
+            width: 48,
             fontSize: 14,
             color: '#64748b',
             textAlign: 'center',
@@ -185,13 +185,13 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
           {estimated1RM != null ? String(estimated1RM) : '-'}
         </Text>
 
-        {/* 削除ボタン: ✕（U+2715）, 小さく控えめに */}
+        {/* 削除ボタン: flex:1 で残りの横幅を占有し × を右端に配置する。
+            タップ領域が広がり誤タップを防ぐ効果もある */}
         <TouchableOpacity
           onPress={() => onDelete(set.id)}
           style={{
-            width: 20,
-            height: 20,
-            alignItems: 'center',
+            flex: 1,
+            alignItems: 'flex-end',
             justifyContent: 'center',
             opacity: 0.4,
           }}

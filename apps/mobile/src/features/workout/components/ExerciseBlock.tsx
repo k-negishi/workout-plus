@@ -162,14 +162,14 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
           Issue #174: フォント1段階拡大、kg/rep幅をSetRowの固定幅72pxに合わせる
           Issue #190: paddingLeft を削除して SetRow 行とのアライメントを統一 */}
       <View testID="column-header-row" style={{ flexDirection: 'row', gap: 8, paddingBottom: 8 }}>
-        {/* Set: セット番号列幅 32px */}
+        {/* Set: セット番号列幅 32px。SetRow の数字と中央揃えを統一する */}
         <Text
           style={{
             width: 32,
             fontSize: 12,
             fontWeight: '600',
             color: '#64748b',
-            textAlign: 'left',
+            textAlign: 'center',
           }}
         >
           Set
@@ -200,10 +200,10 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
         >
           rep
         </Text>
-        {/* 1RM: SetRow の 1RM 列（flex:1）と幅を合わせて残りスペースを吸収する */}
+        {/* 1RM: 固定幅48でコンパクトに表示。SetRow の 1RM 列と幅を合わせる */}
         <Text
           style={{
-            flex: 1,
+            width: 48,
             fontSize: 12,
             fontWeight: '600',
             color: '#64748b',
@@ -212,8 +212,8 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
         >
           1RM
         </Text>
-        {/* 削除ボタン列のスペーサー: SetRow の削除ボタン幅 20px に合わせる */}
-        <View style={{ width: 20 }} />
+        {/* 削除列スペーサー: SetRow の削除ボタン（flex:1）に合わせて残りスペースを吸収する */}
+        <View style={{ flex: 1 }} />
       </View>
 
       {/* セットリスト: Issue #146 FlatList を map に置き換えてちらつきを修正
