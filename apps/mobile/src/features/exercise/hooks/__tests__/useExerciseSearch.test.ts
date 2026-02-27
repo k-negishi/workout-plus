@@ -239,7 +239,7 @@ describe('useExerciseSearch セクション計算ロジック', () => {
       // testExercises には腹筋(abs)がない
       const sections = computeSections(testExercises, '', null);
       const sectionTitles = sections.map((s) => s.title);
-      expect(sectionTitles).not.toContain('腹の種目');
+      expect(sectionTitles).not.toContain('腹筋の種目');
     });
   });
 });

@@ -102,7 +102,7 @@ jest.mock('../../hooks/useExerciseSearch', () => ({
     shoulders: '肩',
     biceps: '二頭',
     triceps: '三頭',
-    abs: '腹',
+    abs: '腹筋',
   },
 }));
 

@@ -49,7 +49,7 @@ const CATEGORIES: Array<{ key: MuscleGroup | null; label: string }> = [
   { key: 'shoulders', label: '肩' },
   { key: 'biceps', label: '二頭' },
   { key: 'triceps', label: '三頭' },
-  { key: 'abs', label: '腹' },
+  { key: 'abs', label: '腹筋' },
 ];
 
 /** 器具の日本語ラベル */

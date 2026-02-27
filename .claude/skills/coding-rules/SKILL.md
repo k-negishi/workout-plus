@@ -202,6 +202,41 @@ function useWorkoutSession(sessionId: string) {
 }
 ```
 
+### DB 変更後は必ず UI を同期する
+
+Repository の write 系メソッド（create / update / delete / toggle 等）を呼んだ後は、
+必ず表示データを更新する。しないと UI が DB と乖離した古い状態を表示し続ける。
+
+```typescript
+// NG: DB を変更したが UI を更新しない → 画面が古い状態のまま
+const handleToggleFavorite = async (id: string) => {
+  await ExerciseRepository.toggleFavorite(id);
+  // ← 何もしないと一覧の表示が変わらない
+};
+
+// OK パターン A: 再取得（DB の最新状態を信頼する）
+const handleToggleFavorite = async (id: string) => {
+  await ExerciseRepository.toggleFavorite(id);
+  await loadExercises(); // ← DB から最新リストを再取得して state に反映
+};
+
+// OK パターン B: 楽観的更新（レスポンシブな UX が必要な場合）
+const handleToggleFavorite = async (id: string) => {
+  setExercises((prev) =>
+    prev.map((e) => (e.id === id ? { ...e, isFavorite: !e.isFavorite } : e)),
+  );
+  try {
+    await ExerciseRepository.toggleFavorite(id);
+  } catch {
+    await loadExercises(); // 失敗時は再取得でロールバック
+  }
+};
+```
+
+**使い分け**:
+- 単純な CRUD → パターン A（再取得）で十分。実装がシンプル
+- タップ → 即座に反応が必要な UX → パターン B（楽観的更新）
+
 ### サービス層でネットワーク・ストレージの副作用を分離する
 
 ```

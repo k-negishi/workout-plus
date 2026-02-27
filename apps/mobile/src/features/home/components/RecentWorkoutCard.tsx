@@ -19,7 +19,7 @@ const MUSCLE_GROUP_LABELS: Record<MuscleGroup, string> = {
   shoulders: '肩',
   biceps: '二頭',
   triceps: '三頭',
-  abs: '腹',
+  abs: '腹筋',
 };
 
 /** 秒数を「X時間X分」形式に変換する */

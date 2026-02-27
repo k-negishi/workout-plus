@@ -110,7 +110,7 @@ describe('RecentWorkoutCard 部位名表示', () => {
     );
 
     // 「胸」「背中」等の部位名がないことを確認
-    expect(screen.queryByText(/胸|背中|脚|肩|二頭|三頭|腹/)).toBeNull();
+    expect(screen.queryByText(/胸|背中|脚|肩|二頭|三頭|腹筋/)).toBeNull();
   });
 });
 
