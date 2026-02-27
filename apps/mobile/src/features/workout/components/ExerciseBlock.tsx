@@ -75,9 +75,9 @@ const getCircledNumber = (n: number): string => {
   return `(${n})`;
 };
 
-/** 前回チップのスタイル（控えめなグレー小テキスト） */
+/** 前回チップのスタイル（控えめなグレー小テキスト）Issue #174: フォント1段階拡大 */
 const chipTextStyle = {
-  fontSize: 12,
+  fontSize: 13,
   color: '#94a3b8',
 } as const;
 
@@ -121,7 +121,7 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
       >
         {/* 種目名（タップで種目履歴へ遷移）Issue #151: ハイパーリンクカラーに統一 */}
         <TouchableOpacity onPress={() => onExerciseNamePress(exercise.id)}>
-          <Text style={{ fontSize: 16, fontWeight: '600', color: '#4D94FF' }}>{exercise.name}</Text>
+          <Text style={{ fontSize: 17, fontWeight: '600', color: '#4D94FF' }}>{exercise.name}</Text>
         </TouchableOpacity>
 
         {/* 前回記録チップ: flex:1 で残りスペースを占有し右詰め折り返し */}
@@ -154,17 +154,18 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
           accessibilityLabel={`${exercise.name}を削除`}
           style={{ padding: 4 }}
         >
-          <Text style={{ fontSize: 16, color: '#64748b' }}>✕</Text>
+          <Text style={{ fontSize: 17, color: '#64748b' }}>✕</Text>
         </TouchableOpacity>
       </View>
 
-      {/* カラムヘッダー行: Set / kg / (x スペーサー) / rep / 1RM / (削除スペーサー) */}
+      {/* カラムヘッダー行: Set / kg / (x スペーサー) / rep / 1RM / (削除スペーサー）
+          Issue #174: フォント1段階拡大、kg/rep幅をSetRowの固定幅72pxに合わせる */}
       <View style={{ flexDirection: 'row', gap: 8, paddingLeft: 8, paddingBottom: 8 }}>
         {/* Set: セット番号列幅 32px */}
         <Text
           style={{
             width: 32,
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: '600',
             color: '#64748b',
             textAlign: 'left',
@@ -172,11 +173,11 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
         >
           Set
         </Text>
-        {/* kg: flex-1 で重量入力列に合わせる */}
+        {/* kg: SetRow の重量入力幅 72px に合わせる */}
         <Text
           style={{
-            flex: 1,
-            fontSize: 11,
+            width: 72,
+            fontSize: 12,
             fontWeight: '600',
             color: '#64748b',
             textAlign: 'center',
@@ -186,11 +187,11 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
         </Text>
         {/* ×記号のスペーサー: SetRow の区切り文字列幅に合わせて 16px */}
         <View style={{ width: 16 }} />
-        {/* rep: flex-1 でレップ数入力列に合わせる（Issue #134: 「回」→「rep」に変更） */}
+        {/* rep: SetRow のレップ入力幅 72px に合わせる（Issue #134: 「回」→「rep」に変更） */}
         <Text
           style={{
-            flex: 1,
-            fontSize: 11,
+            width: 72,
+            fontSize: 12,
             fontWeight: '600',
             color: '#64748b',
             textAlign: 'center',
@@ -202,7 +203,7 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
         <Text
           style={{
             width: 48,
-            fontSize: 11,
+            fontSize: 12,
             fontWeight: '600',
             color: '#64748b',
             textAlign: 'center',
@@ -234,14 +235,14 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
         style={{ marginTop: 8, paddingVertical: 8, alignItems: 'center' }}
         accessibilityLabel="セットを追加"
       >
-        <Text style={{ fontSize: 14, fontWeight: '600', color: '#4D94FF' }}>+ セットを追加</Text>
+        <Text style={{ fontSize: 15, fontWeight: '600', color: '#4D94FF' }}>+ セットを追加</Text>
       </TouchableOpacity>
 
       {/* 種目メモ: Issue #147 ローカル state で管理してリセットを防止 */}
       <View className="flex-row items-center mt-2 gap-2">
-        <Text className="text-[14px] text-[#64748b]">{'\u270E'}</Text>
+        <Text className="text-[15px] text-[#64748b]">{'\u270E'}</Text>
         <TextInput
-          className="flex-1 text-[15px] text-[#475569] py-1"
+          className="flex-1 text-[16px] text-[#475569] py-1"
           placeholder="メモ（フォーム、体感など）"
           placeholderTextColor="#94a3b8"
           value={localMemo}

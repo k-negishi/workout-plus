@@ -120,7 +120,7 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
         <Text
           style={{
             width: 32,
-            fontSize: 14,
+            fontSize: 15,
             color: '#64748b',
             textAlign: 'left',
           }}
@@ -128,17 +128,17 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
           {set.setNumber}
         </Text>
 
-        {/* 重量入力（decimal-pad: 小数点入力を許可） */}
+        {/* 重量入力（decimal-pad: 小数点入力を許可）Issue #174: 幅縮小・フォント拡大 */}
         <TextInput
           testID="weight-input"
           style={{
-            flex: 1,
+            width: 72,
             backgroundColor: '#FAFBFC',
             borderWidth: 1,
             borderColor: '#e2e8f0',
             borderRadius: 8,
             paddingVertical: 8,
-            fontSize: 15,
+            fontSize: 16,
             fontWeight: '600',
             color: '#334155',
             textAlign: 'center',
@@ -150,19 +150,19 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
         />
 
         {/* 区切り文字: "x"（乗算の意味を持つ小文字） */}
-        <Text style={{ fontSize: 14, color: '#64748b' }}>x</Text>
+        <Text style={{ fontSize: 15, color: '#64748b' }}>x</Text>
 
-        {/* レップ数入力（number-pad: 整数のみ） */}
+        {/* レップ数入力（number-pad: 整数のみ）Issue #174: 幅縮小・フォント拡大 */}
         <TextInput
           testID="reps-input"
           style={{
-            flex: 1,
+            width: 72,
             backgroundColor: '#FAFBFC',
             borderWidth: 1,
             borderColor: '#e2e8f0',
             borderRadius: 8,
             paddingVertical: 8,
-            fontSize: 15,
+            fontSize: 16,
             fontWeight: '600',
             color: '#334155',
             textAlign: 'center',
@@ -177,7 +177,7 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
         <Text
           style={{
             width: 48,
-            fontSize: 13,
+            fontSize: 14,
             color: '#64748b',
             textAlign: 'center',
           }}
@@ -197,7 +197,7 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
           }}
           accessibilityLabel={`セット${set.setNumber}を削除`}
         >
-          <Text style={{ fontSize: 12, color: '#64748b' }}>{'\u2715'}</Text>
+          <Text style={{ fontSize: 13, color: '#64748b' }}>{'\u2715'}</Text>
         </TouchableOpacity>
       </View>
     </View>

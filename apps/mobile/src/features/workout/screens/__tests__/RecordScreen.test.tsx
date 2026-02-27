@@ -199,10 +199,10 @@ describe('RecordScreen', () => {
       expect(header.props.style).toEqual(expect.objectContaining({ backgroundColor: '#4D94FF' }));
     });
 
-    it('ヘッダータイトルの fontSize が 17 であること（Issue #168: トンマナ統一）', () => {
+    it('ヘッダータイトルの fontSize が 18 であること（Issue #174: フォント1段階拡大）', () => {
       render(<RecordScreen />);
       const title = screen.getByTestId('record-header-title');
-      expect(title.props.style).toEqual(expect.objectContaining({ fontSize: 17 }));
+      expect(title.props.style).toEqual(expect.objectContaining({ fontSize: 18 }));
     });
 
     it('当日のワークアウトタイトルが表示される', () => {

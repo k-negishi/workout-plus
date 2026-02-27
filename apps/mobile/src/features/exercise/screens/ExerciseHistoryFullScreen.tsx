@@ -591,12 +591,12 @@ const editFormStyles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    fontSize: 16,
+    fontSize: 17,
     color: '#475569',
     marginBottom: 12,
   },
   sectionLabel: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
     color: '#64748b',
     letterSpacing: 0.5,
@@ -620,7 +620,7 @@ const editFormStyles = StyleSheet.create({
     borderColor: '#4D94FF',
   },
   chipText: {
-    fontSize: 14,
+    fontSize: 15,
     color: '#64748b',
   },
   chipTextSelected: {
@@ -639,7 +639,7 @@ const editFormStyles = StyleSheet.create({
     alignItems: 'center',
   },
   saveButtonText: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '600',
     color: '#ffffff',
   },
@@ -649,7 +649,7 @@ const editFormStyles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelButtonText: {
-    fontSize: 15,
+    fontSize: 16,
     color: '#64748b',
   },
 });

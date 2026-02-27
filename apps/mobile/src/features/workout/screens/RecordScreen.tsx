@@ -372,7 +372,7 @@ export const RecordScreen: React.FC = () => {
           style={{
             flex: 1,
             textAlign: 'center',
-            fontSize: 17,
+            fontSize: 18,
             fontWeight: '600',
             color: '#ffffff',
           }}
@@ -392,8 +392,10 @@ export const RecordScreen: React.FC = () => {
           onStart={timer.startTimer}
           onPause={timer.pauseTimer}
           onResume={timer.resumeTimer}
+          onResetAndStart={timer.resetAndStartTimer}
           onStopTimer={handleStopTimer}
           onComplete={handleComplete}
+          onManualTimeSet={timer.setManualTime}
           isCompleteDisabled={!hasExercises}
         />
       )}
@@ -464,12 +466,12 @@ export const RecordScreen: React.FC = () => {
             }}
             accessibilityLabel="種目を追加"
           >
-            <Text style={{ fontSize: 15, fontWeight: '600', color: '#475569' }}>+ 種目を追加</Text>
+            <Text style={{ fontSize: 16, fontWeight: '600', color: '#475569' }}>+ 種目を追加</Text>
           </TouchableOpacity>
 
           {/* ワークアウトメモ */}
           <View style={{ marginHorizontal: 16, marginTop: 16 }}>
-            <Text style={{ fontSize: 14, color: '#64748b', marginBottom: 4 }}>
+            <Text style={{ fontSize: 15, color: '#64748b', marginBottom: 4 }}>
               ワークアウトメモ
             </Text>
             <TextInput
@@ -479,7 +481,7 @@ export const RecordScreen: React.FC = () => {
                 borderColor: '#e2e8f0',
                 borderRadius: 8,
                 padding: 12,
-                fontSize: 16,
+                fontSize: 17,
                 color: '#475569',
                 minHeight: 60,
               }}
