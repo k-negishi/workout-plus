@@ -162,12 +162,12 @@ const ExerciseListHeader: React.FC<{
     <View className="px-5 py-4">
       <View className="border border-dashed border-[#e2e8f0] rounded-lg p-4">
         <TextInput
-          className="bg-white border border-[#e2e8f0] rounded-lg px-3 py-2.5 text-[16px] text-[#475569] mb-3"
+          className="bg-white border border-[#e2e8f0] rounded-lg px-3 py-2.5 text-[18px] text-[#475569] mb-3"
           placeholder="種目名を入力"
           value={newExerciseName}
           onChangeText={onNameChange}
         />
-        <Text className="text-[13px] font-semibold text-[#64748b] tracking-wide mb-1.5">部位</Text>
+        <Text className="text-[15px] font-semibold text-[#64748b] tracking-wide mb-1.5">部位</Text>
         <View className="flex-row flex-wrap gap-1.5 mb-3">
           {MUSCLE_GROUP_OPTIONS.map((opt) => (
             <TouchableOpacity
@@ -178,7 +178,7 @@ const ExerciseListHeader: React.FC<{
               }`}
             >
               <Text
-                className={`text-[14px] ${
+                className={`text-[16px] ${
                   newMuscleGroup === opt.key ? 'text-[#4D94FF] font-semibold' : 'text-[#64748b]'
                 }`}
               >
@@ -187,7 +187,7 @@ const ExerciseListHeader: React.FC<{
             </TouchableOpacity>
           ))}
         </View>
-        <Text className="text-[13px] font-semibold text-[#64748b] tracking-wide mb-1.5">器具</Text>
+        <Text className="text-[15px] font-semibold text-[#64748b] tracking-wide mb-1.5">器具</Text>
         <View className="flex-row flex-wrap gap-1.5 mb-3">
           {EQUIPMENT_OPTIONS.map((opt) => (
             <TouchableOpacity
@@ -198,7 +198,7 @@ const ExerciseListHeader: React.FC<{
               }`}
             >
               <Text
-                className={`text-[14px] ${
+                className={`text-[16px] ${
                   newEquipment === opt.key ? 'text-[#4D94FF] font-semibold' : 'text-[#64748b]'
                 }`}
               >
@@ -211,10 +211,10 @@ const ExerciseListHeader: React.FC<{
           onPress={onSubmit}
           className="py-2.5 bg-[#4D94FF] rounded-lg items-center"
         >
-          <Text className="text-[15px] font-semibold text-white">作成して追加</Text>
+          <Text className="text-[17px] font-semibold text-white">作成して追加</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={onCancel} className="items-center mt-2">
-          <Text className="text-[15px] text-[#64748b]">キャンセル</Text>
+          <Text className="text-[17px] text-[#64748b]">キャンセル</Text>
         </TouchableOpacity>
       </View>
     </View>
