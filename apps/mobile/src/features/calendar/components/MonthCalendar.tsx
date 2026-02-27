@@ -184,12 +184,14 @@ export const MonthCalendar = React.memo(function MonthCalendar({
     }
 
     // 今日
-    // todayTextColor は MarkingProps 型定義に含まれないが、
-    // react-native-calendars は実行時に todayTextColor を参照する。
+    // todayTextColor / todayBackgroundColor は MarkingProps 型定義に含まれないが、
+    // react-native-calendars は実行時にこれらのプロパティを参照する。
+    // Issue #177: 選択日ほど目立たないが、今日の日付に薄いブルー背景を付ける
     if (!selectedDate || selectedDate !== today) {
       marks[today] = {
         ...(marks[today] ?? {}),
         todayTextColor: '#4D94FF',
+        todayBackgroundColor: '#E6F2FF',
       } as (typeof marks)[string];
     }
 
@@ -375,7 +377,10 @@ export const MonthCalendar = React.memo(function MonthCalendar({
           {months.map((month, index) => (
             <View key={index} style={{ width: containerWidth }}>
               <Calendar
-                key={monthChangeKey}
+                // react-native-calendars は markedDates prop の変更を内部状態に即座に反映しない既知の問題がある。
+                // selectedDate を key に含めることで、日付タップ時に Calendar を強制再マウントし、
+                // 青丸が即座に表示されるようにする（Issue #173）。
+                key={`${monthChangeKey}-${selectedDate ?? 'none'}`}
                 current={format(startOfMonth(month), 'yyyy-MM-dd')}
                 markedDates={markedDates}
                 onDayPress={handleDayPress}

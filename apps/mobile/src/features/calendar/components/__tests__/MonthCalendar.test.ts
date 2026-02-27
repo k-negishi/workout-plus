@@ -16,6 +16,7 @@ type MarkedDateEntry = {
   selectedColor?: string;
   selectedTextColor?: string;
   todayTextColor?: string;
+  todayBackgroundColor?: string;
 };
 
 function generateMarkedDates(
@@ -47,10 +48,12 @@ function generateMarkedDates(
   }
 
   // 今日
+  // Issue #177: 選択日ほど目立たないが、今日の日付に薄いブルー背景を付ける
   if (!selectedDate || selectedDate !== today) {
     marks[today] = {
       ...(marks[today] ?? {}),
       todayTextColor: '#4D94FF',
+      todayBackgroundColor: '#E6F2FF',
     };
   }
 
@@ -128,6 +131,31 @@ describe('MonthCalendar ロジック', () => {
       // selectedは付くがtodayTextColorは付かない
       expect(marks[today]!.selected).toBe(true);
       expect(marks[today]!.todayTextColor).toBeUndefined();
+    });
+
+    // Issue #177: 今日の日付に薄い背景色を設定する
+    it('今日の日付にtodayBackgroundColorが設定される（未選択時）', () => {
+      const marks = generateMarkedDates([], null, today);
+
+      expect(marks[today]).toBeDefined();
+      // 選択日ほど目立たない薄いブルー背景を設定する
+      expect(marks[today]!.todayBackgroundColor).toBe('#E6F2FF');
+    });
+
+    it('今日が選択日の場合、todayBackgroundColorは設定されない', () => {
+      const marks = generateMarkedDates([], today, today);
+
+      // 選択済みの場合は selectedColor が背景を担うため todayBackgroundColor は不要
+      expect(marks[today]!.selected).toBe(true);
+      expect(marks[today]!.todayBackgroundColor).toBeUndefined();
+    });
+
+    it('今日がトレーニング日かつ未選択の場合、todayBackgroundColorが設定される', () => {
+      // トレーニング日の薄いブルー背景と同じ色で一貫性を保つ
+      const trainingDates = [new Date(today)];
+      const marks = generateMarkedDates(trainingDates, null, today);
+
+      expect(marks[today]!.todayBackgroundColor).toBe('#E6F2FF');
     });
   });
 

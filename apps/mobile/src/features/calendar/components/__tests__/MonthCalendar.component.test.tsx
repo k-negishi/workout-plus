@@ -28,6 +28,7 @@ type CalendarMockProps = {
   current?: string;
   enableSwipeMonths?: boolean;
   hideArrows?: boolean;
+  markedDates?: Record<string, unknown>;
 };
 
 // mock prefix により jest.mock() factory 内でのクロージャ参照が許可される
@@ -317,6 +318,97 @@ describe('MonthCalendar コンポーネント - handleDayPress', () => {
     centerCalendar!.onDayPress({ dateString: todayStr });
 
     expect(mockOnDayPress).toHaveBeenCalledWith(todayStr);
+  });
+});
+
+// ==========================================
+// Issue #173: selectedDate 変更時の即座反映テスト
+// selectedDate が変わった時に Calendar が再マウントされ、青丸が即座に表示されることを保証する
+// ==========================================
+describe('MonthCalendar - selectedDate 変更時の即座反映 (#173)', () => {
+  beforeEach(() => {
+    mockCalendarInstances = [];
+  });
+
+  it('初期描画時に selectedDate が Calendar の markedDates に反映される', () => {
+    renderWithLayout({ selectedDate: '2026-02-10' });
+
+    // 中央パネル（当月）の markedDates に選択日が含まれること
+    const centerCalendar = mockCalendarInstances[1];
+    expect(centerCalendar).toBeDefined();
+    const markedDates = centerCalendar!.markedDates as Record<string, { selectedColor?: string }>;
+    expect(markedDates['2026-02-10']?.selectedColor).toBe('#4D94FF');
+  });
+
+  it('selectedDate が変わると Calendar の markedDates が即座に更新される', async () => {
+    const { rerender } = render(
+      <MonthCalendar trainingDates={[]} selectedDate="2026-02-10" onDayPress={jest.fn()} />,
+    );
+
+    // onLayout を発火して ScrollView をマウントする
+    const container = screen.getByTestId('calendar-container');
+    fireEvent(container, 'layout', {
+      nativeEvent: { layout: { width: MOCK_LAYOUT_WIDTH, height: 400 } },
+    });
+
+    // selectedDate を '2026-02-15' に変更する
+    mockCalendarInstances = [];
+    rerender(<MonthCalendar trainingDates={[]} selectedDate="2026-02-15" onDayPress={jest.fn()} />);
+
+    // 変更後の markedDates が即座に更新されること（遅延なし）
+    const centerCalendar = mockCalendarInstances[1];
+    expect(centerCalendar).toBeDefined();
+    const markedDates = centerCalendar!.markedDates as Record<string, { selectedColor?: string }>;
+    // 新しい選択日に青丸が設定される
+    expect(markedDates['2026-02-15']?.selectedColor).toBe('#4D94FF');
+    // 旧選択日の青丸が消える（trainingDate でない場合はエントリなし）
+    expect(markedDates['2026-02-10']?.selectedColor).not.toBe('#4D94FF');
+  });
+
+  it('selectedDate 変更時に Calendar が再マウントされる（key が selectedDate を含む）', async () => {
+    // react-native-calendars は markedDates prop の変更を内部状態に即座に反映しない既知の問題がある。
+    // key を selectedDate に基づいて変えることで強制再マウントし、青丸が即座に表示されることを保証する。
+    const { rerender } = render(
+      <MonthCalendar trainingDates={[]} selectedDate="2026-02-10" onDayPress={jest.fn()} />,
+    );
+
+    const container = screen.getByTestId('calendar-container');
+    fireEvent(container, 'layout', {
+      nativeEvent: { layout: { width: MOCK_LAYOUT_WIDTH, height: 400 } },
+    });
+
+    // 初期描画: 3パネル描画
+    expect(mockCalendarInstances).toHaveLength(3);
+
+    // selectedDate を変更する前の mockCalendarInstances をクリア
+    // （再マウントなら再度 push されるはず）
+    const instancesBefore = [...mockCalendarInstances];
+    mockCalendarInstances = [];
+
+    rerender(<MonthCalendar trainingDates={[]} selectedDate="2026-02-15" onDayPress={jest.fn()} />);
+
+    // selectedDate が変わると Calendar が再マウントされ（3パネル分）、
+    // 新しい markedDates を持つインスタンスが作られる
+    expect(mockCalendarInstances).toHaveLength(3);
+
+    // 新しいインスタンスの markedDates は新しい selectedDate を反映している
+    const newCenterCalendar = mockCalendarInstances[1];
+    expect(newCenterCalendar).toBeDefined();
+    const newMarkedDates = newCenterCalendar!.markedDates as Record<
+      string,
+      { selectedColor?: string }
+    >;
+    expect(newMarkedDates['2026-02-15']?.selectedColor).toBe('#4D94FF');
+
+    // 旧インスタンスとは異なる markedDates を持つ（再マウントされた証拠）
+    const oldCenterCalendar = instancesBefore[1];
+    const oldMarkedDates = oldCenterCalendar!.markedDates as Record<
+      string,
+      { selectedColor?: string }
+    >;
+    expect(oldMarkedDates['2026-02-10']?.selectedColor).toBe('#4D94FF');
+    // 新しいインスタンスでは旧選択日の青丸が消えている
+    expect(newMarkedDates['2026-02-10']?.selectedColor).not.toBe('#4D94FF');
   });
 });
 
