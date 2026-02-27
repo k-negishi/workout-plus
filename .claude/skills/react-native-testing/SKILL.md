@@ -173,6 +173,42 @@ const handleDayPress = useCallback((dateString: string) => {
 
 ---
 
+## 5. useState リスト + DB 更新：明示的再取得が必要
+
+`useState` で管理されたリスト（例: `allExercises`）は、DB を更新しても UI に自動反映されない。
+更新処理の末尾で必ず再取得関数を呼ぶこと（Issue #186 実例: お気に入りトグル後に反映されなかったバグ）。
+
+```typescript
+// NG: DB だけ更新、state が古いまま → UI に反映されない
+const handleToggleFavorite = useCallback(async (id: string) => {
+  await ExerciseRepository.toggleFavorite(id);
+}, []);
+
+// OK: DB 更新 → 再取得で state を最新化
+const handleToggleFavorite = useCallback(async (id: string) => {
+  await ExerciseRepository.toggleFavorite(id);
+  await loadExercises(); // ← 明示的に再取得
+}, [loadExercises]);
+```
+
+**テストで検証する観点**
+
+```typescript
+it('お気に入り登録後にリスト再取得が呼ばれる', async () => {
+  render(<ExercisePickerScreen />);
+  fireEvent.press(screen.getByTestId('favorite-button-exercise-1'));
+  await waitFor(() => {
+    expect(mockLoadExercises).toHaveBeenCalledTimes(1);
+  });
+});
+```
+
+**楽観的更新との使い分け**:
+- `loadExercises()` 再取得: 実装シンプル。ネットワーク遅延がない SQLite では体感差なし
+- 楽観的更新（state を先に変更 → DB 更新 → 失敗時ロールバック）: サーバー通信がある場合に有効
+
+---
+
 ## 4. マルチエージェント並行実行時の競合に注意
 
 複数エージェントが同一ファイルを並行編集すると変更が上書きされる。
