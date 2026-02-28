@@ -183,15 +183,12 @@ export function HomeScreen() {
         try {
           const db = await getDatabase();
 
-          // 本日の記録中セッション・当日完了チェック（ボタン表示制御用）
-          // findTodayRecording を使うことで前日以前の recording を除外する
+          // 本日の「実質的に記録中」セッション確認（有効セットのない空 recording を除外: Issue #203）
           const [recording, todayCompleted] = await Promise.all([
-            WorkoutRepository.findTodayRecording(),
+            WorkoutRepository.findTodayActiveRecording(),
             WorkoutRepository.findTodayCompleted(),
           ]);
-          // timer_status が not_started の場合はタイマーが一度も起動していないため
-          // 「記録中」とみなさない（running / paused のみバナー表示対象）
-          setIsRecording(recording !== null && recording.timer_status !== 'not_started');
+          setIsRecording(recording !== null);
           setHasTodayCompleted(todayCompleted !== null);
 
           // 完了済みワークアウトを全件取得

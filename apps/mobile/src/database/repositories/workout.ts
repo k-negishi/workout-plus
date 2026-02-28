@@ -28,6 +28,13 @@ type UpdateWorkoutParams = Partial<
   >
 >;
 
+/**
+ * 有効セット判定の SQL 条件。テーブルエイリアス s（sets）を前提とする。
+ * ドメインルールの定義は WorkoutPolicy.isValidSet() を参照。
+ * 変更時は WorkoutPolicy.isValidSet() と必ず同期すること。
+ */
+const VALID_SET_SQL = `s.weight IS NOT NULL AND s.reps IS NOT NULL AND s.reps > 0`;
+
 export const WorkoutRepository = {
   /**
    * 新規ワークアウトを作成する
@@ -92,6 +99,40 @@ export const WorkoutRepository = {
     const dayEnd = dayStart + 86400000; // 翌日 0:00
     return db.getFirstAsync<WorkoutRow>(
       "SELECT * FROM workouts WHERE status = 'recording' AND created_at >= ? AND created_at < ? LIMIT 1",
+      [dayStart, dayEnd],
+    );
+  },
+
+  /**
+   * 本日作成された「実質的に記録中」のワークアウトを1件取得する。
+   * findTodayRecording との違い: 有効セットが今回セッションで追加済みであることを条件とする。
+   * ホーム画面バナー表示専用。セッション復元には findTodayRecording を使うこと。
+   *
+   * TODO: expo-sqlite のインメモリモードが利用可能になったら
+   * findTodayActiveRecording の integration test を追加する（#203）
+   */
+  async findTodayActiveRecording(): Promise<WorkoutRow | null> {
+    const db = await getDatabase();
+    const today = new Date();
+    const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+    const dayEnd = dayStart + 86400000;
+    return db.getFirstAsync<WorkoutRow>(
+      `SELECT w.*
+       FROM workouts w
+       WHERE w.status = 'recording'
+         AND w.created_at >= ? AND w.created_at < ?
+         AND EXISTS (
+           SELECT 1
+           FROM workout_exercises we
+           JOIN sets s ON s.workout_exercise_id = we.id
+           WHERE we.workout_id = w.id
+             AND ${VALID_SET_SQL}
+             AND (
+               w.completed_at IS NULL
+               OR s.created_at > w.completed_at
+             )
+         )
+       LIMIT 1`,
       [dayStart, dayEnd],
     );
   },

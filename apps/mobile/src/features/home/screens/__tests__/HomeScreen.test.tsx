@@ -58,12 +58,12 @@ jest.mock('@/database/client', () => ({
 }));
 
 // T10: WorkoutRepository モック（記録中チェック・当日完了チェックで呼ばれる）
-// findTodayRecording: ホーム画面で使用（本日分のみ）
-const mockFindTodayRecording = jest.fn().mockResolvedValue(null);
+// findTodayActiveRecording: ホーム画面で使用（有効セット判定済み）
+const mockFindTodayActiveRecording = jest.fn().mockResolvedValue(null);
 const mockFindTodayCompleted = jest.fn().mockResolvedValue(null);
 jest.mock('@/database/repositories/workout', () => ({
   WorkoutRepository: {
-    findTodayRecording: (...args: unknown[]) => mockFindTodayRecording(...args),
+    findTodayActiveRecording: (...args: unknown[]) => mockFindTodayActiveRecording(...args),
     findTodayCompleted: (...args: unknown[]) => mockFindTodayCompleted(...args),
   },
 }));
@@ -120,7 +120,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockGetAllAsync.mockResolvedValue([]);
   mockGetFirstAsync.mockResolvedValue(null);
-  mockFindTodayRecording.mockResolvedValue(null);
+  mockFindTodayActiveRecording.mockResolvedValue(null);
   mockFindTodayCompleted.mockResolvedValue(null);
   mockNavigate.mockClear();
   // データ取得が useFocusEffect に統合されたため、コールバックをデフォルトで実行する
@@ -266,10 +266,10 @@ describe('HomeScreen タイトルヘッダー', () => {
 });
 
 describe('HomeScreen 記録中バナーと記録ボタンの排他表示', () => {
-  it('記録中セッションがないとき、記録ボタンが表示されバナーは非表示', async () => {
-    // useFocusEffect のコールバックを実行して isRecording を評価させる
+  it('findTodayActiveRecording が null を返すとき バナー非表示・記録ボタン表示', async () => {
     mockUseFocusEffect.mockImplementation((cb: () => void) => cb());
-    mockFindTodayRecording.mockResolvedValue(null);
+    // 有効セットがない（または本日外）→ null を返す
+    mockFindTodayActiveRecording.mockResolvedValue(null);
 
     render(<HomeScreen />);
     await screen.findByText('今月のトレーニング');
@@ -278,17 +278,15 @@ describe('HomeScreen 記録中バナーと記録ボタンの排他表示', () =>
     expect(screen.queryByTestId('recording-banner')).toBeNull();
   });
 
-  it('本日の記録中セッションがあるとき、バナーが表示され記録ボタンは非表示', async () => {
-    // useFocusEffect のコールバックを実行して isRecording = true にする
+  it('findTodayActiveRecording がワークアウトを返すとき バナー表示・記録ボタン非表示', async () => {
     mockUseFocusEffect.mockImplementation((cb: () => void) => cb());
-    // 本日の recording セッション（タイマー起動済み = running）
     const today = new Date();
     const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
-    mockFindTodayRecording.mockResolvedValue({
+    // findTodayActiveRecording は有効セット判定済みのワークアウトのみ返す
+    mockFindTodayActiveRecording.mockResolvedValue({
       id: 'recording-today',
       status: 'recording',
       created_at: dayStart + 3600000,
-      timer_status: 'running',
     });
 
     render(<HomeScreen />);
@@ -301,57 +299,15 @@ describe('HomeScreen 記録中バナーと記録ボタンの排他表示', () =>
     expect(screen.queryByTestId('record-workout-button')).toBeNull();
   });
 
-  it('timer_status=not_started の recording セッションはバナーを表示しない', async () => {
-    // タイマーが未起動（継続モードで開いてすぐ戻った場合など）はバナー非表示
-    mockUseFocusEffect.mockImplementation((cb: () => void) => cb());
-    const today = new Date();
-    const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
-    mockFindTodayRecording.mockResolvedValue({
-      id: 'recording-not-started',
-      status: 'recording',
-      created_at: dayStart + 3600000,
-      timer_status: 'not_started',
-    });
-
-    render(<HomeScreen />);
-    await screen.findByText('今月のトレーニング');
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('recording-banner')).toBeNull();
-    });
-    expect(screen.getByTestId('record-workout-button')).toBeTruthy();
-  });
-
-  it('timer_status=paused の recording セッションはバナーを表示する', async () => {
-    // タイマーが一時停止中は「記録中」と見なしてバナーを表示する
-    mockUseFocusEffect.mockImplementation((cb: () => void) => cb());
-    const today = new Date();
-    const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
-    mockFindTodayRecording.mockResolvedValue({
-      id: 'recording-paused',
-      status: 'recording',
-      created_at: dayStart + 3600000,
-      timer_status: 'paused',
-    });
-
-    render(<HomeScreen />);
-    await screen.findByText('今月のトレーニング');
-
-    await waitFor(() => {
-      expect(screen.getByTestId('recording-banner')).toBeTruthy();
-    });
-    expect(screen.queryByTestId('record-workout-button')).toBeNull();
-  });
-
   it('前日の recording セッションがあってもバナーは表示されない（本日分のみ対象）', async () => {
     mockUseFocusEffect.mockImplementation((cb: () => void) => cb());
-    // findTodayRecording は日付フィルタ済みのため前日分は null を返す
-    mockFindTodayRecording.mockResolvedValue(null);
+    // findTodayActiveRecording は日付フィルタ済みのため前日分は null を返す
+    mockFindTodayActiveRecording.mockResolvedValue(null);
 
     render(<HomeScreen />);
     await screen.findByText('今月のトレーニング');
 
-    // 前日 recording があっても findTodayRecording が null を返すためバナー非表示
+    // 前日 recording があっても findTodayActiveRecording が null を返すためバナー非表示
     await waitFor(() => {
       expect(screen.queryByTestId('recording-banner')).toBeNull();
     });
@@ -408,7 +364,7 @@ describe('HomeScreen クロスタブナビゲーション（T7）', () => {
 describe('HomeScreen 当日完了済みボタンテキスト', () => {
   it('当日完了済みワークアウトがないとき「本日のワークアウトを記録」と表示する', async () => {
     mockUseFocusEffect.mockImplementation((cb: () => void) => cb());
-    mockFindTodayRecording.mockResolvedValue(null);
+    mockFindTodayActiveRecording.mockResolvedValue(null);
     mockFindTodayCompleted.mockResolvedValue(null);
 
     render(<HomeScreen />);
@@ -422,7 +378,7 @@ describe('HomeScreen 当日完了済みボタンテキスト', () => {
 
   it('当日完了済みワークアウトがあるとき「本日のワークアウトを再開する」と表示する', async () => {
     mockUseFocusEffect.mockImplementation((cb: () => void) => cb());
-    mockFindTodayRecording.mockResolvedValue(null);
+    mockFindTodayActiveRecording.mockResolvedValue(null);
     mockFindTodayCompleted.mockResolvedValue({
       id: 'today-completed-1',
       status: 'completed',
