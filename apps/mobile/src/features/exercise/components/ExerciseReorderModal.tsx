@@ -213,7 +213,12 @@ export function ExerciseReorderModal({
           backgroundColor: colors.white,
         }}
       >
-        {/* ヘッダー: GestureHandlerRootView の外側。Reanimated の影響を一切受けない */}
+        {/*
+          ヘッダー: GestureHandlerRootView の外側。
+          JSX 上、後に配置された GHRV がデフォルトで上位 z-order になるため
+          ヘッダーへのタッチが GHRV にインターセプトされる。
+          zIndex: 1 で明示的に最前面に配置してボタンを確実に受け取れるようにする。
+        */}
         <View
           style={{
             flexDirection: 'row',
@@ -224,6 +229,7 @@ export function ExerciseReorderModal({
             borderBottomWidth: 1,
             borderBottomColor: colors.border,
             backgroundColor: colors.white,
+            zIndex: 1,
           }}
         >
           {/* 左: キャンセルボタン（アウトライン） */}
