@@ -75,8 +75,8 @@ export function ExerciseReorderModal({
   const insets = useSafeAreaInsets();
   // Reanimated が GestureHandlerRootView の flex:1 を拡張するのを防ぐため、
   // 画面サイズを明示的に取得して absolute 基準コンテナのサイズを固定する
-  // フッター撤廃により幅は不要。高さのみ GestureHandlerRootView のサイズ固定に使用
-  const { height: windowHeight } = useWindowDimensions();
+  // Reanimated が GestureHandlerRootView を水平・垂直両方向に拡張するため width/height 両方を固定する
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
 
   // 内部で並び順の状態を管理する
   // visible=true になるたびに exercises の順序を初期値として設定する
@@ -202,10 +202,11 @@ export function ExerciseReorderModal({
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="fullScreen">
-      {/* height を明示することで DraggableFlatList の Reanimated による垂直拡張を封じる。
-          flex:1 だけでは iOS 実機でコンテナが拡張されフッターが画面外に出ることが確認済み。
-          フッターをヘッダーへ移動することでレイアウト問題を根本解消した */}
-      <GestureHandlerRootView style={{ height: windowHeight, backgroundColor: colors.background }}>
+      {/* width/height 両方を明示することで Reanimated による水平・垂直方向の拡張を封じる。
+          height のみだと右方向にも拡張され right:0 の基準が画面外に移動してしまう */}
+      <GestureHandlerRootView
+        style={{ width: windowWidth, height: windowHeight, backgroundColor: colors.background }}
+      >
         {/* ① ヘッダー: iOS 標準パターン（左:キャンセル / 中央:タイトル / 右:保存）。
             flex:1 のサイドコンテナで両端ボタンを包み、タイトルを数学的中央に固定する */}
         <View
