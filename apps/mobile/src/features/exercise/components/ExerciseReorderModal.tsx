@@ -10,9 +10,16 @@
  * GestureHandlerRootView は DraggableFlatList だけを包む。
  * Reanimated は GestureHandlerRootView を水平・垂直に拡張するため、
  * ヘッダーを外側の View に置くことで影響を完全に遮断する。
+ *
+ * ## width: windowWidth の必要性
+ * Modal 内の flex:1 View は Yoga では画面幅に収まるはずだが、
+ * GestureHandlerRootView 内の Reanimated が native レイヤーで親の
+ * bounds を水平方向にも拡張することがある。
+ * width を明示的に固定することで space-between の「保存」ボタンが
+ * 画面外に押し出されるのを防ぐ。
  */
 import React, { useCallback, useState } from 'react';
-import { Modal, Pressable, Text, View } from 'react-native';
+import { Modal, Pressable, Text, useWindowDimensions, View } from 'react-native';
 import DraggableFlatList, { type RenderItemParams } from 'react-native-draggable-flatlist';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -69,6 +76,8 @@ export function ExerciseReorderModal({
   onClose,
 }: ExerciseReorderModalProps) {
   const insets = useSafeAreaInsets();
+  // 水平方向の Reanimated 拡張を防ぐため、画面幅を明示的に取得して外側 View に固定する
+  const { width: windowWidth } = useWindowDimensions();
 
   // 内部で並び順の状態を管理する
   // visible=true になるたびに exercises の順序を初期値として設定する
@@ -194,9 +203,11 @@ export function ExerciseReorderModal({
       {/*
         外側 View: Modal の bounds に従った通常の flex コンテナ。
         ヘッダーをここに置くことで、GestureHandlerRootView の Reanimated 拡張から完全に隔離する。
+        width: windowWidth を明示して、Reanimated の水平拡張がヘッダー幅に波及しないよう固定する。
       */}
       <View
         style={{
+          width: windowWidth,
           flex: 1,
           paddingTop: insets.top,
           backgroundColor: colors.white,
