@@ -7,9 +7,7 @@ const config: Config = {
     {
       displayName: 'components',
       preset: 'jest-expo',
-      testMatch: [
-        '<rootDir>/src/**/__tests__/**/*.test.tsx',
-      ],
+      testMatch: ['<rootDir>/src/**/__tests__/**/*.test.tsx'],
       transformIgnorePatterns: [
         // jest-expo 54 のデフォルトパターンを踏襲しつつ、追加パッケージを列挙する。
         // pnpm は .pnpm/ にパッケージをフラット展開するため先頭に .pnpm を含める。
@@ -40,6 +38,7 @@ const config: Config = {
     // ロジック層のみカバレッジ対象
     // UI コンポーネント・スクリーン・ナビゲーションは jest-expo + Expo 54 + pnpm の
     // 互換性問題が解決されるまでE2Eテストで担保する
+    'src/domain/**/*.ts',
     'src/**/utils/**/*.ts',
     'src/**/hooks/**/*.ts',
     'src/stores/**/*.ts',
