@@ -1,6 +1,6 @@
 /**
  * プリセット種目のシードデータ
- * 7部位 × 各5〜10種目 = 約50種目
+ * 7部位 × 各5〜12種目 = 約55種目
  */
 import type { SQLiteDatabase } from 'expo-sqlite';
 import { ulid } from 'ulid';
@@ -21,6 +21,7 @@ const SEED_EXERCISES: SeedExercise[] = [
   { name: 'インクラインベンチプレス', muscle_group: 'chest', equipment: 'barbell' },
   { name: 'ダンベルベンチプレス', muscle_group: 'chest', equipment: 'dumbbell' },
   { name: 'チェストプレス', muscle_group: 'chest', equipment: 'machine' },
+  { name: 'インクラインチェストプレス', muscle_group: 'chest', equipment: 'machine' },
   { name: 'ケーブルクロスオーバー', muscle_group: 'chest', equipment: 'cable' },
   { name: 'ディップス', muscle_group: 'chest', equipment: 'bodyweight' },
   { name: 'ペックフライ', muscle_group: 'chest', equipment: 'machine' },
@@ -34,6 +35,10 @@ const SEED_EXERCISES: SeedExercise[] = [
   { name: 'ダンベルロウ', muscle_group: 'back', equipment: 'dumbbell' },
   { name: 'Tバーロウ', muscle_group: 'back', equipment: 'barbell' },
   { name: 'プルアップ', muscle_group: 'back', equipment: 'bodyweight' },
+  { name: 'Strive ラットプルダウン', muscle_group: 'back', equipment: 'cable' },
+  { name: 'ハンマーフロントプルダウン', muscle_group: 'back', equipment: 'machine' },
+  { name: 'ハンマーローイング', muscle_group: 'back', equipment: 'machine' },
+  { name: 'ローイングマシン', muscle_group: 'back', equipment: 'machine' },
 
   // 脚 (legs) - 8種目
   { name: 'スクワット', muscle_group: 'legs', equipment: 'barbell' },
@@ -52,10 +57,12 @@ const SEED_EXERCISES: SeedExercise[] = [
   { name: 'フェイスプル', muscle_group: 'shoulders', equipment: 'cable' },
   { name: 'アップライトロウ', muscle_group: 'shoulders', equipment: 'barbell' },
   { name: 'ショルダープレス', muscle_group: 'shoulders', equipment: 'dumbbell' },
+  { name: 'マシンサイドレイズ', muscle_group: 'shoulders', equipment: 'machine' },
   { name: 'リアデルトフライ', muscle_group: 'shoulders', equipment: 'dumbbell' },
 
   // 二頭 (biceps) - 6種目
   { name: 'バーベルカール', muscle_group: 'biceps', equipment: 'barbell' },
+  { name: 'EZバーカール', muscle_group: 'biceps', equipment: 'barbell' },
   { name: 'ダンベルカール', muscle_group: 'biceps', equipment: 'dumbbell' },
   { name: 'ハンマーカール', muscle_group: 'biceps', equipment: 'dumbbell' },
   { name: 'プリーチャーカール', muscle_group: 'biceps', equipment: 'machine' },
@@ -97,7 +104,7 @@ const DEV_WORKOUT_ID_PREFIX = 'dev-fixture-workout-';
 
 type DevFixtureSet = {
   weight: number | null;
-  reps: number;
+  reps: number | null;
 };
 
 type DevFixtureExercise = {
@@ -115,136 +122,590 @@ type DevFixtureWorkout = {
 
 const DEV_WORKOUT_FIXTURES: DevFixtureWorkout[] = [
   {
-    id: 'dev-fixture-workout-2026-02-20-chest',
-    createdAt: 1771513200000, // 2026-02-20 00:00 JST
-    completedAt: 1771518000000, // 2026-02-20 01:20 JST
-    elapsedSeconds: 4800,
+    id: 'dev-fixture-workout-2026-01-01',
+    createdAt: new Date('2026-01-01T00:00:00+09:00').getTime(),
+    completedAt: new Date('2026-01-01T01:00:00+09:00').getTime(),
+    elapsedSeconds: 3600,
     exercises: [
       {
         name: 'ベンチプレス',
         sets: [
-          { weight: 60, reps: 10 },
-          { weight: 65, reps: 8 },
-          { weight: 70, reps: 5 },
+          { weight: 50, reps: 5 },
+          { weight: 50, reps: 5 },
+          { weight: 50, reps: 5 },
         ],
       },
       {
-        name: 'インクラインベンチプレス',
+        name: 'インクラインチェストプレス',
         sets: [
-          { weight: 50, reps: 10 },
-          { weight: 55, reps: 8 },
-          { weight: 55, reps: 6 },
+          { weight: 42, reps: 11 },
+          { weight: 42, reps: 11 },
+          { weight: 42, reps: 10 },
+        ],
+      },
+      {
+        name: 'チェストプレス',
+        sets: [
+          { weight: 27, reps: 10 },
+          { weight: 27, reps: 10 },
+          { weight: 27, reps: 9 },
         ],
       },
     ],
   },
   {
-    id: 'dev-fixture-workout-2026-02-18-back',
-    createdAt: 1771340400000, // 2026-02-18 00:00 JST
-    completedAt: 1771344600000, // 2026-02-18 01:10 JST
-    elapsedSeconds: 4200,
-    exercises: [
-      {
-        name: 'ラットプルダウン',
-        sets: [
-          { weight: 50, reps: 12 },
-          { weight: 55, reps: 10 },
-          { weight: 60, reps: 8 },
-        ],
-      },
-      {
-        name: 'シーテッドロウ',
-        sets: [
-          { weight: 45, reps: 12 },
-          { weight: 50, reps: 10 },
-          { weight: 55, reps: 8 },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'dev-fixture-workout-2026-02-16-legs',
-    createdAt: 1771167600000, // 2026-02-16 00:00 JST
-    completedAt: 1771173000000, // 2026-02-16 01:30 JST
-    elapsedSeconds: 5400,
-    exercises: [
-      {
-        name: 'スクワット',
-        sets: [
-          { weight: 80, reps: 8 },
-          { weight: 85, reps: 6 },
-          { weight: 90, reps: 5 },
-        ],
-      },
-      {
-        name: 'レッグプレス',
-        sets: [
-          { weight: 140, reps: 12 },
-          { weight: 160, reps: 10 },
-          { weight: 180, reps: 8 },
-        ],
-      },
-    ],
-  },
-  {
-    id: 'dev-fixture-workout-2026-02-12-shoulders',
-    createdAt: 1770822000000, // 2026-02-12 00:00 JST
-    completedAt: 1770825600000, // 2026-02-12 01:00 JST
+    id: 'dev-fixture-workout-2026-01-02',
+    createdAt: new Date('2026-01-02T00:00:00+09:00').getTime(),
+    completedAt: new Date('2026-01-02T01:00:00+09:00').getTime(),
     elapsedSeconds: 3600,
     exercises: [
       {
-        name: 'オーバーヘッドプレス',
+        name: 'サイドレイズ',
         sets: [
-          { weight: 40, reps: 8 },
-          { weight: 45, reps: 6 },
-          { weight: 45, reps: 5 },
+          { weight: 6, reps: 15 },
+          { weight: 6, reps: 15 },
+          { weight: 6, reps: 11 },
+        ],
+      },
+      {
+        name: 'ショルダープレス',
+        sets: [
+          { weight: 27, reps: 12 },
+          { weight: 27, reps: 12 },
+          { weight: 27, reps: 10 },
+        ],
+      },
+      {
+        name: 'マシンサイドレイズ',
+        sets: [
+          { weight: 11, reps: 11 },
+          { weight: 11, reps: 11 },
+          { weight: 11, reps: 12 },
+        ],
+      },
+      {
+        name: 'リアデルトフライ',
+        sets: [
+          { weight: 13, reps: 11 },
+          { weight: 13, reps: 11 },
+          { weight: 13, reps: 11 },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'dev-fixture-workout-2026-01-04',
+    createdAt: new Date('2026-01-04T00:00:00+09:00').getTime(),
+    completedAt: new Date('2026-01-04T01:00:00+09:00').getTime(),
+    elapsedSeconds: 3600,
+    exercises: [
+      {
+        name: 'ハンマーフロントプルダウン',
+        sets: [
+          { weight: 15, reps: 14 },
+          { weight: 15, reps: 12 },
+          { weight: 15, reps: 12 },
+        ],
+      },
+      {
+        name: 'ハンマーローイング',
+        sets: [
+          { weight: 15, reps: 11 },
+          { weight: 15, reps: 11 },
+          { weight: 15, reps: 10 },
+        ],
+      },
+      {
+        name: 'ラットプルダウン',
+        sets: [
+          { weight: 35, reps: 11 },
+          { weight: 35, reps: 11 },
+          { weight: 32.5, reps: 11 },
+        ],
+      },
+      {
+        name: 'EZバーカール',
+        sets: [
+          { weight: 15, reps: 12 },
+          { weight: 15, reps: 12 },
+          { weight: 15, reps: 12 },
+        ],
+      },
+      {
+        name: 'インクラインダンベルカール',
+        sets: [
+          { weight: 7, reps: 12 },
+          { weight: 7, reps: 12 },
+          { weight: 7, reps: 10 },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'dev-fixture-workout-2026-01-09',
+    createdAt: new Date('2026-01-09T00:00:00+09:00').getTime(),
+    completedAt: new Date('2026-01-09T01:00:00+09:00').getTime(),
+    elapsedSeconds: 3600,
+    exercises: [
+      {
+        name: 'ベンチプレス',
+        sets: [
+          { weight: 60, reps: 1 },
+          { weight: 52.5, reps: 5 },
+          { weight: 52.5, reps: 2 },
+          { weight: 50, reps: 5 },
+        ],
+      },
+      {
+        name: 'インクラインチェストプレス',
+        sets: [
+          { weight: 42, reps: 10 },
+          { weight: 42, reps: 11 },
+          { weight: 42, reps: 10 },
+        ],
+      },
+      {
+        name: 'ショルダープレス',
+        sets: [
+          { weight: 27, reps: 12 },
+          { weight: 27, reps: 11 },
+          { weight: 27, reps: 7 },
         ],
       },
       {
         name: 'サイドレイズ',
         sets: [
-          { weight: 10, reps: 15 },
-          { weight: 12, reps: 12 },
-          { weight: 12, reps: 10 },
+          { weight: 5, reps: 16 },
+          { weight: 5, reps: 14 },
+          { weight: 5, reps: 14 },
+        ],
+      },
+      {
+        name: 'マシンサイドレイズ',
+        sets: [
+          { weight: 11, reps: 10 },
+          { weight: 11, reps: 10 },
+          { weight: 11, reps: 10 },
         ],
       },
     ],
   },
   {
-    id: 'dev-fixture-workout-2026-02-08-chest-light',
-    createdAt: 1770476400000, // 2026-02-08 00:00 JST
-    completedAt: 1770479400000, // 2026-02-08 00:50 JST
-    elapsedSeconds: 3000,
+    id: 'dev-fixture-workout-2026-01-12',
+    createdAt: new Date('2026-01-12T00:00:00+09:00').getTime(),
+    completedAt: new Date('2026-01-12T01:00:00+09:00').getTime(),
+    elapsedSeconds: 3600,
     exercises: [
       {
-        name: 'ダンベルベンチプレス',
+        name: 'ラットプルダウン',
         sets: [
-          { weight: 24, reps: 12 },
-          { weight: 26, reps: 10 },
-          { weight: 28, reps: 8 },
+          { weight: 41, reps: 10 },
+          { weight: 36, reps: 10 },
+          { weight: 36, reps: 9 },
+        ],
+      },
+      {
+        name: 'Strive ラットプルダウン',
+        sets: [
+          { weight: 36, reps: 10 },
+          { weight: 36, reps: 10 },
+          { weight: 36, reps: 12 },
+        ],
+      },
+      {
+        name: 'EZバーカール',
+        sets: [
+          { weight: 15, reps: 12 },
+          { weight: 15, reps: 9 },
+          { weight: 15, reps: 12 },
+        ],
+      },
+      {
+        name: 'インクラインダンベルカール',
+        sets: [
+          { weight: 7, reps: 10 },
+          { weight: 7, reps: 10 },
+          { weight: 7, reps: 9 },
+        ],
+      },
+      {
+        name: 'ローイングマシン',
+        sets: [
+          { weight: 40, reps: 12 },
+          { weight: 40, reps: 11 },
+          { weight: 40, reps: 11 },
         ],
       },
     ],
   },
   {
-    id: 'dev-fixture-workout-2026-02-02-fullbody',
-    createdAt: 1769958000000, // 2026-02-02 00:00 JST
-    completedAt: 1769960400000, // 2026-02-02 00:40 JST
-    elapsedSeconds: 2400,
+    id: 'dev-fixture-workout-2026-01-13',
+    createdAt: new Date('2026-01-13T00:00:00+09:00').getTime(),
+    completedAt: new Date('2026-01-13T01:00:00+09:00').getTime(),
+    elapsedSeconds: 3600,
+    exercises: [
+      {
+        name: 'ベンチプレス',
+        sets: [
+          { weight: 52.5, reps: 5 },
+          { weight: 52.5, reps: 4 },
+          { weight: 50, reps: 5 },
+        ],
+      },
+      {
+        name: 'インクラインチェストプレス',
+        sets: [
+          { weight: 43, reps: 12 },
+          { weight: 43, reps: 12 },
+          { weight: 43, reps: 10 },
+        ],
+      },
+      {
+        name: 'チェストプレス',
+        sets: [
+          { weight: 27, reps: 12 },
+          { weight: 27, reps: 12 },
+          { weight: 27, reps: 10 },
+        ],
+      },
+      {
+        name: 'サイドレイズ',
+        sets: [
+          { weight: 6, reps: 14 },
+          { weight: 6, reps: 14 },
+          { weight: 6, reps: 12 },
+        ],
+      },
+      {
+        name: 'マシンサイドレイズ',
+        sets: [
+          { weight: 11, reps: 10 },
+          { weight: 11, reps: 10 },
+          { weight: 11, reps: 12 },
+        ],
+      },
+      {
+        name: 'ショルダープレス',
+        sets: [
+          { weight: 27, reps: 12 },
+          { weight: 27, reps: 8 },
+          { weight: 25, reps: 12 },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'dev-fixture-workout-2026-01-18',
+    createdAt: new Date('2026-01-18T00:00:00+09:00').getTime(),
+    completedAt: new Date('2026-01-18T01:00:00+09:00').getTime(),
+    elapsedSeconds: 3600,
+    exercises: [
+      {
+        name: 'ラットプルダウン',
+        sets: [
+          { weight: 40, reps: 11 },
+          { weight: 37.5, reps: 12 },
+          { weight: 35, reps: 12 },
+        ],
+      },
+      {
+        name: 'Strive ラットプルダウン',
+        sets: [
+          { weight: 36, reps: 12 },
+          { weight: 36, reps: 14 },
+          { weight: 36, reps: 12 },
+        ],
+      },
+      {
+        name: 'EZバーカール',
+        sets: [
+          { weight: 15, reps: 14 },
+          { weight: 15, reps: 14 },
+          { weight: 15, reps: 12 },
+        ],
+      },
+      {
+        name: 'インクラインダンベルカール',
+        sets: [
+          { weight: 7, reps: 11 },
+          { weight: 7, reps: 10 },
+          { weight: 7, reps: 10 },
+        ],
+      },
+      {
+        name: 'レッグエクステンション',
+        sets: [
+          { weight: 45, reps: 10 },
+          { weight: 45, reps: 10 },
+          { weight: 45, reps: 10 },
+        ],
+      },
+      {
+        name: 'ベンチプレス',
+        sets: [
+          { weight: 40, reps: 10 },
+          { weight: 40, reps: 10 },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'dev-fixture-workout-2026-01-20',
+    createdAt: new Date('2026-01-20T00:00:00+09:00').getTime(),
+    completedAt: new Date('2026-01-20T01:00:00+09:00').getTime(),
+    elapsedSeconds: 3600,
+    exercises: [
+      {
+        name: 'チェストプレス',
+        sets: [
+          { weight: 30, reps: 15 },
+          { weight: 30, reps: 12 },
+          { weight: 30, reps: 10 },
+        ],
+      },
+      {
+        name: 'マシンサイドレイズ',
+        sets: [
+          { weight: 13, reps: 12 },
+          { weight: 13, reps: 12 },
+          { weight: 13, reps: 9 },
+          { weight: 15, reps: 12 },
+          { weight: 15, reps: 12 },
+          { weight: 15, reps: 10 },
+        ],
+      },
+      {
+        name: 'リアデルトフライ',
+        sets: [
+          { weight: 23, reps: 10 },
+          { weight: 23, reps: 10 },
+          { weight: 23, reps: 10 },
+        ],
+      },
+      {
+        name: 'ベンチプレス',
+        sets: [
+          { weight: 50, reps: 5 },
+          { weight: 50, reps: 5 },
+          { weight: 47.5, reps: 5 },
+          { weight: 47.5, reps: 4 },
+        ],
+      },
+      {
+        name: 'インクラインチェストプレス',
+        sets: [
+          { weight: 43, reps: 10 },
+          { weight: 43, reps: 9 },
+          { weight: 40, reps: 10 },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'dev-fixture-workout-2026-01-21',
+    createdAt: new Date('2026-01-21T00:00:00+09:00').getTime(),
+    completedAt: new Date('2026-01-21T01:00:00+09:00').getTime(),
+    elapsedSeconds: 3600,
+    exercises: [
+      {
+        name: 'ベンチプレス',
+        sets: [
+          { weight: 37.5, reps: 5 },
+          { weight: 37.5, reps: 5 },
+          { weight: 37.5, reps: 5 },
+        ],
+      },
+      {
+        name: 'スクワット',
+        sets: [
+          { weight: 60, reps: 5 },
+          { weight: 60, reps: 5 },
+          { weight: 57.5, reps: 5 },
+        ],
+      },
+      {
+        name: 'EZバーカール',
+        sets: [
+          { weight: 27.5, reps: 3 },
+          { weight: 25, reps: 9 },
+          { weight: 22.5, reps: 10 },
+          { weight: 20, reps: null },
+        ],
+      },
+      {
+        name: 'インクラインダンベルカール',
+        sets: [
+          { weight: 7, reps: 10 },
+          { weight: 6, reps: 10 },
+          { weight: 6, reps: 12 },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'dev-fixture-workout-2026-01-23',
+    createdAt: new Date('2026-01-23T00:00:00+09:00').getTime(),
+    completedAt: new Date('2026-01-23T01:00:00+09:00').getTime(),
+    elapsedSeconds: 3600,
+    exercises: [
+      {
+        name: 'ベンチプレス',
+        sets: [
+          { weight: 40, reps: 5 },
+          { weight: 40, reps: 5 },
+          { weight: 40, reps: 5 },
+        ],
+      },
+      {
+        name: 'ハンマーフロントプルダウン',
+        sets: [
+          { weight: 15, reps: 14 },
+          { weight: 15, reps: 14 },
+          { weight: 15, reps: 13 },
+        ],
+      },
+      {
+        name: 'デッドリフト',
+        sets: [
+          { weight: 60, reps: 5 },
+          { weight: 60, reps: 5 },
+          { weight: 60, reps: 5 },
+        ],
+      },
+      {
+        name: 'ラットプルダウン',
+        sets: [
+          { weight: 36, reps: 10 },
+          { weight: 36, reps: 10 },
+          { weight: 36, reps: 10 },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'dev-fixture-workout-2026-01-25',
+    createdAt: new Date('2026-01-25T00:00:00+09:00').getTime(),
+    completedAt: new Date('2026-01-25T01:00:00+09:00').getTime(),
+    elapsedSeconds: 3600,
+    exercises: [
+      {
+        name: 'ベンチプレス',
+        sets: [
+          { weight: 52.5, reps: 5 },
+          { weight: 52.5, reps: 5 },
+          { weight: 52.5, reps: 5 },
+          { weight: 52.5, reps: 5 },
+        ],
+      },
+      {
+        name: 'サイドレイズ',
+        sets: [
+          { weight: 5, reps: 14 },
+          { weight: 5, reps: 14 },
+          { weight: 5, reps: 15 },
+        ],
+      },
+      {
+        name: 'インクラインチェストプレス',
+        sets: [
+          { weight: 43, reps: 13 },
+          { weight: 43, reps: 12 },
+          { weight: 43, reps: 11 },
+        ],
+      },
+      {
+        name: 'マシンサイドレイズ',
+        sets: [
+          { weight: 11, reps: 11 },
+          { weight: 11, reps: 12 },
+          { weight: 11, reps: 11 },
+        ],
+      },
+      {
+        name: 'チェストプレス',
+        sets: [
+          { weight: 27, reps: 13 },
+          { weight: 27, reps: 10 },
+          { weight: 27, reps: 10 },
+        ],
+      },
+      {
+        name: 'リアデルトフライ',
+        sets: [
+          { weight: 23, reps: 10 },
+          { weight: 23, reps: 10 },
+          { weight: 23, reps: 10 },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'dev-fixture-workout-2026-01-28',
+    createdAt: new Date('2026-01-28T00:00:00+09:00').getTime(),
+    completedAt: new Date('2026-01-28T01:00:00+09:00').getTime(),
+    elapsedSeconds: 3600,
+    exercises: [
+      {
+        name: 'ベンチプレス',
+        sets: [
+          { weight: 35, reps: 5 },
+          { weight: 35, reps: 5 },
+          { weight: 35, reps: 5 },
+        ],
+      },
+      {
+        name: 'スクワット',
+        sets: [
+          { weight: 60, reps: 5 },
+          { weight: 60, reps: 5 },
+          { weight: 60, reps: 5 },
+        ],
+      },
+      {
+        name: 'EZバーカール',
+        sets: [
+          { weight: 20, reps: 11 },
+          { weight: 20, reps: 10 },
+          { weight: 20, reps: 10 },
+        ],
+      },
+      {
+        name: 'インクラインダンベルカール',
+        sets: [
+          { weight: 7, reps: 9 },
+          { weight: 6, reps: 10 },
+          { weight: 6, reps: 12 },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'dev-fixture-workout-2026-01-30',
+    createdAt: new Date('2026-01-30T00:00:00+09:00').getTime(),
+    completedAt: new Date('2026-01-30T01:00:00+09:00').getTime(),
+    elapsedSeconds: 3600,
     exercises: [
       {
         name: 'デッドリフト',
         sets: [
-          { weight: 100, reps: 5 },
-          { weight: 110, reps: 3 },
+          { weight: 60, reps: 5 },
+          { weight: 60, reps: null },
         ],
       },
       {
-        name: 'プランク',
+        name: 'ベンチプレス',
         sets: [
-          { weight: null, reps: 60 },
-          { weight: null, reps: 60 },
-          { weight: null, reps: 60 },
+          { weight: 40, reps: 5 },
+          { weight: 40, reps: 5 },
+          { weight: 40, reps: 5 },
+        ],
+      },
+      {
+        name: 'ラットプルダウン',
+        sets: [
+          { weight: 36, reps: 14 },
+          { weight: 36, reps: 12 },
+          { weight: 36, reps: 10 },
         ],
       },
     ],
@@ -305,8 +766,9 @@ async function insertFixtureSets(
   for (const [index, set] of sets.entries()) {
     const setId = `dev-fixture-set-${workoutId}-${displayOrder + 1}-${index + 1}`;
     const weight = set.weight === null ? 'NULL' : String(set.weight);
+    const reps = set.reps === null ? 'NULL' : String(set.reps);
     await db.execAsync(
-      `INSERT OR IGNORE INTO sets (id, workout_exercise_id, set_number, weight, reps, created_at, updated_at) VALUES ('${setId}', '${workoutExerciseId}', ${index + 1}, ${weight}, ${set.reps}, ${createdAt}, ${createdAt})`,
+      `INSERT OR IGNORE INTO sets (id, workout_exercise_id, set_number, weight, reps, created_at, updated_at) VALUES ('${setId}', '${workoutExerciseId}', ${index + 1}, ${weight}, ${reps}, ${createdAt}, ${createdAt})`,
     );
   }
 }
@@ -363,7 +825,10 @@ export async function generateDevWorkoutSeedSQL(db: SQLiteDatabase): Promise<voi
   }
 
   const seededCount = await getSeededFixtureWorkoutCount(db);
-  if (seededCount >= DEV_WORKOUT_FIXTURES.length) {
+  if (seededCount > 0 && seededCount !== DEV_WORKOUT_FIXTURES.length) {
+    // fixture構成変更時は旧データを削除し、最新fixtureを再投入する
+    await db.runAsync('DELETE FROM workouts WHERE id LIKE ?', [`${DEV_WORKOUT_ID_PREFIX}%`]);
+  } else if (seededCount >= DEV_WORKOUT_FIXTURES.length) {
     return;
   }
 
