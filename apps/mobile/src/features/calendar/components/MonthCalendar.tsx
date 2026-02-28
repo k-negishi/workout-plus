@@ -138,6 +138,11 @@ export const MonthCalendar = React.memo(function MonthCalendar({
   // ref は即座に更新されるため、ネイティブイベントの競合を防げる。
   const isAnimatingRef = useRef(false);
 
+  // ユーザーのスワイプ操作を追跡するフラグ
+  // 矢印ボタンによる scrollTo の遅延モメンタムと
+  // ユーザーのスワイプによる onMomentumScrollEnd を分離するため
+  const isUserDraggingRef = useRef(false);
+
   // stale closure 対策: 最新値を ref で保持
   const containerWidthRef = useRef(containerWidth);
   containerWidthRef.current = containerWidth;
@@ -209,6 +214,14 @@ export const MonthCalendar = React.memo(function MonthCalendar({
       // 今日以前のみ選択可能
       if (isBefore(selected, endOfToday)) {
         onDayPress(day.dateString);
+
+        // 前後月のオーバーフロー日付をタップした場合は表示月を自動切り替えする
+        // onMonthChange は呼ばない（selectedDate を onDayPress で設定済みのため上書きを防ぐ）
+        const tappedMonth = startOfMonth(selected);
+        if (!isSameMonth(tappedMonth, displayMonthRef.current)) {
+          setDisplayMonth(tappedMonth);
+          setMonthChangeKey((prev) => prev + 1);
+        }
       }
     },
     [onDayPress],
@@ -227,9 +240,20 @@ export const MonthCalendar = React.memo(function MonthCalendar({
     }, 0);
   }, []);
 
+  // ユーザーのスワイプ開始を記録する
+  // 矢印ボタンの scrollTo 完了後に遅れて発火するモメンタムを除外するために必要
+  const handleScrollBeginDrag = useCallback(() => {
+    isUserDraggingRef.current = true;
+  }, []);
+
   // スワイプ完了時のハンドラ（pagingEnabled により index 0 or 2 で止まる）
   const handleMomentumScrollEnd = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      // ユーザーのドラッグ操作でない場合は処理しない
+      // 矢印ボタンの scrollTo に起因するモメンタムを除外する
+      if (!isUserDraggingRef.current) return;
+      isUserDraggingRef.current = false;
+
       // isAnimatingRef を参照（state と違い commit 前でも即座に正確な値を持つ）
       if (isAnimatingRef.current) return;
       const x = event.nativeEvent.contentOffset.x;
@@ -366,6 +390,7 @@ export const MonthCalendar = React.memo(function MonthCalendar({
           showsHorizontalScrollIndicator={false}
           // ページ変更処理中はスクロールを無効化して多重発火を防ぐ
           scrollEnabled={!isAnimating}
+          onScrollBeginDrag={handleScrollBeginDrag}
           onMomentumScrollEnd={handleMomentumScrollEnd}
           onLayout={handleScrollViewLayout}
           // 初期位置を中央（index 1）に設定

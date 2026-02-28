@@ -215,13 +215,15 @@ describe('CalendarScreen', () => {
       });
       const initialDateString = mockDaySummaryCapturedProps['dateString'] as string;
 
-      // 日付を変更する
+      // 初期値（今日の日付）と異なる過去の日付に変更する
+      // 注意: 今日と同じ日付を渡しても値が変わらず、not.toBe アサーションが失敗するため
+      const differentDate = '2026-02-15';
       const onDayPress = capturedMonthCalendarProps['onDayPress'] as (date: string) => void;
-      onDayPress('2026-03-01');
+      onDayPress(differentDate);
 
       // 変更後の dateString が更新されること
       await waitFor(() => {
-        expect(mockDaySummaryCapturedProps['dateString']).toBe('2026-03-01');
+        expect(mockDaySummaryCapturedProps['dateString']).toBe(differentDate);
       });
 
       // 変更前と異なる日付になっていることを確認（key の変化で再マウントが発生する前提）

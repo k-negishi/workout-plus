@@ -14,6 +14,8 @@
  * - handleDayPress が正しく onDayPress を呼ぶか (#164-D1)
  * - 3 パネル分の Calendar が描画されるか
  * - 初期表示フラッシュ防止 (#171)
+ * - 矢印ボタン後の遅延 onMomentumScrollEnd を無視する（Issue #196 Bug 1）
+ * - 前後月オーバーフロー日付タップで表示月が切り替わる（Issue #196 Bug 2）
  */
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import React from 'react';
@@ -48,6 +50,9 @@ jest.mock('react-native-calendars', () => ({
 
 // faker timers を使用（矢印ボタンの setTimeout 300ms を制御するため）
 jest.useFakeTimers();
+// テスト全体の日付を 2026-02-21 に固定する
+// jest.useFakeTimers() の後に呼ぶことで Date も偽装される
+jest.setSystemTime(new Date(2026, 1, 21));
 
 import type { MonthCalendarProps } from '../MonthCalendar';
 import { MonthCalendar } from '../MonthCalendar';
@@ -75,8 +80,9 @@ function renderWithLayout(props: Partial<MonthCalendarProps> = {}) {
 beforeEach(() => {
   mockCalendarInstances = [];
   jest.clearAllMocks();
-  // タイマーをリセット
+  // clearAllTimers は SystemTime をリセットするため、直後に再設定する
   jest.clearAllTimers();
+  jest.setSystemTime(new Date(2026, 1, 21));
 });
 
 // ==========================================
@@ -192,6 +198,48 @@ describe('MonthCalendar - アニメーション中の多重発火防止', () => 
 });
 
 // ==========================================
+// Issue #196 Bug 1: 矢印ボタン後の遅延 onMomentumScrollEnd を無視する
+// タイマー完了後（isAnimatingRef.current = false 後）に onMomentumScrollEnd が
+// 遅れて発火しても月が追加変更されないことを保証する
+// ==========================================
+describe('MonthCalendar - 矢印ボタン後の遅延 onMomentumScrollEnd を無視する (Issue #196)', () => {
+  it('タイマー完了後に onMomentumScrollEnd が発火しても月が追加変更されない', async () => {
+    const mockOnMonthChange = jest.fn();
+    renderWithLayout({ onMonthChange: mockOnMonthChange });
+
+    // 矢印ボタンを押す
+    fireEvent.press(screen.getByTestId('prev-month-button'));
+
+    // すべてのタイマーを進める（300ms + setTimeout(0) → isAnimatingRef.current = false になる）
+    act(() => {
+      jest.runAllTimers();
+    });
+
+    // 1ヶ月前（2026年1月）に移動済みであることを確認
+    await waitFor(() => {
+      expect(screen.getByText('2026年1月')).toBeTruthy();
+    });
+
+    // タイマー完了後に遅れて onMomentumScrollEnd が発火するシミュレーション
+    // （iOS では矢印ボタンの scrollTo animated:true のモメンタムが後から発火するケース）
+    // ユーザーのドラッグ操作でないため isUserDraggingRef = false のはず → 無視されるべき
+    fireEvent(screen.getByTestId('month-calendar-scroll'), 'momentumScrollEnd', {
+      nativeEvent: { contentOffset: { x: 0 } },
+    });
+
+    act(() => {
+      jest.runAllTimers();
+    });
+
+    // 2ヶ月飛び（2025年12月）にならず、1月のまま
+    expect(screen.getByText('2026年1月')).toBeTruthy();
+    // onMonthChange は1回だけ（2回目は NG）
+    expect(mockOnMonthChange).toHaveBeenCalledTimes(1);
+    expect(mockOnMonthChange).toHaveBeenCalledWith('2026-01-01');
+  });
+});
+
+// ==========================================
 // スクロール（スワイプ）テスト
 // ==========================================
 const MOCK_CONTAINER_WIDTH = MOCK_LAYOUT_WIDTH;
@@ -200,6 +248,8 @@ describe('MonthCalendar - スワイプ月変更', () => {
   it('左端にスクロールすると前月に移動する (#164-S1)', async () => {
     renderWithLayout();
 
+    // onScrollBeginDrag でスワイプ開始を登録してから momentumScrollEnd を発火
+    fireEvent(screen.getByTestId('month-calendar-scroll'), 'scrollBeginDrag');
     // index 0 (前月方向) にスクロール
     fireEvent(screen.getByTestId('month-calendar-scroll'), 'momentumScrollEnd', {
       nativeEvent: { contentOffset: { x: 0 } },
@@ -219,6 +269,8 @@ describe('MonthCalendar - スワイプ月変更', () => {
     const mockOnMonthChange = jest.fn();
     renderWithLayout({ onMonthChange: mockOnMonthChange });
 
+    // onScrollBeginDrag でスワイプ開始を登録してから momentumScrollEnd を発火
+    fireEvent(screen.getByTestId('month-calendar-scroll'), 'scrollBeginDrag');
     // index 2 (翌月方向) にスクロール（当月なのでブロックされる）
     fireEvent(screen.getByTestId('month-calendar-scroll'), 'momentumScrollEnd', {
       nativeEvent: { contentOffset: { x: MOCK_CONTAINER_WIDTH * 2 } },
@@ -238,6 +290,7 @@ describe('MonthCalendar - スワイプ月変更', () => {
     renderWithLayout();
 
     // まず前月（1月）に移動
+    fireEvent(screen.getByTestId('month-calendar-scroll'), 'scrollBeginDrag');
     fireEvent(screen.getByTestId('month-calendar-scroll'), 'momentumScrollEnd', {
       nativeEvent: { contentOffset: { x: 0 } },
     });
@@ -248,6 +301,7 @@ describe('MonthCalendar - スワイプ月変更', () => {
 
     // 翌月方向にスクロール（2月）
     mockCalendarInstances = [];
+    fireEvent(screen.getByTestId('month-calendar-scroll'), 'scrollBeginDrag');
     fireEvent(screen.getByTestId('month-calendar-scroll'), 'momentumScrollEnd', {
       nativeEvent: { contentOffset: { x: MOCK_CONTAINER_WIDTH * 2 } },
     });
@@ -261,6 +315,7 @@ describe('MonthCalendar - スワイプ月変更', () => {
     const mockOnMonthChange = jest.fn();
     renderWithLayout({ onMonthChange: mockOnMonthChange });
 
+    fireEvent(screen.getByTestId('month-calendar-scroll'), 'scrollBeginDrag');
     fireEvent(screen.getByTestId('month-calendar-scroll'), 'momentumScrollEnd', {
       nativeEvent: { contentOffset: { x: 0 } },
     });
@@ -318,6 +373,104 @@ describe('MonthCalendar コンポーネント - handleDayPress', () => {
     centerCalendar!.onDayPress({ dateString: todayStr });
 
     expect(mockOnDayPress).toHaveBeenCalledWith(todayStr);
+  });
+});
+
+// ==========================================
+// Issue #196 Bug 2: 前後月オーバーフロー日付タップで表示月が自動切り替えされる
+// ==========================================
+describe('MonthCalendar - 前後月オーバーフロー日付タップで表示月が切り替わる (Issue #196)', () => {
+  beforeEach(() => {
+    mockCalendarInstances = [];
+  });
+
+  it('当月カレンダーで前月の日付をタップすると前月に切り替わる', async () => {
+    const mockOnDayPress = jest.fn();
+    renderWithLayout({ onDayPress: mockOnDayPress });
+
+    // 中央パネル（当月 = 2月）で 1/28 をタップ（2月カレンダーの前月オーバーフロー日付）
+    const centerCalendar = mockCalendarInstances[1];
+    expect(centerCalendar).toBeDefined();
+    centerCalendar!.onDayPress({ dateString: '2026-01-28' });
+
+    act(() => {
+      jest.runAllTimers();
+    });
+
+    // 表示月が前月（1月）に切り替わること
+    await waitFor(() => {
+      expect(screen.getByText('2026年1月')).toBeTruthy();
+    });
+    // onDayPress はタップした日付で呼ばれること
+    expect(mockOnDayPress).toHaveBeenCalledWith('2026-01-28');
+  });
+
+  it('前後月日付タップ時に onMonthChange は呼ばれない（selectedDate の上書きを防ぐため）', () => {
+    const mockOnDayPress = jest.fn();
+    const mockOnMonthChange = jest.fn();
+    renderWithLayout({ onDayPress: mockOnDayPress, onMonthChange: mockOnMonthChange });
+
+    const centerCalendar = mockCalendarInstances[1];
+    centerCalendar!.onDayPress({ dateString: '2026-01-28' });
+
+    act(() => {
+      jest.runAllTimers();
+    });
+
+    // onMonthChange は呼ばれない（selectedDate が 1/1 に上書きされるのを防ぐため）
+    expect(mockOnMonthChange).not.toHaveBeenCalled();
+    // onDayPress はタップした日付で呼ばれること
+    expect(mockOnDayPress).toHaveBeenCalledWith('2026-01-28');
+  });
+
+  it('前月表示中に翌月の日付をタップすると翌月に切り替わる', async () => {
+    const mockOnDayPress = jest.fn();
+    renderWithLayout({ onDayPress: mockOnDayPress });
+
+    // まず前月（1月）に移動
+    mockCalendarInstances = [];
+    fireEvent(screen.getByTestId('month-calendar-scroll'), 'scrollBeginDrag');
+    fireEvent(screen.getByTestId('month-calendar-scroll'), 'momentumScrollEnd', {
+      nativeEvent: { contentOffset: { x: 0 } },
+    });
+    act(() => {
+      jest.runAllTimers();
+    });
+    expect(screen.getByText('2026年1月')).toBeTruthy();
+
+    // 1月表示中の中央パネルで 2/1 をタップ（翌月オーバーフロー日付）
+    // momentumScrollEnd 後の re-render でインスタンスが更新されている
+    const centerCalendar = mockCalendarInstances[1];
+    expect(centerCalendar).toBeDefined();
+    centerCalendar!.onDayPress({ dateString: '2026-02-01' });
+
+    act(() => {
+      jest.runAllTimers();
+    });
+
+    // 表示月が翌月（2月）に切り替わること
+    await waitFor(() => {
+      expect(screen.getByText('2026年2月')).toBeTruthy();
+    });
+    expect(mockOnDayPress).toHaveBeenCalledWith('2026-02-01');
+  });
+
+  it('当月カレンダーで翌月の日付をタップしても月が変わらない（翌月移動制限）', () => {
+    const mockOnMonthChange = jest.fn();
+    renderWithLayout({ onMonthChange: mockOnMonthChange });
+
+    // 当月（2月）表示中に翌月（3月）の日付をタップ
+    // → 翌月移動制限により月は変わらない（3月は未来なので未来日判定もかかる）
+    const centerCalendar = mockCalendarInstances[1];
+    centerCalendar!.onDayPress({ dateString: '2026-03-01' });
+
+    act(() => {
+      jest.runAllTimers();
+    });
+
+    // 翌月（3月）は未来日なので onDayPress が呼ばれず、月も変わらない
+    expect(screen.getByText('2026年2月')).toBeTruthy();
+    expect(mockOnMonthChange).not.toHaveBeenCalled();
   });
 });
 
@@ -398,6 +551,7 @@ describe('MonthCalendar - selectedDate 変更時の即座反映 (#173)', () => {
       string,
       { selectedColor?: string }
     >;
+    // 新しい選択日に青丸が設定される
     expect(newMarkedDates['2026-02-15']?.selectedColor).toBe('#4D94FF');
 
     // 旧インスタンスとは異なる markedDates を持つ（再マウントされた証拠）
