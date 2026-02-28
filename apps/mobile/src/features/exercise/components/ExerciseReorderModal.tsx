@@ -217,13 +217,17 @@ export function ExerciseReorderModal({
           ヘッダー: GestureHandlerRootView の外側。
           JSX 上、後に配置された GHRV がデフォルトで上位 z-order になるため
           ヘッダーへのタッチが GHRV にインターセプトされる。
-          zIndex: 1 で明示的に最前面に配置してボタンを確実に受け取れるようにする。
+          zIndex: 1 で明示的に最前面に配置する。
+
+          ## レイアウト: 3等分 flex（absolute 配置を使わない理由）
+          position:absolute のタイトルテキストは JSX 順序によって z-order が
+          ボタンより上になり、キャンセルのタッチをインターセプトしてしまう。
+          3等分 flex にすることで z-order 問題が構造的に発生しなくなる。
         */}
         <View
           style={{
             flexDirection: 'row',
             alignItems: 'center',
-            justifyContent: 'space-between',
             paddingHorizontal: 12,
             paddingVertical: 10,
             borderBottomWidth: 1,
@@ -232,64 +236,66 @@ export function ExerciseReorderModal({
             zIndex: 1,
           }}
         >
-          {/* 左: キャンセルボタン（アウトライン） */}
-          <Pressable
-            onPress={onClose}
-            style={({ pressed }) => ({
-              paddingVertical: 7,
-              paddingHorizontal: 12,
-              borderRadius: borderRadius.md,
-              borderWidth: 1,
-              borderColor: colors.border,
-              backgroundColor: pressed ? colors.background : colors.white,
-            })}
-          >
+          {/* 左1/3: キャンセルボタン（アウトライン） */}
+          <View style={{ flex: 1, alignItems: 'flex-start' }}>
+            <Pressable
+              onPress={onClose}
+              style={({ pressed }) => ({
+                paddingVertical: 7,
+                paddingHorizontal: 12,
+                borderRadius: borderRadius.md,
+                borderWidth: 1,
+                borderColor: colors.border,
+                backgroundColor: pressed ? colors.background : colors.white,
+              })}
+            >
+              <Text
+                style={{
+                  fontSize: fontSize.sm,
+                  fontWeight: fontWeight.semibold,
+                  color: colors.textSecondary,
+                }}
+              >
+                キャンセル
+              </Text>
+            </Pressable>
+          </View>
+
+          {/* 中央1/3: タイトル（absolute 不使用・z-order 問題を回避） */}
+          <View style={{ flex: 1, alignItems: 'center' }}>
             <Text
               style={{
                 fontSize: fontSize.sm,
                 fontWeight: fontWeight.semibold,
-                color: colors.textSecondary,
+                color: colors.textPrimary,
               }}
             >
-              キャンセル
+              並び替え
             </Text>
-          </Pressable>
+          </View>
 
-          {/* 中央: タイトル。position:absolute で全幅中央に固定 */}
-          <Text
-            style={{
-              position: 'absolute',
-              left: 0,
-              right: 0,
-              textAlign: 'center',
-              fontSize: fontSize.sm,
-              fontWeight: fontWeight.semibold,
-              color: colors.textPrimary,
-            }}
-          >
-            並び替え
-          </Text>
-
-          {/* 右: 保存ボタン（青背景・白文字） */}
-          <Pressable
-            onPress={handleSave}
-            style={({ pressed }) => ({
-              paddingVertical: 7,
-              paddingHorizontal: 16,
-              borderRadius: borderRadius.md,
-              backgroundColor: pressed ? colors.primaryDark : colors.primary,
-            })}
-          >
-            <Text
-              style={{
-                fontSize: fontSize.sm,
-                fontWeight: fontWeight.semibold,
-                color: colors.white,
-              }}
+          {/* 右1/3: 保存ボタン（青背景・白文字） */}
+          <View style={{ flex: 1, alignItems: 'flex-end' }}>
+            <Pressable
+              onPress={handleSave}
+              style={({ pressed }) => ({
+                paddingVertical: 7,
+                paddingHorizontal: 16,
+                borderRadius: borderRadius.md,
+                backgroundColor: pressed ? colors.primaryDark : colors.primary,
+              })}
             >
-              保存
-            </Text>
-          </Pressable>
+              <Text
+                style={{
+                  fontSize: fontSize.sm,
+                  fontWeight: fontWeight.semibold,
+                  color: colors.white,
+                }}
+              >
+                保存
+              </Text>
+            </Pressable>
+          </View>
         </View>
 
         {/*
