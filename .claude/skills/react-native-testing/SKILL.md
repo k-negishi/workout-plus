@@ -279,6 +279,32 @@ microtask + state flush が polling 間隔に収まらないことがある。
 - `mockFn.mockReturnValueOnce(new Promise(...))` で pending Promise をセットしたとき
 - `resolve()` / `reject()` を呼んだ直後に DOM 変化を検証するとき
 
+**⚠️ `await act(async () => {})` をフラッシュ目的で使うのは NG**:
+
+「状態更新を待つために `act()` を挿入する」テクニックは、コンポーネントが
+`setInterval` / `Animated.loop` / SQLite 非同期などの **active timers** を持つ場合にハングする。
+`act()` は「すべての pending async work が完了するまで」待つため、
+終わらないタイマーがあるとテストが 5000ms タイムアウトで落ちる。
+
+```typescript
+// ❌ NG: active timers を持つコンポーネントで使うとテストがハング（5000ms タイムアウト）
+render(<HomeScreen />);
+await screen.findByText('今月のトレーニング');
+await act(async () => {});  // ← HomeScreen の SQLite 非同期が残っていてハング
+expect(screen.queryByTestId('recording-banner')).toBeNull();
+
+// ✅ OK: waitFor をそのまま使う
+render(<HomeScreen />);
+await screen.findByText('今月のトレーニング');
+await waitFor(() => {
+  expect(screen.queryByTestId('recording-banner')).toBeNull();
+});
+```
+
+**`act()` をフラッシュ目的に使えるのは**、手動で resolve できる Promise のみを持つ
+シンプルなモックコンポーネント（AIScreen の `resolveChat` パターン）に限る。
+「toBeNull() が CI でタイムアウトする」場合はまず実装側の条件漏れを疑うこと。
+
 ---
 
 ## 7. ScrollView pagingEnabled + ユーザー操作ガードのスワイプテスト
