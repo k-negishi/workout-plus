@@ -6,22 +6,24 @@
  * - 「保存」で onSave に並び替え後の配列を渡す
  * - 「キャンセル」で変更を破棄して onClose を呼ぶ
  *
- * ## レイアウト設計
- * GestureHandlerRootView は DraggableFlatList だけを包む。
- * Reanimated は GestureHandlerRootView を水平・垂直に拡張するため、
- * ヘッダーを外側の View に置くことで影響を完全に遮断する。
+ * ## レイアウト設計（根本解決版）
+ * Modal（iOS）は App.tsx の GestureHandlerRootView とは別 UIViewController に描画される。
+ * そのため Modal 内には独自の GHRV が必要だが、DraggableFlatList だけを包むと
+ * Reanimated が GHRV の native frame を拡張してヘッダーボタンへのタッチをインターセプトする。
+ *
+ * 解決策: GHRV を Modal 全体（ヘッダー + リスト）に拡大する。
+ * ヘッダーボタンも RNGH の TouchableOpacity を使うことで、RNGH ジェスチャー
+ * コーディネーターに正しく参加させ、タッチのインターセプト問題を根本解決する。
  *
  * ## width: windowWidth の必要性
  * Modal 内の flex:1 View は Yoga では画面幅に収まるはずだが、
- * GestureHandlerRootView 内の Reanimated が native レイヤーで親の
- * bounds を水平方向にも拡張することがある。
- * width を明示的に固定することで space-between の「保存」ボタンが
- * 画面外に押し出されるのを防ぐ。
+ * Reanimated が native レイヤーで親の bounds を水平方向に拡張することがある。
+ * width を明示的に固定することで「保存」ボタンが画面外に押し出されるのを防ぐ。
  */
 import React, { useCallback, useState } from 'react';
 import { Modal, Pressable, Text, useWindowDimensions, View } from 'react-native';
 import DraggableFlatList, { type RenderItemParams } from 'react-native-draggable-flatlist';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { GestureHandlerRootView, TouchableOpacity } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { borderRadius } from '@/shared/constants/borderRadius';
@@ -201,108 +203,107 @@ export function ExerciseReorderModal({
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="fullScreen">
       {/*
-        外側 View: Modal の bounds に従った通常の flex コンテナ。
-        ヘッダーをここに置くことで、GestureHandlerRootView の Reanimated 拡張から完全に隔離する。
-        width: windowWidth を明示して、Reanimated の水平拡張がヘッダー幅に波及しないよう固定する。
+        GHRV が Modal 全体をカバーする。
+        これにより Reanimated の native frame 拡張が GHRV 内で完結し、
+        ヘッダーボタン（GHRV 内）も RNGH ジェスチャーコーディネーターに
+        正しく参加するためタッチのインターセプト問題が発生しない。
       */}
-      <View
-        style={{
-          width: windowWidth,
-          flex: 1,
-          paddingTop: insets.top,
-          backgroundColor: colors.white,
-        }}
-      >
+      <GestureHandlerRootView style={{ flex: 1 }}>
         {/*
-          ヘッダー: GestureHandlerRootView の外側。
-          JSX 上、後に配置された GHRV がデフォルトで上位 z-order になるため
-          ヘッダーへのタッチが GHRV にインターセプトされる。
-          zIndex: 1 で明示的に最前面に配置する。
-
-          ## レイアウト: 3等分 flex（absolute 配置を使わない理由）
-          position:absolute のタイトルテキストは JSX 順序によって z-order が
-          ボタンより上になり、キャンセルのタッチをインターセプトしてしまう。
-          3等分 flex にすることで z-order 問題が構造的に発生しなくなる。
+          内側 View: width: windowWidth を固定して Reanimated の水平拡張を抑制する。
         */}
         <View
           style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            paddingHorizontal: 12,
-            paddingVertical: 10,
-            borderBottomWidth: 1,
-            borderBottomColor: colors.border,
+            width: windowWidth,
+            flex: 1,
+            paddingTop: insets.top,
             backgroundColor: colors.white,
-            zIndex: 1,
           }}
         >
-          {/* 左1/3: キャンセルボタン（アウトライン） */}
-          <View style={{ flex: 1, alignItems: 'flex-start' }}>
-            <Pressable
-              onPress={onClose}
-              style={({ pressed }) => ({
-                paddingVertical: 7,
-                paddingHorizontal: 12,
-                borderRadius: borderRadius.md,
-                borderWidth: 1,
-                borderColor: colors.border,
-                backgroundColor: pressed ? colors.background : colors.white,
-              })}
-            >
+          {/*
+            ヘッダー: GHRV 内に配置することで RNGH ジェスチャーコーディネーターに参加する。
+            ボタンは RNGH の TouchableOpacity を使用することで確実にタッチが届く。
+
+            ## レイアウト: 3等分 flex（absolute 配置を使わない理由）
+            position:absolute のタイトルテキストは JSX 順序によって z-order が
+            ボタンより上になり、キャンセルのタッチをインターセプトしてしまう。
+            3等分 flex にすることで z-order 問題が構造的に発生しなくなる。
+          */}
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              paddingHorizontal: 12,
+              paddingVertical: 10,
+              borderBottomWidth: 1,
+              borderBottomColor: colors.border,
+              backgroundColor: colors.white,
+            }}
+          >
+            {/* 左1/3: キャンセルボタン（アウトライン）*/}
+            <View style={{ flex: 1, alignItems: 'flex-start' }}>
+              <TouchableOpacity
+                onPress={onClose}
+                style={{
+                  paddingVertical: 7,
+                  paddingHorizontal: 12,
+                  borderRadius: borderRadius.md,
+                  borderWidth: 1,
+                  borderColor: colors.border,
+                }}
+              >
+                <Text
+                  style={{
+                    fontSize: fontSize.sm,
+                    fontWeight: fontWeight.semibold,
+                    color: colors.textSecondary,
+                  }}
+                >
+                  キャンセル
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* 中央1/3: タイトル（absolute 不使用・z-order 問題を回避） */}
+            <View style={{ flex: 1, alignItems: 'center' }}>
               <Text
                 style={{
                   fontSize: fontSize.sm,
                   fontWeight: fontWeight.semibold,
-                  color: colors.textSecondary,
+                  color: colors.textPrimary,
                 }}
               >
-                キャンセル
+                並び替え
               </Text>
-            </Pressable>
-          </View>
+            </View>
 
-          {/* 中央1/3: タイトル（absolute 不使用・z-order 問題を回避） */}
-          <View style={{ flex: 1, alignItems: 'center' }}>
-            <Text
-              style={{
-                fontSize: fontSize.sm,
-                fontWeight: fontWeight.semibold,
-                color: colors.textPrimary,
-              }}
-            >
-              並び替え
-            </Text>
-          </View>
-
-          {/* 右1/3: 保存ボタン（青背景・白文字） */}
-          <View style={{ flex: 1, alignItems: 'flex-end' }}>
-            <Pressable
-              onPress={handleSave}
-              style={({ pressed }) => ({
-                paddingVertical: 7,
-                paddingHorizontal: 16,
-                borderRadius: borderRadius.md,
-                backgroundColor: pressed ? colors.primaryDark : colors.primary,
-              })}
-            >
-              <Text
+            {/* 右1/3: 保存ボタン（青背景・白文字）*/}
+            <View style={{ flex: 1, alignItems: 'flex-end' }}>
+              <TouchableOpacity
+                onPress={handleSave}
                 style={{
-                  fontSize: fontSize.sm,
-                  fontWeight: fontWeight.semibold,
-                  color: colors.white,
+                  paddingVertical: 7,
+                  paddingHorizontal: 16,
+                  borderRadius: borderRadius.md,
+                  backgroundColor: colors.primary,
                 }}
               >
-                保存
-              </Text>
-            </Pressable>
+                <Text
+                  style={{
+                    fontSize: fontSize.sm,
+                    fontWeight: fontWeight.semibold,
+                    color: colors.white,
+                  }}
+                >
+                  保存
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
 
-        {/*
-          GestureHandlerRootView は DraggableFlatList だけを包む。
-          Reanimated がここを拡張しても、上のヘッダーには影響しない。
-        */}
-        <GestureHandlerRootView style={{ flex: 1 }}>
+          {/*
+            DraggableFlatList: GHRV の子孫として動作するため、独自 GHRV は不要。
+          */}
           <DraggableFlatList
             data={orderedItems}
             renderItem={renderItem}
@@ -312,8 +313,8 @@ export function ExerciseReorderModal({
             style={{ flex: 1, backgroundColor: colors.white }}
             contentContainerStyle={{ paddingBottom: insets.bottom }}
           />
-        </GestureHandlerRootView>
-      </View>
+        </View>
+      </GestureHandlerRootView>
     </Modal>
   );
 }

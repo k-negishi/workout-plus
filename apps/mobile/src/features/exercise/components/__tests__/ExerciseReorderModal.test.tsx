@@ -63,6 +63,9 @@ jest.mock('react-native-safe-area-context', () => ({
 
 jest.mock('react-native-gesture-handler', () => ({
   GestureHandlerRootView: ({ children }: { children: React.ReactNode }) => children,
+  // ヘッダーボタンが RNGH TouchableOpacity を使うため react-native の実装にフォールバック
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  TouchableOpacity: require('react-native').TouchableOpacity,
 }));
 
 jest.mock('@expo/vector-icons', () => {
