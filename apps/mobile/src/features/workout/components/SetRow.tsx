@@ -128,11 +128,11 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
           {set.setNumber}
         </Text>
 
-        {/* 重量入力（decimal-pad: 小数点入力を許可）Issue #174: 幅縮小・フォント拡大 */}
+        {/* 重量入力（decimal-pad: 小数点入力を許可）flex:1 でkg/rep入力が均等に残りスペースを分配する */}
         <TextInput
           testID="weight-input"
           style={{
-            width: 72,
+            flex: 1,
             backgroundColor: '#FAFBFC',
             borderWidth: 1,
             borderColor: '#e2e8f0',
@@ -152,11 +152,11 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
         {/* 区切り文字: "x"（乗算の意味を持つ小文字）カラムヘッダーの16px スペーサーと幅を合わせる */}
         <Text style={{ width: 16, fontSize: 15, color: '#64748b', textAlign: 'center' }}>x</Text>
 
-        {/* レップ数入力（number-pad: 整数のみ）Issue #174: 幅縮小・フォント拡大 */}
+        {/* レップ数入力（number-pad: 整数のみ）flex:1 でkg/rep入力が均等に残りスペースを分配する */}
         <TextInput
           testID="reps-input"
           style={{
-            width: 72,
+            flex: 1,
             backgroundColor: '#FAFBFC',
             borderWidth: 1,
             borderColor: '#e2e8f0',
@@ -185,13 +185,13 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
           {estimated1RM != null ? String(estimated1RM) : '-'}
         </Text>
 
-        {/* 削除ボタン: flex:1 で残りの横幅を占有し × を右端に配置する。
-            タップ領域が広がり誤タップを防ぐ効果もある */}
+        {/* 削除ボタン: 固定幅28でkg/rep入力のflex:1対応。1RM直後の余白を最小化する */}
         <TouchableOpacity
           onPress={() => onDelete(set.id)}
           style={{
-            flex: 1,
-            alignItems: 'flex-end',
+            width: 28,
+            height: 28,
+            alignItems: 'center',
             justifyContent: 'center',
             opacity: 0.4,
           }}

@@ -242,10 +242,10 @@ describe('SetRow', () => {
     expect(rmText.props.style).toMatchObject({ width: 48 });
   });
 
-  it('削除ボタンが flex: 1 を持ち右スペースを吸収すること', () => {
+  it('削除ボタンに width: 28 が設定されていること', () => {
     render(<SetRow {...defaultProps} />);
     const deleteButton = screen.getByLabelText('セット1を削除');
-    expect(deleteButton.props.style).toMatchObject({ flex: 1 });
+    expect(deleteButton.props.style).toMatchObject({ width: 28 });
   });
 
   // ────────────────────────────────────────────────────────────

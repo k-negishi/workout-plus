@@ -174,10 +174,10 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
         >
           Set
         </Text>
-        {/* kg: SetRow の重量入力幅 72px に合わせる */}
+        {/* kg: SetRow の重量入力（flex:1）に合わせて flex:1 で均等分配 */}
         <Text
           style={{
-            width: 72,
+            flex: 1,
             fontSize: 12,
             fontWeight: '600',
             color: '#64748b',
@@ -188,10 +188,10 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
         </Text>
         {/* ×記号のスペーサー: SetRow の区切り文字列幅に合わせて 16px */}
         <View style={{ width: 16 }} />
-        {/* rep: SetRow のレップ入力幅 72px に合わせる（Issue #134: 「回」→「rep」に変更） */}
+        {/* rep: SetRow のレップ入力（flex:1）に合わせて flex:1 で均等分配 */}
         <Text
           style={{
-            width: 72,
+            flex: 1,
             fontSize: 12,
             fontWeight: '600',
             color: '#64748b',
@@ -212,8 +212,8 @@ export const ExerciseBlock: React.FC<ExerciseBlockProps> = ({
         >
           1RM
         </Text>
-        {/* 削除列スペーサー: SetRow の削除ボタン（flex:1）に合わせて残りスペースを吸収する */}
-        <View style={{ flex: 1 }} />
+        {/* 削除列スペーサー: SetRow の削除ボタン（width:28）に合わせて固定幅 28px */}
+        <View style={{ width: 28 }} />
       </View>
 
       {/* セットリスト: Issue #146 FlatList を map に置き換えてちらつきを修正
