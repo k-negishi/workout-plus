@@ -76,6 +76,7 @@ Reference these guidelines when:
 - `ui-native-modals` - Use native modals when possible
 - `ui-measure-views` - Use onLayout, not measure()
 - `ui-styling` - Use StyleSheet.create or Nativewind
+- `ui-text-overflow-card` - 数値カードのテキストオーバーフロー対策（adjustsFontSizeToFit + 動的フォントサイズ）
 
 ### 5. State Management (MEDIUM)
 
