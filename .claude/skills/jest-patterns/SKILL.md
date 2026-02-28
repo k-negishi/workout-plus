@@ -130,6 +130,39 @@ ESLint auto-fix が孤立コードを自動削除し、テストブロックご�
 
 ---
 
+## 7. `jest.clearAllTimers()` は fake system time をリセットする
+
+`jest.useFakeTimers()` + `jest.setSystemTime()` で日付を固定しているテストで、
+`beforeEach` に `jest.clearAllTimers()` を書くと **fake system time がリセットされる**。
+`setSystemTime` を呼ばないと以降のテストで日付がズレてテストが失敗する。
+
+```typescript
+// NG: clearAllTimers 後に setSystemTime を呼び忘れる
+jest.useFakeTimers();
+jest.setSystemTime(new Date(2026, 1, 21)); // モジュールレベルで固定
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  jest.clearAllTimers(); // ← ここで fake system time がリセットされる！
+  // この後の Date.now() は実際の現在時刻を返す → テストが壊れる
+});
+
+// OK: clearAllTimers の直後に必ず再設定する
+jest.useFakeTimers();
+jest.setSystemTime(new Date(2026, 1, 21));
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  jest.clearAllTimers();
+  jest.setSystemTime(new Date(2026, 1, 21)); // ← 必ず再設定
+});
+```
+
+**適用ケース**: `Date` に依存するコンポーネント（カレンダー、タイムスタンプ表示など）のテストで
+`useFakeTimers` + `setSystemTime` を使っている場合、`beforeEach` に必ずセットにして書く。
+
+---
+
 ## 6. 事前存在するテスト失敗の検証: `git stash` の罠
 
 自分の変更が原因のテスト失敗かを確認するため `git stash` を使うと、

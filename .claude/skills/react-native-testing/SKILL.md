@@ -209,6 +209,69 @@ it('お気に入り登録後にリスト再取得が呼ばれる', async () => {
 
 ---
 
+## 6. モックされた prop コールバックが state 更新を伴う場合は `act()` でラップする
+
+モックコンポーネントの prop（`onDayPress` など）を直接呼び出すとき、
+そのハンドラーの内部で `setState` / `useState setter` が**同期で**呼ばれる場合は
+`act()` でラップしないと "not wrapped in act(...)" 警告が出る。
+
+```typescript
+// NG: モック prop を直接呼ぶ（ハンドラーが setIsAnimating など state を更新する場合）
+const centerCalendar = mockCalendarInstances[1];
+centerCalendar!.onDayPress({ dateString: '2026-01-28' });
+// → Warning: An update to MonthCalendar inside a test was not wrapped in act(...)
+
+// OK: act() でラップする
+act(() => {
+  centerCalendar!.onDayPress({ dateString: '2026-01-28' });
+});
+
+// 非同期アニメーション完了を待つ場合はさらに runAllTimers() も act() 内で
+act(() => {
+  jest.runAllTimers();
+});
+
+await waitFor(() => {
+  expect(screen.getByText('2026年1月')).toBeTruthy();
+});
+```
+
+**判断基準**: モック prop ハンドラーの中で `setState` 系が呼ばれる可能性があれば `act()` 必須。
+以前は直接呼んでいたテストも、実装変更でハンドラーに `setState` が追加されると警告が出始める。
+
+---
+
+## 7. ScrollView pagingEnabled + ユーザー操作ガードのスワイプテスト
+
+`onScrollBeginDrag` で `isUserDraggingRef = true` をセットして
+「プログラム的な scrollTo」と「ユーザースワイプ」を区別するガードがある場合、
+スワイプをテストするときは必ず `scrollBeginDrag` → `momentumScrollEnd` の順で発火する。
+
+```typescript
+// NG: momentumScrollEnd だけ発火 → ガードに弾かれて月が変わらない
+fireEvent(screen.getByTestId('month-calendar-scroll'), 'momentumScrollEnd', {
+  nativeEvent: { contentOffset: { x: 0 } },
+});
+// → isUserDraggingRef.current が false のため何も起きない
+
+// OK: スワイプ開始を先に発火してからスワイプ終了を発火
+fireEvent(screen.getByTestId('month-calendar-scroll'), 'scrollBeginDrag');
+fireEvent(screen.getByTestId('month-calendar-scroll'), 'momentumScrollEnd', {
+  nativeEvent: { contentOffset: { x: 0 } },
+});
+act(() => {
+  jest.runAllTimers(); // resetToCenter の setTimeout(0) を消化
+});
+await waitFor(() => {
+  expect(screen.getByText('2026年1月')).toBeTruthy();
+});
+```
+
+**適用条件**: `onScrollBeginDrag` + `isUserDraggingRef` のガードパターンが実装されている ScrollView。
+`pagingEnabled` の 3パネル方式（前月・当月・翌月）カレンダーで採用している。
+
+---
+
 ## 4. マルチエージェント並行実行時の競合に注意
 
 複数エージェントが同一ファイルを並行編集すると変更が上書きされる。
