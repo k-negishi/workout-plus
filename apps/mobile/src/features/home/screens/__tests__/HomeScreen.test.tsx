@@ -281,19 +281,62 @@ describe('HomeScreen 記録中バナーと記録ボタンの排他表示', () =>
   it('本日の記録中セッションがあるとき、バナーが表示され記録ボタンは非表示', async () => {
     // useFocusEffect のコールバックを実行して isRecording = true にする
     mockUseFocusEffect.mockImplementation((cb: () => void) => cb());
-    // 本日の recording セッション
+    // 本日の recording セッション（タイマー起動済み = running）
     const today = new Date();
     const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
     mockFindTodayRecording.mockResolvedValue({
       id: 'recording-today',
       status: 'recording',
       created_at: dayStart + 3600000,
+      timer_status: 'running',
     });
 
     render(<HomeScreen />);
     await screen.findByText('今月のトレーニング');
 
     // 非同期の setIsRecording 反映を待つ
+    await waitFor(() => {
+      expect(screen.getByTestId('recording-banner')).toBeTruthy();
+    });
+    expect(screen.queryByTestId('record-workout-button')).toBeNull();
+  });
+
+  it('timer_status=not_started の recording セッションはバナーを表示しない', async () => {
+    // タイマーが未起動（継続モードで開いてすぐ戻った場合など）はバナー非表示
+    mockUseFocusEffect.mockImplementation((cb: () => void) => cb());
+    const today = new Date();
+    const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+    mockFindTodayRecording.mockResolvedValue({
+      id: 'recording-not-started',
+      status: 'recording',
+      created_at: dayStart + 3600000,
+      timer_status: 'not_started',
+    });
+
+    render(<HomeScreen />);
+    await screen.findByText('今月のトレーニング');
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('recording-banner')).toBeNull();
+    });
+    expect(screen.getByTestId('record-workout-button')).toBeTruthy();
+  });
+
+  it('timer_status=paused の recording セッションはバナーを表示する', async () => {
+    // タイマーが一時停止中は「記録中」と見なしてバナーを表示する
+    mockUseFocusEffect.mockImplementation((cb: () => void) => cb());
+    const today = new Date();
+    const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+    mockFindTodayRecording.mockResolvedValue({
+      id: 'recording-paused',
+      status: 'recording',
+      created_at: dayStart + 3600000,
+      timer_status: 'paused',
+    });
+
+    render(<HomeScreen />);
+    await screen.findByText('今月のトレーニング');
+
     await waitFor(() => {
       expect(screen.getByTestId('recording-banner')).toBeTruthy();
     });
