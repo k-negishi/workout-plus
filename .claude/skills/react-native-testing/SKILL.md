@@ -241,6 +241,46 @@ await waitFor(() => {
 
 ---
 
+## 6b. 外部コントロール可能な Promise を resolve した後も `act()` でラップ必須
+
+テスト内で「pending Promise を後から resolve する」パターン（`resolveChat` / `resolveQuery` 等）では、
+`resolve()` の呼び出しを `await act(async () => {})` でラップしないと
+**ローカルは通過・CI でのみ失敗**するタイミング依存バグが生じる。
+
+```typescript
+// セットアップ: テスト内で resolve をコントロールできる Promise を用意
+let resolveChat!: (v: { content: string }) => void;
+mockChat.mockReturnValueOnce(
+  new Promise<{ content: string }>((resolve) => { resolveChat = resolve; }),
+);
+render(<AIScreen />);
+
+// NG: act() の外から resolve → ローカル OK・CI でタイムアウト
+resolveChat({ content: '応答' });
+await waitFor(() => {
+  expect(screen.queryByTestId('typing-indicator')).toBeNull();
+  // CI: waitFor が polling する前に isLoading=false が反映されず タイムアウト
+});
+
+// OK: act(async () => {}) でラップ → 環境非依存で確実に動く
+await act(async () => {
+  resolveChat({ content: '応答' });
+});
+expect(screen.queryByTestId('typing-indicator')).toBeNull();
+```
+
+**なぜ CI だけ落ちるのか**:
+`act(async () => {})` は「Promise チェーン完了 → React state flush → 再レンダー完了」
+まで同期的に待つ。`waitFor` の polling は最大 1000ms だが、CI（Linux、低スペック）では
+microtask + state flush が polling 間隔に収まらないことがある。
+`act()` を使えば環境に関係なく状態が確定してから assertion できる。
+
+**適用タイミング**:
+- `mockFn.mockReturnValueOnce(new Promise(...))` で pending Promise をセットしたとき
+- `resolve()` / `reject()` を呼んだ直後に DOM 変化を検証するとき
+
+---
+
 ## 7. ScrollView pagingEnabled + ユーザー操作ガードのスワイプテスト
 
 `onScrollBeginDrag` で `isUserDraggingRef = true` をセットして
@@ -410,6 +450,27 @@ beforeEach(() => {
 ```
 
 直接代入（`key: mockVar`）だけが NG で、関数内での参照（`key: () => mockVar`）は OK。
+
+### RNGH コンポーネント追加時は mock を必ず更新する
+
+`react-native-gesture-handler` から新しいコンポーネント（`TouchableOpacity`、`Gesture.Tap` 等）を
+追加するたびに、テストの mock にも同じコンポーネントを追加する必要がある。
+追加しないとテスト実行時に `undefined` が返りクラッシュするか、ボタン押下が検知されない。
+
+```typescript
+jest.mock('react-native-gesture-handler', () => ({
+  GestureHandlerRootView: ({ children }: { children: React.ReactNode }) => children,
+  // RNGH コンポーネントを追加するたびここにも追加する
+  // react-native の実装にフォールバックさせることで fireEvent.press が動く
+  TouchableOpacity: require('react-native').TouchableOpacity,
+}));
+```
+
+**追加が必要なタイミング**:
+- 実装ファイルの import に RNGH コンポーネントが増えたとき
+- `fireEvent.press` でボタンが検知されなくなったとき（mock から漏れているサイン）
+
+**実績**: ExerciseReorderModal（Issue #189）でヘッダーボタンを RNGH `TouchableOpacity` に変更した際に追記。
 
 ### Zustand `getState()` で stale closure を回避
 
