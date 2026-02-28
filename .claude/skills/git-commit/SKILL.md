@@ -1,6 +1,13 @@
 ---
 name: git-commit
-description: Gitコミット時に変更内容を分析し、コミットprefix（add/fix/docs/refactor/test/chore/perf/build/ci/revert/style）を適切に選定して、明確で追跡可能なコミットメッセージを作成・実行するためのスキル。コミットメッセージ作成、prefix選定、複数変更の分割判断、コミット実行時に使用する。
+description: >
+  ALWAYS use this skill before running `git add` or `git commit`.
+  Trigger conditions: any time a commit needs to be created — after implementing a feature,
+  fixing a bug, updating tests, or as part of another skill (close-issue, commit-close, etc.).
+  Do NOT run `git add` or `git commit` directly; invoke this skill instead.
+  Handles the full staging → commit flow: validates that only task-related files are staged,
+  selects the correct prefix (add/fix/docs/refactor/test/chore/perf/build/ci/revert/style),
+  and produces a structured commit message.
 allowed-tools: Read, Write, Bash
 ---
 
