@@ -7,7 +7,7 @@
  * - 「キャンセル」で変更を破棄して onClose を呼ぶ
  */
 import React, { useCallback, useState } from 'react';
-import { Modal, Pressable, Text, View } from 'react-native';
+import { Modal, Pressable, Text, useWindowDimensions, View } from 'react-native';
 import DraggableFlatList, { type RenderItemParams } from 'react-native-draggable-flatlist';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -72,6 +72,9 @@ export function ExerciseReorderModal({
   onClose,
 }: ExerciseReorderModalProps) {
   const insets = useSafeAreaInsets();
+  // Reanimated が GestureHandlerRootView の flex:1 を拡張するのを防ぐため、
+  // 画面サイズを明示的に取得して absolute 基準コンテナのサイズを固定する
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
 
   // 内部で並び順の状態を管理する
   // visible=true になるたびに exercises の順序を初期値として設定する
@@ -206,7 +209,11 @@ export function ExerciseReorderModal({
         Yoga flex チェーンを上向きに拡張しても、このコンテナは影響を受けない唯一の ROOT。
         backgroundColor でヘッダー/フッターの隙間（SafeArea 領域）を背景色で隠す。
       */}
-      <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
+      {/* width/height を明示することで DraggableFlatList の Reanimated による
+          コンテナ拡張を完全に封じる。flex:1 だけでは iOS 実機で拡張されることが確認済み */}
+      <GestureHandlerRootView
+        style={{ width: windowWidth, height: windowHeight, backgroundColor: colors.background }}
+      >
         {/* ① ヘッダー: 上固定。flex 計算と完全に無関係 */}
         <View
           style={{
