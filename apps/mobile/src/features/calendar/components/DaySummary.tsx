@@ -14,6 +14,17 @@ import { Polyline, Svg } from 'react-native-svg';
 import { getDatabase } from '@/database/client';
 import type { SetRow, WorkoutExerciseRow, WorkoutRow } from '@/database/types';
 
+/**
+ * estimated_1rm が DB に null の場合に weight/reps から推定1RMを計算するフォールバック。
+ * 旧データ（estimated_1rm 列が後から追加された時期のデータ）との互換性確保のために使用する。
+ * Epley式: weight * (1 + reps / 30)
+ */
+function computeFallback1RM(weight: number | null, reps: number | null): number | null {
+  if (weight == null || reps == null || weight <= 0 || reps <= 0) return null;
+  if (reps === 1) return weight;
+  return Math.round(weight * (1 + reps / 30));
+}
+
 /** チェックアイコン */
 function CheckIcon() {
   return (
@@ -168,11 +179,13 @@ export function DaySummary({
             if (s.weight != null && s.reps != null) {
               volumeTotal += s.weight * s.reps;
             }
+            // DB の estimated_1rm が null の場合は weight/reps から再計算（旧データ互換）
+            const estimated1RM = s.estimated_1rm ?? computeFallback1RM(s.weight, s.reps);
             return {
               setNumber: s.set_number,
               weight: s.weight,
               reps: s.reps,
-              estimated1RM: s.estimated_1rm,
+              estimated1RM,
             };
           });
 

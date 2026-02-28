@@ -420,6 +420,182 @@ describe('DaySummary - set 文言追加', () => {
 });
 
 // ==========================================
+// Issue #201: 1RM nullフォールバック表示のテスト
+// ==========================================
+describe('DaySummary - 1RM 表示', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  const setupMockWith1RMInDB = () => {
+    mockGetAllAsync.mockImplementation((sql: string) => {
+      if (sql.includes('FROM workouts')) {
+        return Promise.resolve([
+          {
+            id: 'workout-1rm-1',
+            status: 'completed',
+            completed_at: new Date('2026-02-01T10:00:00.000Z').getTime(),
+            elapsed_seconds: 3600,
+            timer_status: 'stopped',
+            memo: null,
+          },
+        ]);
+      }
+      if (sql.includes('FROM workout_exercises')) {
+        return Promise.resolve([
+          {
+            id: 'we-1',
+            workout_id: 'workout-1rm-1',
+            exercise_id: 'ex-bench',
+            display_order: 1,
+            memo: null,
+            exercise_name: 'ベンチプレス',
+          },
+        ]);
+      }
+      if (sql.includes('FROM sets')) {
+        return Promise.resolve([
+          {
+            id: 's-1',
+            workout_exercise_id: 'we-1',
+            set_number: 1,
+            weight: 80,
+            reps: 10,
+            // estimated_1rm が DB に存在する場合（正常系）
+            estimated_1rm: 107,
+          },
+        ]);
+      }
+      return Promise.resolve([]);
+    });
+  };
+
+  const setupMockWith1RMNull = () => {
+    mockGetAllAsync.mockImplementation((sql: string) => {
+      if (sql.includes('FROM workouts')) {
+        return Promise.resolve([
+          {
+            id: 'workout-1rm-2',
+            status: 'completed',
+            completed_at: new Date('2026-02-01T10:00:00.000Z').getTime(),
+            elapsed_seconds: 3600,
+            timer_status: 'stopped',
+            memo: null,
+          },
+        ]);
+      }
+      if (sql.includes('FROM workout_exercises')) {
+        return Promise.resolve([
+          {
+            id: 'we-1',
+            workout_id: 'workout-1rm-2',
+            exercise_id: 'ex-bench',
+            display_order: 1,
+            memo: null,
+            exercise_name: 'ベンチプレス',
+          },
+        ]);
+      }
+      if (sql.includes('FROM sets')) {
+        return Promise.resolve([
+          {
+            id: 's-1',
+            workout_exercise_id: 'we-1',
+            set_number: 1,
+            weight: 80,
+            reps: 10,
+            // estimated_1rm が DB に null の場合（旧データ互換）
+            estimated_1rm: null,
+          },
+        ]);
+      }
+      return Promise.resolve([]);
+    });
+  };
+
+  const setupMockWithNullWeightReps = () => {
+    mockGetAllAsync.mockImplementation((sql: string) => {
+      if (sql.includes('FROM workouts')) {
+        return Promise.resolve([
+          {
+            id: 'workout-1rm-3',
+            status: 'completed',
+            completed_at: new Date('2026-02-01T10:00:00.000Z').getTime(),
+            elapsed_seconds: 3600,
+            timer_status: 'stopped',
+            memo: null,
+          },
+        ]);
+      }
+      if (sql.includes('FROM workout_exercises')) {
+        return Promise.resolve([
+          {
+            id: 'we-1',
+            workout_id: 'workout-1rm-3',
+            exercise_id: 'ex-bench',
+            display_order: 1,
+            memo: null,
+            exercise_name: 'ベンチプレス',
+          },
+        ]);
+      }
+      if (sql.includes('FROM sets')) {
+        return Promise.resolve([
+          {
+            id: 's-1',
+            workout_exercise_id: 'we-1',
+            set_number: 1,
+            weight: null,
+            reps: null,
+            estimated_1rm: null,
+          },
+        ]);
+      }
+      return Promise.resolve([]);
+    });
+  };
+
+  it('estimated_1rm が DB に存在する場合に1RMが表示される', async () => {
+    setupMockWith1RMInDB();
+
+    render(<DaySummary dateString="2026-02-01" />);
+
+    await waitFor(() => {
+      expect(screen.getByText('ベンチプレス')).toBeTruthy();
+    });
+
+    // DB 格納値そのまま表示される（Math.round(107) = 107）
+    expect(screen.getByText('1RM: 107kg')).toBeTruthy();
+  });
+
+  it('estimated_1rm が null でも weight/reps があれば1RMをフォールバック計算して表示する', async () => {
+    // 旧データで estimated_1rm = null でも weight=80, reps=10 があれば計算できる
+    // Epley式: Math.round(80 * (1 + 10/30)) = Math.round(106.67) = 107
+    setupMockWith1RMNull();
+
+    render(<DaySummary dateString="2026-02-01" />);
+
+    await waitFor(() => {
+      expect(screen.getByText('ベンチプレス')).toBeTruthy();
+    });
+
+    expect(screen.getByText('1RM: 107kg')).toBeTruthy();
+  });
+
+  it('estimated_1rm が null かつ weight/reps も null のときは1RMを表示しない', async () => {
+    setupMockWithNullWeightReps();
+
+    render(<DaySummary dateString="2026-02-01" />);
+
+    await waitFor(() => {
+      expect(screen.getByText('ベンチプレス')).toBeTruthy();
+    });
+
+    expect(screen.queryByText(/1RM:/)).toBeNull();
+  });
+});
+
+// ==========================================
 // Issue #133: メモ表示のテスト
 // ==========================================
 describe('DaySummary - メモ表示', () => {
