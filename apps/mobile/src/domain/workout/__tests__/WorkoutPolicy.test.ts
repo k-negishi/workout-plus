@@ -20,7 +20,7 @@ describe('WorkoutPolicy.isValidSet — SQL VALID_SET_SQL との同期仕様', ()
     [60, null, false, 'reps が null'],
     [null, null, false, '両方 null'],
     [60, 0, false, 'reps=0 は未実施'],
-  ])('weight=%s reps=%s → %s（%s）', (weight, reps, expected) => {
+  ])('weight=%s reps=%s → %s（%s）', (weight, reps, expected, _description) => {
     expect(
       WorkoutPolicy.isValidSet({ weight: weight as number | null, reps: reps as number | null }),
     ).toBe(expected);
