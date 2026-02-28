@@ -74,17 +74,15 @@ export function ExerciseReorderModal({
   const insets = useSafeAreaInsets();
   // Reanimated が GestureHandlerRootView の flex:1 を拡張するのを防ぐため、
   // 画面サイズを明示的に取得して absolute 基準コンテナのサイズを固定する
-  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  // フッター撤廃により幅は不要。高さのみ GestureHandlerRootView のサイズ固定に使用
+  const { height: windowHeight } = useWindowDimensions();
 
   // 内部で並び順の状態を管理する
   // visible=true になるたびに exercises の順序を初期値として設定する
   const [orderedItems, setOrderedItems] = useState<Exercise[]>(exercises);
 
-  // ヘッダー・フッターの実測高さ（onLayout で確定）。リスト領域の top/bottom 計算に使用
-  // footerH 初期値 0: フッターは bottom:0, zIndex:2 で常に可視のため、
-  // onLayout 前はリストが少し被るが、フッター自体は見えている
+  // ヘッダーの実測高さ（onLayout で確定）。リスト領域の top 計算に使用
   const [headerH, setHeaderH] = useState(HEADER_HEIGHT_INITIAL);
-  const [footerH, setFooterH] = useState(0);
 
   // visible が true になったとき親から受け取った exercises で内部状態を初期化する
   React.useEffect(() => {
@@ -203,18 +201,12 @@ export function ExerciseReorderModal({
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="fullScreen">
-      {/*
-        GestureHandlerRootView を absolute 基準コンテナとして使う。
-        flex:1 で画面全体にバインドされており、DraggableFlatList の Reanimated が
-        Yoga flex チェーンを上向きに拡張しても、このコンテナは影響を受けない唯一の ROOT。
-        backgroundColor でヘッダー/フッターの隙間（SafeArea 領域）を背景色で隠す。
-      */}
-      {/* width/height を明示することで DraggableFlatList の Reanimated による
-          コンテナ拡張を完全に封じる。flex:1 だけでは iOS 実機で拡張されることが確認済み */}
-      <GestureHandlerRootView
-        style={{ width: windowWidth, height: windowHeight, backgroundColor: colors.background }}
-      >
-        {/* ① ヘッダー: 上固定。flex 計算と完全に無関係 */}
+      {/* height を明示することで DraggableFlatList の Reanimated による垂直拡張を封じる。
+          flex:1 だけでは iOS 実機でコンテナが拡張されフッターが画面外に出ることが確認済み。
+          フッターをヘッダーへ移動することでレイアウト問題を根本解消した */}
+      <GestureHandlerRootView style={{ height: windowHeight, backgroundColor: colors.background }}>
+        {/* ① ヘッダー: iOS 標準パターン（左:キャンセル / 中央:タイトル / 右:保存）。
+            フッター廃止により Reanimated によるボタン押し出し問題が根本解消される */}
         <View
           style={{
             position: 'absolute',
@@ -224,7 +216,7 @@ export function ExerciseReorderModal({
             zIndex: 2,
             flexDirection: 'row',
             alignItems: 'center',
-            justifyContent: 'center',
+            justifyContent: 'space-between',
             paddingHorizontal: 16,
             paddingVertical: 14,
             borderBottomWidth: 1,
@@ -233,49 +225,11 @@ export function ExerciseReorderModal({
           }}
           onLayout={(e) => setHeaderH(e.nativeEvent.layout.height)}
         >
-          <Text
-            style={{
-              fontSize: fontSize.sm,
-              fontWeight: fontWeight.semibold,
-              color: colors.textPrimary,
-            }}
-          >
-            並び替え
-          </Text>
-        </View>
-
-        {/* ② フッター: bottom:0 = GestureHandlerRootView の最下部 = 画面最下部。
-            DraggableFlatList が何をしても絶対に画面外に出ない */}
-        <View
-          testID="reorder-footer"
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            zIndex: 2,
-            flexDirection: 'row',
-            gap: 12,
-            paddingHorizontal: 16,
-            paddingTop: 16,
-            paddingBottom: insets.bottom + 16,
-            borderTopWidth: 1,
-            borderTopColor: colors.border,
-            backgroundColor: colors.white,
-          }}
-          onLayout={(e) => setFooterH(e.nativeEvent.layout.height)}
-        >
+          {/* 左: キャンセルボタン（hitSlop で Apple HIG 最小 44pt のタップ領域を確保） */}
           <Pressable
             onPress={onClose}
-            style={({ pressed }) => ({
-              flex: 1,
-              paddingVertical: 14,
-              borderRadius: borderRadius.lg,
-              borderWidth: 1,
-              borderColor: colors.border,
-              backgroundColor: pressed ? colors.background : colors.white,
-              alignItems: 'center',
-            })}
+            style={{ paddingVertical: 2, paddingHorizontal: 4 }}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <Text
               style={{
@@ -288,36 +242,42 @@ export function ExerciseReorderModal({
             </Text>
           </Pressable>
 
+          {/* 中央: タイトル */}
+          <Text
+            style={{
+              fontSize: fontSize.sm,
+              fontWeight: fontWeight.semibold,
+              color: colors.textPrimary,
+            }}
+          >
+            並び替え
+          </Text>
+
+          {/* 右: 保存ボタン */}
           <Pressable
             onPress={handleSave}
-            style={({ pressed }) => ({
-              flex: 1,
-              paddingVertical: 14,
-              borderRadius: borderRadius.lg,
-              backgroundColor: pressed ? colors.primaryDark : colors.primary,
-              alignItems: 'center',
-            })}
+            style={{ paddingVertical: 2, paddingHorizontal: 4 }}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
           >
             <Text
               style={{
                 fontSize: fontSize.sm,
                 fontWeight: fontWeight.semibold,
-                color: colors.white,
+                color: colors.primary,
               }}
             >
-              保存する
+              保存
             </Text>
           </Pressable>
         </View>
 
-        {/* ③ リスト: ①②の実測高さで top/bottom を確定。
-            DraggableFlatList はこの中で flex:1 を使うが、
-            親が absolute で bounded されているため外にはみ出さない */}
+        {/* ② リスト: ヘッダーの実測高さで top を確定。
+            bottom は SafeArea の insets.bottom で処理する */}
         <View
           style={{
             position: 'absolute',
             top: insets.top + headerH,
-            bottom: footerH,
+            bottom: insets.bottom,
             left: 0,
             right: 0,
           }}
