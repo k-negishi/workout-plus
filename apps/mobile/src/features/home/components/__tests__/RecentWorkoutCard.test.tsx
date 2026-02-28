@@ -188,3 +188,43 @@ describe('RecentWorkoutCard タグ表示', () => {
     expect(screen.getByText('1時間0分')).toBeTruthy();
   });
 });
+
+// ==========================================
+// Issue #200: メモ表示のテスト
+// ==========================================
+describe('RecentWorkoutCard メモ表示', () => {
+  const baseProps = {
+    completedAt: new Date(2026, 1, 18, 10, 0, 0).getTime(),
+    exerciseCount: 3,
+    setCount: 9,
+    totalVolume: 1200,
+    durationSeconds: 3600,
+    muscleGroups: ['chest'] as string[],
+    onPress: jest.fn(),
+  };
+
+  it('memo がある場合にメモテキストが表示される', () => {
+    render(<RecentWorkoutCard {...baseProps} memo="今日は調子が良かった" />);
+
+    expect(screen.getByText('今日は調子が良かった')).toBeTruthy();
+  });
+
+  it('memo が null の場合はメモ領域が表示されない', () => {
+    render(<RecentWorkoutCard {...baseProps} memo={null} />);
+
+    expect(screen.queryByTestId('workout-card-memo')).toBeNull();
+  });
+
+  it('memo が undefined の場合はメモ領域が表示されない', () => {
+    render(<RecentWorkoutCard {...baseProps} />);
+
+    expect(screen.queryByTestId('workout-card-memo')).toBeNull();
+  });
+
+  it('長いメモも折り返して表示される', () => {
+    const longMemo = 'フォームを意識してゆっくりと行った。肩に違和感あり。次回は重量を落とすこと。';
+    render(<RecentWorkoutCard {...baseProps} memo={longMemo} />);
+
+    expect(screen.getByText(longMemo)).toBeTruthy();
+  });
+});

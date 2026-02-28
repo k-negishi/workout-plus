@@ -55,6 +55,8 @@ type WorkoutSummary = {
   timerStatus: TimerStatus;
   /** ワークアウトに含まれる部位の配列（重複排除済み） */
   muscleGroups: string[];
+  /** ワークアウトメモ */
+  memo: string | null;
 };
 
 /** ダッシュボード統計（SQL集計値） */
@@ -115,6 +117,7 @@ async function buildWorkoutSummary(db: AppDatabase, workout: WorkoutRow): Promis
     durationSeconds: workout.elapsed_seconds,
     timerStatus: workout.timer_status,
     muscleGroups,
+    memo: workout.memo,
   };
 }
 
@@ -470,6 +473,7 @@ export function HomeScreen() {
               durationSeconds={ws.durationSeconds}
               timerStatus={ws.timerStatus}
               muscleGroups={ws.muscleGroups}
+              memo={ws.memo}
               onPress={() => handleWorkoutPress(ws.id)}
             />
           ))}

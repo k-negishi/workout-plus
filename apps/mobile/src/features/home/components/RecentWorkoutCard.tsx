@@ -69,6 +69,8 @@ type RecentWorkoutCardProps = {
   timerStatus?: TimerStatus;
   /** ワークアウトに含まれる部位の配列（表示とアイコン背景色に使用） */
   muscleGroups: string[];
+  /** ワークアウトメモ（存在する場合のみ表示） */
+  memo?: string | null;
   /** テスト用 ID */
   testID?: string;
   /** タップ時のコールバック */
@@ -82,6 +84,7 @@ export function RecentWorkoutCard({
   durationSeconds,
   timerStatus,
   muscleGroups,
+  memo,
   testID,
   onPress,
 }: RecentWorkoutCardProps) {
@@ -139,6 +142,13 @@ export function RecentWorkoutCard({
           </Text>
         </View>
       </View>
+
+      {/* ワークアウトメモ: 存在する場合のみタグ行の下に表示 */}
+      {memo ? (
+        <Text testID="workout-card-memo" style={styles.memo} numberOfLines={2}>
+          {memo}
+        </Text>
+      ) : null}
     </Pressable>
   );
 }
@@ -222,5 +232,12 @@ const styles = StyleSheet.create({
   tagText: {
     fontSize: 13,
     fontWeight: '600',
+  },
+  // ワークアウトメモ: タグ行の下にグレーで表示
+  memo: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    marginTop: 8,
+    lineHeight: 18,
   },
 });
