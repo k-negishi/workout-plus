@@ -203,30 +203,6 @@ export const MonthCalendar = React.memo(function MonthCalendar({
     return marks;
   }, [trainingDates, selectedDate, today]);
 
-  // 日付タップハンドラ（未来日は無効）
-  const handleDayPress = useCallback(
-    (day: DateData) => {
-      // 'yyyy-MM-dd' 文字列を UTC ではなくローカル日付として安全に解釈する
-      const [year, month, date] = day.dateString.split('-').map(Number);
-      const selected = new Date(year!, month! - 1, date!);
-      const endOfToday = new Date(startOfDay(new Date()).getTime() + 86400000);
-
-      // 今日以前のみ選択可能
-      if (isBefore(selected, endOfToday)) {
-        onDayPress(day.dateString);
-
-        // 前後月のオーバーフロー日付をタップした場合は表示月を自動切り替えする
-        // onMonthChange は呼ばない（selectedDate を onDayPress で設定済みのため上書きを防ぐ）
-        const tappedMonth = startOfMonth(selected);
-        if (!isSameMonth(tappedMonth, displayMonthRef.current)) {
-          setDisplayMonth(tappedMonth);
-          setMonthChangeKey((prev) => prev + 1);
-        }
-      }
-    },
-    [onDayPress],
-  );
-
   // ScrollView を中央（index 1）にスナップしてアニメーション状態をリセットする。
   // setDisplayMonth・setMonthChangeKey・onMonthChange は呼び出し側が担い、
   // このコールバックはスクロール位置とフラグのみ管理する。
@@ -239,6 +215,51 @@ export const MonthCalendar = React.memo(function MonthCalendar({
       isAnimatingRef.current = false;
     }, 0);
   }, []);
+
+  // 月切り替えの共通スライドアニメーションロジック。
+  // 矢印ボタン・オーバーフロー日付タップ両方から呼ばれる。
+  // onMonthChange は呼び出し側が担う（オーバーフロー日付タップ時は selectedDate 上書き防止のため不要）
+  const startMonthAnimation = useCallback(
+    (newMonth: Date, direction: 'prev' | 'next') => {
+      if (isAnimatingRef.current) return;
+      isAnimatingRef.current = true;
+      setIsAnimating(true);
+      scrollViewRef.current?.scrollTo({
+        x: direction === 'prev' ? 0 : containerWidthRef.current * 2,
+        animated: true,
+      });
+      setTimeout(() => {
+        setDisplayMonth(newMonth);
+        setMonthChangeKey((prev) => prev + 1);
+        resetToCenter();
+      }, ANIMATION_DURATION_MS);
+    },
+    [resetToCenter],
+  );
+
+  // 日付タップハンドラ（未来日は無効）
+  const handleDayPress = useCallback(
+    (day: DateData) => {
+      // 'yyyy-MM-dd' 文字列を UTC ではなくローカル日付として安全に解釈する
+      const [year, month, date] = day.dateString.split('-').map(Number);
+      const selected = new Date(year!, month! - 1, date!);
+      const endOfToday = new Date(startOfDay(new Date()).getTime() + 86400000);
+
+      // 今日以前のみ選択可能
+      if (isBefore(selected, endOfToday)) {
+        onDayPress(day.dateString);
+
+        // 前後月のオーバーフロー日付をタップした場合はスライドアニメーション付きで表示月を切り替える
+        // onMonthChange は呼ばない（selectedDate を onDayPress で設定済みのため上書きを防ぐ）
+        const tappedMonth = startOfMonth(selected);
+        if (!isSameMonth(tappedMonth, displayMonthRef.current)) {
+          const direction = isBefore(tappedMonth, displayMonthRef.current) ? 'prev' : 'next';
+          startMonthAnimation(tappedMonth, direction);
+        }
+      }
+    },
+    [onDayPress, startMonthAnimation],
+  );
 
   // ユーザーのスワイプ開始を記録する
   // 矢印ボタンの scrollTo 完了後に遅れて発火するモメンタムを除外するために必要
@@ -296,45 +317,21 @@ export const MonthCalendar = React.memo(function MonthCalendar({
   // markedDates が即座に再計算される。これにより:
   //   - 前月（スライドアウト中）の青丸が消える
   //   - 新しい月（スライドイン中）の1日が青丸付きで表示される
-  // アニメーション完了後は setDisplayMonth + setMonthChangeKey のみ処理する
   const handlePrevMonth = useCallback(() => {
     if (isAnimatingRef.current) return;
     const newMonth = subMonths(displayMonthRef.current, 1);
     // アニメーション前に親へ通知 → markedDates が即座に更新され、アニメーション中から正しい状態に
     onMonthChangeRef.current?.(format(startOfMonth(newMonth), 'yyyy-MM-dd'));
-    isAnimatingRef.current = true;
-    setIsAnimating(true);
-
-    scrollViewRef.current?.scrollTo({ x: 0, animated: true });
-
-    setTimeout(() => {
-      // setDisplayMonth + setMonthChangeKey を同一バッチで処理
-      // → months[] 更新と Calendar リマウントが1レンダーで完結
-      setDisplayMonth(newMonth);
-      setMonthChangeKey((prev) => prev + 1);
-      resetToCenter();
-    }, ANIMATION_DURATION_MS);
-  }, [resetToCenter]);
+    startMonthAnimation(newMonth, 'prev');
+  }, [startMonthAnimation]);
 
   // 翌月ボタン: 同じく開始前に onMonthChange を呼ぶ
   const handleNextMonth = useCallback(() => {
     if (isAnimatingRef.current || isNextMonthDisabled) return;
     const newMonth = addMonths(displayMonthRef.current, 1);
     onMonthChangeRef.current?.(format(startOfMonth(newMonth), 'yyyy-MM-dd'));
-    isAnimatingRef.current = true;
-    setIsAnimating(true);
-
-    scrollViewRef.current?.scrollTo({
-      x: containerWidthRef.current * 2,
-      animated: true,
-    });
-
-    setTimeout(() => {
-      setDisplayMonth(newMonth);
-      setMonthChangeKey((prev) => prev + 1);
-      resetToCenter();
-    }, ANIMATION_DURATION_MS);
-  }, [isNextMonthDisabled, resetToCenter]);
+    startMonthAnimation(newMonth, 'next');
+  }, [isNextMonthDisabled, startMonthAnimation]);
 
   // コンテナ幅を onLayout で動的取得（初期値との誤差を補正する）
   const handleLayout = useCallback((event: LayoutChangeEvent) => {

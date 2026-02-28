@@ -346,7 +346,10 @@ describe('MonthCalendar コンポーネント - handleDayPress', () => {
     // 3パネル描画されるため、[0]=前月, [1]=当月, [2]=翌月
     const centerCalendar = mockCalendarInstances[1];
     expect(centerCalendar).toBeDefined();
-    centerCalendar!.onDayPress({ dateString: '2020-01-01' });
+    // 別月の過去日付タップは startMonthAnimation も呼ぶため act() でラップする
+    act(() => {
+      centerCalendar!.onDayPress({ dateString: '2020-01-01' });
+    });
 
     expect(mockOnDayPress).toHaveBeenCalledWith('2020-01-01');
     expect(mockOnDayPress).toHaveBeenCalledTimes(1);
@@ -391,7 +394,10 @@ describe('MonthCalendar - 前後月オーバーフロー日付タップで表示
     // 中央パネル（当月 = 2月）で 1/28 をタップ（2月カレンダーの前月オーバーフロー日付）
     const centerCalendar = mockCalendarInstances[1];
     expect(centerCalendar).toBeDefined();
-    centerCalendar!.onDayPress({ dateString: '2026-01-28' });
+    // startMonthAnimation が setIsAnimating を同期で呼ぶため act() でラップする
+    act(() => {
+      centerCalendar!.onDayPress({ dateString: '2026-01-28' });
+    });
 
     act(() => {
       jest.runAllTimers();
@@ -411,7 +417,9 @@ describe('MonthCalendar - 前後月オーバーフロー日付タップで表示
     renderWithLayout({ onDayPress: mockOnDayPress, onMonthChange: mockOnMonthChange });
 
     const centerCalendar = mockCalendarInstances[1];
-    centerCalendar!.onDayPress({ dateString: '2026-01-28' });
+    act(() => {
+      centerCalendar!.onDayPress({ dateString: '2026-01-28' });
+    });
 
     act(() => {
       jest.runAllTimers();
@@ -442,7 +450,9 @@ describe('MonthCalendar - 前後月オーバーフロー日付タップで表示
     // momentumScrollEnd 後の re-render でインスタンスが更新されている
     const centerCalendar = mockCalendarInstances[1];
     expect(centerCalendar).toBeDefined();
-    centerCalendar!.onDayPress({ dateString: '2026-02-01' });
+    act(() => {
+      centerCalendar!.onDayPress({ dateString: '2026-02-01' });
+    });
 
     act(() => {
       jest.runAllTimers();
