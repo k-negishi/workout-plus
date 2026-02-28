@@ -161,9 +161,10 @@ describe('ExerciseHistoryFullScreen', () => {
       expect(screen.getByText('12')).toBeTruthy();
     });
 
-    it('総ワークアウト回数カードが単位なしで表示される', () => {
+    it('ワークアウト数カードが単位なしで表示される', () => {
       render(<ExerciseHistoryFullScreen />);
-      expect(screen.getByText('総ワークアウト回数')).toBeTruthy();
+      // Issue #195-fix: ラベルを「総ワークアウト回数」→「ワークアウト数」に短縮（3列カードで1行に収めるため）
+      expect(screen.getByText('ワークアウト数')).toBeTruthy();
       // stats.totalSessions = 10
       expect(screen.getByText('10')).toBeTruthy();
     });

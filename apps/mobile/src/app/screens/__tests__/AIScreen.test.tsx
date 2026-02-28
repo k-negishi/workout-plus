@@ -9,7 +9,7 @@
  *
  * DB アクセス・AI サービス・SafeArea はモックで代替する。
  */
-import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import React from 'react';
 
 // react-native-safe-area-context のモック
@@ -177,10 +177,11 @@ describe('AIScreen', () => {
     });
 
     // AI応答後は非表示になる
-    resolveChat({ content: 'テスト応答' });
-    await waitFor(() => {
-      expect(screen.queryByTestId('typing-indicator')).toBeNull();
+    // act() で Promise 解決 → React 状態更新 → 再レンダーを一括フラッシュする
+    await act(async () => {
+      resolveChat({ content: 'テスト応答' });
     });
+    expect(screen.queryByTestId('typing-indicator')).toBeNull();
   });
 
   it('ローディング中に3つのドット（typing-dot-0/1/2）が表示されること（Issue #198）', async () => {

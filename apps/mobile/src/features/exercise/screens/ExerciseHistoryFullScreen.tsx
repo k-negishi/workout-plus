@@ -385,8 +385,8 @@ export function ExerciseHistoryFullScreen() {
             )}
             {/* 最高rep数: 全セット中の最大レップ数（単位なし） */}
             <StatCard label="最高rep数" value={`${stats.maxReps}`} />
-            {/* 総ワークアウト回数: この種目を実施したワークアウト数（単位なし） */}
-            <StatCard label="総ワークアウト回数" value={`${stats.totalSessions}`} />
+            {/* ワークアウト数: この種目を実施したワークアウト数（単位なし。旧「総ワークアウト回数」を短縮） */}
+            <StatCard label="ワークアウト数" value={`${stats.totalSessions}`} />
             {/* 総セット: 全ワークアウト合算のセット数（単位なし） */}
             <StatCard label="総セット" value={`${stats.totalSets}`} />
             {/* 総ボリューム: 全セット合算の重量×回数（単位 kg、3桁区切り） */}
@@ -545,9 +545,16 @@ export function ExerciseHistoryFullScreen() {
 /**
  * 統計サマリー個別カード。
  * Issue #195: 6項目・3列グリッド対応のため width を 31% に変更（gap=8 考慮）。
+ *   - 数値・ラベルを中央寄せ
+ *   - 値の文字数が増えると枠からはみ出すため、文字数に応じてフォントサイズを動的調整
  * Issue #188: 数値の視認性向上のため value フォントを 22px・label を 13px に拡大。
  */
 function StatCard({ label, value, unit }: { label: string; value: string; unit?: string }) {
+  // 値の文字数に応じてフォントサイズを動的調整（長い数値がカードからはみ出ないよう制御）
+  // 例: "9"(1) → 22px, "1,000"(5) → 18px, "10,000"(6) → 18px, "100,000"(7) → 15px
+  const valueFontSize =
+    value.length <= 4 ? 22 : value.length <= 6 ? 18 : value.length <= 8 ? 15 : 13;
+
   return (
     <View
       className="bg-white rounded-sm p-3"
@@ -556,13 +563,23 @@ function StatCard({ label, value, unit }: { label: string; value: string; unit?:
         borderColor: colors.border,
         // 3列グリッド: gap=8（2箇所）を考慮して 31% で3列ぴったり並ぶ
         width: '31%',
+        alignItems: 'center',
       }}
     >
-      {/* ラベル: 11px→13px に拡大して読みやすくする */}
-      <Text style={{ fontSize: 13, color: colors.textSecondary }}>{label}</Text>
+      {/* ラベル: 中央寄せ・長いラベルは自動縮小して1行に収める */}
+      <Text
+        style={{ fontSize: 13, color: colors.textSecondary, textAlign: 'center' }}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.7}
+      >
+        {label}
+      </Text>
       <View style={{ flexDirection: 'row', alignItems: 'flex-end', marginTop: 4 }}>
-        {/* 値: 18px（text-lg）→ 22px に拡大して一覧性を高める */}
-        <Text style={{ fontSize: 22, fontWeight: '700', color: colors.textPrimary }}>{value}</Text>
+        {/* 値: 文字数に応じてフォントサイズ動的調整 */}
+        <Text style={{ fontSize: valueFontSize, fontWeight: '700', color: colors.textPrimary }}>
+          {value}
+        </Text>
         {unit ? (
           <Text style={{ fontSize: 13, marginLeft: 2, color: colors.textSecondary }}>{unit}</Text>
         ) : null}
