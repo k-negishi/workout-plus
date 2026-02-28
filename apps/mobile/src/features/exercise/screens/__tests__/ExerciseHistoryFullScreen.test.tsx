@@ -35,6 +35,7 @@ jest.mock('@react-navigation/native', () => ({
 // gifted-charts は ESM のみ配布のため jest 環境でパースエラーになる
 jest.mock('react-native-gifted-charts', () => ({
   BarChart: 'BarChart',
+  LineChart: 'LineChart',
 }));
 
 // react-native-svg のモック
@@ -87,6 +88,7 @@ jest.mock('../../hooks/useExerciseHistory', () => ({
       totalSets: 50,
       maxEstimated1RM: 116,
     },
+    // Issue #195: weeklyData に maxEstimated1RM を含む
     weeklyData: [],
     prHistory: [],
     get allHistory() {
@@ -173,11 +175,17 @@ describe('ExerciseHistoryFullScreen', () => {
       expect(screen.getByText('50')).toBeTruthy();
     });
 
-    it('旧統計項目（最大ボリューム・平均重量・総ボリューム）は表示されない', () => {
+    it('旧統計項目（最大ボリューム・平均重量）は表示されない', () => {
       render(<ExerciseHistoryFullScreen />);
       expect(screen.queryByText('最大ボリューム')).toBeNull();
       expect(screen.queryByText('平均重量')).toBeNull();
-      expect(screen.queryByText('総ボリューム')).toBeNull();
+    });
+
+    it('Issue #195: 総ボリュームカードが値と単位「kg」付きで表示される', () => {
+      render(<ExerciseHistoryFullScreen />);
+      // stats.totalVolume = 30000
+      expect(screen.getByText('総ボリューム')).toBeTruthy();
+      expect(screen.getByText('30,000')).toBeTruthy();
     });
   });
 

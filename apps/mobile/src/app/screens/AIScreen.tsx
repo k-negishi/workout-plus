@@ -11,8 +11,8 @@
  *   - TypingIndicator（AI 応答待ち中のみ表示）
  *   - ChatInput（テキスト入力 + 送信ボタン、キーボード対応）
  */
-import React, { useCallback, useMemo, useRef } from 'react';
-import { FlatList, KeyboardAvoidingView, Platform, Text, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
+import { Animated, FlatList, KeyboardAvoidingView, Platform, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors } from '@/shared/constants/colors';
@@ -28,27 +28,94 @@ import {
   type QuickAction,
 } from '../../features/ai/types/index';
 
+/** 各ドットのアニメーション周期（ms） */
+const DOT_CYCLE_DURATION = 800;
+/** ドット間のオフセット（ms） */
+const DOT_STAGGER_OFFSET = 160;
+/** ドットの上昇・下降時間（ms） */
+const DOT_MOVE_DURATION = 300;
+/** ドットのバウンス移動量（上方向、px） */
+const DOT_BOUNCE_OFFSET = -6;
+/** ドットの個数 */
+const DOT_COUNT = 3;
+
 /**
- * AI 応答待ち中に表示するインジケーター
+ * ChatGPT 風の3ドットバウンスアニメーション
  *
- * シンプルな「考え中...」テキスト表示。
- * 将来的に Animated API でドットアニメーションに置き換え可能。
+ * 各ドットが stagger 付きで順番に上下する。
+ * Animated.loop + Animated.sequence で実装し、
+ * アンマウント時に stopAnimation() でリソースを解放する。
  */
 function TypingIndicator() {
+  // 各ドットの translateY 用 Animated.Value を作成
+  const dots = useRef(Array.from({ length: DOT_COUNT }, () => new Animated.Value(0))).current;
+
+  useEffect(() => {
+    // 各ドットに対してループアニメーションを構築
+    const animations = dots.map((val, i) => {
+      // アニメーション周期内の残余待機時間（全体周期を均等に保つため）
+      const tailDelay = DOT_CYCLE_DURATION - DOT_MOVE_DURATION * 2 - DOT_STAGGER_OFFSET * i;
+      return Animated.loop(
+        Animated.sequence([
+          // stagger オフセット: i番目のドットを遅らせて開始
+          Animated.delay(DOT_STAGGER_OFFSET * i),
+          // 上昇
+          Animated.timing(val, {
+            toValue: DOT_BOUNCE_OFFSET,
+            duration: DOT_MOVE_DURATION,
+            useNativeDriver: true,
+          }),
+          // 下降
+          Animated.timing(val, {
+            toValue: 0,
+            duration: DOT_MOVE_DURATION,
+            useNativeDriver: true,
+          }),
+          // 次のサイクルまで待機
+          Animated.delay(tailDelay > 0 ? tailDelay : 0),
+        ]),
+      );
+    });
+
+    // 全ドットのアニメーションを並行開始
+    animations.forEach((anim) => anim.start());
+
+    // アンマウント時にアニメーションを停止してメモリリークを防ぐ
+    return () => {
+      animations.forEach((anim) => anim.stop());
+    };
+  }, [dots]);
+
   return (
     <View
+      testID="typing-indicator"
       style={{
         alignSelf: 'flex-start',
         backgroundColor: colors.neutralBg,
         borderRadius: 12,
         borderTopLeftRadius: 4,
-        paddingVertical: 10,
+        paddingVertical: 12,
         paddingHorizontal: 16,
         marginHorizontal: 16,
         marginVertical: 4,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 4,
       }}
     >
-      <Text style={{ color: colors.textSecondary, fontSize: 15 }}>考え中...</Text>
+      {dots.map((val, i) => (
+        <Animated.View
+          key={i}
+          testID={`typing-dot-${i}`}
+          style={{
+            width: 8,
+            height: 8,
+            borderRadius: 4,
+            backgroundColor: colors.textSecondary,
+            transform: [{ translateY: val }],
+          }}
+        />
+      ))}
     </View>
   );
 }

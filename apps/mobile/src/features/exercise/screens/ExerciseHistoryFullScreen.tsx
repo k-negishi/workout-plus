@@ -27,7 +27,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { BarChart } from 'react-native-gifted-charts';
+import { LineChart } from 'react-native-gifted-charts';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Polyline, Svg } from 'react-native-svg';
 
@@ -217,11 +217,10 @@ export function ExerciseHistoryFullScreen() {
   const [editMuscleGroup, setEditMuscleGroup] = useState<MuscleGroup>('chest');
   const [editEquipment, setEditEquipment] = useState<Equipment>('barbell');
 
-  // チャートデータ変換
+  // Issue #195: 直近3ヶ月の最大RM推移グラフ用データ
   const chartData = weeklyData.map((w) => ({
-    value: w.averageWeight,
+    value: w.maxEstimated1RM,
     label: w.weekLabel,
-    frontColor: colors.primary,
   }));
 
   /**
@@ -373,8 +372,8 @@ export function ExerciseHistoryFullScreen() {
 
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="px-4 pt-5">
-          {/* === T058: 統計サマリー (5項目・2列グリッド) ===
-              Issue #188: 項目を5つに絞り、視認性向上のため2列表示に変更 */}
+          {/* === T058: 統計サマリー（6項目・3列グリッド）===
+              Issue #195: 3列表示に変更し、総ボリュームを6番目の項目として追加 */}
           <View className="flex-row flex-wrap" style={{ gap: 8 }}>
             {/* 最高重量: 全セット中の最大重量 */}
             <StatCard label="最高重量" value={`${stats.maxWeight}`} unit="kg" />
@@ -390,24 +389,27 @@ export function ExerciseHistoryFullScreen() {
             <StatCard label="総ワークアウト回数" value={`${stats.totalSessions}`} />
             {/* 総セット: 全ワークアウト合算のセット数（単位なし） */}
             <StatCard label="総セット" value={`${stats.totalSets}`} />
+            {/* 総ボリューム: 全セット合算の重量×回数（単位 kg、3桁区切り） */}
+            <StatCard label="総ボリューム" value={stats.totalVolume.toLocaleString()} unit="kg" />
           </View>
 
-          {/* === T059: 重量推移チャート === */}
+          {/* === T059: 直近3ヶ月の最大RM推移チャート（LineChart）===
+              Issue #195: BarChart（週平均重量）→ LineChart（週最大推定1RM）に変更 */}
           {chartData.length > 0 ? (
             <View className="mt-6">
               <Text className="text-sm font-bold text-text-primary mb-4">
-                過去3ヶ月の重量推移 (週平均)
+                直近3ヶ月の最大RM推移
               </Text>
               <View
                 className="bg-white rounded-lg p-4"
                 style={{ borderWidth: 1, borderColor: colors.border }}
               >
-                <BarChart
+                <LineChart
                   data={chartData}
-                  barWidth={20}
-                  spacing={12}
-                  roundedTop
-                  roundedBottom
+                  color={colors.primary}
+                  thickness={2}
+                  dataPointsColor={colors.primary}
+                  dataPointsRadius={4}
                   xAxisThickness={1}
                   yAxisThickness={1}
                   xAxisColor={colors.border}
@@ -542,8 +544,8 @@ export function ExerciseHistoryFullScreen() {
 
 /**
  * 統計サマリー個別カード。
- * Issue #188: 5項目・2列グリッド対応のため width を 48% に拡大し、
- * 数値の視認性向上のため value フォントを 22px・label を 13px に拡大。
+ * Issue #195: 6項目・3列グリッド対応のため width を 31% に変更（gap=8 考慮）。
+ * Issue #188: 数値の視認性向上のため value フォントを 22px・label を 13px に拡大。
  */
 function StatCard({ label, value, unit }: { label: string; value: string; unit?: string }) {
   return (
@@ -552,8 +554,8 @@ function StatCard({ label, value, unit }: { label: string; value: string; unit?:
       style={{
         borderWidth: 1,
         borderColor: colors.border,
-        // 2列グリッド: gap=8 を考慮して 48% で左右ぴったり並ぶ
-        width: '48%',
+        // 3列グリッド: gap=8（2箇所）を考慮して 31% で3列ぴったり並ぶ
+        width: '31%',
       }}
     >
       {/* ラベル: 11px→13px に拡大して読みやすくする */}

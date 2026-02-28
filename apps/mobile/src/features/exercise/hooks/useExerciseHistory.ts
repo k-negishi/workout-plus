@@ -24,11 +24,15 @@ export type ExerciseStats = {
   maxEstimated1RM: number;
 };
 
-/** 週ごとの平均重量データ（チャート用） */
+/** 週ごとの集計データ（チャート用）
+ * Issue #195: maxEstimated1RM を追加（直近3ヶ月の最大RM推移グラフ用）
+ */
 export type WeeklyData = {
   weekLabel: string; // 'MM/DD'形式
   weekStart: Date;
   averageWeight: number;
+  /** 当週のセット中の最高推定1RM（Epley式） */
+  maxEstimated1RM: number;
 };
 
 /** PR履歴の1項目 */
@@ -243,6 +247,55 @@ export function buildHistory(
     .sort((a, b) => b.completedAt - a.completedAt);
 }
 
+/**
+ * セットデータから週ごとの集計データ（WeeklyData[]）を生成する純粋関数。
+ * Issue #195: 直近3ヶ月の最大RM推移グラフ用に maxEstimated1RM も算出する。
+ * @param sets - 全セットデータ
+ * @param cutoffAt - この日時（unix ms）より古いセットは除外する
+ */
+export function buildWeeklyData(sets: SetWithWorkout[], cutoffAt: number): WeeklyData[] {
+  const weekMap = new Map<
+    string,
+    { totalWeight: number; count: number; weekStart: Date; maxEstimated1RM: number }
+  >();
+
+  for (const set of sets) {
+    if (set.completed_at < cutoffAt || set.weight == null || set.weight <= 0) continue;
+
+    const weekStart = startOfWeek(new Date(set.completed_at), { weekStartsOn: 1 });
+    const key = weekStart.toISOString();
+
+    // Epley式で当セットの推定1RMを計算（reps が null / 0 の場合は 0）
+    let estimated1RM = 0;
+    if (set.reps != null && set.reps > 0) {
+      estimated1RM = set.reps === 1 ? set.weight : Math.round(set.weight * (1 + set.reps / 30));
+    }
+
+    const existing = weekMap.get(key);
+    if (existing) {
+      existing.totalWeight += set.weight;
+      existing.count++;
+      if (estimated1RM > existing.maxEstimated1RM) existing.maxEstimated1RM = estimated1RM;
+    } else {
+      weekMap.set(key, {
+        totalWeight: set.weight,
+        count: 1,
+        weekStart,
+        maxEstimated1RM: estimated1RM,
+      });
+    }
+  }
+
+  return Array.from(weekMap.values())
+    .sort((a, b) => a.weekStart.getTime() - b.weekStart.getTime())
+    .map((w) => ({
+      weekLabel: format(w.weekStart, 'M/d'),
+      weekStart: w.weekStart,
+      averageWeight: Math.round(w.totalWeight / w.count),
+      maxEstimated1RM: w.maxEstimated1RM,
+    }));
+}
+
 /* istanbul ignore next -- React hook本体はrenderHookが必要。純粋関数（calculateStats/buildHistory）はカバー済み */
 export function useExerciseHistory(exerciseId: string) {
   const [stats, setStats] = useState<ExerciseStats>({
@@ -305,33 +358,9 @@ export function useExerciseHistory(exerciseId: string) {
       const prWorkoutIds = new Set(prs.map((pr) => pr.workout_id));
       setAllHistory(buildHistory(sets, prWorkoutIds));
 
-      // === 週ごとの平均重量（過去3ヶ月） ===
+      // === 週ごとの集計（過去3ヶ月）: Issue #195 で buildWeeklyData に委譲 ===
       const threeMonthsAgo = subMonths(new Date(), 3).getTime();
-      const weekMap = new Map<string, { totalWeight: number; count: number; weekStart: Date }>();
-
-      for (const set of sets) {
-        if (set.completed_at >= threeMonthsAgo && set.weight != null && set.weight > 0) {
-          const weekStart = startOfWeek(new Date(set.completed_at), { weekStartsOn: 1 });
-          const key = weekStart.toISOString();
-          const existing = weekMap.get(key);
-          if (existing) {
-            existing.totalWeight += set.weight;
-            existing.count++;
-          } else {
-            weekMap.set(key, { totalWeight: set.weight, count: 1, weekStart });
-          }
-        }
-      }
-
-      // 週をソートしてチャートデータに変換
-      const weekly: WeeklyData[] = Array.from(weekMap.values())
-        .sort((a, b) => a.weekStart.getTime() - b.weekStart.getTime())
-        .map((w) => ({
-          weekLabel: format(w.weekStart, 'M/d'),
-          weekStart: w.weekStart,
-          averageWeight: Math.round(w.totalWeight / w.count),
-        }));
-      setWeeklyData(weekly);
+      setWeeklyData(buildWeeklyData(sets, threeMonthsAgo));
     } catch (error) {
       console.error('種目履歴の取得に失敗:', error);
     } finally {

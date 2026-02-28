@@ -155,4 +155,55 @@ describe('AIScreen', () => {
       );
     });
   });
+
+  it('ローディング中に typing-indicator が表示されること（Issue #198）', async () => {
+    // chat が解決されないまま pending 状態にする
+    let resolveChat!: (value: { content: string }) => void;
+    mockChat.mockReturnValueOnce(
+      new Promise<{ content: string }>((resolve) => {
+        resolveChat = resolve;
+      }),
+    );
+    render(<AIScreen />);
+
+    // メッセージ送信開始
+    const input = screen.getByTestId('chat-input-text');
+    fireEvent.changeText(input, 'テスト');
+    fireEvent.press(screen.getByTestId('chat-send-button'));
+
+    // isLoading=true の間、typing-indicator が表示される
+    await waitFor(() => {
+      expect(screen.getByTestId('typing-indicator')).toBeTruthy();
+    });
+
+    // AI応答後は非表示になる
+    resolveChat({ content: 'テスト応答' });
+    await waitFor(() => {
+      expect(screen.queryByTestId('typing-indicator')).toBeNull();
+    });
+  });
+
+  it('ローディング中に3つのドット（typing-dot-0/1/2）が表示されること（Issue #198）', async () => {
+    let resolveChat!: (value: { content: string }) => void;
+    mockChat.mockReturnValueOnce(
+      new Promise<{ content: string }>((resolve) => {
+        resolveChat = resolve;
+      }),
+    );
+    render(<AIScreen />);
+
+    const input = screen.getByTestId('chat-input-text');
+    fireEvent.changeText(input, 'テスト');
+    fireEvent.press(screen.getByTestId('chat-send-button'));
+
+    await waitFor(() => {
+      // 3つのドットが存在すること
+      expect(screen.getByTestId('typing-dot-0')).toBeTruthy();
+      expect(screen.getByTestId('typing-dot-1')).toBeTruthy();
+      expect(screen.getByTestId('typing-dot-2')).toBeTruthy();
+    });
+
+    // クリーンアップ
+    resolveChat({ content: '応答' });
+  });
 });

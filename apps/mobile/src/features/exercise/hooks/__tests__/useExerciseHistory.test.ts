@@ -7,6 +7,7 @@
  */
 import {
   buildHistory,
+  buildWeeklyData,
   calculateStats,
   type PRForStats,
   type SetWithWorkout,
@@ -377,6 +378,139 @@ describe('useExerciseHistory ロジック', () => {
       // Epley式: reps=1 のとき weight * (1 + 1/30) ≈ 124 だが、
       // 仕様では reps=1 のときは weight をそのまま返す
       expect(stats.maxEstimated1RM).toBe(120);
+    });
+  });
+
+  describe('Issue #195: buildWeeklyData', () => {
+    // 週の基準タイムスタンプ（月曜日始まり）
+    // 2026-02-16（月）の 00:00:00 UTC をベースに使う
+    const mondayTs = new Date('2026-02-16T00:00:00.000Z').getTime();
+    // cutoff を1ヶ月前に設定（全データが含まれるようにする）
+    const cutoffAt = new Date('2026-01-01T00:00:00.000Z').getTime();
+
+    it('週ごとの averageWeight を正しく算出する', () => {
+      const sets: SetWithWorkout[] = [
+        {
+          weight: 80,
+          reps: 10,
+          set_number: 1,
+          workout_id: 'w1',
+          completed_at: mondayTs + 3600_000, // 月曜
+          workout_exercise_id: 'we1',
+        },
+        {
+          weight: 100,
+          reps: 5,
+          set_number: 2,
+          workout_id: 'w1',
+          completed_at: mondayTs + 3600_000,
+          workout_exercise_id: 'we1',
+        },
+      ];
+      const result = buildWeeklyData(sets, cutoffAt);
+      expect(result).toHaveLength(1);
+      // (80 + 100) / 2 = 90
+      expect(result[0]!.averageWeight).toBe(90);
+    });
+
+    it('週ごとの maxEstimated1RM を正しく算出する（Epley式）', () => {
+      const sets: SetWithWorkout[] = [
+        {
+          weight: 80,
+          reps: 10,
+          set_number: 1,
+          workout_id: 'w1',
+          completed_at: mondayTs + 3600_000,
+          workout_exercise_id: 'we1',
+        },
+        {
+          weight: 100,
+          reps: 5,
+          set_number: 2,
+          workout_id: 'w1',
+          completed_at: mondayTs + 3600_000,
+          workout_exercise_id: 'we1',
+        },
+      ];
+      const result = buildWeeklyData(sets, cutoffAt);
+      expect(result).toHaveLength(1);
+      // 80 * (1 + 10/30) ≈ 106.67 → 107
+      // 100 * (1 + 5/30) ≈ 116.67 → 117
+      // max は 117
+      expect(result[0]!.maxEstimated1RM).toBe(117);
+    });
+
+    it('cutoffAt より古いセットは除外する', () => {
+      const sets: SetWithWorkout[] = [
+        {
+          weight: 100,
+          reps: 5,
+          set_number: 1,
+          workout_id: 'w1',
+          // cutoffAt より古い
+          completed_at: cutoffAt - 1,
+          workout_exercise_id: 'we1',
+        },
+        {
+          weight: 80,
+          reps: 10,
+          set_number: 1,
+          workout_id: 'w2',
+          // cutoffAt より新しい
+          completed_at: mondayTs + 3600_000,
+          workout_exercise_id: 'we2',
+        },
+      ];
+      const result = buildWeeklyData(sets, cutoffAt);
+      expect(result).toHaveLength(1);
+      expect(result[0]!.averageWeight).toBe(80);
+    });
+
+    it('weight が null のセットは除外する', () => {
+      const sets: SetWithWorkout[] = [
+        {
+          weight: null,
+          reps: 10,
+          set_number: 1,
+          workout_id: 'w1',
+          completed_at: mondayTs + 3600_000,
+          workout_exercise_id: 'we1',
+        },
+      ];
+      const result = buildWeeklyData(sets, cutoffAt);
+      expect(result).toHaveLength(0);
+    });
+
+    it('複数週のデータが週の開始日昇順で返される', () => {
+      const week2Ts = mondayTs + 7 * 24 * 3600_000; // 翌週月曜日
+      const sets: SetWithWorkout[] = [
+        {
+          weight: 90,
+          reps: 8,
+          set_number: 1,
+          workout_id: 'w2',
+          completed_at: week2Ts + 3600_000, // 翌週
+          workout_exercise_id: 'we2',
+        },
+        {
+          weight: 80,
+          reps: 10,
+          set_number: 1,
+          workout_id: 'w1',
+          completed_at: mondayTs + 3600_000, // 今週
+          workout_exercise_id: 'we1',
+        },
+      ];
+      const result = buildWeeklyData(sets, cutoffAt);
+      expect(result).toHaveLength(2);
+      // 昇順（古い週が先）
+      expect(result[0]!.averageWeight).toBe(80);
+      expect(result[1]!.averageWeight).toBe(90);
+    });
+
+    it('データが空の場合は空配列を返す', () => {
+      const result = buildWeeklyData([], cutoffAt);
+      expect(result).toHaveLength(0);
     });
   });
 
