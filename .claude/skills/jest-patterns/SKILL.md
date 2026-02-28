@@ -105,3 +105,51 @@ cd apps/mobile && npx jest --testPathPattern='calendar'
 
 特に `--no-coverage` 等のハイフン付きオプションはパースで壊れやすい。
 テストが見つからないエラーが出たら、まず `npx jest` 直接実行を試す。
+
+---
+
+## 5. `replace_all: true` はテストの describe ブロックを破壊する危険がある
+
+テストファイルで `replace_all: true` を使うと、同一パターンが
+describe ブロック内外の複数箇所にあった場合にブロック構造が壊れることがある。
+ESLint auto-fix が孤立コードを自動削除し、テストブロックごと消滅するケースがある。
+
+**発生例**:
+
+```typescript
+// 「    mockFindRecording.mockResolvedValue(null);」を replace_all: true で全置換
+// → describe('Y') ブロック内でもマッチしてヘッダー行が消える
+// → linter が「孤立コード」として削除 → テストブロックごと消滅
+```
+
+**対処**:
+
+- `replace_all: true` は使わず、各 describe 内の出現を個別に Edit する
+- どうしても使う場合は事前に Grep で全マッチ箇所と周辺コンテキストを確認してから実行
+- 実行後は必ず `git diff` でブロック構造が保たれているか確認する
+
+---
+
+## 6. 事前存在するテスト失敗の検証: `git stash` の罠
+
+自分の変更が原因のテスト失敗かを確認するため `git stash` を使うと、
+リポジトリの**全ての**未コミット変更がスタッシュされる（他人の変更も含む）。
+結果として stash pop 後の状態が意図と異なり混乱しやすい。
+
+```bash
+# NG: カレントディレクトリ全体をスタッシュ → 他の未コミット変更も消える
+git stash
+
+# OK: 自分のファイルだけスタッシュして比較
+git stash -- apps/mobile/src/my-file.ts
+
+# OK: そもそも stash せず HEAD 版を直接確認
+git show HEAD:apps/mobile/src/my-file.ts | grep <pattern>
+
+# OK: 問題のテストスイートだけ直接実行して確認
+cd apps/mobile && npx jest src/features/calendar --no-coverage 2>&1 | grep "Tests:"
+```
+
+事前存在の失敗か確認するだけなら `git stash` より `git show HEAD:<file>` か
+特定テストの直接実行が確実で副作用が少ない。
+

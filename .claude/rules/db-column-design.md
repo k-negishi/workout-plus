@@ -79,9 +79,11 @@ workout_exercises.workout_id REFERENCES workouts(id) ON DELETE CASCADE
 workout_exercises.exercise_id REFERENCES exercises(id)
 -- → 使用中の種目を削除しようとすると外部キーエラーになる（意図的）
 
--- 達成記録を保持したい場合: CASCADE なし（意図的）
-personal_records.workout_id REFERENCES workouts(id)
--- → ワークアウト削除後もPR達成記録を残す設計
+-- 子レコードを保持しつつ親を削除したい場合: CASCADE なし + アプリ層事前処理（Issue #194）
+personal_records.workout_id TEXT NOT NULL REFERENCES workouts(id)
+-- → NOT NULL + CASCADE なし = 親削除前にアプリ層で子を処理する必要がある
+-- → 手順: 影響する子 ID を収集 → 子を削除 → 親を削除 → 子を再計算
+-- → 詳細パターン: .claude/skills/sqlite-patterns/SKILL.md
 ```
 
 ## スキーマドキュメント
