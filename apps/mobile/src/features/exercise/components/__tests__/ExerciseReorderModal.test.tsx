@@ -203,7 +203,7 @@ describe('ExerciseReorderModal', () => {
     expect(mockOnSave).not.toHaveBeenCalled();
   });
 
-  it('「保存する」タップで onSave に現在の順序が渡される', () => {
+  it('「保存」タップで onSave に現在の順序が渡される', () => {
     const exercises = makeExercises();
     render(
       <ExerciseReorderModal
@@ -214,7 +214,7 @@ describe('ExerciseReorderModal', () => {
       />,
     );
 
-    fireEvent.press(screen.getByText('保存する'));
+    fireEvent.press(screen.getByText('保存'));
 
     expect(mockOnSave).toHaveBeenCalledTimes(1);
     // 変更なしで保存した場合は初期の順序（exercises と同じ内容）が渡される
@@ -237,9 +237,9 @@ describe('ExerciseReorderModal', () => {
     expect(screen.queryByText('スクワット')).toBeNull();
   });
 
-  it('フッターが testID "reorder-footer" で存在し、「キャンセル」と「保存する」が両方表示される', () => {
-    // Issue #189: 保存ボタンが隠れて押せないバグの回帰防止
-    // フッターが画面内に収まっていることをテストで保証する
+  it('ヘッダーに「キャンセル」と「保存」が両方表示される（iOS ヘッダーボタン方式）', () => {
+    // フッター廃止・ヘッダーボタン方式の回帰防止テスト
+    // キャンセルと保存がヘッダー内に常に表示されることを保証する
     render(
       <ExerciseReorderModal
         visible={true}
@@ -249,19 +249,12 @@ describe('ExerciseReorderModal', () => {
       />,
     );
 
-    // フッターコンテナが存在する
-    expect(screen.getByTestId('reorder-footer')).toBeTruthy();
-
-    // フッター内にキャンセルと保存ボタンが両方存在する
-    const footer = screen.getByTestId('reorder-footer');
-    expect(footer).toBeTruthy();
     expect(screen.getByText('キャンセル')).toBeTruthy();
-    expect(screen.getByText('保存する')).toBeTruthy();
+    expect(screen.getByText('保存')).toBeTruthy();
+    expect(screen.getByText('並び替え')).toBeTruthy();
   });
 
-  it('フッターに SafeArea の paddingBottom が反映される（insets.bottom=34 のとき padding が確保される）', () => {
-    // insets.bottom=34 でモックしているため、フッターの paddingBottom は 16 + 34 = 50 になることを期待
-    // ただしスタイルの実装詳細ではなく「フッターが存在し操作可能か」を検証する
+  it('「保存」ボタンが押せる状態である（ヘッダーボタンの操作可能性確認）', () => {
     render(
       <ExerciseReorderModal
         visible={true}
@@ -271,9 +264,7 @@ describe('ExerciseReorderModal', () => {
       />,
     );
 
-    // 保存ボタンとキャンセルボタンが押せる状態であることを確認
-    // （onPress が呼ばれれば表示・操作に問題なし）
-    fireEvent.press(screen.getByText('保存する'));
+    fireEvent.press(screen.getByText('保存'));
     expect(mockOnSave).toHaveBeenCalledTimes(1);
   });
 });
