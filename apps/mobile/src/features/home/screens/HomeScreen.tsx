@@ -26,7 +26,6 @@ import type { ExerciseRow, SetRow, WorkoutExerciseRow, WorkoutRow } from '@/data
 import { colors } from '@/shared/constants/colors';
 import type { HomeStackParamList, MainTabParamList, TimerStatus } from '@/types';
 
-import { OnTrackBadge } from '../components/OnTrackBadge';
 import { QuickStatsWidget } from '../components/QuickStatsWidget';
 import { RecentWorkoutCard } from '../components/RecentWorkoutCard';
 import { StreakCard } from '../components/StreakCard';
@@ -181,9 +180,10 @@ export function HomeScreen() {
         try {
           const db = await getDatabase();
 
-          // 記録中セッション・当日完了チェック（ボタン表示制御用）
+          // 本日の記録中セッション・当日完了チェック（ボタン表示制御用）
+          // findTodayRecording を使うことで前日以前の recording を除外する
           const [recording, todayCompleted] = await Promise.all([
-            WorkoutRepository.findRecording(),
+            WorkoutRepository.findTodayRecording(),
             WorkoutRepository.findTodayCompleted(),
           ]);
           setIsRecording(recording !== null);
@@ -365,12 +365,9 @@ export function HomeScreen() {
               marginBottom: 16,
             }}
           >
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <Text style={{ fontSize: 22, fontWeight: '700', color: colors.primary }}>
-                Workout Plus
-              </Text>
-              <OnTrackBadge weeklyWorkouts={weeklyWorkouts} />
-            </View>
+            <Text style={{ fontSize: 22, fontWeight: '700', color: colors.primary }}>
+              Workout Plus
+            </Text>
             {/* 設定ボタン: タップ時アクションは将来対応 */}
             <TouchableOpacity
               testID="settings-button"
