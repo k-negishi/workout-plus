@@ -172,6 +172,29 @@ export const PersonalRecordRepository = {
     return rowToPR(current);
   },
 
+  /**
+   * 指定ワークアウトを参照しているPRの種目IDを取得する
+   * ワークアウト削除前にPR再計算が必要な種目を特定するために使用する
+   */
+  async findExerciseIdsByWorkoutId(workoutId: string): Promise<string[]> {
+    const db = await getDatabase();
+    const rows = await db.getAllAsync<{ exercise_id: string }>(
+      'SELECT DISTINCT exercise_id FROM personal_records WHERE workout_id = ?',
+      [workoutId],
+    );
+    return rows.map((r) => r.exercise_id);
+  },
+
+  /**
+   * 指定ワークアウトを参照しているPRを全件削除する
+   * ワークアウト削除時の外部キー制約（personal_records.workout_id）を解除するために
+   * WorkoutRepository.delete の前に呼び出す
+   */
+  async deleteByWorkoutId(workoutId: string): Promise<void> {
+    const db = await getDatabase();
+    await db.runAsync('DELETE FROM personal_records WHERE workout_id = ?', [workoutId]);
+  },
+
   /** 種目のPR全件を取得する */
   async findByExerciseId(exerciseId: string): Promise<PersonalRecord[]> {
     const db = await getDatabase();

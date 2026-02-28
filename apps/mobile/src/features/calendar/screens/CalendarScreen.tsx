@@ -15,6 +15,7 @@ import { ActivityIndicator, Alert, ScrollView, Text, TouchableOpacity, View } fr
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getDatabase } from '@/database/client';
+import { PersonalRecordRepository } from '@/database/repositories/pr';
 import { WorkoutRepository } from '@/database/repositories/workout';
 import type { WorkoutRow } from '@/database/types';
 import type { CalendarStackParamList } from '@/types';
@@ -120,7 +121,23 @@ export function CalendarScreen() {
           style: 'destructive',
           onPress: async () => {
             try {
+              // PRが参照しているワークアウトを削除する前に、影響する種目IDを収集する
+              const affectedExerciseIds =
+                await PersonalRecordRepository.findExerciseIdsByWorkoutId(workoutId);
+
+              // 外部キー制約（personal_records.workout_id）を解除するため
+              // ワークアウト削除より先にPRを削除する
+              await PersonalRecordRepository.deleteByWorkoutId(workoutId);
+
+              // ワークアウト本体を削除（CASCADE で workout_exercises, sets も削除）
               await WorkoutRepository.delete(workoutId);
+
+              // 削除されたワークアウトのPRを残りのワークアウトから再計算する
+              // （次点のPRがあれば自動的に2番目の記録が新しいPRになる）
+              for (const exerciseId of affectedExerciseIds) {
+                await PersonalRecordRepository.recalculateForExercise(exerciseId);
+              }
+
               setRefreshKey((prev) => prev + 1);
               void fetchTrainingDates();
             } catch (error) {

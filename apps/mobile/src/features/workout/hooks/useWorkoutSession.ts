@@ -330,8 +330,8 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
 
         // targetDate指定時は別日の recording を復元しない（新規ワークアウトを常に作成する）
         if (!targetDate) {
-          // 既存の recording セッションがあるか確認
-          const existing = await WorkoutRepository.findRecording();
+          // 本日の recording セッションがあるか確認（前日以前は復元しない）
+          const existing = await WorkoutRepository.findTodayRecording();
           if (existing) {
             // ヘルパーに委譲して complexity を抑制する
             await restoreExistingRecordingToStore(existing, store);

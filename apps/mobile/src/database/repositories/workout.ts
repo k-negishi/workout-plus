@@ -78,6 +78,24 @@ export const WorkoutRepository = {
     );
   },
 
+  /**
+   * 本日作成された進行中（recording）のワークアウトを1件取得する。
+   *
+   * ホーム画面の「記録中のワークアウト」バナー表示に使用する。
+   * 前日以前に作成された recording は除外するため、
+   * created_at が本日（端末ローカル時刻）の範囲内であることを条件に加える。
+   */
+  async findTodayRecording(): Promise<WorkoutRow | null> {
+    const db = await getDatabase();
+    const today = new Date();
+    const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+    const dayEnd = dayStart + 86400000; // 翌日 0:00
+    return db.getFirstAsync<WorkoutRow>(
+      "SELECT * FROM workouts WHERE status = 'recording' AND created_at >= ? AND created_at < ? LIMIT 1",
+      [dayStart, dayEnd],
+    );
+  },
+
   /** 完了済みワークアウトを全件取得する（created_at降順） */
   async findAllCompleted(): Promise<WorkoutRow[]> {
     const db = await getDatabase();

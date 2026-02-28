@@ -21,6 +21,73 @@ function createMockDb() {
   };
 }
 
+describe('WorkoutRepository.findTodayRecording', () => {
+  it('当日の recording ワークアウトを返す', async () => {
+    const mockDb = createMockDb();
+    mockGetDatabase.mockResolvedValue(mockDb as never);
+
+    // 当日の created_at タイムスタンプ
+    const today = new Date();
+    const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+    const now = dayStart + 3600000;
+
+    const mockRow = {
+      id: 'workout-recording-today',
+      status: 'recording',
+      created_at: now,
+      started_at: null,
+      completed_at: null,
+      timer_status: 'not_started',
+      elapsed_seconds: 0,
+      timer_started_at: null,
+      memo: null,
+    };
+
+    mockDb.getFirstAsync.mockResolvedValue(mockRow);
+
+    const result = await WorkoutRepository.findTodayRecording();
+
+    expect(result).toEqual(mockRow);
+    // created_at の当日範囲でフィルタされていることを検証
+    expect(mockDb.getFirstAsync).toHaveBeenCalledWith(
+      expect.stringContaining("status = 'recording'"),
+      expect.arrayContaining([expect.any(Number), expect.any(Number)]),
+    );
+  });
+
+  it('当日の recording ワークアウトがない場合は null を返す', async () => {
+    const mockDb = createMockDb();
+    mockGetDatabase.mockResolvedValue(mockDb as never);
+
+    mockDb.getFirstAsync.mockResolvedValue(null);
+
+    const result = await WorkoutRepository.findTodayRecording();
+
+    expect(result).toBeNull();
+  });
+
+  it('前日の recording ワークアウトは取得しない（created_at 範囲外は除外される）', async () => {
+    const mockDb = createMockDb();
+    mockGetDatabase.mockResolvedValue(mockDb as never);
+
+    // 前日のタイムスタンプ（範囲外）は取得されないため null を返す
+    mockDb.getFirstAsync.mockResolvedValue(null);
+
+    const result = await WorkoutRepository.findTodayRecording();
+
+    // created_at に dayStart と dayEnd の範囲が渡されていることを検証
+    expect(mockDb.getFirstAsync).toHaveBeenCalledWith(
+      expect.stringContaining('created_at >= ?'),
+      expect.arrayContaining([expect.any(Number), expect.any(Number)]),
+    );
+    expect(result).toBeNull();
+  });
+
+  it('findTodayRecording が関数として存在する', () => {
+    expect(typeof WorkoutRepository.findTodayRecording).toBe('function');
+  });
+});
+
 describe('WorkoutRepository.findTodayCompleted', () => {
   it('当日の completed ワークアウトを返す', async () => {
     const mockDb = createMockDb();

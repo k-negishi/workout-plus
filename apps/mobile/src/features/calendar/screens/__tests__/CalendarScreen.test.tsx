@@ -81,6 +81,18 @@ jest.mock('@/database/repositories/workout', () => ({
   },
 }));
 
+// PersonalRecordRepository のモック: PR削除・再計算を差し替え可能にする
+const mockPRFindExerciseIdsByWorkoutId = jest.fn().mockResolvedValue([]);
+const mockPRDeleteByWorkoutId = jest.fn().mockResolvedValue(undefined);
+const mockPRRecalculateForExercise = jest.fn().mockResolvedValue(undefined);
+jest.mock('@/database/repositories/pr', () => ({
+  PersonalRecordRepository: {
+    findExerciseIdsByWorkoutId: (...args: unknown[]) => mockPRFindExerciseIdsByWorkoutId(...args),
+    deleteByWorkoutId: (...args: unknown[]) => mockPRDeleteByWorkoutId(...args),
+    recalculateForExercise: (...args: unknown[]) => mockPRRecalculateForExercise(...args),
+  },
+}));
+
 // Alert.alert のスパイ: 削除確認ダイアログは Alert.alert（ネイティブ）で実装している
 // jest.spyOn で呼び出しを検証し、ボタン onPress を手動実行して削除フローをシミュレートする
 import { useRoute } from '@react-navigation/native';
@@ -104,6 +116,9 @@ describe('CalendarScreen', () => {
     mockGetAllAsync.mockResolvedValue([]);
     mockWorkoutRepositoryDelete.mockResolvedValue(undefined);
     mockWorkoutRepositoryFindCompletedByDate.mockResolvedValue(null);
+    mockPRFindExerciseIdsByWorkoutId.mockResolvedValue([]);
+    mockPRDeleteByWorkoutId.mockResolvedValue(undefined);
+    mockPRRecalculateForExercise.mockResolvedValue(undefined);
     // Alert.alert をスパイ化してネイティブ UI をテスト可能にする
     jest.spyOn(Alert, 'alert').mockImplementation(() => {});
   });
@@ -297,6 +312,64 @@ describe('CalendarScreen', () => {
       await waitFor(() => {
         expect(mockGetAllAsync).toHaveBeenCalledTimes(2);
       });
+    });
+
+    it('削除確定時にPRを持つ種目のrecalculateが実行される順序: deleteByWorkoutId → WorkoutRepository.delete → recalculateForExercise', async () => {
+      (useRoute as jest.Mock).mockReturnValue({ params: undefined });
+
+      // このワークアウトに2種目のPRが紐づいている状態をシミュレートする
+      mockPRFindExerciseIdsByWorkoutId.mockResolvedValue(['exercise-1', 'exercise-2']);
+
+      render(<CalendarScreen />);
+      await simulateWorkoutFound('workout-pr-test');
+
+      fireEvent.press(screen.getByTestId('delete-workout-button'));
+
+      const buttons = (Alert.alert as jest.Mock).mock.calls[0][2] as Array<{
+        text: string;
+        style: string;
+        onPress?: () => Promise<void>;
+      }>;
+      const deleteButton = buttons.find((b) => b.style === 'destructive');
+      await act(async () => {
+        await deleteButton?.onPress?.();
+      });
+
+      // 影響種目IDの収集
+      expect(mockPRFindExerciseIdsByWorkoutId).toHaveBeenCalledWith('workout-pr-test');
+      // FK制約解除のためPR削除がワークアウト削除より先に実行されること
+      expect(mockPRDeleteByWorkoutId).toHaveBeenCalledWith('workout-pr-test');
+      expect(mockWorkoutRepositoryDelete).toHaveBeenCalledWith('workout-pr-test');
+      // 影響種目ごとにPR再計算が実行されること
+      expect(mockPRRecalculateForExercise).toHaveBeenCalledWith('exercise-1');
+      expect(mockPRRecalculateForExercise).toHaveBeenCalledWith('exercise-2');
+    });
+
+    it('PRを持たないワークアウトの削除でもrecalculateは呼ばれない', async () => {
+      (useRoute as jest.Mock).mockReturnValue({ params: undefined });
+
+      // PRが存在しない（空配列）
+      mockPRFindExerciseIdsByWorkoutId.mockResolvedValue([]);
+
+      render(<CalendarScreen />);
+      await simulateWorkoutFound('workout-no-pr-test');
+
+      fireEvent.press(screen.getByTestId('delete-workout-button'));
+
+      const buttons = (Alert.alert as jest.Mock).mock.calls[0][2] as Array<{
+        text: string;
+        style: string;
+        onPress?: () => Promise<void>;
+      }>;
+      const deleteButton = buttons.find((b) => b.style === 'destructive');
+      await act(async () => {
+        await deleteButton?.onPress?.();
+      });
+
+      // PRがない場合はrecalculateが呼ばれないこと
+      expect(mockPRRecalculateForExercise).not.toHaveBeenCalled();
+      // ワークアウト自体は削除されること
+      expect(mockWorkoutRepositoryDelete).toHaveBeenCalledWith('workout-no-pr-test');
     });
 
     it('キャンセルを選択すると WorkoutRepository.delete は呼ばれない', async () => {
