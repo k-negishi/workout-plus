@@ -17,6 +17,14 @@ import { colors } from '@/shared/constants/colors';
 import { fontSize, fontWeight } from '@/shared/constants/typography';
 import type { Exercise } from '@/types';
 
+/**
+ * ヘッダーの高さ初期値（px）。
+ * DraggableFlatList の Reanimated が Yoga flex チェーンを破壊するため absolute 配置に切り替えた。
+ * onLayout で実測値が確定するまでの間、リストとヘッダーが重なるフラッシュを防ぐために使用。
+ * paddingVertical:14×2 + lineHeight.sm:24 = 52px
+ */
+const HEADER_HEIGHT_INITIAL = 52;
+
 /** 部位の日本語ラベル */
 const MUSCLE_GROUP_LABELS: Record<string, string> = {
   chest: '胸',
@@ -68,6 +76,12 @@ export function ExerciseReorderModal({
   // 内部で並び順の状態を管理する
   // visible=true になるたびに exercises の順序を初期値として設定する
   const [orderedItems, setOrderedItems] = useState<Exercise[]>(exercises);
+
+  // ヘッダー・フッターの実測高さ（onLayout で確定）。リスト領域の top/bottom 計算に使用
+  // footerH 初期値 0: フッターは bottom:0, zIndex:2 で常に可視のため、
+  // onLayout 前はリストが少し被るが、フッター自体は見えている
+  const [headerH, setHeaderH] = useState(HEADER_HEIGHT_INITIAL);
+  const [footerH, setFooterH] = useState(0);
 
   // visible が true になったとき親から受け取った exercises で内部状態を初期化する
   React.useEffect(() => {
@@ -186,111 +200,129 @@ export function ExerciseReorderModal({
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="fullScreen">
-      <GestureHandlerRootView style={{ flex: 1 }}>
+      {/*
+        GestureHandlerRootView を absolute 基準コンテナとして使う。
+        flex:1 で画面全体にバインドされており、DraggableFlatList の Reanimated が
+        Yoga flex チェーンを上向きに拡張しても、このコンテナは影響を受けない唯一の ROOT。
+        backgroundColor でヘッダー/フッターの隙間（SafeArea 領域）を背景色で隠す。
+      */}
+      <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
+        {/* ① ヘッダー: 上固定。flex 計算と完全に無関係 */}
         <View
           style={{
-            flex: 1,
-            backgroundColor: colors.background,
-            paddingTop: insets.top,
+            position: 'absolute',
+            top: insets.top,
+            left: 0,
+            right: 0,
+            zIndex: 2,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+            paddingHorizontal: 16,
+            paddingVertical: 14,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.border,
+            backgroundColor: colors.white,
           }}
+          onLayout={(e) => setHeaderH(e.nativeEvent.layout.height)}
         >
-          {/* ヘッダー */}
-          <View
+          <Text
             style={{
-              flexDirection: 'row',
-              alignItems: 'center',
-              justifyContent: 'center',
-              paddingHorizontal: 16,
-              paddingVertical: 14,
-              borderBottomWidth: 1,
-              borderBottomColor: colors.border,
-              backgroundColor: colors.white,
+              fontSize: fontSize.sm,
+              fontWeight: fontWeight.semibold,
+              color: colors.textPrimary,
             }}
+          >
+            並び替え
+          </Text>
+        </View>
+
+        {/* ② フッター: bottom:0 = GestureHandlerRootView の最下部 = 画面最下部。
+            DraggableFlatList が何をしても絶対に画面外に出ない */}
+        <View
+          testID="reorder-footer"
+          style={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            zIndex: 2,
+            flexDirection: 'row',
+            gap: 12,
+            paddingHorizontal: 16,
+            paddingTop: 16,
+            paddingBottom: insets.bottom + 16,
+            borderTopWidth: 1,
+            borderTopColor: colors.border,
+            backgroundColor: colors.white,
+          }}
+          onLayout={(e) => setFooterH(e.nativeEvent.layout.height)}
+        >
+          <Pressable
+            onPress={onClose}
+            style={({ pressed }) => ({
+              flex: 1,
+              paddingVertical: 14,
+              borderRadius: borderRadius.lg,
+              borderWidth: 1,
+              borderColor: colors.border,
+              backgroundColor: pressed ? colors.background : colors.white,
+              alignItems: 'center',
+            })}
           >
             <Text
               style={{
                 fontSize: fontSize.sm,
                 fontWeight: fontWeight.semibold,
-                color: colors.textPrimary,
+                color: colors.textSecondary,
               }}
             >
-              並び替え
+              キャンセル
             </Text>
-          </View>
+          </Pressable>
 
-          {/* 種目リスト
-              ネイティブ View (flex: 1) でラップすることで、Yoga の flex 計算を
-              DraggableFlatList 内部の Reanimated Animated.View に依存させない。
-              ネイティブ View が残りスペースを確実に占有し、フッターが常に画面内に収まる */}
-          <View style={{ flex: 1, overflow: 'hidden' }}>
-            <DraggableFlatList
-              data={orderedItems}
-              renderItem={renderItem}
-              keyExtractor={(item) => item.id}
-              onDragEnd={handleDragEnd}
-              containerStyle={{ flex: 1 }}
-              style={{ backgroundColor: colors.white }}
-            />
-          </View>
-
-          {/* フッター: キャンセルと保存ボタン */}
-          <View
-            testID="reorder-footer"
-            style={{
-              flexDirection: 'row',
-              gap: 12,
-              paddingHorizontal: 16,
-              paddingTop: 16,
-              paddingBottom: insets.bottom + 16,
-              borderTopWidth: 1,
-              borderTopColor: colors.border,
-              backgroundColor: colors.white,
-            }}
+          <Pressable
+            onPress={handleSave}
+            style={({ pressed }) => ({
+              flex: 1,
+              paddingVertical: 14,
+              borderRadius: borderRadius.lg,
+              backgroundColor: pressed ? colors.primaryDark : colors.primary,
+              alignItems: 'center',
+            })}
           >
-            <Pressable
-              onPress={onClose}
-              style={({ pressed }) => ({
-                flex: 1,
-                paddingVertical: 14,
-                borderRadius: borderRadius.lg,
-                borderWidth: 1,
-                borderColor: colors.border,
-                backgroundColor: pressed ? colors.background : colors.white,
-                alignItems: 'center',
-              })}
+            <Text
+              style={{
+                fontSize: fontSize.sm,
+                fontWeight: fontWeight.semibold,
+                color: colors.white,
+              }}
             >
-              <Text
-                style={{
-                  fontSize: fontSize.sm,
-                  fontWeight: fontWeight.semibold,
-                  color: colors.textSecondary,
-                }}
-              >
-                キャンセル
-              </Text>
-            </Pressable>
+              保存する
+            </Text>
+          </Pressable>
+        </View>
 
-            <Pressable
-              onPress={handleSave}
-              style={({ pressed }) => ({
-                flex: 1,
-                paddingVertical: 14,
-                borderRadius: borderRadius.lg,
-                backgroundColor: pressed ? colors.primaryDark : colors.primary,
-                alignItems: 'center',
-              })}
-            >
-              <Text
-                style={{
-                  fontSize: fontSize.sm,
-                  fontWeight: fontWeight.semibold,
-                  color: colors.white,
-                }}
-              >
-                保存する
-              </Text>
-            </Pressable>
-          </View>
+        {/* ③ リスト: ①②の実測高さで top/bottom を確定。
+            DraggableFlatList はこの中で flex:1 を使うが、
+            親が absolute で bounded されているため外にはみ出さない */}
+        <View
+          style={{
+            position: 'absolute',
+            top: insets.top + headerH,
+            bottom: footerH,
+            left: 0,
+            right: 0,
+          }}
+        >
+          <DraggableFlatList
+            data={orderedItems}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.id}
+            onDragEnd={handleDragEnd}
+            containerStyle={{ flex: 1 }}
+            style={{ flex: 1, backgroundColor: colors.white }}
+          />
         </View>
       </GestureHandlerRootView>
     </Modal>
