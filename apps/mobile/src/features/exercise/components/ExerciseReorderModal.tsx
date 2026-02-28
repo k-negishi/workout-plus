@@ -12,7 +12,6 @@ import DraggableFlatList, { type RenderItemParams } from 'react-native-draggable
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Button } from '@/shared/components/Button';
 import { borderRadius } from '@/shared/constants/borderRadius';
 import { colors } from '@/shared/constants/colors';
 import { fontSize, fontWeight } from '@/shared/constants/typography';
@@ -208,7 +207,9 @@ export function ExerciseReorderModal({
         style={{ width: windowWidth, height: windowHeight, backgroundColor: colors.background }}
       >
         {/* ① ヘッダー: iOS 標準パターン（左:キャンセル / 中央:タイトル / 右:保存）。
-            flex:1 のサイドコンテナで両端ボタンを包み、タイトルを数学的中央に固定する */}
+            space-between でボタンを両端配置し、タイトルは position:absolute で
+            ヘッダー全幅の中央に固定する。Button コンポーネントは flex 計算に干渉するため
+            インライン Pressable でボタン外観を再現する */}
         <View
           style={{
             position: 'absolute',
@@ -218,6 +219,7 @@ export function ExerciseReorderModal({
             zIndex: 2,
             flexDirection: 'row',
             alignItems: 'center',
+            justifyContent: 'space-between',
             paddingHorizontal: 12,
             paddingVertical: 10,
             borderBottomWidth: 1,
@@ -226,20 +228,37 @@ export function ExerciseReorderModal({
           }}
           onLayout={(e) => setHeaderH(e.nativeEvent.layout.height)}
         >
-          {/* 左: キャンセルボタン（ghost + border でアウトラインボタン） */}
-          <View style={{ flex: 1, alignItems: 'flex-start' }}>
-            <Button
-              label="キャンセル"
-              onPress={onClose}
-              variant="ghost"
-              size="sm"
-              style={{ borderWidth: 1, borderColor: colors.border }}
-            />
-          </View>
+          {/* 左: キャンセルボタン（アウトライン） */}
+          <Pressable
+            onPress={onClose}
+            style={({ pressed }) => ({
+              paddingVertical: 7,
+              paddingHorizontal: 12,
+              borderRadius: borderRadius.md,
+              borderWidth: 1,
+              borderColor: colors.border,
+              backgroundColor: pressed ? colors.background : colors.white,
+            })}
+          >
+            <Text
+              style={{
+                fontSize: fontSize.sm,
+                fontWeight: fontWeight.semibold,
+                color: colors.textSecondary,
+              }}
+            >
+              キャンセル
+            </Text>
+          </Pressable>
 
-          {/* 中央: タイトル（両サイドの flex:1 により数学的中央に固定） */}
+          {/* 中央: タイトル。position:absolute + textAlign:center でヘッダー全幅の中央に固定。
+              Text はタッチイベントを消費しないためボタンのタップを妨げない */}
           <Text
             style={{
+              position: 'absolute',
+              left: 0,
+              right: 0,
+              textAlign: 'center',
               fontSize: fontSize.sm,
               fontWeight: fontWeight.semibold,
               color: colors.textPrimary,
@@ -249,9 +268,25 @@ export function ExerciseReorderModal({
           </Text>
 
           {/* 右: 保存ボタン（primary = 青背景・白文字） */}
-          <View style={{ flex: 1, alignItems: 'flex-end' }}>
-            <Button label="保存" onPress={handleSave} variant="primary" size="sm" />
-          </View>
+          <Pressable
+            onPress={handleSave}
+            style={({ pressed }) => ({
+              paddingVertical: 7,
+              paddingHorizontal: 16,
+              borderRadius: borderRadius.md,
+              backgroundColor: pressed ? colors.primaryDark : colors.primary,
+            })}
+          >
+            <Text
+              style={{
+                fontSize: fontSize.sm,
+                fontWeight: fontWeight.semibold,
+                color: colors.white,
+              }}
+            >
+              保存
+            </Text>
+          </Pressable>
         </View>
 
         {/* ② リスト: ヘッダーの実測高さで top を確定。
