@@ -1,9 +1,9 @@
 ---
-paths:
-  - "apps/mobile/src/**/*.{ts,tsx}"
+title: React Native Fetch Patterns (Hermes Compatible)
+impact: HIGH
+impactDescription: fetch(Request) form causes "Network request failed" on Hermes
+tags: fetch, hermes, networking, api
 ---
-
-# React Native での fetch パターン
 
 ## `fetch(Request)` 形式は Hermes で不安定
 

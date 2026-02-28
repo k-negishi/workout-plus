@@ -1,9 +1,9 @@
 ---
-paths:
-  - "apps/mobile/src/**/*.{ts,tsx}"
+title: React Navigation Focus and Navigation Patterns
+impact: HIGH
+impactDescription: correct focus handling for tab screens, safe parent navigation
+tags: navigation, focus, useFocusEffect, tabs
 ---
-
-# React Navigation フォーカス・ナビゲーション パターン
 
 ## 1. BottomTab 画面では `useEffect([], [])` でなく `useFocusEffect` を使う
 
