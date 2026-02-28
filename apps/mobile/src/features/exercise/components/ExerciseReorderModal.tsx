@@ -64,12 +64,12 @@ export function ExerciseReorderModal({
   onClose,
 }: ExerciseReorderModalProps) {
   const insets = useSafeAreaInsets();
+
   // 内部で並び順の状態を管理する
   // visible=true になるたびに exercises の順序を初期値として設定する
   const [orderedItems, setOrderedItems] = useState<Exercise[]>(exercises);
 
   // visible が true になったとき親から受け取った exercises で内部状態を初期化する
-  // useEffect は visible の変化に反応するが、モーダルが表示済みのときは不要な再初期化を避ける
   React.useEffect(() => {
     if (visible) {
       setOrderedItems(exercises);
@@ -192,9 +192,6 @@ export function ExerciseReorderModal({
             flex: 1,
             backgroundColor: colors.background,
             paddingTop: insets.top,
-            // paddingBottom は insets.bottom をフッター側で管理するため、ここでは設定しない
-            // フッターに直接 paddingBottom: insets.bottom + 16 を設定し、
-            // SafeArea の余白がボタンの下に確保されることを保証する
           }}
         >
           {/* ヘッダー */}
@@ -221,10 +218,11 @@ export function ExerciseReorderModal({
             </Text>
           </View>
 
-          {/* 種目リスト（DraggableFlatList） */}
-          {/* containerStyle でコンポーネント外側コンテナを flex: 1 に固定し、
-              View ラップと組み合わせてフッターが常に画面内に収まるようにする */}
-          <View style={{ flex: 1 }}>
+          {/* 種目リスト
+              ネイティブ View (flex: 1) でラップすることで、Yoga の flex 計算を
+              DraggableFlatList 内部の Reanimated Animated.View に依存させない。
+              ネイティブ View が残りスペースを確実に占有し、フッターが常に画面内に収まる */}
+          <View style={{ flex: 1, overflow: 'hidden' }}>
             <DraggableFlatList
               data={orderedItems}
               renderItem={renderItem}
@@ -235,9 +233,7 @@ export function ExerciseReorderModal({
             />
           </View>
 
-          {/* フッター: キャンセル・保存ボタン
-              Issue #189: paddingBottom に insets.bottom を加算してホームインジケーター領域と重ならないようにする
-              外側コンテナの paddingBottom は削除し、フッター自体で SafeArea を管理することでボタンが隠れるバグを修正 */}
+          {/* フッター: キャンセルと保存ボタン */}
           <View
             testID="reorder-footer"
             style={{
@@ -245,7 +241,6 @@ export function ExerciseReorderModal({
               gap: 12,
               paddingHorizontal: 16,
               paddingTop: 16,
-              // ホームインジケーター（insets.bottom）の分を加算して、ボタンが SafeArea に隠れないようにする
               paddingBottom: insets.bottom + 16,
               borderTopWidth: 1,
               borderTopColor: colors.border,
