@@ -12,6 +12,7 @@ import { SetRepository } from '@/database/repositories/set';
 import { WorkoutRepository } from '@/database/repositories/workout';
 import { WorkoutExerciseRepository } from '@/database/repositories/workoutExercise';
 import type { WorkoutRow } from '@/database/types';
+import { WorkoutPolicy } from '@/domain/workout/WorkoutPolicy';
 import { showErrorToast } from '@/shared/components/Toast';
 import { useWorkoutSessionStore } from '@/stores/workoutSessionStore';
 import type { WorkoutExercise, WorkoutSet } from '@/types';
@@ -196,7 +197,7 @@ async function cleanupExerciseSets(
     const sets = currentSets[exercise.id] ?? [];
     // 有効セット定義: weight != null AND reps != null AND reps > 0
     // reps=0 は weight の有無に関わらず「未実施」として除外する
-    const incompleteSets = sets.filter((s) => s.weight == null || s.reps == null || s.reps === 0);
+    const incompleteSets = sets.filter((s) => !WorkoutPolicy.isValidSet(s));
     for (const s of incompleteSets) {
       await SetRepository.delete(s.id);
     }
@@ -277,6 +278,10 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
             return;
           }
           // completed → recording に再オープン
+          // 注意: completed_at は意図的にクリアしない。
+          // WorkoutRepository.findTodayActiveRecording() が「今回セッションで追加したセット」を
+          // sets.created_at > workouts.completed_at で識別するために必要。（Issue #203）
+          // この前提を変更する場合は findTodayActiveRecording() の SQL も合わせて修正すること。
           await WorkoutRepository.update(workoutId, { status: 'recording' });
           store.setCurrentWorkout({
             id: targetWorkout.id,
