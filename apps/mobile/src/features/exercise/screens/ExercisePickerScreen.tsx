@@ -244,11 +244,11 @@ const ExerciseListHeader: React.FC<{
           </View>
           <TouchableOpacity
             onPress={onSubmit}
-            className="py-2.5 bg-[#4D94FF] rounded-lg items-center"
+            className="mt-4 py-2.5 bg-[#4D94FF] rounded-lg items-center"
           >
             <Text className="text-[17px] font-semibold text-white">作成して追加</Text>
           </TouchableOpacity>
-          <TouchableOpacity onPress={onCancel} className="items-center mt-2">
+          <TouchableOpacity onPress={onCancel} className="items-center mt-2 mb-1">
             <Text className="text-[17px] text-[#64748b]">キャンセル</Text>
           </TouchableOpacity>
         </View>
