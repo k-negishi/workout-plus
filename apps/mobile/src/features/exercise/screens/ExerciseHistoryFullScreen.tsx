@@ -73,14 +73,18 @@ const PR_TYPE_LABELS: Record<string, string> = {
 /** PR値のフォーマット */
 function formatPRValue(prType: string, value: number): string {
   switch (prType) {
-    case 'max_weight':
+    case 'max_weight': {
       return `${value}kg`;
-    case 'max_volume':
+    }
+    case 'max_volume': {
       return `${value.toLocaleString()}kg`;
-    case 'max_reps':
+    }
+    case 'max_reps': {
       return `${value}回`;
-    default:
+    }
+    default: {
       return `${value}`;
+    }
   }
 }
 
@@ -307,13 +311,13 @@ export function ExerciseHistoryFullScreen() {
           <Ionicons name="chevron-back" size={24} color="#475569" />
         </Pressable>
 
-        {/* タイトル: 中央寄せ（fontSize 17 / fontWeight '600' に統一） */}
+        {/* タイトル: 中央寄せ（Issue #213: fontSize 17 → 20 に拡大） */}
         <Text
           testID="exercise-history-header-title"
           style={{
             flex: 1,
             textAlign: 'center',
-            fontSize: 17,
+            fontSize: 20,
             fontWeight: '600',
             color: '#334155',
           }}
@@ -397,7 +401,8 @@ export function ExerciseHistoryFullScreen() {
               Issue #195: BarChart（週平均重量）→ LineChart（週最大推定1RM）に変更 */}
           {chartData.length > 0 ? (
             <View className="mt-6">
-              <Text className="text-sm font-bold text-text-primary mb-4">
+              {/* Issue #213: text-sm → text-base に拡大 */}
+              <Text className="text-base font-bold text-text-primary mb-4">
                 直近3ヶ月の最大RM推移
               </Text>
               <View
@@ -427,7 +432,10 @@ export function ExerciseHistoryFullScreen() {
           {/* === T060: PR履歴 === */}
           {prHistory.length > 0 ? (
             <View className="mt-6">
-              <Text className="text-sm font-bold text-text-primary mb-3">PR (自己ベスト) 履歴</Text>
+              {/* Issue #213: text-sm → text-base に拡大 */}
+              <Text className="text-base font-bold text-text-primary mb-3">
+                PR (自己ベスト) 履歴
+              </Text>
               {prHistory.map((pr, idx) => (
                 <View
                   key={idx}
@@ -452,7 +460,8 @@ export function ExerciseHistoryFullScreen() {
 
           {/* === T060: 全履歴リスト === */}
           <View className="mt-6 mb-20">
-            <Text className="text-sm font-bold text-text-primary mb-3">
+            {/* Issue #213: text-sm → text-base に拡大 */}
+            <Text className="text-base font-bold text-text-primary mb-3">
               全履歴 ({stats.totalSessions}回)
             </Text>
             {allHistory.map((session) => (
@@ -475,7 +484,11 @@ export function ExerciseHistoryFullScreen() {
                     marginBottom: 8,
                   }}
                 >
-                  <Text style={{ fontSize: 13, color: colors.textPrimary }}>
+                  {/* Issue #213: fontSize 13 → 15 に拡大 */}
+                  <Text
+                    testID="exercise-history-date-text"
+                    style={{ fontSize: 15, color: colors.textPrimary }}
+                  >
                     {formatJapaneseDate(session.completedAt)}
                   </Text>
                   {session.hasPR ? (
@@ -525,11 +538,11 @@ export function ExerciseHistoryFullScreen() {
                       >
                         {set.weight ?? '-'}kg × {set.reps ?? '-'}
                       </Text>
-                      {set.estimated1RM != null ? (
+                      {set.estimated1RM == null ? null : (
                         <Text style={{ fontSize: 13, color: colors.textSecondary }}>
                           1RM: {Math.round(set.estimated1RM)}kg
                         </Text>
-                      ) : null}
+                      )}
                     </View>
                   ))}
                 </View>
@@ -552,8 +565,10 @@ export function ExerciseHistoryFullScreen() {
 function StatCard({ label, value, unit }: { label: string; value: string; unit?: string }) {
   // 値の文字数に応じてフォントサイズを動的調整（長い数値がカードからはみ出ないよう制御）
   // 例: "9"(1) → 22px, "1,000"(5) → 18px, "10,000"(6) → 18px, "100,000"(7) → 15px
-  const valueFontSize =
-    value.length <= 4 ? 22 : value.length <= 6 ? 18 : value.length <= 8 ? 15 : 13;
+  let valueFontSize = 13;
+  if (value.length <= 4) valueFontSize = 22;
+  else if (value.length <= 6) valueFontSize = 18;
+  else if (value.length <= 8) valueFontSize = 15;
 
   return (
     <View

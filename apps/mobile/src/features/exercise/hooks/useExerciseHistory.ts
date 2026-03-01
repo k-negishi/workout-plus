@@ -237,14 +237,14 @@ export function buildHistory(
     }
   }
 
-  return Array.from(workoutMap.entries())
+  return [...workoutMap.entries()]
     .map(([workoutId, data]) => ({
       workoutId,
       completedAt: data.completedAt,
       sets: data.sets,
       hasPR: prWorkoutIds.has(workoutId),
     }))
-    .sort((a, b) => b.completedAt - a.completedAt);
+    .toSorted((a, b) => b.completedAt - a.completedAt);
 }
 
 /**
@@ -286,8 +286,8 @@ export function buildWeeklyData(sets: SetWithWorkout[], cutoffAt: number): Weekl
     }
   }
 
-  return Array.from(weekMap.values())
-    .sort((a, b) => a.weekStart.getTime() - b.weekStart.getTime())
+  return [...weekMap.values()]
+    .toSorted((a, b) => a.weekStart.getTime() - b.weekStart.getTime())
     .map((w) => ({
       weekLabel: format(w.weekStart, 'M/d'),
       weekStart: w.weekStart,

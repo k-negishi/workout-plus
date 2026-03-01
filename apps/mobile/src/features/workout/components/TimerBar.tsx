@@ -34,7 +34,7 @@ export function parseTimeInput(input: string): number | null {
 
   const parts = trimmed.split(':').map(Number);
   // 全パートが有効な数値であることを確認
-  if (parts.some((p) => isNaN(p) || p < 0)) return null;
+  if (parts.some((p) => Number.isNaN(p) || p < 0)) return null;
 
   if (parts.length === 2) {
     // MM:SS 形式
@@ -95,19 +95,23 @@ export const TimerBar: React.FC<TimerBarProps> = ({
   /** 再生/一時停止ボタンのハンドラー */
   const handleToggle = useCallback(() => {
     switch (timerStatus) {
-      case TimerStatus.NOT_STARTED:
+      case TimerStatus.NOT_STARTED: {
         onStart();
         break;
-      case 'running':
+      }
+      case 'running': {
         onPause();
         break;
-      case 'paused':
+      }
+      case 'paused': {
         onResume();
         break;
-      case 'discarded':
+      }
+      case 'discarded': {
         // Issue #175: discarded 状態でも 0:00 から再開可能
         onResetAndStart();
         break;
+      }
     }
   }, [timerStatus, onStart, onPause, onResume, onResetAndStart]);
 

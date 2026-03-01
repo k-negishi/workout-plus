@@ -40,7 +40,7 @@ export function NumericInput({
   style,
 }: NumericInputProps) {
   /** 内部的に文字列として管理（入力途中の "5." 等を保持するため） */
-  const [textValue, setTextValue] = useState<string>(value != null ? String(value) : '');
+  const [textValue, setTextValue] = useState<string>(value == null ? '' : String(value));
 
   /** 不正な文字を除去して値を反映 */
   const handleChangeText = useCallback(
@@ -49,14 +49,14 @@ export function NumericInput({
 
       if (inputType === 'decimal') {
         // 小数点1つまで許可
-        cleaned = text.replace(/[^0-9.]/g, '');
+        cleaned = text.replaceAll(/[^0-9.]/g, '');
         const parts = cleaned.split('.');
         if (parts.length > 2) {
           cleaned = `${parts[0]}.${parts.slice(1).join('')}`;
         }
       } else {
         // 整数のみ許可
-        cleaned = text.replace(/[^0-9]/g, '');
+        cleaned = text.replaceAll(/[^0-9]/g, '');
       }
 
       setTextValue(cleaned);
@@ -67,7 +67,7 @@ export function NumericInput({
       }
 
       const numValue = Number(cleaned);
-      if (!isNaN(numValue)) {
+      if (!Number.isNaN(numValue)) {
         // min/max 範囲チェック
         if (min != null && numValue < min) return;
         if (max != null && numValue > max) return;
@@ -79,10 +79,10 @@ export function NumericInput({
 
   /** フォーカスが外れた時に表示値を整える */
   const handleBlur = useCallback(() => {
-    if (value != null) {
-      setTextValue(String(value));
-    } else {
+    if (value == null) {
       setTextValue('');
+    } else {
+      setTextValue(String(value));
     }
   }, [value]);
 

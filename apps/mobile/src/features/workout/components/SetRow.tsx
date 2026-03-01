@@ -29,8 +29,8 @@ function computeEstimated1RM(weight: number | null, reps: number | null): number
  */
 function parseInputToNumber(text: string): number | null {
   if (text === '' || text === '-') return null;
-  const parsed = parseFloat(text);
-  return isNaN(parsed) ? null : parsed;
+  const parsed = Number.parseFloat(text);
+  return Number.isNaN(parsed) ? null : parsed;
 }
 
 export type SetRowProps = {
@@ -54,9 +54,9 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
    * ローカル state を挟むことで re-render が TextInput の表示値に影響しない。
    */
   const [weightText, setWeightText] = useState<string>(
-    set.weight != null ? String(set.weight) : '',
+    set.weight == null ? '' : String(set.weight),
   );
-  const [repsText, setRepsText] = useState<string>(set.reps != null ? String(set.reps) : '');
+  const [repsText, setRepsText] = useState<string>(set.reps == null ? '' : String(set.reps));
 
   /**
    * 重量テキスト変更ハンドラー。
@@ -67,7 +67,7 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
   const handleWeightChangeText = useCallback(
     (text: string) => {
       // 数値と小数点以外を除去（日本語文字・記号を排除）
-      const filtered = text.replace(/[^0-9.]/g, '');
+      const filtered = text.replaceAll(/[^0-9.]/g, '');
       // 小数点の重複を防ぐ（例: "6..5" → "6.5"）
       const parts = filtered.split('.');
       const cleaned = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : filtered;
@@ -85,7 +85,7 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
    * 保存済みの値に戻ることを保証する。
    */
   const handleWeightBlur = useCallback(() => {
-    setWeightText(set.weight != null ? String(set.weight) : '');
+    setWeightText(set.weight == null ? '' : String(set.weight));
   }, [set.weight]);
 
   /**
@@ -96,7 +96,7 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
   const handleRepsChangeText = useCallback(
     (text: string) => {
       // 数字以外を除去（小数点も不要）
-      const cleaned = text.replace(/[^0-9]/g, '');
+      const cleaned = text.replaceAll(/[^0-9]/g, '');
       setRepsText(cleaned);
       onRepsChange(set.id, parseInputToNumber(cleaned));
     },
@@ -105,7 +105,7 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
 
   /** レップフィールドの blur ハンドラー。フォーカス離脱時に親の set.reps に戻す */
   const handleRepsBlur = useCallback(() => {
-    setRepsText(set.reps != null ? String(set.reps) : '');
+    setRepsText(set.reps == null ? '' : String(set.reps));
   }, [set.reps]);
 
   /** 推定1RM（null なら "-" 表示） */
@@ -182,7 +182,7 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
             textAlign: 'center',
           }}
         >
-          {estimated1RM != null ? String(estimated1RM) : '-'}
+          {estimated1RM == null ? '-' : String(estimated1RM)}
         </Text>
 
         {/* 削除ボタン: 固定幅28でkg/rep入力のflex:1対応。1RM直後の余白を最小化する */}
