@@ -67,50 +67,8 @@ You are an advanced TypeScript expert with deep, practical knowledge of type-lev
 
 ### Type-Level Programming Patterns
 
-**Branded Types for Domain Modeling**
-```typescript
-// Create nominal types to prevent primitive obsession
-type Brand<K, T> = K & { __brand: T };
-type UserId = Brand<string, 'UserId'>;
-type OrderId = Brand<string, 'OrderId'>;
-
-// Prevents accidental mixing of domain primitives
-function processOrder(orderId: OrderId, userId: UserId) { }
-```
-- Use for: Critical domain primitives, API boundaries, currency/units
-- Resource: https://egghead.io/blog/using-branded-types-in-typescript
-
-**Advanced Conditional Types**
-```typescript
-// Recursive type manipulation
-type DeepReadonly<T> = T extends (...args: any[]) => any 
-  ? T 
-  : T extends object 
-    ? { readonly [K in keyof T]: DeepReadonly<T[K]> }
-    : T;
-
-// Template literal type magic
-type PropEventSource<Type> = {
-  on<Key extends string & keyof Type>
-    (eventName: `${Key}Changed`, callback: (newValue: Type[Key]) => void): void;
-};
-```
-- Use for: Library APIs, type-safe event systems, compile-time validation
-- Watch for: Type instantiation depth errors (limit recursion to 10 levels)
-
-**Type Inference Techniques**
-```typescript
-// Use 'satisfies' for constraint validation (TS 5.0+)
-const config = {
-  api: "https://api.example.com",
-  timeout: 5000
-} satisfies Record<string, string | number>;
-// Preserves literal types while ensuring constraints
-
-// Const assertions for maximum inference
-const routes = ['/home', '/about', '/contact'] as const;
-type Route = typeof routes[number]; // '/home' | '/about' | '/contact'
-```
+> **A案（型レベルプログラミング・Branded Types・Conditional Types 実装時 Read）**: `Read .claude/skills/typescript-expert/type-patterns.md`
+> Branded Types・Advanced Conditional Types・Type Inference Techniques（satisfies, const assertion）が収録されている。
 
 ### Performance Optimization Strategies
 
@@ -134,88 +92,8 @@ npx tsc --extendedDiagnostics --incremental false | grep -E "Check time|Files:|L
 
 ## Real-World Problem Resolution
 
-### Complex Error Patterns
-
-**"The inferred type of X cannot be named"**
-- Cause: Missing type export or circular dependency
-- Fix priority:
-  1. Export the required type explicitly
-  2. Use `ReturnType<typeof function>` helper
-  3. Break circular dependencies with type-only imports
-- Resource: https://github.com/microsoft/TypeScript/issues/47663
-
-**Missing type declarations**
-- Quick fix with ambient declarations:
-```typescript
-// types/ambient.d.ts
-declare module 'some-untyped-package' {
-  const value: unknown;
-  export default value;
-  export = value; // if CJS interop is needed
-}
-```
-- For more details: [Declaration Files Guide](https://www.typescriptlang.org/docs/handbook/declaration-files/introduction.html)
-
-**"Excessive stack depth comparing types"**
-- Cause: Circular or deeply recursive types
-- Fix priority:
-  1. Limit recursion depth with conditional types
-  2. Use `interface` extends instead of type intersection
-  3. Simplify generic constraints
-```typescript
-// Bad: Infinite recursion
-type InfiniteArray<T> = T | InfiniteArray<T>[];
-
-// Good: Limited recursion
-type NestedArray<T, D extends number = 5> = 
-  D extends 0 ? T : T | NestedArray<T, [-1, 0, 1, 2, 3, 4][D]>[];
-```
-
-**Module Resolution Mysteries**
-- "Cannot find module" despite file existing:
-  1. Check `moduleResolution` matches your bundler
-  2. Verify `baseUrl` and `paths` alignment
-  3. For monorepos: Ensure workspace protocol (workspace:*)
-  4. Try clearing cache: `rm -rf node_modules/.cache .tsbuildinfo`
-
-**Path Mapping at Runtime**
-- TypeScript paths only work at compile time, not runtime
-- Node.js runtime solutions:
-  - ts-node: Use `ts-node -r tsconfig-paths/register`
-  - Node ESM: Use loader alternatives or avoid TS paths at runtime
-  - Production: Pre-compile with resolved paths
-
-### Migration Expertise
-
-**JavaScript to TypeScript Migration**
-```bash
-# Incremental migration strategy
-# 1. Enable allowJs and checkJs (merge into existing tsconfig.json):
-# Add to existing tsconfig.json:
-# {
-#   "compilerOptions": {
-#     "allowJs": true,
-#     "checkJs": true
-#   }
-# }
-
-# 2. Rename files gradually (.js → .ts)
-# 3. Add types file by file using AI assistance
-# 4. Enable strict mode features one by one
-
-# Automated helpers (if installed/needed)
-command -v ts-migrate >/dev/null 2>&1 && npx ts-migrate migrate . --sources 'src/**/*.js'
-command -v typesync >/dev/null 2>&1 && npx typesync  # Install missing @types packages
-```
-
-**Tool Migration Decisions**
-
-| From | To | When | Migration Effort |
-|------|-----|------|-----------------|
-| ESLint + Prettier | Biome | Need much faster speed, okay with fewer rules | Low (1 day) |
-| TSC for linting | Type-check only | Have 100+ files, need faster feedback | Medium (2-3 days) |
-| Lerna | Nx/Turborepo | Need caching, parallel builds | High (1 week) |
-| CJS | ESM | Node 18+, modern tooling | High (varies) |
+> **A案（TS エラー調査・難解な型エラー解決時 Read）**: `Read .claude/skills/typescript-expert/troubleshooting.md`
+> "inferred type cannot be named"・Missing type declarations・"Excessive stack depth"・Module Resolution Mysteries・JS→TS マイグレーション手順が収録されている。
 
 ### Monorepo Management
 

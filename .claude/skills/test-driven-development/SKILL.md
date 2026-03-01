@@ -4,6 +4,8 @@ description: Use when implementing any feature or bugfix, before writing impleme
 allowed-tools: Read, Write, Edit, Bash
 ---
 
+> **⚠️ CLAUDE.md 必須ルール**: 機能追加・バグ修正の実装コードを書く前に必ず実行すること。テストなしでプロダクションコードを書いてはならない（例外は人間のパートナーの許可がある場合のみ）。
+
 # Test-Driven Development (TDD)
 
 ## Overview

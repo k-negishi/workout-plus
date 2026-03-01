@@ -7,6 +7,7 @@ allowed-tools: Read, Write, Edit, Bash
 # Jest テストパターン
 
 Jest テスト記述でよく踏む落とし穴と解法のリファレンス。
+汎用 Jest & Testing Library パターン集。React Native 固有のテストは react-native-testing スキルを参照。
 
 ---
 
@@ -130,7 +131,7 @@ ESLint auto-fix が孤立コードを自動削除し、テストブロックご�
 
 ---
 
-## 7. `jest.clearAllTimers()` は fake system time をリセットする
+## 6. `jest.clearAllTimers()` は fake system time をリセットする
 
 `jest.useFakeTimers()` + `jest.setSystemTime()` で日付を固定しているテストで、
 `beforeEach` に `jest.clearAllTimers()` を書くと **fake system time がリセットされる**。
@@ -163,7 +164,7 @@ beforeEach(() => {
 
 ---
 
-## 6. 事前存在するテスト失敗の検証: `git stash` の罠
+## 7. 事前存在するテスト失敗の検証: `git stash` の罠
 
 自分の変更が原因のテスト失敗かを確認するため `git stash` を使うと、
 リポジトリの**全ての**未コミット変更がスタッシュされる（他人の変更も含む）。
@@ -188,7 +189,7 @@ cd apps/mobile && npx jest src/features/calendar --no-coverage 2>&1 | grep "Test
 
 ---
 
-## ESLint 10 + vitest 互換性
+## 8. ESLint 10 + vitest 互換性
 
 ### 問題
 
