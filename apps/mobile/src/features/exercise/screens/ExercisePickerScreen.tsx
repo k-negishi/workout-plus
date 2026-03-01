@@ -13,7 +13,6 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   FlatList,
-  Pressable,
   SectionList,
   StyleSheet,
   Text,
@@ -144,7 +143,7 @@ const ExerciseItemActions: React.FC<{
  * カスタム種目作成フォームをリスト先頭に表示する。
  * FAB タップ時にフォームが即座に見えるよう ListHeaderComponent に配置。
  * Issue #205: React.memo でラップしてチップ選択時の不要な再レンダーを防止。
- *             Pressable を使うことでアニメーション遅延なしの即時フィードバック。
+ *             TouchableOpacity + 静的スタイルで NativeWind v4 との互換性を確保。
  */
 const ExerciseListHeader: React.FC<{
   isCreating: boolean;
@@ -182,24 +181,21 @@ const ExerciseListHeader: React.FC<{
           </Text>
           <View className="flex-row flex-wrap gap-1.5 mb-3">
             {MUSCLE_GROUP_OPTIONS.map((opt) => (
-              <Pressable
+              // NativeWind v4 の jsxImportSource は Pressable の style 関数を無視するため
+              // TouchableOpacity + 静的スタイルオブジェクトを使用する（RecentWorkoutCard と同パターン）
+              <TouchableOpacity
                 key={opt.key}
                 testID={`muscle-chip-${opt.key}`}
                 onPress={() => onMuscleGroupChange(opt.key)}
-                style={({ pressed }) => ({
+                activeOpacity={0.7}
+                style={{
                   paddingHorizontal: 10,
                   paddingVertical: 4,
                   borderRadius: 999,
                   borderWidth: 1,
-                  // 未選択時は #CBD5E1（より視認性の高いグレー）で枠を明示する
                   borderColor: newMuscleGroup === opt.key ? '#4D94FF' : '#CBD5E1',
-                  // 未選択時は #F8FAFC（薄グレー）で白背景と区別してボタン形状を際立たせる
-                  backgroundColor: pressed
-                    ? '#D6EAFF'
-                    : newMuscleGroup === opt.key
-                      ? '#E6F2FF'
-                      : '#F8FAFC',
-                })}
+                  backgroundColor: newMuscleGroup === opt.key ? '#E6F2FF' : '#F8FAFC',
+                }}
               >
                 <Text
                   style={{
@@ -210,7 +206,7 @@ const ExerciseListHeader: React.FC<{
                 >
                   {opt.label}
                 </Text>
-              </Pressable>
+              </TouchableOpacity>
             ))}
           </View>
           <Text className="text-[16px] font-semibold text-[#64748b] tracking-wide mb-1.5">
@@ -218,24 +214,21 @@ const ExerciseListHeader: React.FC<{
           </Text>
           <View className="flex-row flex-wrap gap-1.5 mb-3">
             {EQUIPMENT_OPTIONS.map((opt) => (
-              <Pressable
+              // NativeWind v4 の jsxImportSource は Pressable の style 関数を無視するため
+              // TouchableOpacity + 静的スタイルオブジェクトを使用する（RecentWorkoutCard と同パターン）
+              <TouchableOpacity
                 key={opt.key}
                 testID={`equipment-chip-${opt.key}`}
                 onPress={() => onEquipmentChange(opt.key)}
-                style={({ pressed }) => ({
+                activeOpacity={0.7}
+                style={{
                   paddingHorizontal: 10,
                   paddingVertical: 4,
                   borderRadius: 999,
                   borderWidth: 1,
-                  // 未選択時は #CBD5E1（より視認性の高いグレー）で枠を明示する
                   borderColor: newEquipment === opt.key ? '#4D94FF' : '#CBD5E1',
-                  // 未選択時は #F8FAFC（薄グレー）で白背景と区別してボタン形状を際立たせる
-                  backgroundColor: pressed
-                    ? '#D6EAFF'
-                    : newEquipment === opt.key
-                      ? '#E6F2FF'
-                      : '#F8FAFC',
-                })}
+                  backgroundColor: newEquipment === opt.key ? '#E6F2FF' : '#F8FAFC',
+                }}
               >
                 <Text
                   style={{
@@ -246,7 +239,7 @@ const ExerciseListHeader: React.FC<{
                 >
                   {opt.label}
                 </Text>
-              </Pressable>
+              </TouchableOpacity>
             ))}
           </View>
           <TouchableOpacity
