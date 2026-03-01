@@ -42,7 +42,7 @@ const EXERCISE_ID_BY_NAME: Record<string, string> = {
 };
 
 describe('generateDevWorkoutSeedSQL', () => {
-  const globalWithDev = global as typeof globalThis & { __DEV__?: boolean };
+  const globalWithDev = globalThis as typeof globalThis & { __DEV__?: boolean };
   const originalDev = globalWithDev.__DEV__;
 
   beforeEach(() => {
@@ -74,7 +74,7 @@ describe('generateDevWorkoutSeedSQL', () => {
       if (rawExerciseName == null) {
         return null;
       }
-      const exerciseName = rawExerciseName.replace(/''/g, "'");
+      const exerciseName = rawExerciseName.replaceAll("''", "'");
       const exerciseId = EXERCISE_ID_BY_NAME[exerciseName];
       return exerciseId ? { id: exerciseId } : null;
     });
@@ -114,7 +114,7 @@ describe('generateDevWorkoutSeedSQL', () => {
       if (rawExerciseName == null) {
         return null;
       }
-      const exerciseName = rawExerciseName.replace(/''/g, "'");
+      const exerciseName = rawExerciseName.replaceAll("''", "'");
       const exerciseId = EXERCISE_ID_BY_NAME[exerciseName];
       return exerciseId ? { id: exerciseId } : null;
     });

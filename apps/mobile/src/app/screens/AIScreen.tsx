@@ -72,17 +72,17 @@ function TypingIndicator() {
             useNativeDriver: true,
           }),
           // 次のサイクルまで待機
-          Animated.delay(tailDelay > 0 ? tailDelay : 0),
+          Animated.delay(Math.max(tailDelay, 0)),
         ]),
       );
     });
 
     // 全ドットのアニメーションを並行開始
-    animations.forEach((anim) => anim.start());
+    for (const anim of animations) anim.start();
 
     // アンマウント時にアニメーションを停止してメモリリークを防ぐ
     return () => {
-      animations.forEach((anim) => anim.stop());
+      for (const anim of animations) anim.stop();
     };
   }, [dots]);
 

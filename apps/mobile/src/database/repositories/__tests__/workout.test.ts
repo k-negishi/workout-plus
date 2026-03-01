@@ -29,7 +29,7 @@ describe('WorkoutRepository.findTodayRecording', () => {
     // 当日の created_at タイムスタンプ
     const today = new Date();
     const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
-    const now = dayStart + 3600000;
+    const now = dayStart + 3_600_000;
 
     const mockRow = {
       id: 'workout-recording-today',
@@ -96,13 +96,13 @@ describe('WorkoutRepository.findTodayCompleted', () => {
     // 当日のタイムスタンプ範囲
     const today = new Date();
     const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
-    const now = dayStart + 3600000; // 当日の1時間後
+    const now = dayStart + 3_600_000; // 当日の1時間後
 
     const mockRow = {
       id: 'workout-today',
       status: 'completed',
       created_at: now,
-      started_at: now - 1800000,
+      started_at: now - 1_800_000,
       completed_at: now,
       timer_status: 'notStarted',
       elapsed_seconds: 1800,
@@ -145,7 +145,7 @@ describe('WorkoutRepository.findCompletedByDate', () => {
 
     // 2026-02-14 の dayStart (JST)
     const dayStart = new Date(2026, 1, 14).getTime(); // month は 0-indexed
-    const completedAt = dayStart + 3600000; // 当日1時間後
+    const completedAt = dayStart + 3_600_000; // 当日1時間後
 
     const mockRow = {
       id: 'workout-feb14',

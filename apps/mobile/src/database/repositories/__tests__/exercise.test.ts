@@ -311,10 +311,10 @@ describe('ExerciseRepository.updateSortOrders', () => {
 
     await ExerciseRepository.updateSortOrders([{ id: 'ex-abc', sortOrder: 5 }]);
 
-    const updateCalls = mockDb.runAsync.mock.calls.filter((call) =>
+    const updateCall = mockDb.runAsync.mock.calls.find((call) =>
       String(call[0]).includes('UPDATE exercises SET sort_order'),
     );
-    expect(updateCalls[0]![1]).toEqual([5, 'ex-abc']);
+    expect(updateCall![1]).toEqual([5, 'ex-abc']);
   });
 
   it('空配列を渡した場合は UPDATE が実行されないこと', async () => {
