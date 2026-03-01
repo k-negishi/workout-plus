@@ -6,10 +6,15 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 import { ALL_CREATE_TABLES, CREATE_INDEXES } from './schema';
-import { ensureDevWorkoutFixtures, generateDevWorkoutSeedSQL, generateSeedSQL } from './seed';
+import {
+  ensureDevWorkoutFixtures,
+  generateDevWorkoutSeedSQL,
+  generateSeedSQL,
+  refreshPresetExercises,
+} from './seed';
 
 /** 現在の最新スキーマバージョン */
-const LATEST_VERSION = 9;
+const LATEST_VERSION = 11;
 
 /**
  * 現在のスキーマバージョンを取得する
@@ -61,10 +66,10 @@ async function migrateV1ToV2(db: SQLiteDatabase): Promise<void> {
  * - 新: 1769878800000 (2026-02-01 02:00 JST)
  */
 async function migrateV2ToV3(db: SQLiteDatabase): Promise<void> {
-  const OLD_CREATED_AT = 1738332000000;
-  const OLD_COMPLETED_AT = 1738339200000;
-  const NEW_CREATED_AT = 1769871600000; // 2026/2/1 00:00 JST
-  const NEW_COMPLETED_AT = 1769878800000; // 2026/2/1 02:00 JST
+  const OLD_CREATED_AT = 1_738_332_000_000;
+  const OLD_COMPLETED_AT = 1_738_339_200_000;
+  const NEW_CREATED_AT = 1_769_871_600_000; // 2026/2/1 00:00 JST
+  const NEW_COMPLETED_AT = 1_769_878_800_000; // 2026/2/1 02:00 JST
 
   // workouts テーブルのタイムスタンプを更新（古い seed データのみ対象）
   await db.execAsync(
@@ -140,7 +145,9 @@ async function migrateV4ToV5(db: SQLiteDatabase): Promise<void> {
     const dateStr = `${year}-${month}-${day}`;
 
     const existing = dateMap.get(dateStr);
-    if (existing != null) {
+    if (existing == null) {
+      dateMap.set(dateStr, w);
+    } else {
       // 同日重複: 古い方を削除リストに追加し、新しい方を保持する
       if (w.completed_at > existing.completed_at) {
         toDelete.push(existing.id);
@@ -148,8 +155,6 @@ async function migrateV4ToV5(db: SQLiteDatabase): Promise<void> {
       } else {
         toDelete.push(w.id);
       }
-    } else {
-      dateMap.set(dateStr, w);
     }
   }
 
@@ -217,9 +222,19 @@ async function migrateV6ToV7(db: SQLiteDatabase): Promise<void> {
  * 開発用ワークアウトフィクスチャが欠落するケースがあった（Issue #206）。
  * このマイグレーションは dev fixture の存在を確認し、不足があれば再投入する。
  * workout_date カラムを直接設定することでカレンダーに正しく表示されるようにする。
+ *
+ * try-catch の理由:
+ * V9 は開発用データの補完のみを担うため、失敗してもアプリ起動を妨げるべきではない。
+ * エラーを吸収してバージョンを 9 に進めることで、次回起動時の再試行ループを防ぐ。
  */
 async function migrateV8ToV9(db: SQLiteDatabase): Promise<void> {
-  await ensureDevWorkoutFixtures(db);
+  try {
+    await ensureDevWorkoutFixtures(db);
+  } catch (error) {
+    // dev fixture 整合性確保の失敗はアプリ起動を妨げない
+    // エラーを記録して V9 を完了扱いにし、次回起動での無限リトライを防ぐ
+    console.warn('[migration V9] dev fixture 整合性確保に失敗（スキップ）:', error);
+  }
 }
 
 /**
@@ -246,6 +261,51 @@ async function migrateV7ToV8(db: SQLiteDatabase): Promise<void> {
   );
 }
 
+/**
+ * バージョン 9 → 10: dev fixture データの確実なクリーンアップ
+ *
+ * V9 の ensureDevWorkoutFixtures が FK 制約違反で失敗した場合、
+ * 不完全な dev fixture データが DB に残ることがあった（Issue #206）。
+ * また generateDevWorkoutSeedSQL (App.tsx bootstrap) も同様の FK 違反で失敗していた。
+ *
+ * このマイグレーションは dev fixture データを FK 依存関係の逆順で明示的に削除する:
+ * 1. personal_records: workout_id FK が CASCADE なし → workouts 削除前に先に削除
+ * 2. sets: workout_exercise_id FK の CASCADE が不確実なため明示的に削除
+ * 3. workout_exercises: workout_id FK の CASCADE より明示的削除を優先
+ * 4. workouts: 最後に削除
+ *
+ * 削除後は generateDevWorkoutSeedSQL が次回起動時にクリーンな状態で全件再投入する。
+ */
+async function migrateV9ToV10(db: SQLiteDatabase): Promise<void> {
+  const workoutPrefix = 'dev-fixture-workout-%';
+  const wePrefix = 'dev-fixture-we-dev-fixture-workout-%';
+
+  // 1. personal_records: CASCADE なし FK のため workouts より前に削除する
+  await db.runAsync('DELETE FROM personal_records WHERE workout_id LIKE ?', [workoutPrefix]);
+
+  // 2. sets: workout_exercise_id を含む dev fixture の set を明示的に削除する
+  await db.runAsync('DELETE FROM sets WHERE workout_exercise_id LIKE ?', [wePrefix]);
+
+  // 3. workout_exercises: workouts 削除前に明示的に削除する
+  await db.runAsync('DELETE FROM workout_exercises WHERE workout_id LIKE ?', [workoutPrefix]);
+
+  // 4. workouts: 最後に削除する（上記で依存レコードを削除済みのため FK 制約を満たす）
+  await db.runAsync('DELETE FROM workouts WHERE id LIKE ?', [workoutPrefix]);
+}
+
+/**
+ * バージョン 10 → 11: プリセット種目の差分追加
+ *
+ * V1 マイグレーション実行後に SEED_EXERCISES に種目が追加された場合、
+ * 既存 DB には新種目が存在しない（INSERT OR IGNORE が PRIMARY KEY で判定されるため）。
+ *
+ * このマイグレーションは name ベースの重複チェック付きで不足分の種目を追加する。
+ * 例: 「インクラインチェストプレス」が既存 DB に存在しない場合に追加。
+ */
+async function migrateV10ToV11(db: SQLiteDatabase): Promise<void> {
+  await refreshPresetExercises(db);
+}
+
 /** マイグレーション関数の型 */
 type Migration = (db: SQLiteDatabase) => Promise<void>;
 
@@ -260,6 +320,8 @@ const MIGRATIONS: Record<number, Migration> = {
   7: migrateV6ToV7,
   8: migrateV7ToV8,
   9: migrateV8ToV9,
+  10: migrateV9ToV10,
+  11: migrateV10ToV11,
 };
 
 /**

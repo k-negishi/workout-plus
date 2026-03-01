@@ -49,7 +49,12 @@ export default function App() {
         const db = await getDatabase();
 
         // 開発環境のみ、UI確認用のダミーデータを投入（冪等）
-        await generateDevWorkoutSeedSQL(db);
+        // dev fixture の投入失敗はアプリ起動を妨げないため try-catch で吸収する
+        try {
+          await generateDevWorkoutSeedSQL(db);
+        } catch (seedError) {
+          console.warn('dev fixture seeding failed (skipping):', seedError);
+        }
 
         // T044: recording 状態のワークアウトがあればストアに復元
         // WorkoutRepository は WorkoutRow（snake_case）を返すため Workout（camelCase）にマッピング
@@ -71,7 +76,14 @@ export default function App() {
   // 初期化中はローディングスピナー表示
   if (!isReady) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background }}>
+      <View
+        style={{
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: colors.background,
+        }}
+      >
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );

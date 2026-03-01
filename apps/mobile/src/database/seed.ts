@@ -713,7 +713,7 @@ const DEV_WORKOUT_FIXTURES: DevFixtureWorkout[] = [
 ];
 
 function escapeSqlString(value: string): string {
-  return value.replace(/'/g, "''");
+  return value.replaceAll("'", "''");
 }
 
 /** dev fixture の completedAt タイムスタンプから yyyy-MM-dd の workout_date を算出する */
@@ -726,7 +726,7 @@ function formatWorkoutDate(completedAt: number): string {
 }
 
 function isDevelopmentBuild(): boolean {
-  return typeof __DEV__ !== 'undefined' ? __DEV__ : true;
+  return typeof __DEV__ === 'undefined' ? true : __DEV__;
 }
 
 async function getSeededFixtureWorkoutCount(db: SQLiteDatabase): Promise<number> {
@@ -890,6 +890,30 @@ export async function ensureDevWorkoutFixtures(db: SQLiteDatabase): Promise<void
       continue;
     }
     await insertFixtureExercises(db, workout, exerciseIdMap);
+  }
+}
+
+/**
+ * プリセット種目の差分追加（種目追加マイグレーション用）
+ *
+ * V1 マイグレーション実行後に SEED_EXERCISES に種目が追加された場合、
+ * 既存 DB には新種目が存在しない。このメソッドは name ベースの重複チェック付きで
+ * 不足分の種目のみを追加する。
+ *
+ * INSERT ... WHERE NOT EXISTS により冪等（何度実行しても安全）。
+ */
+export async function refreshPresetExercises(db: SQLiteDatabase): Promise<void> {
+  const now = Date.now();
+  // sort_order は既存の最大値 + 1 で採番し、既存種目の並び順を崩さない
+  for (const exercise of SEED_EXERCISES) {
+    const id = ulid();
+    await db.runAsync(
+      `INSERT INTO exercises (id, name, muscle_group, equipment, is_custom, is_favorite, created_at, updated_at, sort_order)
+       SELECT ?, ?, ?, ?, 0, 0, ?, ?,
+         COALESCE((SELECT MAX(sort_order) FROM exercises), 0) + 1
+       WHERE NOT EXISTS (SELECT 1 FROM exercises WHERE name = ?)`,
+      [id, exercise.name, exercise.muscle_group, exercise.equipment, now, now, exercise.name],
+    );
   }
 }
 
