@@ -8,8 +8,6 @@ import type { IAIService } from '../types/index';
 import { APIAIService } from './api';
 import { MockAIService } from './mock';
 
-export type { IAIService };
-
 /**
  * AI サービスのシングルトンインスタンスを生成する
  *
@@ -37,3 +35,5 @@ export function createAIService(): IAIService {
 
   return new APIAIService({ baseUrl, apiKey });
 }
+
+export { type IAIService } from '../types/index';

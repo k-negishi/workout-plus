@@ -30,7 +30,7 @@ function generateMarkedDates(
   for (const date of trainingDates) {
     const dateStr = format(date, 'yyyy-MM-dd');
     marks[dateStr] = {
-      ...(marks[dateStr] ?? {}),
+      ...marks[dateStr],
       selected: true,
       selectedColor: '#E6F2FF',
       selectedTextColor: '#4D94FF',
@@ -40,7 +40,7 @@ function generateMarkedDates(
   // 選択中の日付
   if (selectedDate) {
     marks[selectedDate] = {
-      ...(marks[selectedDate] ?? {}),
+      ...marks[selectedDate],
       selected: true,
       selectedColor: '#4D94FF',
       selectedTextColor: '#FFFFFF',
@@ -51,7 +51,7 @@ function generateMarkedDates(
   // Issue #177: 選択日ほど目立たないが、今日の日付に薄いブルー背景を付ける
   if (!selectedDate || selectedDate !== today) {
     marks[today] = {
-      ...(marks[today] ?? {}),
+      ...marks[today],
       todayTextColor: '#4D94FF',
       todayBackgroundColor: '#E6F2FF',
     };
@@ -63,7 +63,7 @@ function generateMarkedDates(
 /** 未来日判定ロジック */
 function isFutureDate(dateString: string, todayDate: Date): boolean {
   const selected = new Date(dateString);
-  const endOfToday = new Date(startOfDay(todayDate).getTime() + 86400000);
+  const endOfToday = new Date(startOfDay(todayDate).getTime() + 86_400_000);
   return !isBefore(selected, endOfToday);
 }
 

@@ -4,17 +4,19 @@ import { describe, expect, it, vi } from 'vitest';
 import { errorHandler } from '../../src/middleware/errorHandler.js';
 import type { APIError } from '../../src/types/index.js';
 
+// describe 外に配置（unicorn/consistent-function-scoping 対応）
+// errorHandler はモジュールスコープのため describe 内である必要がない
+function buildApp() {
+  const app = new Hono();
+  app.onError(errorHandler);
+  return app;
+}
+
 /**
  * errorHandler ミドルウェアのテスト
  * Hono の app.onError に登録するエラーハンドラーの動作を検証する
  */
 describe('errorHandler', () => {
-  function buildApp() {
-    const app = new Hono();
-    app.onError(errorHandler);
-    return app;
-  }
-
   it('APIError 型のエラー（UNAUTHORIZED）が 401 で返ること', async () => {
     const app = buildApp();
     app.get('/test', () => {

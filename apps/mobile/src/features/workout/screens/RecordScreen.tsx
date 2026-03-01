@@ -185,7 +185,7 @@ export const RecordScreen: React.FC = () => {
       void session.startSession({ workoutId });
     } else {
       // 新規記録モード: 当日 or 過去日付（targetDate）
-      void session.startSession(targetDate !== undefined ? { targetDate } : undefined);
+      void session.startSession(targetDate === undefined ? undefined : { targetDate });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

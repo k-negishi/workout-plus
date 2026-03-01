@@ -120,7 +120,7 @@ export function DaySummary({
       const db = await getDatabase();
       const date = parseISO(dateString);
       const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
-      const dayEnd = dayStart + 86400000; // +1日
+      const dayEnd = dayStart + 86_400_000; // +1日
 
       // その日に完了したワークアウトを取得
       const workouts = await db.getAllAsync<WorkoutRow>(
@@ -355,11 +355,11 @@ export function DaySummary({
                   <Text style={{ fontSize: 16, fontWeight: '600', flex: 1, color: '#334155' }}>
                     {set.weight ?? '-'}kg × {set.reps ?? '-'} reps
                   </Text>
-                  {set.estimated1RM != null ? (
+                  {set.estimated1RM == null ? null : (
                     <Text style={{ fontSize: 13, color: '#64748b' }}>
                       1RM: {Math.round(set.estimated1RM)}kg
                     </Text>
-                  ) : null}
+                  )}
                 </View>
               ))}
             </View>

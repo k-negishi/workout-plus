@@ -1,8 +1,18 @@
 import { Hono } from 'hono';
-import { afterEach,beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { apiKeyMiddleware } from '../../src/middleware/apiKey.js';
 import { errorHandler } from '../../src/middleware/errorHandler.js';
+
+// describe 外に配置（unicorn/consistent-function-scoping 対応）
+// apiKeyMiddleware / errorHandler はモジュールスコープのため describe 内である必要がない
+function buildApp() {
+  const app = new Hono();
+  app.onError(errorHandler);
+  app.use('/protected/*', apiKeyMiddleware());
+  app.get('/protected/resource', (c) => c.json({ ok: true }));
+  return app;
+}
 
 /**
  * X-API-Key 認証ミドルウェアのテスト
@@ -18,14 +28,6 @@ describe('apiKeyMiddleware', () => {
   afterEach(() => {
     process.env['API_KEY_SECRET'] = originalEnv;
   });
-
-  function buildApp() {
-    const app = new Hono();
-    app.onError(errorHandler);
-    app.use('/protected/*', apiKeyMiddleware());
-    app.get('/protected/resource', (c) => c.json({ ok: true }));
-    return app;
-  }
 
   it('正しい API Key で 200 が返ること', async () => {
     const app = buildApp();

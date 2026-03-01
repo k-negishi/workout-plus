@@ -39,7 +39,7 @@ const mockWorkout: Workout = {
   completedAt: null,
   timerStatus: 'running',
   elapsedSeconds: 120,
-  timerStartedAt: Date.now() - 120000,
+  timerStartedAt: Date.now() - 120_000,
   memo: null,
 };
 
@@ -415,12 +415,12 @@ describe('startSession - targetDate指定時の動作', () => {
     mockFindRecording.mockResolvedValue({
       id: 'existing-recording',
       status: 'recording',
-      created_at: Date.now() - 86400000, // 前日
+      created_at: Date.now() - 86_400_000, // 前日
       started_at: null,
       completed_at: null,
       timer_status: 'running',
       elapsed_seconds: 300,
-      timer_started_at: Date.now() - 300000,
+      timer_started_at: Date.now() - 300_000,
       memo: null,
     } as never);
 
@@ -436,25 +436,25 @@ describe('startSession - targetDate指定時の動作', () => {
     store.setSessionTargetDate(targetDate);
 
     // workoutId が無い場合の分岐
-    if (!workoutId) {
-      // バグ修正後: targetDate がある場合は findRecording をスキップすべき
-      if (!targetDate) {
-        const existing = await WorkoutRepository.findRecording();
-        if (existing) {
-          // 既存セッションを復元してしまう（バグ）
-          store.setCurrentWorkout({
-            id: existing.id,
-            status: existing.status,
-            createdAt: existing.created_at,
-            startedAt: existing.started_at,
-            completedAt: existing.completed_at,
-            timerStatus: existing.timer_status,
-            elapsedSeconds: existing.elapsed_seconds,
-            timerStartedAt: existing.timer_started_at,
-            memo: existing.memo,
-          });
-          return;
-        }
+    if (
+      !workoutId && // バグ修正後: targetDate がある場合は findRecording をスキップすべき
+      !targetDate
+    ) {
+      const existing = await WorkoutRepository.findRecording();
+      if (existing) {
+        // 既存セッションを復元してしまう（バグ）
+        store.setCurrentWorkout({
+          id: existing.id,
+          status: existing.status,
+          createdAt: existing.created_at,
+          startedAt: existing.started_at,
+          completedAt: existing.completed_at,
+          timerStatus: existing.timer_status,
+          elapsedSeconds: existing.elapsed_seconds,
+          timerStartedAt: existing.timer_started_at,
+          memo: existing.memo,
+        });
+        return;
       }
     }
 
@@ -489,10 +489,8 @@ describe('startSession - targetDate指定時の動作', () => {
     const store = useWorkoutSessionStore.getState();
     store.reset();
 
-    if (!workoutId) {
-      if (!targetDate) {
-        await WorkoutRepository.findRecording();
-      }
+    if (!workoutId && !targetDate) {
+      await WorkoutRepository.findRecording();
     }
 
     // targetDate 未指定なので findRecording は呼ばれる

@@ -194,9 +194,9 @@ describe('HomeScreen EmptyState 廃止', () => {
           {
             id: 'w1',
             status: 'completed',
-            created_at: 1700000000000,
-            started_at: 1700000000000,
-            completed_at: 1700003600000,
+            created_at: 1_700_000_000_000,
+            started_at: 1_700_000_000_000,
+            completed_at: 1_700_003_600_000,
             timer_status: 'discarded',
             elapsed_seconds: 0,
             timer_started_at: null,
@@ -212,7 +212,7 @@ describe('HomeScreen EmptyState 廃止', () => {
             exercise_id: 'e1',
             display_order: 0,
             memo: null,
-            created_at: 1700000000000,
+            created_at: 1_700_000_000_000,
           },
         ]);
       }
@@ -225,8 +225,8 @@ describe('HomeScreen EmptyState 廃止', () => {
             weight: 60,
             reps: 8,
             estimated_1rm: 75,
-            created_at: 1700000000000,
-            updated_at: 1700000000000,
+            created_at: 1_700_000_000_000,
+            updated_at: 1_700_000_000_000,
           },
         ]);
       }
@@ -240,8 +240,8 @@ describe('HomeScreen EmptyState 廃止', () => {
       equipment: 'barbell',
       is_custom: 0,
       is_favorite: 0,
-      created_at: 1700000000000,
-      updated_at: 1700000000000,
+      created_at: 1_700_000_000_000,
+      updated_at: 1_700_000_000_000,
     });
 
     render(<HomeScreen />);
@@ -299,7 +299,7 @@ describe('HomeScreen 記録中バナーと記録ボタンの排他表示', () =>
     mockFindTodayActiveRecording.mockResolvedValue({
       id: 'recording-today',
       status: 'recording',
-      created_at: dayStart + 3600000,
+      created_at: dayStart + 3_600_000,
     });
 
     render(<HomeScreen />);
@@ -332,7 +332,7 @@ describe('HomeScreen クロスタブナビゲーション（T7）', () => {
   it('最近のワークアウトカードタップ時に CalendarTab + Calendar + targetDate で遷移する', async () => {
     // 2026-02-10 00:00:00 UTC に完了したワークアウトを用意
     // new Date(1739145600000) === 2026-02-10T00:00:00.000Z
-    const completedAt = 1739145600000;
+    const completedAt = 1_739_145_600_000;
     const expectedDate = (() => {
       const d = new Date(completedAt);
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;

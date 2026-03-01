@@ -11,7 +11,7 @@ import type { ChatMessage, WorkoutHistoryContext } from '../../types/index';
 // openapi-fetch は `new Request(url, options)` を作って `fetch(request)` を呼ぶため、
 // モックの引数は Request オブジェクトになる
 const mockFetch = jest.fn();
-global.fetch = mockFetch;
+globalThis.fetch = mockFetch;
 
 const BASE_URL = 'https://api.example.com';
 const API_KEY = 'test-key';
@@ -25,7 +25,7 @@ const emptyWorkoutHistory: WorkoutHistoryContext = {
 /** fetch モックのレスポンスを設定するヘルパー */
 function mockResponse(status: number, body: unknown) {
   mockFetch.mockResolvedValueOnce(
-    new Response(JSON.stringify(body), {
+    Response.json(body, {
       status,
       headers: { 'Content-Type': 'application/json' },
     }),

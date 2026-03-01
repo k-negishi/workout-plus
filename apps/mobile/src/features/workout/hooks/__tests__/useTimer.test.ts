@@ -38,7 +38,7 @@ describe('useTimer - 状態遷移テスト', () => {
 
     // running開始
     store.setTimerStatus('running');
-    store.setTimerStartedAt(Date.now() - 30000); // 30秒前に開始
+    store.setTimerStartedAt(Date.now() - 30_000); // 30秒前に開始
 
     // paused に遷移
     store.setTimerStatus('paused');
@@ -92,7 +92,7 @@ describe('useTimer - 状態遷移テスト', () => {
       const store = useWorkoutSessionStore.getState();
 
       // 60秒のベースelapsedがあり、10秒前にtimerを開始した状態をシミュレート
-      const tenSecondsAgo = Date.now() - 10000;
+      const tenSecondsAgo = Date.now() - 10_000;
       store.setTimerStatus('running');
       store.setElapsedSeconds(60);
       store.setTimerStartedAt(tenSecondsAgo);
@@ -131,7 +131,7 @@ describe('useTimer - 状態遷移テスト', () => {
       const store = useWorkoutSessionStore.getState();
 
       // 10秒前に開始した running 状態をシミュレートする
-      const tenSecondsAgo = Date.now() - 10000;
+      const tenSecondsAgo = Date.now() - 10_000;
       store.setTimerStatus('running');
       store.setElapsedSeconds(0); // ベース値は 0（startTimer 直後は 0）
       store.setTimerStartedAt(tenSecondsAgo);
@@ -159,7 +159,7 @@ describe('useTimer - 状態遷移テスト', () => {
       //             displayElapsed は timerStartedAt からリアルタイムに計算する。
 
       const store = useWorkoutSessionStore.getState();
-      const startTime = Date.now() - 10000; // 10秒前
+      const startTime = Date.now() - 10_000; // 10秒前
       store.setTimerStatus('running');
       store.setElapsedSeconds(0);
       store.setTimerStartedAt(startTime);

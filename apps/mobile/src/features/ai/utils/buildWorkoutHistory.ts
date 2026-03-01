@@ -145,9 +145,7 @@ export async function buildWorkoutHistoryContext(message: string): Promise<Worko
   const summaries = summaryResults.filter((s): s is WorkoutSummary => s !== null);
 
   // 種目名キーワードが含まれる場合は該当種目のみに絞り込む
-  const allExerciseNames = Array.from(
-    new Set(summaries.flatMap((s) => s.exercises.map((e) => e.name))),
-  );
+  const allExerciseNames = [...new Set(summaries.flatMap((s) => s.exercises.map((e) => e.name)))];
   const matchedKeywords = parseExerciseKeywordsFromMessage(message, allExerciseNames);
 
   let finalSummaries = summaries;

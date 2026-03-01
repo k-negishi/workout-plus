@@ -454,8 +454,8 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
       const currentSets = store.currentSets[workoutExerciseId] ?? [];
       const updatedSets = currentSets.map((s) => {
         if (s.id !== setId) return s;
-        const newWeight = params.weight !== undefined ? params.weight : s.weight;
-        const newReps = params.reps !== undefined ? params.reps : s.reps;
+        const newWeight = params.weight === undefined ? s.weight : params.weight;
+        const newReps = params.reps === undefined ? s.reps : params.reps;
         const estimated1RM =
           newWeight != null && newReps != null && newWeight > 0 && newReps > 0
             ? calculate1RM(newWeight, newReps)

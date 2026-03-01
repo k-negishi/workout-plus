@@ -320,11 +320,9 @@ describe('RecordScreen', () => {
       render(<RecordScreen />);
       fireEvent.press(screen.getByLabelText('時間計測を停止'));
 
-      const [, , buttons] = alertSpy.mock.calls[0] as [
-        string,
-        string,
-        Array<{ text: string; onPress?: () => void }>,
-      ];
+      const buttons = (
+        alertSpy.mock.calls[0] as [string, string, Array<{ text: string; onPress?: () => void }>]
+      )[2];
       const cancelButton = buttons.find((button) => button.text === 'キャンセル');
       expect(cancelButton).toBeTruthy();
 
@@ -339,11 +337,9 @@ describe('RecordScreen', () => {
       render(<RecordScreen />);
       fireEvent.press(screen.getByLabelText('時間計測を停止'));
 
-      const [, , buttons] = alertSpy.mock.calls[0] as [
-        string,
-        string,
-        Array<{ text: string; onPress?: () => void }>,
-      ];
+      const buttons = (
+        alertSpy.mock.calls[0] as [string, string, Array<{ text: string; onPress?: () => void }>]
+      )[2];
       const stopButton = buttons.find((button) => button.text === '停止する');
       expect(stopButton).toBeTruthy();
 

@@ -87,22 +87,30 @@ describe('usePreviousRecord - 型とインターフェーステスト', () => {
   });
 });
 
+// 型レベルのテスト用ヘルパー: currentWorkoutCreatedAt の関数シグネチャ検証
+// describe 外に置くことで unicorn/consistent-function-scoping ルールに準拠
+type PreviousRecordFn = (
+  exerciseId: string,
+  currentWorkoutId: string | null,
+  currentWorkoutCreatedAt: number | null,
+) => { previousRecord: null; isLoading: boolean };
+
+const mockPreviousRecordFn: PreviousRecordFn = (
+  _exerciseId,
+  _currentWorkoutId,
+  _currentWorkoutCreatedAt,
+) => ({ previousRecord: null, isLoading: false });
+
 describe('usePreviousRecord - currentWorkoutCreatedAt パラメータ', () => {
   it('currentWorkoutCreatedAt: number | null を受け取れる関数シグネチャになっている', () => {
     // 型レベルのテスト: この型割り当てがコンパイルエラーにならないことを確認
-    type PreviousRecordFn = (
-      exerciseId: string,
-      currentWorkoutId: string | null,
-      currentWorkoutCreatedAt: number | null,
-    ) => { previousRecord: null; isLoading: boolean };
-
-    const mockFn: PreviousRecordFn = (
-      _exerciseId,
-      _currentWorkoutId,
-      _currentWorkoutCreatedAt,
-    ) => ({ previousRecord: null, isLoading: false });
-
-    expect(mockFn('ex-1', null, null)).toEqual({ previousRecord: null, isLoading: false });
-    expect(mockFn('ex-1', 'w-1', Date.now())).toEqual({ previousRecord: null, isLoading: false });
+    expect(mockPreviousRecordFn('ex-1', null, null)).toEqual({
+      previousRecord: null,
+      isLoading: false,
+    });
+    expect(mockPreviousRecordFn('ex-1', 'w-1', Date.now())).toEqual({
+      previousRecord: null,
+      isLoading: false,
+    });
   });
 });

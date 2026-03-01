@@ -69,7 +69,7 @@ describe('useAIChat', () => {
       await result.current.sendMessage('test');
     });
 
-    const lastMessage = result.current.messages[result.current.messages.length - 1]!;
+    const lastMessage = result.current.messages.at(-1)!;
     expect(lastMessage.role).toBe('assistant');
     expect(lastMessage.content).toContain('エラー');
   });

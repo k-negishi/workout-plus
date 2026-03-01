@@ -16,7 +16,7 @@ const userMessage: ChatMessage = {
   id: 'msg-user-1',
   role: 'user',
   content: 'テストメッセージ',
-  createdAt: 1000000,
+  createdAt: 1_000_000,
 };
 
 /** テスト用アシスタントメッセージ */
@@ -24,7 +24,7 @@ const assistantMessage: ChatMessage = {
   id: 'msg-assistant-1',
   role: 'assistant',
   content: 'AIの返答メッセージ',
-  createdAt: 1000001,
+  createdAt: 1_000_001,
 };
 
 describe('MessageBubble', () => {

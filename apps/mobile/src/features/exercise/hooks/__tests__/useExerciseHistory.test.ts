@@ -22,7 +22,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 10,
           set_number: 1,
           workout_id: 'w1',
-          completed_at: 1000000,
+          completed_at: 1_000_000,
           workout_exercise_id: 'we1',
         },
         {
@@ -30,7 +30,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 8,
           set_number: 2,
           workout_id: 'w1',
-          completed_at: 1000000,
+          completed_at: 1_000_000,
           workout_exercise_id: 'we1',
         },
         {
@@ -38,7 +38,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 5,
           set_number: 3,
           workout_id: 'w1',
-          completed_at: 1000000,
+          completed_at: 1_000_000,
           workout_exercise_id: 'we1',
         },
       ];
@@ -55,7 +55,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 10,
           set_number: 1,
           workout_id: 'w1',
-          completed_at: 2000000,
+          completed_at: 2_000_000,
           workout_exercise_id: 'we1',
         },
         {
@@ -63,7 +63,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 8,
           set_number: 2,
           workout_id: 'w1',
-          completed_at: 2000000,
+          completed_at: 2_000_000,
           workout_exercise_id: 'we1',
         },
         {
@@ -71,7 +71,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 5,
           set_number: 3,
           workout_id: 'w1',
-          completed_at: 2000000,
+          completed_at: 2_000_000,
           workout_exercise_id: 'we1',
         },
         {
@@ -79,7 +79,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 8,
           set_number: 1,
           workout_id: 'w2',
-          completed_at: 1000000,
+          completed_at: 1_000_000,
           workout_exercise_id: 'we2',
         },
         {
@@ -87,7 +87,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 6,
           set_number: 2,
           workout_id: 'w2',
-          completed_at: 1000000,
+          completed_at: 1_000_000,
           workout_exercise_id: 'we2',
         },
       ];
@@ -102,7 +102,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 10,
           set_number: 1,
           workout_id: 'w1',
-          completed_at: 1000000,
+          completed_at: 1_000_000,
           workout_exercise_id: 'we1',
         },
         {
@@ -110,7 +110,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 15,
           set_number: 2,
           workout_id: 'w1',
-          completed_at: 1000000,
+          completed_at: 1_000_000,
           workout_exercise_id: 'we1',
         },
         {
@@ -118,7 +118,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 12,
           set_number: 3,
           workout_id: 'w1',
-          completed_at: 1000000,
+          completed_at: 1_000_000,
           workout_exercise_id: 'we1',
         },
       ];
@@ -133,7 +133,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 10,
           set_number: 1,
           workout_id: 'w1',
-          completed_at: 3000000,
+          completed_at: 3_000_000,
           workout_exercise_id: 'we1',
         },
         {
@@ -141,7 +141,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 8,
           set_number: 1,
           workout_id: 'w2',
-          completed_at: 2000000,
+          completed_at: 2_000_000,
           workout_exercise_id: 'we2',
         },
         {
@@ -149,7 +149,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 6,
           set_number: 1,
           workout_id: 'w3',
-          completed_at: 1000000,
+          completed_at: 1_000_000,
           workout_exercise_id: 'we3',
         },
       ];
@@ -165,7 +165,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 10,
           set_number: 1,
           workout_id: 'w1',
-          completed_at: 1000000,
+          completed_at: 1_000_000,
           workout_exercise_id: 'we1',
         },
         {
@@ -173,7 +173,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 8,
           set_number: 2,
           workout_id: 'w1',
-          completed_at: 1000000,
+          completed_at: 1_000_000,
           workout_exercise_id: 'we1',
         },
       ];
@@ -188,7 +188,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 10,
           set_number: 1,
           workout_id: 'w1',
-          completed_at: 1000000,
+          completed_at: 1_000_000,
           workout_exercise_id: 'we1',
         },
         {
@@ -196,7 +196,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 8,
           set_number: 2,
           workout_id: 'w1',
-          completed_at: 1000000,
+          completed_at: 1_000_000,
           workout_exercise_id: 'we1',
         },
         {
@@ -204,7 +204,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: null,
           set_number: 3,
           workout_id: 'w1',
-          completed_at: 1000000,
+          completed_at: 1_000_000,
           workout_exercise_id: 'we1',
         },
       ];
@@ -237,16 +237,16 @@ describe('useExerciseHistory ロジック', () => {
           reps: 5,
           set_number: 1,
           workout_id: 'w1',
-          completed_at: 5000000,
+          completed_at: 5_000_000,
           workout_exercise_id: 'we1',
         },
       ];
       const prs: PRForStats[] = [
-        { pr_type: 'max_weight', value: 100, workout_id: 'w1', achieved_at: 5000000 },
-        { pr_type: 'max_volume', value: 500, workout_id: 'w1', achieved_at: 3000000 },
+        { pr_type: 'max_weight', value: 100, workout_id: 'w1', achieved_at: 5_000_000 },
+        { pr_type: 'max_volume', value: 500, workout_id: 'w1', achieved_at: 3_000_000 },
       ];
       const stats = calculateStats(sets, prs);
-      expect(stats.lastPRDate).toBe(5000000);
+      expect(stats.lastPRDate).toBe(5_000_000);
     });
 
     it('averageWeightを正しく算出する', () => {
@@ -257,7 +257,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 10,
           set_number: 1,
           workout_id: 'w1',
-          completed_at: 1000000,
+          completed_at: 1_000_000,
           workout_exercise_id: 'we1',
         },
         {
@@ -265,7 +265,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 8,
           set_number: 2,
           workout_id: 'w1',
-          completed_at: 1000000,
+          completed_at: 1_000_000,
           workout_exercise_id: 'we1',
         },
       ];
@@ -282,7 +282,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 10,
           set_number: 1,
           workout_id: 'w1',
-          completed_at: 1000000,
+          completed_at: 1_000_000,
           workout_exercise_id: 'we1',
         },
         {
@@ -290,7 +290,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 8,
           set_number: 2,
           workout_id: 'w1',
-          completed_at: 1000000,
+          completed_at: 1_000_000,
           workout_exercise_id: 'we1',
         },
         {
@@ -298,7 +298,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: null,
           set_number: 3,
           workout_id: 'w1',
-          completed_at: 1000000,
+          completed_at: 1_000_000,
           workout_exercise_id: 'we1',
         },
       ];
@@ -322,7 +322,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 10,
           set_number: 1,
           workout_id: 'w1',
-          completed_at: 1000000,
+          completed_at: 1_000_000,
           workout_exercise_id: 'we1',
         },
         {
@@ -330,7 +330,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 5,
           set_number: 2,
           workout_id: 'w1',
-          completed_at: 1000000,
+          completed_at: 1_000_000,
           workout_exercise_id: 'we1',
         },
       ];
@@ -346,7 +346,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 10,
           set_number: 1,
           workout_id: 'w1',
-          completed_at: 1000000,
+          completed_at: 1_000_000,
           workout_exercise_id: 'we1',
         },
         {
@@ -354,7 +354,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: null,
           set_number: 2,
           workout_id: 'w1',
-          completed_at: 1000000,
+          completed_at: 1_000_000,
           workout_exercise_id: 'we1',
         },
       ];
@@ -370,7 +370,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 1,
           set_number: 1,
           workout_id: 'w1',
-          completed_at: 1000000,
+          completed_at: 1_000_000,
           workout_exercise_id: 'we1',
         },
       ];
@@ -395,7 +395,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 10,
           set_number: 1,
           workout_id: 'w1',
-          completed_at: mondayTs + 3600_000, // 月曜
+          completed_at: mondayTs + 3_600_000, // 月曜
           workout_exercise_id: 'we1',
         },
         {
@@ -403,7 +403,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 5,
           set_number: 2,
           workout_id: 'w1',
-          completed_at: mondayTs + 3600_000,
+          completed_at: mondayTs + 3_600_000,
           workout_exercise_id: 'we1',
         },
       ];
@@ -420,7 +420,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 10,
           set_number: 1,
           workout_id: 'w1',
-          completed_at: mondayTs + 3600_000,
+          completed_at: mondayTs + 3_600_000,
           workout_exercise_id: 'we1',
         },
         {
@@ -428,7 +428,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 5,
           set_number: 2,
           workout_id: 'w1',
-          completed_at: mondayTs + 3600_000,
+          completed_at: mondayTs + 3_600_000,
           workout_exercise_id: 'we1',
         },
       ];
@@ -457,7 +457,7 @@ describe('useExerciseHistory ロジック', () => {
           set_number: 1,
           workout_id: 'w2',
           // cutoffAt より新しい
-          completed_at: mondayTs + 3600_000,
+          completed_at: mondayTs + 3_600_000,
           workout_exercise_id: 'we2',
         },
       ];
@@ -473,7 +473,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 10,
           set_number: 1,
           workout_id: 'w1',
-          completed_at: mondayTs + 3600_000,
+          completed_at: mondayTs + 3_600_000,
           workout_exercise_id: 'we1',
         },
       ];
@@ -482,14 +482,14 @@ describe('useExerciseHistory ロジック', () => {
     });
 
     it('複数週のデータが週の開始日昇順で返される', () => {
-      const week2Ts = mondayTs + 7 * 24 * 3600_000; // 翌週月曜日
+      const week2Ts = mondayTs + 7 * 24 * 3_600_000; // 翌週月曜日
       const sets: SetWithWorkout[] = [
         {
           weight: 90,
           reps: 8,
           set_number: 1,
           workout_id: 'w2',
-          completed_at: week2Ts + 3600_000, // 翌週
+          completed_at: week2Ts + 3_600_000, // 翌週
           workout_exercise_id: 'we2',
         },
         {
@@ -497,7 +497,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 10,
           set_number: 1,
           workout_id: 'w1',
-          completed_at: mondayTs + 3600_000, // 今週
+          completed_at: mondayTs + 3_600_000, // 今週
           workout_exercise_id: 'we1',
         },
       ];
@@ -522,7 +522,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 10,
           set_number: 1,
           workout_id: 'w1',
-          completed_at: 1000000,
+          completed_at: 1_000_000,
           workout_exercise_id: 'we1',
         },
         {
@@ -530,7 +530,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 8,
           set_number: 1,
           workout_id: 'w2',
-          completed_at: 3000000,
+          completed_at: 3_000_000,
           workout_exercise_id: 'we2',
         },
         {
@@ -538,15 +538,15 @@ describe('useExerciseHistory ロジック', () => {
           reps: 6,
           set_number: 1,
           workout_id: 'w3',
-          completed_at: 2000000,
+          completed_at: 2_000_000,
           workout_exercise_id: 'we3',
         },
       ];
       const history = buildHistory(sets, new Set());
 
-      expect(history[0]!.completedAt).toBe(3000000);
-      expect(history[1]!.completedAt).toBe(2000000);
-      expect(history[2]!.completedAt).toBe(1000000);
+      expect(history[0]!.completedAt).toBe(3_000_000);
+      expect(history[1]!.completedAt).toBe(2_000_000);
+      expect(history[2]!.completedAt).toBe(1_000_000);
     });
 
     it('PRのあるワークアウトにhasPRフラグが付く', () => {
@@ -556,7 +556,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 5,
           set_number: 1,
           workout_id: 'w1',
-          completed_at: 2000000,
+          completed_at: 2_000_000,
           workout_exercise_id: 'we1',
         },
         {
@@ -564,7 +564,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 10,
           set_number: 1,
           workout_id: 'w2',
-          completed_at: 1000000,
+          completed_at: 1_000_000,
           workout_exercise_id: 'we2',
         },
       ];
@@ -582,7 +582,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 10,
           set_number: 1,
           workout_id: 'w1',
-          completed_at: 1000000,
+          completed_at: 1_000_000,
           workout_exercise_id: 'we1',
         },
         {
@@ -590,7 +590,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 8,
           set_number: 2,
           workout_id: 'w1',
-          completed_at: 1000000,
+          completed_at: 1_000_000,
           workout_exercise_id: 'we1',
         },
       ];
@@ -611,7 +611,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 5,
           set_number: 1,
           workout_id: 'w1',
-          completed_at: 1000000,
+          completed_at: 1_000_000,
           workout_exercise_id: 'we1',
         },
         {
@@ -619,7 +619,7 @@ describe('useExerciseHistory ロジック', () => {
           reps: 8,
           set_number: 2,
           workout_id: 'w1',
-          completed_at: 1000000,
+          completed_at: 1_000_000,
           workout_exercise_id: 'we1',
         },
       ];

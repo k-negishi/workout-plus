@@ -8,10 +8,10 @@
  * セキュリティ用途ではなく ID 生成のみに使用するため Math.random ベースで十分。
  */
 
-if (typeof global.crypto?.getRandomValues !== 'function') {
+if (typeof globalThis.crypto?.getRandomValues !== 'function') {
   // @ts-expect-error Hermes 環境では global.crypto が未定義のため上書きする
-  global.crypto = {
-    ...(typeof global.crypto === 'object' ? global.crypto : {}),
+  globalThis.crypto = {
+    ...(typeof globalThis.crypto === 'object' ? globalThis.crypto : {}),
     getRandomValues: <T extends ArrayBufferView>(buffer: T): T => {
       const uint8 = new Uint8Array(buffer.buffer, buffer.byteOffset, buffer.byteLength);
       for (let i = 0; i < uint8.length; i++) {

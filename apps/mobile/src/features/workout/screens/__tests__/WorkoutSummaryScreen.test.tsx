@@ -57,8 +57,8 @@ function setupDefaultMocks(options?: { withPRs?: boolean; timerStatus?: string }
   mockGetFirstAsync.mockImplementation((query: string) => {
     if (query.includes('workouts')) {
       return Promise.resolve({
-        created_at: 1700000000000,
-        completed_at: 1700003600000,
+        created_at: 1_700_000_000_000,
+        completed_at: 1_700_003_600_000,
         elapsed_seconds: 1800,
         timer_status: options?.timerStatus ?? 'running',
       });
@@ -87,7 +87,7 @@ function setupDefaultMocks(options?: { withPRs?: boolean; timerStatus?: string }
         prType: 'max_weight',
         value: 100,
         workoutId: 'w-test-1',
-        achievedAt: 1700003600000,
+        achievedAt: 1_700_003_600_000,
       },
     ]);
   } else {

@@ -185,7 +185,7 @@ export const MonthCalendar = React.memo(function MonthCalendar({
     for (const date of trainingDates) {
       const dateStr = format(date, 'yyyy-MM-dd');
       marks[dateStr] = {
-        ...(marks[dateStr] ?? {}),
+        ...marks[dateStr],
         selected: true,
         selectedColor: '#E6F2FF',
         selectedTextColor: '#4D94FF',
@@ -195,7 +195,7 @@ export const MonthCalendar = React.memo(function MonthCalendar({
     // 選択中の日付
     if (selectedDate) {
       marks[selectedDate] = {
-        ...(marks[selectedDate] ?? {}),
+        ...marks[selectedDate],
         selected: true,
         selectedColor: '#4D94FF',
         selectedTextColor: '#FFFFFF',
@@ -208,7 +208,7 @@ export const MonthCalendar = React.memo(function MonthCalendar({
     // Issue #177: 選択日ほど目立たないが、今日の日付に薄いブルー背景を付ける
     if (!selectedDate || selectedDate !== today) {
       marks[today] = {
-        ...(marks[today] ?? {}),
+        ...marks[today],
         todayTextColor: '#4D94FF',
         todayBackgroundColor: '#E6F2FF',
       } as (typeof marks)[string];
@@ -257,7 +257,7 @@ export const MonthCalendar = React.memo(function MonthCalendar({
       // 'yyyy-MM-dd' 文字列を UTC ではなくローカル日付として安全に解釈する
       const [year, month, date] = day.dateString.split('-').map(Number);
       const selected = new Date(year!, month! - 1, date!);
-      const endOfToday = new Date(startOfDay(new Date()).getTime() + 86400000);
+      const endOfToday = new Date(startOfDay(new Date()).getTime() + 86_400_000);
 
       // 今日以前のみ選択可能
       if (isBefore(selected, endOfToday)) {

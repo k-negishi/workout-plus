@@ -13,8 +13,6 @@ import type { PRType } from '../types/pr';
 import type { Equipment, MuscleGroup, TimerStatus, WorkoutStatus } from '../types/workout';
 
 // Union Type の SSOT は src/types/。re-export のみ。
-export type { Equipment, MuscleGroup, TimerStatus, WorkoutStatus };
-export type { PRType };
 
 /** workouts テーブル行型 */
 export type WorkoutRow = {
@@ -93,3 +91,11 @@ export type UserSettings = {
   weeklyGoalCount: number; // 1〜7
   inviteCodeUnlocked: boolean;
 };
+
+export { type PRType } from '../types/pr';
+export {
+  type Equipment,
+  type MuscleGroup,
+  type TimerStatus,
+  type WorkoutStatus,
+} from '../types/workout';

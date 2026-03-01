@@ -28,12 +28,14 @@ export function createAIProvider(): IAIProvider {
   const providerName = process.env['AI_PROVIDER'] ?? 'openai';
 
   switch (providerName) {
-    case 'openai':
+    case 'openai': {
       return new OpenAIProvider();
+    }
     // TODO: Bedrock に切り替える場合は以下を有効化する
     // case 'bedrock':
     //   return new BedrockProvider();
-    default:
+    default: {
       throw new Error(`未知の AI_PROVIDER です: ${providerName}。openai を指定してください。`);
+    }
   }
 }

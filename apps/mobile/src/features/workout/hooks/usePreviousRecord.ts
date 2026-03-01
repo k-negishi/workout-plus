@@ -50,7 +50,7 @@ export function usePreviousRecord(
       // 現在のワークアウトを除外して、直近の完了済みワークアウトを検索
       const excludeClause = currentWorkoutId ? 'AND w.id != ?' : '';
       // 対象日付より前のワークアウトのみを前回セットとして参照する（過去日付セッション対応）
-      const dateClause = currentWorkoutCreatedAt !== null ? 'AND w.created_at < ?' : '';
+      const dateClause = currentWorkoutCreatedAt === null ? '' : 'AND w.created_at < ?';
       const params: (string | number)[] = [exerciseId];
       if (currentWorkoutId) {
         params.push(currentWorkoutId);

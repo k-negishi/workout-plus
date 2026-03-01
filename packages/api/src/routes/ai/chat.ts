@@ -21,12 +21,14 @@ const aiProvider = createAIProvider();
  */
 function getStrategy(strategy: WorkoutHistoryContext['strategy']): WorkoutHistoryStrategy {
   switch (strategy) {
-    case 'recent_months':
+    case 'recent_months': {
       return new RecentMonthsStrategy();
+    }
     // TODO: case 'exercise_specific': return new ExerciseSpecificStrategy();
     // TODO: case 'date_range': return new DateRangeStrategy();
-    default:
+    default: {
       return new RecentMonthsStrategy();
+    }
   }
 }
 
