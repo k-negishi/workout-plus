@@ -12,6 +12,7 @@ import { type RouteProp, useNavigation, useRoute } from '@react-navigation/nativ
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
+  Alert,
   FlatList,
   SectionList,
   StyleSheet,
@@ -406,15 +407,61 @@ export const ExercisePickerScreen: React.FC = () => {
     [loadExercises],
   );
 
-  /** カスタム種目を作成する（Issue #205: 重複名チェックを追加） */
+  /**
+   * Issue #207: 削除済み種目を復元する
+   * 復元後はモードに応じてセッションへ追加 or 選択状態に追加する
+   *
+   * handleCreateCustom より先に定義することで exhaustive-deps の循環依存を避ける
+   */
+  const handleRestoreExercise = useCallback(
+    async (id: string) => {
+      try {
+        await ExerciseRepository.restore(id);
+        await loadExercises();
+        if (mode === 'single') {
+          await session.addExercise(id);
+          navigation.goBack();
+        } else {
+          setSelectedIds((prev) => new Set(prev).add(id));
+        }
+        setIsCreating(false);
+        setNewExerciseName('');
+      } catch {
+        showErrorToast('種目の復元に失敗しました');
+      }
+    },
+    [mode, session, navigation, loadExercises],
+  );
+
+  /**
+   * 種目を作成する（Issue #205: 重複名チェック、Issue #207: 削除済み種目の復元フロー）
+   *
+   * 「作成して追加」ボタンタップ時に:
+   * 1. 同名の有効な種目 → 重複エラーダイアログ
+   * 2. 同名の削除済み種目 → 復元確認ダイアログ
+   * 3. 重複なし → 新規作成
+   */
   const handleCreateCustom = useCallback(async () => {
     if (!newExerciseName.trim()) return;
 
     try {
-      // 同名の種目が既に存在する場合はエラーダイアログを表示して中断する
+      // 削除済みを含む同名種目を検索（Issue #207: findByExactName は is_deleted 問わず検索）
       const existing = await ExerciseRepository.findByExactName(newExerciseName.trim());
       if (existing) {
-        setIsDuplicateError(true);
+        if (existing.is_deleted === 1) {
+          // 削除済み種目 → 復元フローへ誘導（Alert.alert でダイアログ表示）
+          Alert.alert(
+            '削除済み種目の復元',
+            `"${existing.name}" はすでに削除済みです。復元しますか？\n\n復元すると過去の履歴・記録が引き続き利用できます。`,
+            [
+              { text: 'キャンセル', style: 'cancel' },
+              { text: '復元する', onPress: () => handleRestoreExercise(existing.id) },
+            ],
+          );
+        } else {
+          // 有効な同名種目 → 重複エラー
+          setIsDuplicateError(true);
+        }
         return;
       }
 
@@ -434,7 +481,15 @@ export const ExercisePickerScreen: React.FC = () => {
     } catch {
       showErrorToast('種目の作成に失敗しました');
     }
-  }, [newExerciseName, newMuscleGroup, newEquipment, mode, session, navigation]);
+  }, [
+    newExerciseName,
+    newMuscleGroup,
+    newEquipment,
+    mode,
+    session,
+    navigation,
+    handleRestoreExercise,
+  ]);
 
   /** 閉じる */
   const handleClose = useCallback(() => {

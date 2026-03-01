@@ -139,6 +139,38 @@ export const TimerBar: React.FC<TimerBarProps> = ({
   // 手入力可能: paused または discarded（running/not_started は不可）
   const canEdit = timerStatus === 'paused' || timerStatus === 'discarded';
 
+  // 経過時間の表示要素（nested ternary を避けるため変数に分離）
+  const elapsedTimeDisplay = canEdit ? (
+    <TouchableOpacity
+      onPress={handleStartEditing}
+      style={{ marginLeft: 'auto' }}
+      accessibilityLabel="経過時間を編集"
+    >
+      <Text
+        style={{
+          fontSize: 18,
+          fontWeight: '700',
+          color: elapsedLabelColor,
+          fontVariant: ['tabular-nums'],
+        }}
+      >
+        {elapsedLabel}
+      </Text>
+    </TouchableOpacity>
+  ) : (
+    <Text
+      style={{
+        marginLeft: 'auto',
+        fontSize: 18,
+        fontWeight: '700',
+        color: elapsedLabelColor,
+        fontVariant: ['tabular-nums'],
+      }}
+    >
+      {elapsedLabel}
+    </Text>
+  );
+
   return (
     <View
       style={{
@@ -206,35 +238,8 @@ export const TimerBar: React.FC<TimerBarProps> = ({
           selectTextOnFocus
           accessibilityLabel="経過時間の手入力"
         />
-      ) : canEdit ? (
-        <TouchableOpacity
-          onPress={handleStartEditing}
-          style={{ marginLeft: 'auto' }}
-          accessibilityLabel="経過時間を編集"
-        >
-          <Text
-            style={{
-              fontSize: 18,
-              fontWeight: '700',
-              color: elapsedLabelColor,
-              fontVariant: ['tabular-nums'],
-            }}
-          >
-            {elapsedLabel}
-          </Text>
-        </TouchableOpacity>
       ) : (
-        <Text
-          style={{
-            marginLeft: 'auto',
-            fontSize: 18,
-            fontWeight: '700',
-            color: elapsedLabelColor,
-            fontVariant: ['tabular-nums'],
-          }}
-        >
-          {elapsedLabel}
-        </Text>
+        elapsedTimeDisplay
       )}
 
       {/* 中止ボタン */}

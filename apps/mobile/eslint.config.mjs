@@ -105,10 +105,10 @@ export default [
       // RN/Expo 非互換のルールは off に設定
       ...unicorn.configs['recommended'].rules,
       // ファイル名規則: PascalCase（コンポーネント）または camelCase（ユーティリティ）
-      // ignore: "AI" は業界標準アクロニムのため例外扱い（AIScreen.tsx, useAIChat.ts 等）
+      // ignore: "AI" / "1RM" は業界標準アクロニムのため例外扱い（AIScreen.tsx, calculate1RM.ts 等）
       'unicorn/filename-case': [
         'error',
-        { cases: { pascalCase: true, camelCase: true }, ignore: [/AI/] },
+        { cases: { pascalCase: true, camelCase: true }, ignore: [/AI/, /1RM/] },
       ],
       'unicorn/prevent-abbreviations': 'off',        // props / ref / err / idx 等の略語が多い
       'unicorn/no-null': 'off',                      // RN: StyleSheet / route.params で null が必要
