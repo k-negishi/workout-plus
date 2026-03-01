@@ -709,7 +709,7 @@ export const ExercisePickerScreen: React.FC = () => {
         visible={isDuplicateError}
         title="重複する種目名"
         message="同じ名前の種目がすでに存在します"
-        okLabel="OK"
+        okLabel="閉じる"
         onOk={() => setIsDuplicateError(false)}
       />
     </View>
