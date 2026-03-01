@@ -881,7 +881,14 @@ export async function ensureDevWorkoutFixtures(db: SQLiteDatabase): Promise<void
     await db.execAsync(
       `INSERT OR IGNORE INTO workouts (id, status, created_at, completed_at, elapsed_seconds, workout_date, timer_status) VALUES ('${workout.id}', 'completed', ${workout.createdAt}, ${workout.completedAt}, ${workout.elapsedSeconds}, '${workoutDate}', 'not_started')`,
     );
-    // workout_exercises・sets は INSERT OR IGNORE なので競合時も無害
+    // INSERT OR IGNORE が無視された場合（workout_date 競合 = ユーザー実ワークアウトが同日に存在）
+    // workout は DB に存在しないため workout_exercises の INSERT をスキップして FK 制約違反を防ぐ
+    const insertedWorkout = await db.getFirstAsync<{ id: string }>(
+      `SELECT id FROM workouts WHERE id = '${workout.id}'`,
+    );
+    if (!insertedWorkout) {
+      continue;
+    }
     await insertFixtureExercises(db, workout, exerciseIdMap);
   }
 }

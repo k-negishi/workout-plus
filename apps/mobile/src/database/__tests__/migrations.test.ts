@@ -434,6 +434,12 @@ describe('runMigrations V8 → V9: dev fixture 整合性確保', () => {
       if (sql.includes("FROM workouts WHERE id LIKE 'dev-fixture-workout-%'")) {
         return { count: fixtureCount };
       }
+      // fixture workout の存在確認クエリ（INSERT OR IGNORE 後の SELECT id FROM workouts WHERE id = '...'）
+      // デフォルト: INSERT 成功とみなして id を返す（競合テストでは mockImplementation で上書き）
+      const workoutIdMatch = sql.match(/FROM workouts WHERE id = '(dev-fixture-workout-[^']+)'/);
+      if (workoutIdMatch?.[1]) {
+        return { id: workoutIdMatch[1] };
+      }
       // exercises の名前検索 → ダミー ID を返す（全種目存在するとみなす）
       const match = sql.match(/WHERE name = '(.+)' LIMIT 1/);
       if (match?.[1]) return { id: `EX_${match[1]}` };
@@ -522,6 +528,40 @@ describe('runMigrations V8 → V9: dev fixture 整合性確保', () => {
         sql.includes('UPDATE workouts SET workout_date') && sql.includes('workout_date IS NULL'),
     );
     expect(updateCalls.length).toBe(13);
+  });
+
+  it('workout_date 競合により workouts INSERT が無視された場合、workout_exercises を挿入せず FK エラーを防ぐこと', async () => {
+    // 実機シナリオ: ユーザーが 2026-01-01 に実ワークアウトを記録済みで、
+    // dev-fixture-workout-2026-01-01 の INSERT が workout_date UNIQUE 制約でスキップされた状態
+    const db = createMockDbV8({ fixtureCount: 0 });
+    const conflictingWorkoutId = 'dev-fixture-workout-2026-01-01';
+
+    db.getFirstAsync.mockImplementation(async (sql: string) => {
+      if (sql === 'PRAGMA user_version') return { user_version: db.getSchemaVersion() };
+      // dev fixture カウントクエリ
+      if (sql.includes("FROM workouts WHERE id LIKE 'dev-fixture-workout-%'")) return { count: 0 };
+      // 競合 fixture: INSERT OR IGNORE で無視されたため SELECT で見つからない → null
+      if (sql.includes(`WHERE id = '${conflictingWorkoutId}'`)) return null;
+      // 他の fixture workout は INSERT 成功として id を返す
+      const workoutIdMatch = sql.match(/FROM workouts WHERE id = '(dev-fixture-workout-[^']+)'/);
+      if (workoutIdMatch?.[1]) return { id: workoutIdMatch[1] };
+      // 種目名検索
+      const nameMatch = sql.match(/WHERE name = '(.+)' LIMIT 1/);
+      if (nameMatch?.[1]) return { id: `EX_${nameMatch[1]}` };
+      return null;
+    });
+
+    // FK エラーなしで正常完了すること
+    await expect(runMigrations(db as unknown as SQLiteDatabase)).resolves.toBeUndefined();
+
+    // 競合 fixture の workout_exercises は INSERT されないこと（FK 制約違反を防ぐ）
+    const execCalls = db.execAsync.mock.calls.map((call) => String(call[0]));
+    const conflictExerciseInserts = execCalls.filter(
+      (sql) =>
+        sql.includes('INSERT OR IGNORE INTO workout_exercises') &&
+        sql.includes(conflictingWorkoutId),
+    );
+    expect(conflictExerciseInserts.length).toBe(0);
   });
 
   it('__DEV__ = false のとき V9 マイグレーションは workouts を変更しないこと', async () => {
