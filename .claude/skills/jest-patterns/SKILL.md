@@ -238,6 +238,118 @@ monorepo ではホイスト先が意図せず 7.x になるケースがある。
 
 ---
 
+## 10. `expo/virtual/env` ESM を Jest で解決できない問題
+
+`babel-preset-expo` は `process.env.EXPO_PUBLIC_*` アクセスをビルド時に
+ESM モジュール `expo/virtual/env` への import に変換する。
+Jest の logic project（CommonJS）はこの ESM を解決できないため、
+`SyntaxError: Cannot use import statement outside a module` でクラッシュする。
+
+**解決策**: CJS モックを作成して `moduleNameMapper` に追加する。
+
+```javascript
+// apps/mobile/__mocks__/expo-virtual-env.js
+module.exports = { env: process.env };
+```
+
+```typescript
+// apps/mobile/jest.config.ts（logic project の moduleNameMapper に追加）
+moduleNameMapper: {
+  '^expo/virtual/env$': '<rootDir>/__mocks__/expo-virtual-env.js',
+  // ...
+}
+```
+
+**なぜこうなるか**:
+`babel-preset-expo` は `process.env.EXPO_PUBLIC_*` を安全にバンドルするために
+`import { env } from 'expo/virtual/env'` に置き換える。
+Hermes・ブラウザでは ESM として解決されるが、
+Jest の CommonJS 環境では解決できない。
+`__mocks__/` への CJS モックで bypass する。
+
+**適用タイミング**: `EXPO_PUBLIC_*` 変数を読むモジュール（環境変数系・feature flag 系）をテストするとき。
+
+---
+
+## 11. `testing-library/prefer-find-by`: waitFor+getBy は findBy に変換する
+
+ESLint ルール `testing-library/prefer-find-by` により、
+「要素出現を待つだけの `waitFor`」は `findBy*` に書き直す必要がある。
+
+```typescript
+// NG: prefer-find-by エラー（要素取得だけの waitFor）
+await waitFor(() => screen.getByTestId('stepper-increment'));
+await waitFor(() => screen.getByText('解禁済み'));
+
+// OK: findBy* を使う
+await screen.findByTestId('stepper-increment');
+await screen.findByText('解禁済み');
+```
+
+**多段階テスト（出現待ち→操作→結果確認）の典型パターン**:
+
+```typescript
+// 出現を待つ（findBy） → 操作（同期 getBy） → 結果確認（waitFor + expect）
+await screen.findByTestId('invite-code-row');            // ← 出現待ち: findBy
+fireEvent.press(screen.getByTestId('invite-code-row')); // ← 操作: 同期 getBy のまま OK
+await waitFor(() => {
+  expect(screen.getByTestId('invite-code-form')).toBeTruthy(); // ← 結果確認: waitFor+expect のまま OK
+});
+```
+
+**ルールの対象外（waitFor+expect の複数行は OK）**:
+```typescript
+// 複数 expect を含む waitFor はルール対象外（そのまま OK）
+await waitFor(() => {
+  expect(screen.getByText('4回')).toBeTruthy();
+  expect(screen.getByText('設定')).toBeTruthy();
+});
+```
+
+---
+
+## 12. 環境変数依存モジュール: `jest.resetModules()` + `require()` でテストする
+
+モジュール読み込み時に `process.env.*` を参照するモジュール（定数として束縛される）は、
+`jest.resetModules()` でキャッシュをリセットしてから `require()` で再取得することで
+環境変数の変化を反映できる。
+
+```typescript
+// inviteCode.ts（モジュール読み込み時に評価される定数）
+const VALID_INVITE_CODE = process.env['EXPO_PUBLIC_INVITE_CODE'] ?? '';
+```
+
+```typescript
+// inviteCode.test.ts
+describe('環境変数あり', () => {
+  beforeEach(() => {
+    process.env['EXPO_PUBLIC_INVITE_CODE'] = 'test-code-2026';
+    jest.resetModules(); // キャッシュをリセット
+  });
+  afterEach(() => {
+    delete process.env['EXPO_PUBLIC_INVITE_CODE'];
+  });
+
+  it('正しいコードで true を返す', () => {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { validateInviteCode } = require('../inviteCode') as {
+      validateInviteCode: (input: string) => boolean;
+    };
+    expect(validateInviteCode('test-code-2026')).toBe(true);
+  });
+});
+```
+
+**注意点**:
+- `jest.resetModules()` は `beforeEach` で呼ぶ（テスト間の独立性）
+- `require()` はテスト内で毎回呼ぶ（リセット後に再取得）
+- `no-require-imports` エラーは `// eslint-disable-next-line` で抑制する
+
+**適用タイミング**: 環境変数や feature flag を定数として束縛するモジュールで
+「設定 A のとき」「設定 B のとき」を別ケースでテストしたい場合。
+
+---
+
 ## 9. `test.each` のコールバック引数は配列要素数と一致させる（TS2345）
 
 `test.each` に渡す配列の要素数とコールバック引数の数が食い違うと TypeScript エラー（TS2345）になる。
