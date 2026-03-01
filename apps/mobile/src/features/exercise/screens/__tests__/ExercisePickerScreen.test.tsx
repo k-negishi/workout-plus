@@ -507,6 +507,70 @@ describe('ExercisePickerScreen - FAB タップ後のスクロール抑制（Issu
   });
 });
 
+describe('ExercisePickerScreen - チップボタンのスタイル（Issue #205）', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseExerciseSearch.mockReturnValue(DEFAULT_SEARCH_STATE);
+  });
+
+  it('未選択の部位チップ（背中）は #CBD5E1 のボーダーと #F8FAFC の背景を持つ', () => {
+    render(<ExercisePickerScreen />);
+    fireEvent.press(screen.getByLabelText('カスタム種目を追加'));
+
+    // 「背中」はカテゴリタブとフォームチップの両方に存在する。
+    // フォームチップは Pressable に style 関数を持つので、style が関数の親要素を特定する。
+    const backTexts = screen.getAllByText('背中');
+    const formChipText = backTexts.find((el) => typeof el.parent?.props.style === 'function');
+    expect(formChipText).toBeTruthy();
+
+    const style = formChipText!.parent!.props.style({ pressed: false });
+    expect(style.borderColor).toBe('#CBD5E1');
+    expect(style.backgroundColor).toBe('#F8FAFC');
+  });
+
+  it('選択中の部位チップ（胸、初期値）は #4D94FF のボーダーと #E6F2FF の背景を持つ', () => {
+    render(<ExercisePickerScreen />);
+    fireEvent.press(screen.getByLabelText('カスタム種目を追加'));
+
+    // 初期状態では newMuscleGroup === 'chest' なので「胸」が選択済み
+    const chestTexts = screen.getAllByText('胸');
+    const formChipText = chestTexts.find((el) => typeof el.parent?.props.style === 'function');
+    expect(formChipText).toBeTruthy();
+
+    const style = formChipText!.parent!.props.style({ pressed: false });
+    expect(style.borderColor).toBe('#4D94FF');
+    expect(style.backgroundColor).toBe('#E6F2FF');
+  });
+
+  it('未選択の器具チップ（ダンベル）は #CBD5E1 のボーダーと #F8FAFC の背景を持つ', () => {
+    render(<ExercisePickerScreen />);
+    fireEvent.press(screen.getByLabelText('カスタム種目を追加'));
+
+    // 初期値は newEquipment === 'barbell' なので「ダンベル」は未選択
+    const dumbbellTexts = screen.getAllByText('ダンベル');
+    const formChipText = dumbbellTexts.find((el) => typeof el.parent?.props.style === 'function');
+    expect(formChipText).toBeTruthy();
+
+    const style = formChipText!.parent!.props.style({ pressed: false });
+    expect(style.borderColor).toBe('#CBD5E1');
+    expect(style.backgroundColor).toBe('#F8FAFC');
+  });
+
+  it('選択中の器具チップ（バーベル、初期値）は #4D94FF のボーダーと #E6F2FF の背景を持つ', () => {
+    render(<ExercisePickerScreen />);
+    fireEvent.press(screen.getByLabelText('カスタム種目を追加'));
+
+    // 初期状態では newEquipment === 'barbell' なので「バーベル」が選択済み
+    const barbellTexts = screen.getAllByText('バーベル');
+    const formChipText = barbellTexts.find((el) => typeof el.parent?.props.style === 'function');
+    expect(formChipText).toBeTruthy();
+
+    const style = formChipText!.parent!.props.style({ pressed: false });
+    expect(style.borderColor).toBe('#4D94FF');
+    expect(style.backgroundColor).toBe('#E6F2FF');
+  });
+});
+
 describe('ExercisePickerScreen - 種目名重複登録不可（Issue #205）', () => {
   beforeEach(() => {
     jest.clearAllMocks();
