@@ -236,3 +236,31 @@ monorepo ではホイスト先が意図せず 7.x になるケースがある。
 - vitest を使うパッケージに ESLint を導入するとき
 - ESLint を 9 → 10 にアップグレードするとき
 
+---
+
+## 9. `test.each` のコールバック引数は配列要素数と一致させる（TS2345）
+
+`test.each` に渡す配列の要素数とコールバック引数の数が食い違うと TypeScript エラー（TS2345）になる。
+説明文字列など「テストの論理には不要だが配列に含めているもの」も含めて数を合わせること。
+
+```typescript
+// NG: データが [weight, reps, expected, description] の4要素だがコールバックが3引数
+// → TS2345: Argument of type '(...args: [..., string]) => void' is not assignable
+test.each([
+  [60, 10, true, '通常セット'],
+])('weight=%s reps=%s → %s（%s）', (weight, reps, expected) => {
+  expect(fn({ weight, reps })).toBe(expected);
+});
+
+// OK: 4つ目を _description として受け取る（使わなくても型エラーが消える）
+test.each([
+  [60, 10, true, '通常セット'],
+  [null, 10, false, 'weight が null'],
+])('weight=%s reps=%s → %s（%s）', (weight, reps, expected, _description) => {
+  expect(fn({ weight: weight as number | null, reps: reps as number | null })).toBe(expected);
+});
+```
+
+**適用タイミング**: `test.each` にラベル・メモ用の文字列を追加した直後。
+`_description` のアンダースコアプレフィックスで「意図的な未使用」を明示する。
+

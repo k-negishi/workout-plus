@@ -154,6 +154,51 @@ jest.mock('react-native-gesture-handler', () => ({
 - 実装ファイルの import に RNGH コンポーネントが増えたとき
 - `fireEvent.press` でボタンが検知されなくなったとき（mock から漏れているサイン）
 
+### iOS Modal 内で GHRV を使う場合は Modal 全体をラップする
+
+React Native の `Modal` の中で `GestureHandlerRootView`（GHRV）と
+`DraggableFlatList` 等の RNGH コンポーネントを組み合わせる場合、
+**GHRV は Modal の最外層でラップしなければならない。**
+
+GHRV を `DraggableFlatList` のみにラップすると、GHRV の外側にある
+ヘッダーボタン（`TouchableOpacity` 等）のタッチイベントが
+ジェスチャーシステムにインターセプトされ、押下が無効になる。
+
+```tsx
+// ❌ NG: DraggableFlatList だけを GHRV でラップ
+// → ヘッダーの保存ボタンが押せなくなる（タッチが GHRV 外に吸収される）
+<Modal>
+  <View>
+    <Header>
+      <TouchableOpacity onPress={onSave}>保存</TouchableOpacity>  {/* ← 押せない */}
+    </Header>
+    <GestureHandlerRootView>
+      <DraggableFlatList ... />
+    </GestureHandlerRootView>
+  </View>
+</Modal>
+
+// ✅ OK: Modal 全体を GHRV でラップ
+// → ヘッダーボタンも DraggableFlatList も同一ジェスチャーコンテキストで動作する
+<Modal>
+  <GestureHandlerRootView style={{ flex: 1 }}>
+    <View>
+      <Header>
+        <TouchableOpacity onPress={onSave}>保存</TouchableOpacity>  {/* ← 動く */}
+      </Header>
+      <DraggableFlatList ... />
+    </View>
+  </GestureHandlerRootView>
+</Modal>
+```
+
+**追加の注意点**: GHRV 内のボタンは `react-native` の `Pressable` ではなく
+`react-native-gesture-handler` の `TouchableOpacity` を使うと安定する。
+RNGH `TouchableOpacity` はジェスチャーシステムと統合されているため、
+DraggableFlatList とのスクロール競合が起きにくい。
+
+**実績**: ExerciseReorderModal（Issue #189）でヘッダーボタンのタッチ不能を根本解決。
+
 ---
 
 ## Zustand `getState()` で stale closure を回避

@@ -150,6 +150,78 @@ personal_records.workout_id TEXT NOT NULL REFERENCES workouts(id)
 -- → 手順: 影響する子 ID を収集 → 子を削除 → 親を削除 → 子を再計算
 ```
 
+---
+
+## ビジネスロジック関数と SQL WHERE 句の同期契約
+
+### 問題
+
+TypeScript のビジネスロジック関数（例: `WorkoutPolicy.isValidSet()`）と
+Repository 層の SQL WHERE 句（例: `VALID_SET_SQL`）は「別ファイル・別言語」で管理されるため、
+どちらかを変更してももう一方を変更し忘れてもコンパイルエラーにならない。
+結果として「TS の計算結果と DB の集計結果が食い違う」サイレントバグになる。
+
+```typescript
+// NG: 同じ条件を2箇所に散在させる
+// useWorkoutSession.ts
+const isValid = set.weight != null && set.reps != null && set.reps > 0;
+
+// workout.ts (Repository)
+const sql = `... WHERE s.weight IS NOT NULL AND s.reps IS NOT NULL AND s.reps >= 1`;
+// → 条件の微妙な違い（> 0 vs >= 1）に気づけない
+```
+
+### 解決策：定数で一元管理 + パラメタライズドテストで同期を保証
+
+```typescript
+// domain/workout/WorkoutPolicy.ts（単一の真実）
+export const WorkoutPolicy = {
+  isValidSet(set: { weight: number | null; reps: number | null }): boolean {
+    return set.weight != null && set.reps != null && set.reps > 0;
+  },
+} as const;
+
+// database/repositories/workout.ts（SQL 版：WorkoutPolicy と一致させる）
+export const VALID_SET_SQL =
+  's.weight IS NOT NULL AND s.reps IS NOT NULL AND s.reps > 0';
+```
+
+```typescript
+// domain/workout/__tests__/WorkoutPolicy.test.ts（同期契約テスト）
+// WorkoutPolicy.isValidSet と VALID_SET_SQL が同じ真理値表を持つことを保証する
+const cases: Array<[string, { weight: number | null; reps: number | null }, boolean]> = [
+  ['weight=60 reps=8',   { weight: 60, reps: 8 },   true],
+  ['weight=0 reps=8',    { weight: 0,  reps: 8 },   true],   // 0kg は有効（自重等）
+  ['weight=60 reps=0',   { weight: 60, reps: 0 },   false],  // reps=0 は無効
+  ['weight=null reps=8', { weight: null, reps: 8 },  false],
+  ['weight=60 reps=null',{ weight: 60, reps: null }, false],
+  ['weight=null reps=null', { weight: null, reps: null }, false],
+];
+
+it.each(cases)('%s → %s', (_label, set, expected) => {
+  expect(WorkoutPolicy.isValidSet(set)).toBe(expected);
+});
+```
+
+**SQL 側は Repository テストで別途担保する（DB から取得した結果が期待通りか検証）。**
+パラメタライズドテストは「TS と SQL の条件が同一の論理かどうか」をドキュメントとして示す役割も担う。
+
+### なぜ SQL に直接 WorkoutPolicy を呼ばないか
+
+expo-sqlite は JavaScript 関数をカスタム SQL 関数として登録できない。
+そのため「TS の関数を SQL 内で呼ぶ」ことはできず、条件を SQL 文字列として複製するしかない。
+同期テストはこの避けられない複製の「ズレ検知装置」として機能する。
+
+### このプロジェクトでの実装
+
+| シンボル | 定義場所 | 用途 |
+|---|---|---|
+| `WorkoutPolicy.isValidSet()` | `src/domain/workout/WorkoutPolicy.ts` | TS 層（有効セット判定・クリーンアップ） |
+| `VALID_SET_SQL` | `src/database/repositories/workout.ts` | SQL 層（`findTodayActiveRecording` の WHERE 句） |
+| 同期テスト | `src/domain/workout/__tests__/WorkoutPolicy.test.ts` | 両者が同じ真理値表を持つことを保証 |
+
+---
+
 ### スキーマドキュメント
 
 `database/schema.ts` の各テーブル定数に JSDoc で以下を記載する:

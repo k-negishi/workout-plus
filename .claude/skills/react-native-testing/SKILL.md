@@ -185,6 +185,40 @@ const handleDayPress = useCallback((dateString: string) => {
 - エージェントに「このファイルの X 行を変更した後、必ず git add して確認する」と明示する
 - 変更後に `grep` でターゲット値が正しく書き込まれているか確認してからコミットする
 
+### エージェントが idle になっても「タスク完了」とは限らない
+
+エージェントが idle 通知を送っても、TaskList のステータスが `in_progress` のままのことがある。
+**TaskList だけ見ても真実はわからない。ファイルの実態を確認すること。**
+
+```bash
+# NG: TaskList が in_progress → 未完了と判断してエージェントを再起動
+# → 実際には変更済みで二重実装になる
+
+# OK: grep でファイルの変更を直接確認してから判断する
+grep -n "WorkoutPolicy\|isValidSet" src/features/workout/hooks/useWorkoutSession.ts
+```
+
+**確認の流れ**:
+1. エージェントが idle になったら `TaskList` でステータスを確認
+2. `in_progress` のまま → 対象ファイルを `grep` / `Read` で実態確認
+3. 変更が適用済み → 自分で `TaskUpdate` して completed にする
+4. 未適用 → 自分で実装するか再指示する
+
+**なぜ起きるか**: エージェントは変更を適用した後に `TaskUpdate(completed)` を呼ぶ必要があるが、
+呼び忘れて idle になることがある（コミットや他の作業に注意が向いた場合など）。
+
+### エージェントが指示範囲を超えた関連変更を行う場合がある
+
+1エージェントへの指示ファイルが1つでも、文脈から「関連変更」を自律判断して
+複数ファイルをまとめてコミットすることがある。
+
+```bash
+# Phase 1 のエージェント完了後、次フェーズを起動する前に確認
+git show <hash> --stat  # → 予期しないファイルが含まれていないか確認
+```
+
+後続エージェントのタスクが既に完了している場合は、そのタスクを `completed` にしてスキップする。
+
 ---
 
 ## 5. useState リスト + DB 更新：明示的再取得が必要
