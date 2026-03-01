@@ -6,7 +6,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "node esbuild.config.js",
-    "build:openapi": "tsx scripts/generate-openapi.ts",
+    "build:openapi": "tsx scripts/generateOpenapi.ts",
     "dev": "tsx watch --env-file=.env src/server.ts",
     "lint": "eslint .",
     "format": "prettier --write 'src/**/*.ts'",

@@ -9,12 +9,12 @@
  * CI でも実行し、型の乖離を防ぐ。
  */
 import { writeFileSync } from 'fs';
-import { dirname,resolve } from 'path';
+import path from 'path';
 import { fileURLToPath } from 'url';
 
 import { createApp } from '../src/app.js';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = createApp();
 
@@ -29,6 +29,6 @@ const spec = app.getOpenAPIDocument({
   servers: [{ url: 'https://api.workout-plus.example.com', description: '本番' }],
 });
 
-const outputPath = resolve(__dirname, '../openapi.json');
+const outputPath = path.resolve(__dirname, '../openapi.json');
 writeFileSync(outputPath, JSON.stringify(spec, null, 2));
-console.log(`✅ OpenAPI スペックを生成しました: ${outputPath}`);
+console.warn(`✅ OpenAPI スペックを生成しました: ${outputPath}`);
