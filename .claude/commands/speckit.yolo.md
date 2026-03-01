@@ -68,11 +68,4 @@ YOLO! You Only Live Once! 仕様策定から実装までを一気通貫で実行
 
 ## 最終レポート
 
-最終出力では以下を必ず提示する。
-
-- ブランチ名
-- `FEATURE_DIR` と主要成果物のパス
-- 完了タスク数 / 総タスク数
-- 実行した検証コマンドと結果（PASS/FAIL）
-- 失敗・保留事項（存在する場合）
-- 推奨次アクション（例: `/speckit.analyze`）
+Step 5（`/speckit.implement`）完了後、`speckit.implement` のステップ9 に定義されたサマリーフォーマットで出力する。
