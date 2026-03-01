@@ -23,11 +23,12 @@ import {
   format,
   isBefore,
   isSameMonth,
+  parseISO,
   startOfDay,
   startOfMonth,
   subMonths,
 } from 'date-fns';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   type LayoutChangeEvent,
   type NativeScrollEvent,
@@ -150,6 +151,19 @@ export const MonthCalendar = React.memo(function MonthCalendar({
   displayMonthRef.current = displayMonth;
   const onMonthChangeRef = useRef(onMonthChange);
   onMonthChangeRef.current = onMonthChange;
+
+  // 外部ナビゲーション由来の selectedDate 変化に displayMonth を同期する（Issue #204）
+  // ホーム画面から過去月のワークアウトをタップしてカレンダーへ遷移した際に、
+  // その月が正しく表示されるようにする。
+  // displayMonthRef.current を参照することで deps 配列への追加（無限ループ）を回避する
+  useEffect(() => {
+    if (!selectedDate) return;
+    const newMonth = startOfMonth(parseISO(selectedDate));
+    // 同月内の変化（日付タップなど）は無視し、月切替アニメーションが不要に発火しないようにする
+    if (isSameMonth(newMonth, displayMonthRef.current)) return;
+    setDisplayMonth(newMonth);
+    setMonthChangeKey((prev) => prev + 1);
+  }, [selectedDate]);
 
   // 3パネル分の表示月を計算（前月・当月・翌月）
   const months = useMemo(

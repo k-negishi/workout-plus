@@ -620,6 +620,72 @@ describe('MonthCalendar - Calendar パネル設定', () => {
 });
 
 // ==========================================
+// Issue #204: ナビゲーション由来の selectedDate 変化で displayMonth が追従する
+// ホームから過去月のワークアウトカードをタップすると、その月が表示されるべき
+// ==========================================
+describe('MonthCalendar - 外部 selectedDate 変化で displayMonth が追従する (Issue #204)', () => {
+  beforeEach(() => {
+    mockCalendarInstances = [];
+  });
+
+  it('selectedDate が別月に変わると displayMonth がその月に切り替わる', async () => {
+    // 今日は 2026-02-21（2月表示）
+    const { rerender } = render(
+      <MonthCalendar trainingDates={[]} selectedDate="2026-02-21" onDayPress={jest.fn()} />,
+    );
+    const container = screen.getByTestId('calendar-container');
+    fireEvent(container, 'layout', {
+      nativeEvent: { layout: { width: MOCK_LAYOUT_WIDTH, height: 400 } },
+    });
+
+    // 最初は 2月が表示されていること
+    expect(screen.getByText('2026年2月')).toBeTruthy();
+
+    // selectedDate を 1月に更新（ホーム画面からの遷移をシミュレート）
+    mockCalendarInstances = [];
+    rerender(<MonthCalendar trainingDates={[]} selectedDate="2026-01-15" onDayPress={jest.fn()} />);
+
+    // displayMonth が 1月に切り替わること（Issue #204 の修正確認）
+    await waitFor(() => {
+      expect(screen.getByText('2026年1月')).toBeTruthy();
+    });
+  });
+
+  it('selectedDate が同月内で変わっても displayMonth は変わらない', () => {
+    const { rerender } = render(
+      <MonthCalendar trainingDates={[]} selectedDate="2026-02-01" onDayPress={jest.fn()} />,
+    );
+    const container = screen.getByTestId('calendar-container');
+    fireEvent(container, 'layout', {
+      nativeEvent: { layout: { width: MOCK_LAYOUT_WIDTH, height: 400 } },
+    });
+
+    expect(screen.getByText('2026年2月')).toBeTruthy();
+
+    // 同月内の日付変化（日付タップなど）では displayMonth は変わらない
+    rerender(<MonthCalendar trainingDates={[]} selectedDate="2026-02-28" onDayPress={jest.fn()} />);
+
+    expect(screen.getByText('2026年2月')).toBeTruthy();
+  });
+
+  it('初期 selectedDate が今月でない場合、その月で表示される', () => {
+    // ナビゲーション初期パラメータとして過去月が渡されるケース
+    const { rerender } = render(
+      <MonthCalendar trainingDates={[]} selectedDate={null} onDayPress={jest.fn()} />,
+    );
+    const container = screen.getByTestId('calendar-container');
+    fireEvent(container, 'layout', {
+      nativeEvent: { layout: { width: MOCK_LAYOUT_WIDTH, height: 400 } },
+    });
+
+    // null → 1月に変化（CalendarScreen の useEffect が targetDate を反映するパターン）
+    rerender(<MonthCalendar trainingDates={[]} selectedDate="2026-01-10" onDayPress={jest.fn()} />);
+
+    expect(screen.getByText('2026年1月')).toBeTruthy();
+  });
+});
+
+// ==========================================
 // Issue #171: 初期表示フラッシュ防止テスト
 // containerWidth = 0 で開始し、onLayout 計測後に ScrollView をマウントする
 // ==========================================
