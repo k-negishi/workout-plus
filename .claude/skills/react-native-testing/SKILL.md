@@ -436,3 +436,60 @@ describe('外部 selectedDate 変化で displayMonth が追従する', () => {
 
 > **A案（React Navigation 作業時 Read）**: React Navigation を使う画面のテスト（useFocusEffect モック・Zustand getState stale closure 回避等）が必要な場合は以下を参照:
 > `Read .claude/skills/react-native-testing/navigation-testing.md`
+
+---
+
+## 10. NativeWind v4 スタイル検証の落とし穴
+
+RNTL の `el.props.style` は **NativeWind 変換前の raw props** を参照する。
+そのため、`Pressable` の style 関数が NativeWind に無視される場合でも、
+テストでは正しい値が返り**テストが誤って Green になる**（Issue #205 実例）。
+
+### 症状
+
+- テストは Green（`borderColor: '#CBD5E1'` が props に存在する）
+- 実機でボーダー・背景色が一切表示されない
+- `Pressable` の style 関数 `({ pressed }) => ({...})` だけが対象（子の `Text` への style オブジェクトは正常に動く）
+
+### 診断手順
+
+```typescript
+// テストで検証したスタイルが実機で出ない → NativeWind の変換漏れを疑う
+const chip = screen.getByTestId('muscle-chip-back');
+const style = typeof chip.props.style === 'function'
+  ? chip.props.style({ pressed: false })
+  : chip.props.style;
+// ↑ テストは通る。しかし実機では style 関数の結果が NativeWind に無視される
+```
+
+**確認チェックリスト**:
+1. `Pressable` の style 関数（`({ pressed }) => ({...})`）を使っていないか確認
+2. 同一画面の `TouchableOpacity` + 静的スタイルオブジェクトと実機挙動を比較する
+3. `jsxImportSource: 'nativewind'` が `tsconfig.json` で有効かを確認
+
+### 正しいパターン
+
+```tsx
+// NG: NativeWind v4 で style 関数の結果が実機に渡らない
+<Pressable
+  style={({ pressed }) => ({
+    borderWidth: 1,
+    borderColor: isSelected ? '#4D94FF' : '#CBD5E1',
+    backgroundColor: pressed ? '#D6EAFF' : isSelected ? '#E6F2FF' : '#F8FAFC',
+  })}
+/>
+
+// OK: TouchableOpacity + 静的スタイルオブジェクト（activeOpacity でプレスフィードバック）
+<TouchableOpacity
+  activeOpacity={0.7}
+  style={{
+    borderWidth: 1,
+    borderColor: isSelected ? '#4D94FF' : '#CBD5E1',
+    backgroundColor: isSelected ? '#E6F2FF' : '#F8FAFC',
+  }}
+/>
+```
+
+**原則**: NativeWind v4 環境では `Pressable` の style 関数を使わず、
+`TouchableOpacity` + 静的スタイルオブジェクトで代替する。
+参照実装: `RecentWorkoutCard.tsx`、`ExercisePickerScreen.tsx` のチップ部分。

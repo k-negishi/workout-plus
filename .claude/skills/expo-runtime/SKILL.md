@@ -188,3 +188,47 @@ try {
 ```
 
 > `finally` で `clearTimeout` を呼ばないとタイマーが残り続けてリソースリークになる。
+
+---
+
+## NativeWind v4 の jsxImportSource 制約
+
+### Pressable の style 関数が実機で無視される（Issue #205 で発見）
+
+NativeWind v4 で `jsxImportSource: 'nativewind'` が有効なとき、`Pressable` に style 関数
+`({ pressed }) => ({...})` を渡すと `borderWidth`・`backgroundColor` 等が**実機に反映されない**。
+
+**症状**:
+- テストは通る（RNTL は NativeWind 変換前の raw props を参照するため）
+- 実機ではボーダー・背景色が一切表示されない
+- 子の `Text` に渡した style オブジェクトは正常に動作する（色変化は見える）
+
+**原因**: NativeWind の jsxImportSource は className→style 変換時に、style 関数（Pressable callback）の処理が不完全で評価結果が実機に渡らない。
+
+**対処**: `TouchableOpacity` + 静的スタイルオブジェクトに切り替える
+
+```tsx
+// NG: style 関数は NativeWind v4 で無視される
+<Pressable
+  style={({ pressed }) => ({
+    borderWidth: 1,
+    borderColor: isSelected ? '#4D94FF' : '#CBD5E1',
+    backgroundColor: pressed ? '#D6EAFF' : isSelected ? '#E6F2FF' : '#F8FAFC',
+  })}
+/>
+
+// OK: TouchableOpacity + 静的スタイルオブジェクト（RecentWorkoutCard と同パターン）
+<TouchableOpacity
+  activeOpacity={0.7}
+  style={{
+    borderWidth: 1,
+    borderColor: isSelected ? '#4D94FF' : '#CBD5E1',
+    backgroundColor: isSelected ? '#E6F2FF' : '#F8FAFC',
+  }}
+/>
+```
+
+**pressed フィードバック**: `activeOpacity={0.7}` で代替する。背景変化が必須なら `Animated` または `StyleSheet.create()` で2つのスタイルを定義して切り替える。
+
+**参照実装**: `RecentWorkoutCard.tsx` — `Pressable + StyleSheet.create()` でボーダーあり。
+
