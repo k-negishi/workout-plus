@@ -37,6 +37,7 @@ export const MuscleGroup = {
   BICEPS: 'biceps',
   TRICEPS: 'triceps',
   ABS: 'abs',
+  OTHER: 'other',
 } as const;
 export type MuscleGroup = (typeof MuscleGroup)[keyof typeof MuscleGroup];
 
@@ -47,6 +48,7 @@ export const Equipment = {
   MACHINE: 'machine',
   CABLE: 'cable',
   BODYWEIGHT: 'bodyweight',
+  OTHER: 'other',
 } as const;
 export type Equipment = (typeof Equipment)[keyof typeof Equipment];
 

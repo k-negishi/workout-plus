@@ -20,6 +20,7 @@ const MUSCLE_GROUP_LABELS: Record<MuscleGroup, string> = {
   biceps: '二頭',
   triceps: '三頭',
   abs: '腹筋',
+  other: 'その他',
 };
 
 /** 秒数を「X時間X分」形式に変換する */

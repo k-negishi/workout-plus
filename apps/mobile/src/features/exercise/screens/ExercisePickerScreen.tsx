@@ -5,6 +5,7 @@
  * Issue #116: 追加済み種目にバッジ表示 + タップ無効化
  * Issue #155: 左スワイプで「履歴」ボタン表示 → ExerciseHistoryFullScreen へ遷移
  *             既存インライン編集（T039）を履歴画面へ移管し削除
+ * Issue #205: 部位・器具に「その他」追加、重複種目名チェック、パフォーマンス改善
  */
 import { Ionicons } from '@expo/vector-icons';
 import { type RouteProp, useNavigation, useRoute } from '@react-navigation/native';
@@ -12,6 +13,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   FlatList,
+  Pressable,
   SectionList,
   StyleSheet,
   Text,
@@ -23,6 +25,7 @@ import { Swipeable } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ExerciseRepository } from '@/database/repositories/exercise';
+import { AlertDialog } from '@/shared/components/AlertDialog';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { showErrorToast } from '@/shared/components/Toast';
 import { useWorkoutSessionStore } from '@/stores/workoutSessionStore';
@@ -50,6 +53,7 @@ const CATEGORIES: Array<{ key: MuscleGroup | null; label: string }> = [
   { key: 'biceps', label: '二頭' },
   { key: 'triceps', label: '三頭' },
   { key: 'abs', label: '腹筋' },
+  { key: 'other', label: 'その他' },
 ];
 
 /** 器具の日本語ラベル */
@@ -59,6 +63,7 @@ const EQUIPMENT_LABELS: Record<Equipment, string> = {
   machine: 'マシン',
   cable: 'ケーブル',
   bodyweight: '自重',
+  other: 'その他',
 };
 
 /** 部位ラベルを返すヘルパー（renderItem の ?? 演算子を削減） */
@@ -86,17 +91,19 @@ const EQUIPMENT_OPTIONS: Array<{ key: Equipment; label: string }> = [
   { key: 'machine', label: 'マシン' },
   { key: 'cable', label: 'ケーブル' },
   { key: 'bodyweight', label: '自重' },
+  { key: 'other', label: 'その他' },
 ];
 
-/** 部位チップ選択肢 */
+/** 部位チップ選択肢（Issue #205: 「二頭筋」→「二頭」、「三頭筋」→「三頭」、「その他」追加） */
 const MUSCLE_GROUP_OPTIONS: Array<{ key: MuscleGroup; label: string }> = [
   { key: 'chest', label: '胸' },
   { key: 'back', label: '背中' },
   { key: 'legs', label: '脚' },
   { key: 'shoulders', label: '肩' },
-  { key: 'biceps', label: '二頭筋' },
-  { key: 'triceps', label: '三頭筋' },
+  { key: 'biceps', label: '二頭' },
+  { key: 'triceps', label: '三頭' },
   { key: 'abs', label: '腹筋' },
+  { key: 'other', label: 'その他' },
 ];
 
 /**
@@ -136,6 +143,8 @@ const ExerciseItemActions: React.FC<{
  * Issue #136: 種目リストのヘッダーコンポーネント
  * カスタム種目作成フォームをリスト先頭に表示する。
  * FAB タップ時にフォームが即座に見えるよう ListHeaderComponent に配置。
+ * Issue #205: React.memo でラップしてチップ選択時の不要な再レンダーを防止。
+ *             Pressable を使うことでアニメーション遅延なしの即時フィードバック。
  */
 const ExerciseListHeader: React.FC<{
   isCreating: boolean;
@@ -147,78 +156,106 @@ const ExerciseListHeader: React.FC<{
   onEquipmentChange: (eq: Equipment) => void;
   onSubmit: () => void;
   onCancel: () => void;
-}> = ({
-  isCreating,
-  newExerciseName,
-  newMuscleGroup,
-  newEquipment,
-  onNameChange,
-  onMuscleGroupChange,
-  onEquipmentChange,
-  onSubmit,
-  onCancel,
-}) =>
-  isCreating ? (
-    <View className="px-5 py-4">
-      <View className="border border-dashed border-[#e2e8f0] rounded-lg p-4">
-        <TextInput
-          className="bg-white border border-[#e2e8f0] rounded-lg px-3 py-2.5 text-[18px] text-[#475569] mb-3"
-          placeholder="種目名を入力"
-          value={newExerciseName}
-          onChangeText={onNameChange}
-        />
-        <Text className="text-[15px] font-semibold text-[#64748b] tracking-wide mb-1.5">部位</Text>
-        <View className="flex-row flex-wrap gap-1.5 mb-3">
-          {MUSCLE_GROUP_OPTIONS.map((opt) => (
-            <TouchableOpacity
-              key={opt.key}
-              onPress={() => onMuscleGroupChange(opt.key)}
-              className={`px-2.5 py-1 rounded-full border ${
-                newMuscleGroup === opt.key ? 'bg-[#E6F2FF] border-[#4D94FF]' : 'border-[#e2e8f0]'
-              }`}
-            >
-              <Text
-                className={`text-[16px] ${
-                  newMuscleGroup === opt.key ? 'text-[#4D94FF] font-semibold' : 'text-[#64748b]'
-                }`}
+}> = React.memo(
+  ({
+    isCreating,
+    newExerciseName,
+    newMuscleGroup,
+    newEquipment,
+    onNameChange,
+    onMuscleGroupChange,
+    onEquipmentChange,
+    onSubmit,
+    onCancel,
+  }) =>
+    isCreating ? (
+      <View className="px-5 py-4">
+        <View className="border border-dashed border-[#e2e8f0] rounded-lg p-4">
+          <TextInput
+            className="bg-white border border-[#e2e8f0] rounded-lg px-3 py-2.5 text-[18px] text-[#475569] mb-3"
+            placeholder="種目名を入力"
+            value={newExerciseName}
+            onChangeText={onNameChange}
+          />
+          <Text className="text-[16px] font-semibold text-[#64748b] tracking-wide mb-1.5">
+            部位
+          </Text>
+          <View className="flex-row flex-wrap gap-1.5 mb-3">
+            {MUSCLE_GROUP_OPTIONS.map((opt) => (
+              <Pressable
+                key={opt.key}
+                onPress={() => onMuscleGroupChange(opt.key)}
+                style={({ pressed }) => ({
+                  paddingHorizontal: 10,
+                  paddingVertical: 4,
+                  borderRadius: 999,
+                  borderWidth: 1,
+                  borderColor: newMuscleGroup === opt.key ? '#4D94FF' : '#e2e8f0',
+                  backgroundColor: pressed
+                    ? '#D6EAFF'
+                    : newMuscleGroup === opt.key
+                      ? '#E6F2FF'
+                      : 'white',
+                })}
               >
-                {opt.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-        <Text className="text-[15px] font-semibold text-[#64748b] tracking-wide mb-1.5">器具</Text>
-        <View className="flex-row flex-wrap gap-1.5 mb-3">
-          {EQUIPMENT_OPTIONS.map((opt) => (
-            <TouchableOpacity
-              key={opt.key}
-              onPress={() => onEquipmentChange(opt.key)}
-              className={`px-2.5 py-1 rounded-full border ${
-                newEquipment === opt.key ? 'bg-[#E6F2FF] border-[#4D94FF]' : 'border-[#e2e8f0]'
-              }`}
-            >
-              <Text
-                className={`text-[16px] ${
-                  newEquipment === opt.key ? 'text-[#4D94FF] font-semibold' : 'text-[#64748b]'
-                }`}
+                <Text
+                  style={{
+                    fontSize: 16,
+                    color: newMuscleGroup === opt.key ? '#4D94FF' : '#64748b',
+                    fontWeight: newMuscleGroup === opt.key ? '600' : '400',
+                  }}
+                >
+                  {opt.label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+          <Text className="text-[16px] font-semibold text-[#64748b] tracking-wide mb-1.5">
+            器具
+          </Text>
+          <View className="flex-row flex-wrap gap-1.5 mb-3">
+            {EQUIPMENT_OPTIONS.map((opt) => (
+              <Pressable
+                key={opt.key}
+                onPress={() => onEquipmentChange(opt.key)}
+                style={({ pressed }) => ({
+                  paddingHorizontal: 10,
+                  paddingVertical: 4,
+                  borderRadius: 999,
+                  borderWidth: 1,
+                  borderColor: newEquipment === opt.key ? '#4D94FF' : '#e2e8f0',
+                  backgroundColor: pressed
+                    ? '#D6EAFF'
+                    : newEquipment === opt.key
+                      ? '#E6F2FF'
+                      : 'white',
+                })}
               >
-                {opt.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                <Text
+                  style={{
+                    fontSize: 16,
+                    color: newEquipment === opt.key ? '#4D94FF' : '#64748b',
+                    fontWeight: newEquipment === opt.key ? '600' : '400',
+                  }}
+                >
+                  {opt.label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+          <TouchableOpacity
+            onPress={onSubmit}
+            className="py-2.5 bg-[#4D94FF] rounded-lg items-center"
+          >
+            <Text className="text-[17px] font-semibold text-white">作成して追加</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={onCancel} className="items-center mt-2">
+            <Text className="text-[17px] text-[#64748b]">キャンセル</Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity
-          onPress={onSubmit}
-          className="py-2.5 bg-[#4D94FF] rounded-lg items-center"
-        >
-          <Text className="text-[17px] font-semibold text-white">作成して追加</Text>
-        </TouchableOpacity>
-        <TouchableOpacity onPress={onCancel} className="items-center mt-2">
-          <Text className="text-[17px] text-[#64748b]">キャンセル</Text>
-        </TouchableOpacity>
       </View>
-    </View>
-  ) : null;
+    ) : null,
+);
 
 export const ExercisePickerScreen: React.FC = () => {
   const navigation = useNavigation<PickerNavProp>();
@@ -251,6 +288,9 @@ export const ExercisePickerScreen: React.FC = () => {
 
   // 並び替えモーダル表示状態
   const [isReorderModalVisible, setIsReorderModalVisible] = useState(false);
+
+  // Issue #205: 種目名重複エラーダイアログ表示状態
+  const [isDuplicateError, setIsDuplicateError] = useState(false);
 
   // フィルター適用後に表示されている種目（並び替えモーダルに渡す対象）
   // sections を平坦化して現在のフィルター条件での表示種目を取得する
@@ -306,11 +346,18 @@ export const ExercisePickerScreen: React.FC = () => {
     [loadExercises],
   );
 
-  /** カスタム種目を作成する */
+  /** カスタム種目を作成する（Issue #205: 重複名チェックを追加） */
   const handleCreateCustom = useCallback(async () => {
     if (!newExerciseName.trim()) return;
 
     try {
+      // 同名の種目が既に存在する場合はエラーダイアログを表示して中断する
+      const existing = await ExerciseRepository.findByExactName(newExerciseName.trim());
+      if (existing) {
+        setIsDuplicateError(true);
+        return;
+      }
+
       const row = await ExerciseRepository.create({
         name: newExerciseName.trim(),
         muscleGroup: newMuscleGroup,
@@ -562,13 +609,15 @@ export const ExercisePickerScreen: React.FC = () => {
                 <View className="flex-1">
                   <Text className="text-[16px] font-semibold text-[#334155]">{item.name}</Text>
                   <View className="flex-row gap-1.5 mt-1">
+                    {/* Issue #205: 部位バッジのフォントサイズを 13px → 14px に拡大 */}
                     <View className="px-2 py-[2px] rounded-lg bg-[#E6F2FF]">
-                      <Text className="text-[13px] font-semibold text-[#3385FF]">
+                      <Text className="text-[14px] font-semibold text-[#3385FF]">
                         {getMuscleGroupLabel(item.muscleGroup)}
                       </Text>
                     </View>
+                    {/* Issue #205: 器具バッジのフォントサイズを 15px → 16px に拡大 */}
                     <View className="px-2 py-[2px] rounded-lg bg-[#F1F3F5]">
-                      <Text className="text-[15px] text-[#64748b]">
+                      <Text className="text-[16px] text-[#64748b]">
                         {getEquipmentLabel(item.equipment)}
                       </Text>
                     </View>
@@ -655,6 +704,15 @@ export const ExercisePickerScreen: React.FC = () => {
           <Ionicons name="add" size={24} color="white" />
         </TouchableOpacity>
       )}
+
+      {/* Issue #205: 種目名重複登録エラーダイアログ */}
+      <AlertDialog
+        visible={isDuplicateError}
+        title="重複する種目名"
+        message="同じ名前の種目がすでに存在します"
+        okLabel="OK"
+        onOk={() => setIsDuplicateError(false)}
+      />
     </View>
   );
 };

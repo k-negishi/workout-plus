@@ -220,6 +220,55 @@ describe('ExerciseRepository.restore', () => {
   });
 });
 
+describe('ExerciseRepository.findByExactName', () => {
+  it('存在する名前を渡すと ExerciseRow を返すこと', async () => {
+    const mockDb = createMockDb();
+    mockGetDatabase.mockResolvedValue(mockDb as never);
+    const fakeRow = {
+      id: 'ex-abc',
+      name: 'ベンチプレス',
+      muscle_group: 'chest',
+      equipment: 'barbell',
+      is_custom: 0,
+      is_favorite: 0,
+      is_deleted: 0,
+      created_at: 1000,
+      updated_at: 1000,
+      sort_order: 1,
+    };
+    mockDb.getFirstAsync.mockResolvedValue(fakeRow);
+
+    const result = await ExerciseRepository.findByExactName('ベンチプレス');
+
+    expect(result).toEqual(fakeRow);
+    // 名前の完全一致クエリが呼ばれていること
+    expect(mockDb.getFirstAsync).toHaveBeenCalledWith(expect.stringContaining('name = ?'), [
+      'ベンチプレス',
+    ]);
+  });
+
+  it('存在しない名前の場合は null を返すこと', async () => {
+    const mockDb = createMockDb();
+    mockGetDatabase.mockResolvedValue(mockDb as never);
+    mockDb.getFirstAsync.mockResolvedValue(null);
+
+    const result = await ExerciseRepository.findByExactName('存在しない種目');
+
+    expect(result).toBeNull();
+  });
+
+  it('論理削除済み (is_deleted=1) の種目は除外すること', async () => {
+    const mockDb = createMockDb();
+    mockGetDatabase.mockResolvedValue(mockDb as never);
+    mockDb.getFirstAsync.mockResolvedValue(null);
+
+    await ExerciseRepository.findByExactName('削除済み種目');
+
+    const sql = String(mockDb.getFirstAsync.mock.calls[0]?.[0] ?? '');
+    expect(sql).toMatch(/is_deleted\s*=\s*0/i);
+  });
+});
+
 describe('ExerciseRepository.search (is_deleted フィルタ)', () => {
   it('クエリに is_deleted = 0 フィルタが含まれること', async () => {
     const mockDb = createMockDb();

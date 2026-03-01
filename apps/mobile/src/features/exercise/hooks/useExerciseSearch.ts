@@ -69,6 +69,7 @@ const MUSCLE_GROUP_LABELS: Record<MuscleGroup, string> = {
   biceps: '二頭',
   triceps: '三頭',
   abs: '腹筋',
+  other: 'その他',
 };
 
 /** カテゴリ順序 */
@@ -80,6 +81,7 @@ const CATEGORY_ORDER: MuscleGroup[] = [
   'biceps',
   'triceps',
   'abs',
+  'other',
 ];
 
 /**

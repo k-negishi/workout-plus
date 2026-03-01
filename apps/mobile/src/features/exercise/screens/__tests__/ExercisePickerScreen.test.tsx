@@ -82,11 +82,14 @@ jest.mock('@/shared/components/Toast', () => ({
 }));
 
 // ExerciseRepository は空実装で十分
+const mockFindByExactName = jest.fn();
+const mockCreate = jest.fn();
 jest.mock('@/database/repositories/exercise', () => ({
   ExerciseRepository: {
     toggleFavorite: jest.fn(),
-    create: jest.fn(),
+    create: (...args: unknown[]) => mockCreate(...args),
     update: jest.fn(),
+    findByExactName: (...args: unknown[]) => mockFindByExactName(...args),
   },
 }));
 
@@ -105,6 +108,7 @@ jest.mock('../../hooks/useExerciseSearch', () => ({
     biceps: '二頭',
     triceps: '三頭',
     abs: '腹筋',
+    other: 'その他',
   },
 }));
 
@@ -500,5 +504,76 @@ describe('ExercisePickerScreen - FAB タップ後のスクロール抑制（Issu
     // autoFocus が true だとソフトウェアキーボード起動によるスクロールが発生する
     const textInput = screen.getByPlaceholderText('種目名を入力');
     expect(textInput.props.autoFocus).toBeFalsy();
+  });
+});
+
+describe('ExercisePickerScreen - 種目名重複登録不可（Issue #205）', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseExerciseSearch.mockReturnValue(DEFAULT_SEARCH_STATE);
+  });
+
+  it('フォームに「その他」部位チップが表示される', () => {
+    render(<ExercisePickerScreen />);
+    fireEvent.press(screen.getByLabelText('カスタム種目を追加'));
+
+    // 部位「その他」チップが存在すること
+    const otherChips = screen.getAllByText('その他');
+    // 部位・器具それぞれに「その他」があるので 2 件以上
+    expect(otherChips.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('重複する種目名を登録しようとするとエラーダイアログが表示される', async () => {
+    // findByExactName が既存の種目を返す（重複あり）
+    mockFindByExactName.mockResolvedValue({
+      id: 'existing',
+      name: 'ベンチプレス',
+      muscle_group: 'chest',
+      equipment: 'barbell',
+    });
+
+    render(<ExercisePickerScreen />);
+
+    // FAB をタップしてフォームを表示
+    fireEvent.press(screen.getByLabelText('カスタム種目を追加'));
+
+    // 種目名を入力（既存と重複）
+    fireEvent.changeText(screen.getByPlaceholderText('種目名を入力'), 'ベンチプレス');
+
+    // 「作成して追加」ボタンをタップ
+    fireEvent.press(screen.getByText('作成して追加'));
+
+    // エラーダイアログが表示されること
+    await screen.findByText('同じ名前の種目がすでに存在します');
+
+    // create は呼ばれないこと
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it('ユニークな種目名を登録するとエラーダイアログは表示されない', async () => {
+    // findByExactName が null を返す（重複なし）
+    mockFindByExactName.mockResolvedValue(null);
+    mockCreate.mockResolvedValue({
+      id: 'new-exercise',
+      name: '新しい種目',
+      muscle_group: 'chest',
+      equipment: 'barbell',
+      is_custom: 1,
+      is_favorite: 0,
+      is_deleted: 0,
+      created_at: Date.now(),
+      updated_at: Date.now(),
+      sort_order: 10,
+    });
+
+    render(<ExercisePickerScreen />);
+
+    fireEvent.press(screen.getByLabelText('カスタム種目を追加'));
+    fireEvent.changeText(screen.getByPlaceholderText('種目名を入力'), '新しい種目');
+    fireEvent.press(screen.getByText('作成して追加'));
+
+    // create が呼ばれること
+    await screen.findByText('種目を選択');
+    expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ name: '新しい種目' }));
   });
 });

@@ -66,6 +66,17 @@ export const ExerciseRepository = {
     return db.getFirstAsync<ExerciseRow>('SELECT * FROM exercises WHERE id = ?', [id]) ?? null;
   },
 
+  /** 名前の完全一致で種目を1件取得する（重複チェック用。論理削除済みを除く） */
+  async findByExactName(name: string): Promise<ExerciseRow | null> {
+    const db = await getDatabase();
+    return (
+      (await db.getFirstAsync<ExerciseRow>(
+        'SELECT * FROM exercises WHERE name = ? AND is_deleted = 0',
+        [name],
+      )) ?? null
+    );
+  },
+
   /** カスタム種目を作成する */
   async create(params: CreateExerciseParams): Promise<ExerciseRow> {
     const db = await getDatabase();
