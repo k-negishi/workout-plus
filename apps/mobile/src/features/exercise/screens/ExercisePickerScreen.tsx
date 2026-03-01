@@ -117,7 +117,7 @@ const ExerciseItemActions: React.FC<{
 }> = ({ isAdded, isFavorite, onToggleFavorite }) => (
   <View className="flex-row items-center gap-1">
     {/* Issue #116: 追加済みバッジ */}
-    {isAdded && (
+    {!!isAdded && (
       <View className="px-2 py-[3px] rounded-lg bg-[#E6FAF1]">
         <Text className="text-[13px] font-semibold text-[#10B981]">追加済み</Text>
       </View>
@@ -600,7 +600,9 @@ export const ExercisePickerScreen: React.FC = () => {
                       isSelected ? 'bg-[#4D94FF] border-[#4D94FF]' : 'bg-white border-[#e2e8f0]'
                     }`}
                   >
-                    {isSelected && <Text className="text-white text-[14px] font-bold">{'✓'}</Text>}
+                    {!!isSelected && (
+                      <Text className="text-white text-[14px] font-bold">{'✓'}</Text>
+                    )}
                   </View>
                 )}
 

@@ -4,7 +4,7 @@
  * ダイアログカードは白背景、border-radius: 12px
  */
 import React from 'react';
-import { Modal, Pressable, Text, View } from 'react-native';
+import { Modal, Pressable, Text, TouchableOpacity, View } from 'react-native';
 
 import { borderRadius } from '@/shared/constants/borderRadius';
 import { colors } from '@/shared/constants/colors';
@@ -98,18 +98,20 @@ export function ConfirmDialog({
           {/* アクションボタン */}
           <View style={{ flexDirection: 'row', gap: spacing.sm }}>
             {/* キャンセルボタン */}
-            <Pressable
+            {/* NativeWind v4: Pressable の style 関数は実機で無視されるため TouchableOpacity に変更 */}
+            <TouchableOpacity
+              activeOpacity={0.7}
               onPress={onCancel}
-              style={({ pressed }) => ({
+              style={{
                 flex: 1,
                 paddingVertical: 12,
                 paddingHorizontal: spacing.md,
-                backgroundColor: pressed ? colors.background : colors.white,
+                backgroundColor: colors.white,
                 borderWidth: 1,
                 borderColor: colors.border,
                 borderRadius: borderRadius.md,
                 alignItems: 'center',
-              })}
+              }}
             >
               <Text
                 style={{
@@ -120,25 +122,21 @@ export function ConfirmDialog({
               >
                 {cancelLabel}
               </Text>
-            </Pressable>
+            </TouchableOpacity>
 
             {/* 確認ボタン */}
-            <Pressable
+            {/* NativeWind v4: Pressable の style 関数は実機で無視されるため TouchableOpacity に変更 */}
+            <TouchableOpacity
+              activeOpacity={0.7}
               onPress={onConfirm}
-              style={({ pressed }) => ({
+              style={{
                 flex: 1,
                 paddingVertical: 12,
                 paddingHorizontal: spacing.md,
-                backgroundColor: pressed
-                  ? isDestructive
-                    ? '#DC2626'
-                    : colors.primaryDark
-                  : isDestructive
-                    ? colors.error
-                    : colors.primary,
+                backgroundColor: isDestructive ? colors.error : colors.primary,
                 borderRadius: borderRadius.md,
                 alignItems: 'center',
-              })}
+              }}
             >
               <Text
                 style={{
@@ -149,7 +147,7 @@ export function ConfirmDialog({
               >
                 {confirmLabel}
               </Text>
-            </Pressable>
+            </TouchableOpacity>
           </View>
         </Pressable>
       </Pressable>

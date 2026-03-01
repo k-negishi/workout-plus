@@ -4,7 +4,13 @@
  * サイズ: sm / md / lg
  */
 import React from 'react';
-import { ActivityIndicator, Pressable, type StyleProp, Text, type ViewStyle } from 'react-native';
+import {
+  ActivityIndicator,
+  type StyleProp,
+  Text,
+  TouchableOpacity,
+  type ViewStyle,
+} from 'react-native';
 
 import { borderRadius } from '@/shared/constants/borderRadius';
 import { colors } from '@/shared/constants/colors';
@@ -94,12 +100,14 @@ export function Button({
   const isDisabled = disabled || loading;
 
   return (
-    <Pressable
+    // NativeWind v4: Pressable の style 関数は実機で無視されるため TouchableOpacity に変更
+    <TouchableOpacity
+      activeOpacity={0.7}
       onPress={onPress}
       disabled={isDisabled}
-      style={({ pressed }) => [
+      style={[
         {
-          backgroundColor: pressed ? vStyle.bgPressed : vStyle.bg,
+          backgroundColor: vStyle.bg,
           borderRadius: borderRadius.md,
           paddingVertical: sStyle.paddingVertical,
           paddingHorizontal: sStyle.paddingHorizontal,
@@ -126,6 +134,6 @@ export function Button({
           {label}
         </Text>
       )}
-    </Pressable>
+    </TouchableOpacity>
   );
 }

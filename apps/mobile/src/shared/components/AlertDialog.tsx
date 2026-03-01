@@ -5,7 +5,7 @@
  * ダイアログカードは白背景、border-radius: 12px
  */
 import React from 'react';
-import { Modal, Pressable, Text, View } from 'react-native';
+import { Modal, Pressable, Text, TouchableOpacity, View } from 'react-native';
 
 import { borderRadius } from '@/shared/constants/borderRadius';
 import { colors } from '@/shared/constants/colors';
@@ -76,15 +76,17 @@ export function AlertDialog({ visible, title, message, okLabel = 'OK', onOk }: A
           </View>
 
           {/* OKボタン（単一） */}
-          <Pressable
+          {/* NativeWind v4: Pressable の style 関数は実機で無視されるため TouchableOpacity に変更 */}
+          <TouchableOpacity
+            activeOpacity={0.7}
             onPress={onOk}
-            style={({ pressed }) => ({
+            style={{
               paddingVertical: 12,
               paddingHorizontal: spacing.md,
-              backgroundColor: pressed ? colors.primaryDark : colors.primary,
+              backgroundColor: colors.primary,
               borderRadius: borderRadius.md,
               alignItems: 'center',
-            })}
+            }}
           >
             <Text
               style={{
@@ -95,7 +97,7 @@ export function AlertDialog({ visible, title, message, okLabel = 'OK', onOk }: A
             >
               {okLabel}
             </Text>
-          </Pressable>
+          </TouchableOpacity>
         </Pressable>
       </Pressable>
     </Modal>

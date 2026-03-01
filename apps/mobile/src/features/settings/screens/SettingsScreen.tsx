@@ -271,7 +271,7 @@ export function SettingsScreen() {
           </TouchableOpacity>
 
           {/* アコーディオン展開フォーム（未解禁時のみ） */}
-          {!isInviteCodeUnlocked && isFormExpanded && (
+          {!isInviteCodeUnlocked && !!isFormExpanded && (
             <View
               testID="invite-code-form"
               style={{
@@ -318,7 +318,7 @@ export function SettingsScreen() {
               )}
 
               {/* 成功メッセージ */}
-              {inviteCodeSuccess && (
+              {!!inviteCodeSuccess && (
                 <Text
                   testID="invite-code-success"
                   style={{ fontSize: 13, color: '#10B981', marginBottom: 8 }}

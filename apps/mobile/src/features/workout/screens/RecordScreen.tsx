@@ -385,7 +385,7 @@ export const RecordScreen: React.FC = () => {
       </View>
 
       {/* タイマーバー: recording モード（新規登録・再開）のみ表示する */}
-      {isRecordingMode && (
+      {!!isRecordingMode && (
         <TimerBar
           timerStatus={timer.timerStatus}
           elapsedSeconds={timer.elapsedSeconds}

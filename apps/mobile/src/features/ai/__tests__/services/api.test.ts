@@ -92,12 +92,9 @@ describe('APIAIService', () => {
     ).rejects.toThrow();
   });
 
-  it('Hermes 環境（AbortSignal.timeout が undefined）でも動作すること', async () => {
-    // Hermes では AbortSignal.timeout スタティックメソッドが存在しない
-    const originalTimeout = AbortSignal.timeout;
-    // @ts-expect-error Hermes シミュレーション: timeout を undefined に差し替え
-    AbortSignal.timeout = undefined;
-
+  it('正常リクエストが成功すること（AbortController ベースのタイムアウト実装）', async () => {
+    // 本サービスは Hermes 互換のため AbortController + setTimeout を使用している
+    // AbortSignal.timeout() は Hermes 未実装のため使用禁止（no-restricted-syntax ルール）
     mockResponse(200, { message: 'ok' });
 
     const service = new APIAIService({ baseUrl: BASE_URL, apiKey: API_KEY });
@@ -108,8 +105,6 @@ describe('APIAIService', () => {
         workoutHistory: emptyWorkoutHistory,
       }),
     ).resolves.toEqual({ content: 'ok' });
-
-    AbortSignal.timeout = originalTimeout;
   });
 
   it('ネットワークエラーが適切にハンドリングされること', async () => {

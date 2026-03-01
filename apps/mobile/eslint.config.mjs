@@ -1,6 +1,7 @@
 import tseslint from '@typescript-eslint/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
 import jest from 'eslint-plugin-jest';
+import react from 'eslint-plugin-react';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactNative from 'eslint-plugin-react-native';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
@@ -25,6 +26,7 @@ export default [
       '@typescript-eslint': tseslint,
       'simple-import-sort': simpleImportSort,
       'react-native': reactNative,
+      react,
       sonarjs,
       // React Hooks ルール: フック呼び出し規則 + 依存配列の完全性チェック
       'react-hooks': reactHooks,
@@ -48,6 +50,37 @@ export default [
       // React Hooks: useFocusEffect/useEffect の依存配列漏れを検出
       // → stale closure 起因のバグを事前検知し、getState() パターンへ誘導する
       'react-hooks/exhaustive-deps': 'warn',
+      // --- スキルドキュメントからの lint 昇格ルール ---
+      // coding-rules スキル: enum キーワード禁止 → as const パターンを強制
+      // enum は tree-shaking 不可・ビット演算と混同しやすいため
+      // React Native: Text コンポーネント外の文字列リテラルはクラッシュ
+      // expo-runtime スキル: Pressable + style 関数 / AbortSignal.timeout() 禁止
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'TSEnumDeclaration',
+          message:
+            'enum キーワードは禁止です。as const パターンを使ってください（coding-rules スキル参照）。',
+        },
+        {
+          selector:
+            "MemberExpression[object.name='AbortSignal'][property.name='timeout']",
+          message:
+            'AbortSignal.timeout() は Hermes エンジンに未実装です。AbortController + setTimeout + try/finally で代替してください（expo-runtime スキル参照）。',
+        },
+        {
+          selector:
+            "JSXOpeningElement[name.name='Pressable'] > JSXAttribute[name.name='style'] > JSXExpressionContainer > :matches(ArrowFunctionExpression, FunctionExpression)",
+          message:
+            'Pressable の style 関数は NativeWind v4 で実機に反映されません。TouchableOpacity + 静的スタイルオブジェクト（activeOpacity={0.7}）に切り替えてください（expo-runtime スキル参照）。',
+        },
+      ],
+      // react-native/no-raw-text: Text コンポーネント外の文字列リテラルを禁止
+      // React Native では View 等に直接文字列を書くとクラッシュする
+      'react-native/no-raw-text': ['error', { skip: ['Text'] }],
+      // react/jsx-no-leaked-render: {count && <Text>} パターンを禁止
+      // count = 0 のとき "0" が Text 外に描画されて React Native がクラッシュする
+      'react/jsx-no-leaked-render': 'error',
     },
   },
   {

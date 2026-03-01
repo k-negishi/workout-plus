@@ -55,8 +55,8 @@ jest.mock('../../components/MonthCalendar', () => ({
   MonthCalendar: (props: Record<string, unknown>) => {
     capturedMonthCalendarProps = props;
     // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { Text: MockText } = require('react-native');
-    return <MockText testID="mock-month-calendar">MonthCalendar</MockText>;
+    const { Text } = require('react-native');
+    return <Text testID="mock-month-calendar">MonthCalendar</Text>;
   },
 }));
 

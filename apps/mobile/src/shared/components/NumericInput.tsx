@@ -108,7 +108,7 @@ export function NumericInput({
           backgroundColor: '#FAFBFC',
         }}
       />
-      {unit && (
+      {!!unit && (
         <Text
           style={{
             marginLeft: 4,

@@ -357,7 +357,7 @@ export function ExerciseHistoryFullScreen() {
       </View>
 
       {/* Issue #155: 編集フォーム（isEditing の場合にヘッダー下に展開） */}
-      {isEditing && (
+      {!!isEditing && (
         <ExerciseEditForm
           editName={editName}
           editMuscleGroup={editMuscleGroup}

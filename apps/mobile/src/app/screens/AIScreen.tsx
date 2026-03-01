@@ -235,7 +235,7 @@ export function AIScreen() {
         />
 
         {/* AI 応答待ちインジケーター: isLoading 中のみ表示 */}
-        {isLoading && <TypingIndicator />}
+        {!!isLoading && <TypingIndicator />}
 
         {/* チャット入力エリア: AI ローディング中は無効化 */}
         {/* BottomTab 配下のため insets.bottom は TabBar が吸収する。ここでは不要（Issue #185） */}

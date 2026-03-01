@@ -35,7 +35,7 @@ export function EmptyState({ icon, title, description, actionLabel, onAction }: 
         paddingHorizontal: spacing.xl,
       }}
     >
-      {icon && (
+      {!!icon && (
         <View style={{ marginBottom: spacing.md }}>
           <Ionicons
             name={icon as keyof typeof Ionicons.glyphMap}
@@ -55,7 +55,7 @@ export function EmptyState({ icon, title, description, actionLabel, onAction }: 
       >
         {title}
       </Text>
-      {description && (
+      {!!description && (
         <Text
           style={{
             fontSize: fontSize.sm,
@@ -67,7 +67,7 @@ export function EmptyState({ icon, title, description, actionLabel, onAction }: 
           {description}
         </Text>
       )}
-      {actionLabel && onAction && (
+      {!!actionLabel && !!onAction && (
         <View style={{ marginTop: spacing.lg, width: '100%' }}>
           <Button label={actionLabel} onPress={onAction} />
         </View>

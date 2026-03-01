@@ -5,7 +5,7 @@
  * 経過時間と現在の種目数を表示
  */
 import React, { useEffect, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 
 import { borderRadius } from '@/shared/constants/borderRadius';
 import { colors } from '@/shared/constants/colors';
@@ -65,22 +65,24 @@ export function FloatingRecordBar({ onPress }: FloatingRecordBarProps) {
         zIndex: 50,
       }}
     >
-      <Pressable
+      <TouchableOpacity
+        activeOpacity={0.7}
         onPress={onPress}
-        style={({ pressed }) => ({
+        style={{
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
           paddingVertical: 12,
           paddingHorizontal: 16,
           borderRadius: borderRadius.lg,
-          backgroundColor: pressed ? colors.primaryDark : colors.primary,
+          // NativeWind v4: Pressable の style 関数は実機で無視されるため TouchableOpacity に変更
+          backgroundColor: colors.primary,
           shadowColor: '#000',
           shadowOffset: { width: 0, height: 2 },
           shadowOpacity: 0.15,
           shadowRadius: 8,
           elevation: 4,
-        })}
+        }}
       >
         {/* 左側: 状態テキスト */}
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -124,7 +126,7 @@ export function FloatingRecordBar({ onPress }: FloatingRecordBarProps) {
         >
           {formatTime(displaySeconds)}
         </Text>
-      </Pressable>
+      </TouchableOpacity>
     </View>
   );
 }

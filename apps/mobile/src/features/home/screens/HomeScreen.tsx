@@ -374,7 +374,7 @@ export function HomeScreen() {
         </View>
 
         {/* T10: 記録中バナー。記録中セッションがある場合のみ表示する */}
-        {isRecording && (
+        {!!isRecording && (
           <TouchableOpacity
             testID="recording-banner"
             onPress={handleRecordingBannerPress}

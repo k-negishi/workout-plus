@@ -5,7 +5,7 @@
  * single/multi モードに対応
  */
 import React, { useCallback } from 'react';
-import { Pressable, Text, View, type ViewStyle } from 'react-native';
+import { Pressable, Text, TouchableOpacity, View, type ViewStyle } from 'react-native';
 
 import { borderRadius } from '@/shared/constants/borderRadius';
 import { colors } from '@/shared/constants/colors';
@@ -43,7 +43,7 @@ function getEquipLabel(key: string): string {
 }
 
 /** リストアイテムのベーススタイルを計算する純粋関数（複雑な条件分岐をコンポーネント外に分離） */
-function getListItemStyle(isSelected: boolean, pressed: boolean): ViewStyle {
+function getListItemStyle(isSelected: boolean): ViewStyle {
   return {
     flexDirection: 'row',
     alignItems: 'center',
@@ -52,7 +52,9 @@ function getListItemStyle(isSelected: boolean, pressed: boolean): ViewStyle {
     paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
-    backgroundColor: isSelected ? colors.primaryBg : pressed ? colors.background : colors.white,
+    // NativeWind v4: Pressable の style 関数は実機で無視されるため TouchableOpacity に変更
+    // pressed 状態の色変化は activeOpacity={0.7} で代替する
+    backgroundColor: isSelected ? colors.primaryBg : colors.white,
     borderLeftWidth: isSelected ? 3 : 0,
     borderLeftColor: isSelected ? colors.primary : 'transparent',
   };
@@ -87,7 +89,11 @@ export function ExerciseListItem({
   }, [exercise.id, onToggleFavorite]);
 
   return (
-    <Pressable onPress={handlePress} style={({ pressed }) => getListItemStyle(isSelected, pressed)}>
+    <TouchableOpacity
+      activeOpacity={0.7}
+      onPress={handlePress}
+      style={getListItemStyle(isSelected)}
+    >
       {/* multi モード時のチェックボックス */}
       {mode === 'multi' && (
         <View
@@ -102,7 +108,7 @@ export function ExerciseListItem({
             justifyContent: 'center',
           }}
         >
-          {isSelected && (
+          {!!isSelected && (
             <Text style={{ color: colors.white, fontSize: 12, fontWeight: fontWeight.bold }}>
               ✓
             </Text>
@@ -187,6 +193,6 @@ export function ExerciseListItem({
           {exercise.isFavorite ? '★' : '☆'}
         </Text>
       </Pressable>
-    </Pressable>
+    </TouchableOpacity>
   );
 }

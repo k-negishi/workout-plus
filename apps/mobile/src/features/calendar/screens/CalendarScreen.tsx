@@ -213,7 +213,7 @@ export function CalendarScreen() {
         />
 
         {/* T11: 記録・編集ボタン（未来日付・DaySummaryロード中は非表示） */}
-        {!isFutureDate && daySummaryLoaded && (
+        {!isFutureDate && !!daySummaryLoaded && (
           <TouchableOpacity
             testID="record-or-edit-button"
             onPress={() => void handleRecordOrEdit()}
@@ -231,7 +231,7 @@ export function CalendarScreen() {
         )}
 
         {/* ワークアウト削除ボタン: ワークアウトがある日のみ最下部に表示 */}
-        {currentWorkoutId && (
+        {!!currentWorkoutId && (
           <TouchableOpacity
             testID="delete-workout-button"
             onPress={() => handleDeleteWorkout(currentWorkoutId)}
