@@ -111,6 +111,40 @@ const handleToggleFavorite = async (id: string) => {
 - 単純な CRUD → パターン A（再取得）で十分。実装がシンプル
 - タップ → 即座に反応が必要な UX → パターン B（楽観的更新）
 
+### useEffect deps と `ref.current`: ESLint `exhaustive-deps` 回避
+
+`react-hooks/exhaustive-deps` の警告を `// eslint-disable-next-line` で抑制しようとすると罠がある。
+警告は `useEffect(() => {` 行ではなく**コールバック内部の参照行**に出るため、
+フックの直前に disable コメントを置いても「Unused eslint-disable directive」エラーになる。
+
+```typescript
+// NG: disable コメントをフックの直前に置いても効かない
+// eslint-disable-next-line react-hooks/exhaustive-deps  ← "Unused directive" になる
+useEffect(() => {
+  if (isSameMonth(displayMonth, newMonth)) return;  // ← ここで警告が出る（この行が問題）
+  setDisplayMonth(newMonth);
+}, [selectedDate]);
+
+// OK: deps に含めたくない値は useRef 経由で読む
+const displayMonthRef = useRef(displayMonth);
+displayMonthRef.current = displayMonth; // 毎レンダー最新値に更新
+
+useEffect(() => {
+  const newMonth = startOfMonth(parseISO(selectedDate));
+  if (isSameMonth(displayMonthRef.current, newMonth)) return; // ref は deps 不要
+  setDisplayMonth(newMonth);
+}, [selectedDate]); // displayMonthRef は省略可（ref は安定した参照）
+```
+
+**なぜ `ref.current` が有効か**:
+- `useRef` は常に同一オブジェクトを返すため ESLint の deps チェック対象外
+- `displayMonthRef.current` で最新値を参照できる（stale closure を避けられる）
+- `displayMonth` を deps に含めると setter → state 変化 → effect 再実行の**無限ループ**になりうる
+
+**適用条件**: 「外部 props の変化を内部 state に同期したいが、比較に使う内部 state 自体は deps に含めたくない」場合。Issue #204（CalendarScreen の displayMonth 同期）が典型例。
+
+---
+
 ### サービス層でネットワーク・ストレージの副作用を分離する
 
 ```

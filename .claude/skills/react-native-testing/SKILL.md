@@ -386,6 +386,52 @@ await waitFor(() => {
 
 ---
 
+---
+
+## 9. 外部 props → 子コンポーネント内部 state 同期のテスト
+
+タブ配下のカレンダーなど、**親から受け取る props が変化したときに子の内部 state が追従する**ことをテストするパターン。
+`rerender()` でプロパティ変化をシミュレートし、「異月 → 更新」「同月 → 更新なし」の両方を確認する。
+
+```typescript
+// 外部 selectedDate 変化 → displayMonth 追従テスト（Issue #204 実例）
+describe('外部 selectedDate 変化で displayMonth が追従する', () => {
+  it('異なる月の selectedDate が渡されると displayMonth が更新される', async () => {
+    const { rerender } = render(
+      <MonthCalendar selectedDate="2026-01-15" onDayPress={jest.fn()} />,
+    );
+
+    // 別の月に変更（ナビゲーションから selectedDate が渡されるケース）
+    rerender(<MonthCalendar selectedDate="2025-10-15" onDayPress={jest.fn()} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('2025年10月')).toBeTruthy();
+    });
+  });
+
+  it('同じ月の別の日に変更されても displayMonth は変わらない', async () => {
+    const { rerender } = render(
+      <MonthCalendar selectedDate="2026-01-15" onDayPress={jest.fn()} />,
+    );
+
+    rerender(<MonthCalendar selectedDate="2026-01-28" onDayPress={jest.fn()} />);
+
+    // 同月なので表示は変わらない（ガード条件 isSameMonth() の確認）
+    await waitFor(() => {
+      expect(screen.getByText('2026年1月')).toBeTruthy();
+    });
+  });
+});
+```
+
+**テスト設計のポイント**:
+- `rerender()` で親からの props 変化をシミュレートする（`fireEvent` ではなく）
+- **同月・異月の両方**をテストする（ガード条件の確認がセット）
+- `waitFor` で `useEffect` の非同期更新を待つ（`useEffect` は同期ではない）
+- 実装側は `ref.current` を使う場合が多い → `coding-rules/side-effects.md` の「useEffect deps と ref.current」参照
+
+---
+
 ## React Navigation テストパターン
 
 > **A案（React Navigation 作業時 Read）**: React Navigation を使う画面のテスト（useFocusEffect モック・Zustand getState stale closure 回避等）が必要な場合は以下を参照:
