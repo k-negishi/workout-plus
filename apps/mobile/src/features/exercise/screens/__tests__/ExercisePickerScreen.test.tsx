@@ -513,17 +513,22 @@ describe('ExercisePickerScreen - チップボタンのスタイル（Issue #205�
     mockUseExerciseSearch.mockReturnValue(DEFAULT_SEARCH_STATE);
   });
 
+  /**
+   * testID="muscle-chip-{key}" でチップを特定し、style 関数を呼び出してボーダー色と背景色を検証する。
+   * - Pressable の style prop は ({ pressed }) => ({...}) 形式の関数
+   * - pressed: false の状態でスタイルを評価する
+   */
   it('未選択の部位チップ（背中）は #CBD5E1 のボーダーと #F8FAFC の背景を持つ', () => {
     render(<ExercisePickerScreen />);
     fireEvent.press(screen.getByLabelText('カスタム種目を追加'));
 
-    // 「背中」はカテゴリタブとフォームチップの両方に存在する。
-    // フォームチップは Pressable に style 関数を持つので、style が関数の親要素を特定する。
-    const backTexts = screen.getAllByText('背中');
-    const formChipText = backTexts.find((el) => typeof el.parent?.props.style === 'function');
-    expect(formChipText).toBeTruthy();
+    // 初期状態では newMuscleGroup === 'chest' なので「背中」は未選択
+    const chip = screen.getByTestId('muscle-chip-back');
+    const style =
+      typeof chip.props.style === 'function'
+        ? chip.props.style({ pressed: false })
+        : chip.props.style;
 
-    const style = formChipText!.parent!.props.style({ pressed: false });
     expect(style.borderColor).toBe('#CBD5E1');
     expect(style.backgroundColor).toBe('#F8FAFC');
   });
@@ -532,12 +537,13 @@ describe('ExercisePickerScreen - チップボタンのスタイル（Issue #205�
     render(<ExercisePickerScreen />);
     fireEvent.press(screen.getByLabelText('カスタム種目を追加'));
 
-    // 初期状態では newMuscleGroup === 'chest' なので「胸」が選択済み
-    const chestTexts = screen.getAllByText('胸');
-    const formChipText = chestTexts.find((el) => typeof el.parent?.props.style === 'function');
-    expect(formChipText).toBeTruthy();
+    // 初期状態では newMuscleGroup === 'chest' なので「胸」は選択済み
+    const chip = screen.getByTestId('muscle-chip-chest');
+    const style =
+      typeof chip.props.style === 'function'
+        ? chip.props.style({ pressed: false })
+        : chip.props.style;
 
-    const style = formChipText!.parent!.props.style({ pressed: false });
     expect(style.borderColor).toBe('#4D94FF');
     expect(style.backgroundColor).toBe('#E6F2FF');
   });
@@ -547,11 +553,12 @@ describe('ExercisePickerScreen - チップボタンのスタイル（Issue #205�
     fireEvent.press(screen.getByLabelText('カスタム種目を追加'));
 
     // 初期値は newEquipment === 'barbell' なので「ダンベル」は未選択
-    const dumbbellTexts = screen.getAllByText('ダンベル');
-    const formChipText = dumbbellTexts.find((el) => typeof el.parent?.props.style === 'function');
-    expect(formChipText).toBeTruthy();
+    const chip = screen.getByTestId('equipment-chip-dumbbell');
+    const style =
+      typeof chip.props.style === 'function'
+        ? chip.props.style({ pressed: false })
+        : chip.props.style;
 
-    const style = formChipText!.parent!.props.style({ pressed: false });
     expect(style.borderColor).toBe('#CBD5E1');
     expect(style.backgroundColor).toBe('#F8FAFC');
   });
@@ -560,12 +567,13 @@ describe('ExercisePickerScreen - チップボタンのスタイル（Issue #205�
     render(<ExercisePickerScreen />);
     fireEvent.press(screen.getByLabelText('カスタム種目を追加'));
 
-    // 初期状態では newEquipment === 'barbell' なので「バーベル」が選択済み
-    const barbellTexts = screen.getAllByText('バーベル');
-    const formChipText = barbellTexts.find((el) => typeof el.parent?.props.style === 'function');
-    expect(formChipText).toBeTruthy();
+    // 初期状態では newEquipment === 'barbell' なので「バーベル」は選択済み
+    const chip = screen.getByTestId('equipment-chip-barbell');
+    const style =
+      typeof chip.props.style === 'function'
+        ? chip.props.style({ pressed: false })
+        : chip.props.style;
 
-    const style = formChipText!.parent!.props.style({ pressed: false });
     expect(style.borderColor).toBe('#4D94FF');
     expect(style.backgroundColor).toBe('#E6F2FF');
   });

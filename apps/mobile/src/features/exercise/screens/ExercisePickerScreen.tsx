@@ -184,18 +184,21 @@ const ExerciseListHeader: React.FC<{
             {MUSCLE_GROUP_OPTIONS.map((opt) => (
               <Pressable
                 key={opt.key}
+                testID={`muscle-chip-${opt.key}`}
                 onPress={() => onMuscleGroupChange(opt.key)}
                 style={({ pressed }) => ({
                   paddingHorizontal: 10,
                   paddingVertical: 4,
                   borderRadius: 999,
                   borderWidth: 1,
-                  borderColor: newMuscleGroup === opt.key ? '#4D94FF' : '#e2e8f0',
+                  // 未選択時は #CBD5E1（より視認性の高いグレー）で枠を明示する
+                  borderColor: newMuscleGroup === opt.key ? '#4D94FF' : '#CBD5E1',
+                  // 未選択時は #F8FAFC（薄グレー）で白背景と区別してボタン形状を際立たせる
                   backgroundColor: pressed
                     ? '#D6EAFF'
                     : newMuscleGroup === opt.key
                       ? '#E6F2FF'
-                      : 'white',
+                      : '#F8FAFC',
                 })}
               >
                 <Text
@@ -217,18 +220,21 @@ const ExerciseListHeader: React.FC<{
             {EQUIPMENT_OPTIONS.map((opt) => (
               <Pressable
                 key={opt.key}
+                testID={`equipment-chip-${opt.key}`}
                 onPress={() => onEquipmentChange(opt.key)}
                 style={({ pressed }) => ({
                   paddingHorizontal: 10,
                   paddingVertical: 4,
                   borderRadius: 999,
                   borderWidth: 1,
-                  borderColor: newEquipment === opt.key ? '#4D94FF' : '#e2e8f0',
+                  // 未選択時は #CBD5E1（より視認性の高いグレー）で枠を明示する
+                  borderColor: newEquipment === opt.key ? '#4D94FF' : '#CBD5E1',
+                  // 未選択時は #F8FAFC（薄グレー）で白背景と区別してボタン形状を際立たせる
                   backgroundColor: pressed
                     ? '#D6EAFF'
                     : newEquipment === opt.key
                       ? '#E6F2FF'
-                      : 'white',
+                      : '#F8FAFC',
                 })}
               >
                 <Text
