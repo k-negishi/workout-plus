@@ -716,6 +716,15 @@ function escapeSqlString(value: string): string {
   return value.replace(/'/g, "''");
 }
 
+/** dev fixture の completedAt タイムスタンプから yyyy-MM-dd の workout_date を算出する */
+function formatWorkoutDate(completedAt: number): string {
+  const date = new Date(completedAt);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function isDevelopmentBuild(): boolean {
   return typeof __DEV__ !== 'undefined' ? __DEV__ : true;
 }
@@ -747,6 +756,8 @@ async function buildExerciseIdMap(
       `SELECT id FROM exercises WHERE name = '${escapedName}' LIMIT 1`,
     );
     if (!result?.id) {
+      // 種目が見つからない場合はログを出してnullを返す（サイレント失敗を防ぐ）
+      console.warn(`[dev seed] 種目「${name}」が exercises テーブルに見つかりません`);
       return null;
     }
     exerciseIdMap.set(name, result.id);
@@ -810,6 +821,69 @@ async function insertFixtureWorkout(
   );
 
   await insertFixtureExercises(db, workout, exerciseIdMap);
+}
+
+/**
+ * dev fixture ワークアウトの workout_date が未設定の行を補完する
+ *
+ * 全件存在するが workout_date = NULL の場合（V4→V5 がスキップされた等）に呼ばれる。
+ * UNIQUE 制約違反（ユーザーの実ワークアウトと競合）は無視してスキップする。
+ */
+async function fillMissingWorkoutDates(db: SQLiteDatabase): Promise<void> {
+  for (const workout of DEV_WORKOUT_FIXTURES) {
+    const workoutDate = formatWorkoutDate(workout.completedAt);
+    try {
+      await db.runAsync(
+        `UPDATE workouts SET workout_date = ? WHERE id = ? AND workout_date IS NULL`,
+        [workoutDate, workout.id],
+      );
+    } catch {
+      // workout_date UNIQUE 制約違反: ユーザーの実ワークアウトが同日に存在 → スキップ
+    }
+  }
+}
+
+/**
+ * dev fixture ワークアウトの存在と workout_date を確認・修復する
+ *
+ * V8→V9 マイグレーションから呼ばれる。workout_date カラムが存在する前提。
+ *
+ * - 全件存在する場合: workout_date が未設定の行のみ補完する
+ * - 不足がある場合: 不完全なデータを削除し、workout_date 付きで再投入する
+ *   （INSERT OR IGNORE により、workout_date がユーザー実データと競合する日付はスキップ）
+ */
+export async function ensureDevWorkoutFixtures(db: SQLiteDatabase): Promise<void> {
+  if (!isDevelopmentBuild()) {
+    return;
+  }
+
+  const seededCount = await getSeededFixtureWorkoutCount(db);
+
+  if (seededCount === DEV_WORKOUT_FIXTURES.length) {
+    // 全件存在: workout_date が未設定のものだけ補完する
+    await fillMissingWorkoutDates(db);
+    return;
+  }
+
+  // 不足あり: 不完全なデータを削除して workout_date 付きで再投入する
+  await db.runAsync('DELETE FROM workouts WHERE id LIKE ?', [`${DEV_WORKOUT_ID_PREFIX}%`]);
+
+  const exerciseNames = getRequiredFixtureExerciseNames();
+  const exerciseIdMap = await buildExerciseIdMap(db, exerciseNames);
+  if (!exerciseIdMap) {
+    console.warn('[dev seed] プリセット種目が未投入のため dev fixture の再投入をスキップします');
+    return;
+  }
+
+  for (const workout of DEV_WORKOUT_FIXTURES) {
+    const workoutDate = formatWorkoutDate(workout.completedAt);
+    // workout_date を直接指定して INSERT（同日にユーザー実データがあれば IGNORE）
+    await db.execAsync(
+      `INSERT OR IGNORE INTO workouts (id, status, created_at, completed_at, elapsed_seconds, workout_date, timer_status) VALUES ('${workout.id}', 'completed', ${workout.createdAt}, ${workout.completedAt}, ${workout.elapsedSeconds}, '${workoutDate}', 'not_started')`,
+    );
+    // workout_exercises・sets は INSERT OR IGNORE なので競合時も無害
+    await insertFixtureExercises(db, workout, exerciseIdMap);
+  }
 }
 
 /**

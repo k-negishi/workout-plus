@@ -6,10 +6,10 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 import { ALL_CREATE_TABLES, CREATE_INDEXES } from './schema';
-import { generateDevWorkoutSeedSQL, generateSeedSQL } from './seed';
+import { ensureDevWorkoutFixtures, generateDevWorkoutSeedSQL, generateSeedSQL } from './seed';
 
 /** 現在の最新スキーマバージョン */
-const LATEST_VERSION = 8;
+const LATEST_VERSION = 9;
 
 /**
  * 現在のスキーマバージョンを取得する
@@ -211,6 +211,18 @@ async function migrateV6ToV7(db: SQLiteDatabase): Promise<void> {
 }
 
 /**
+ * バージョン 8 → 9: dev fixture ワークアウトの整合性確保
+ *
+ * iOS 実機での初回インストール時に、V1→V2 マイグレーションで投入される
+ * 開発用ワークアウトフィクスチャが欠落するケースがあった（Issue #206）。
+ * このマイグレーションは dev fixture の存在を確認し、不足があれば再投入する。
+ * workout_date カラムを直接設定することでカレンダーに正しく表示されるようにする。
+ */
+async function migrateV8ToV9(db: SQLiteDatabase): Promise<void> {
+  await ensureDevWorkoutFixtures(db);
+}
+
+/**
  * バージョン 7 → 8: user_settings テーブルを追加
  *
  * user_settings はアプリ設定を保存する単一行テーブル（id = 1 固定）。
@@ -247,6 +259,7 @@ const MIGRATIONS: Record<number, Migration> = {
   6: migrateV5ToV6,
   7: migrateV6ToV7,
   8: migrateV7ToV8,
+  9: migrateV8ToV9,
 };
 
 /**

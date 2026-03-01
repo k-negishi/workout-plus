@@ -215,13 +215,13 @@ describe('runMigrations V4 → V5', () => {
     expect(updatedIds).toContain('workout-b');
   });
 
-  it('バージョン 5 からは V6, V7 マイグレーションが実行されること', async () => {
+  it('バージョン 5 からは V6, V7, V8, V9 マイグレーションが実行されること', async () => {
     const db = createMockDb(5);
 
     await runMigrations(db as unknown as SQLiteDatabase);
 
-    // v5 → v6 → v7 → v8 の 3 回マイグレーションが実行される（LATEST_VERSION = 8 のため）
-    expect(db.withTransactionAsync).toHaveBeenCalledTimes(3);
+    // v5 → v6 → v7 → v8 → v9 の 4 回マイグレーションが実行される（LATEST_VERSION = 9 のため）
+    expect(db.withTransactionAsync).toHaveBeenCalledTimes(4);
   });
 });
 
@@ -325,8 +325,8 @@ describe('runMigrations V5 → V6', () => {
     expect(hasAlterTable).toBe(false);
   });
 
-  it('既にバージョン 8（最新）の場合はマイグレーションをスキップすること', async () => {
-    let schemaVersion = 8;
+  it('既にバージョン 9（最新）の場合はマイグレーションをスキップすること', async () => {
+    let schemaVersion = 9;
     const db = {
       getFirstAsync: jest.fn(async (sql: string) => {
         if (sql === 'PRAGMA user_version') return { user_version: schemaVersion };
@@ -417,5 +417,125 @@ describe('runMigrations V6 → V7', () => {
       (sql) => sql.includes('ALTER TABLE exercises') && sql.includes('is_deleted'),
     );
     expect(hasAlterTable).toBe(false);
+  });
+});
+
+describe('runMigrations V8 → V9: dev fixture 整合性確保', () => {
+  /**
+   * V8 スタートの mockDb を生成するヘルパー。
+   * V9 マイグレーション（ensureDevWorkoutFixtures）が呼ぶ SQL パターンに対応する。
+   */
+  function createMockDbV8({ fixtureCount = 0 }: { fixtureCount?: number } = {}) {
+    let schemaVersion = 8;
+
+    const getFirstAsync = jest.fn(async (sql: string) => {
+      if (sql === 'PRAGMA user_version') return { user_version: schemaVersion };
+      // dev fixture のカウントクエリ
+      if (sql.includes("FROM workouts WHERE id LIKE 'dev-fixture-workout-%'")) {
+        return { count: fixtureCount };
+      }
+      // exercises の名前検索 → ダミー ID を返す（全種目存在するとみなす）
+      const match = sql.match(/WHERE name = '(.+)' LIMIT 1/);
+      if (match?.[1]) return { id: `EX_${match[1]}` };
+      return null;
+    });
+
+    const getAllAsync = jest.fn(async () => []);
+
+    const execAsync = jest.fn(async (sql: string) => {
+      const match = sql.match(/PRAGMA user_version = (\d+)/);
+      if (match?.[1] != null) schemaVersion = parseInt(match[1], 10);
+    });
+
+    const runAsync = jest.fn(async () => {});
+
+    const withTransactionAsync = jest.fn(async (callback: () => Promise<void>) => {
+      await callback();
+    });
+
+    return {
+      getSchemaVersion: () => schemaVersion,
+      getFirstAsync,
+      getAllAsync,
+      execAsync,
+      runAsync,
+      withTransactionAsync,
+    } as unknown as jest.Mocked<SQLiteDatabase> & {
+      getSchemaVersion: () => number;
+      getFirstAsync: jest.Mock;
+      getAllAsync: jest.Mock;
+      execAsync: jest.Mock;
+      runAsync: jest.Mock;
+      withTransactionAsync: jest.Mock;
+    };
+  }
+
+  const globalWithDev = global as typeof globalThis & { __DEV__?: boolean };
+  const originalDev = globalWithDev.__DEV__;
+
+  beforeEach(() => {
+    globalWithDev.__DEV__ = true;
+  });
+
+  afterAll(() => {
+    if (originalDev === undefined) {
+      delete globalWithDev.__DEV__;
+    } else {
+      globalWithDev.__DEV__ = originalDev;
+    }
+  });
+
+  it('dev fixture が全件欠落のとき、workout_date 付きで 13 件の workouts を INSERT すること', async () => {
+    const db = createMockDbV8({ fixtureCount: 0 });
+
+    await runMigrations(db as unknown as SQLiteDatabase);
+
+    // INSERT OR IGNORE INTO workouts かつ workout_date を含む SQL が 13 件実行されること
+    const execCalls = db.execAsync.mock.calls.map((call) => String(call[0]));
+    const workoutInserts = execCalls.filter(
+      (sql) => sql.includes('INSERT OR IGNORE INTO workouts') && sql.includes('workout_date'),
+    );
+    expect(workoutInserts.length).toBe(13);
+  });
+
+  it('dev fixture が全件欠落のとき、旧データを DELETE してから再投入すること', async () => {
+    const db = createMockDbV8({ fixtureCount: 0 });
+
+    await runMigrations(db as unknown as SQLiteDatabase);
+
+    // DELETE FROM workouts WHERE id LIKE ? が呼ばれること
+    expect(db.runAsync).toHaveBeenCalledWith('DELETE FROM workouts WHERE id LIKE ?', [
+      'dev-fixture-workout-%',
+    ]);
+  });
+
+  it('dev fixture が全件存在するとき、workout_date が null の行を UPDATE で補完すること', async () => {
+    // fixtureCount = 13（全件存在）→ fillMissingWorkoutDates が呼ばれる
+    const db = createMockDbV8({ fixtureCount: 13 });
+
+    await runMigrations(db as unknown as SQLiteDatabase);
+
+    // UPDATE workouts SET workout_date = ? WHERE id = ? AND workout_date IS NULL が 13 件実行されること
+    const runCalls = db.runAsync.mock.calls.map((call) => String(call[0]));
+    const updateCalls = runCalls.filter(
+      (sql) =>
+        sql.includes('UPDATE workouts SET workout_date') && sql.includes('workout_date IS NULL'),
+    );
+    expect(updateCalls.length).toBe(13);
+  });
+
+  it('__DEV__ = false のとき V9 マイグレーションは workouts を変更しないこと', async () => {
+    globalWithDev.__DEV__ = false;
+    const db = createMockDbV8({ fixtureCount: 0 });
+
+    await runMigrations(db as unknown as SQLiteDatabase);
+
+    // INSERT も DELETE も UPDATE も呼ばれないこと
+    const execCalls = db.execAsync.mock.calls.map((call) => String(call[0]));
+    const hasWorkoutInsert = execCalls.some((sql) =>
+      sql.includes('INSERT OR IGNORE INTO workouts'),
+    );
+    expect(hasWorkoutInsert).toBe(false);
+    expect(db.runAsync).not.toHaveBeenCalled();
   });
 });
