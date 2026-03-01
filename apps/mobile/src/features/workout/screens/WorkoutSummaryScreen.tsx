@@ -12,7 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getDatabase } from '@/database/client';
 import { PersonalRecordRepository } from '@/database/repositories/pr';
-import { colors } from '@/shared/constants/colors';
+import { colors, fontWeight } from '@/shared/constants';
 import type { HomeStackParamList } from '@/types';
 import { TimerStatus } from '@/types';
 
@@ -140,15 +140,18 @@ export const WorkoutSummaryScreen: React.FC = () => {
           for (const pr of newPrs) {
             let label = '';
             switch (pr.prType) {
-              case 'max_weight':
+              case 'max_weight': {
                 label = `最大重量: ${pr.value}kg`;
                 break;
-              case 'max_reps':
+              }
+              case 'max_reps': {
                 label = `最大レップ: ${pr.value}回`;
                 break;
-              case 'max_volume':
+              }
+              case 'max_volume': {
                 label = `最大ボリューム: ${pr.value}kg`;
                 break;
+              }
             }
             prs.push({ exerciseName: ex.name, label });
           }
@@ -192,14 +195,14 @@ export const WorkoutSummaryScreen: React.FC = () => {
       <View
         testID="summary-header"
         style={{
-          backgroundColor: '#FFFFFF',
+          backgroundColor: colors.white,
           paddingTop: insets.top,
           paddingBottom: 12,
           paddingHorizontal: 16,
           flexDirection: 'row',
           alignItems: 'center',
           borderBottomWidth: 1,
-          borderBottomColor: '#e2e8f0',
+          borderBottomColor: colors.border,
         }}
       >
         {/* 戻るボタン: スタックのルートに戻る */}
@@ -208,7 +211,7 @@ export const WorkoutSummaryScreen: React.FC = () => {
           accessibilityLabel="戻る"
           style={{ width: 40, alignItems: 'flex-start' }}
         >
-          <Ionicons name="chevron-back" size={24} color="#475569" />
+          <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
 
         {/* タイトル: 中央寄せ */}
@@ -218,8 +221,8 @@ export const WorkoutSummaryScreen: React.FC = () => {
             flex: 1,
             textAlign: 'center',
             fontSize: 17,
-            fontWeight: '600',
-            color: '#334155',
+            fontWeight: fontWeight.semibold,
+            color: colors.textTertiary,
           }}
         >
           ワークアウト完了
@@ -331,7 +334,10 @@ export const WorkoutSummaryScreen: React.FC = () => {
                     {pr.label}
                   </Text>
                 </View>
-                <View className="px-2 py-[2px] rounded-lg" style={{ backgroundColor: '#FEF3C7' }}>
+                <View
+                  className="px-2 py-[2px] rounded-lg"
+                  style={{ backgroundColor: colors.tagYellowBg }}
+                >
                   <Text className="text-[11px] font-bold" style={{ color: colors.warning }}>
                     NEW
                   </Text>

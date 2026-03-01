@@ -8,9 +8,12 @@ import { useMemo } from 'react';
 import { Text, View } from 'react-native';
 import { Path, Svg } from 'react-native-svg';
 
+import { colors, fontSize } from '@/shared/constants';
+
 /** チェックマークアイコン */
 function CheckIcon() {
   return (
+    // SVG の stroke 属性は文字列リテラルが必要なため colors.white は使用不可
     <Svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth={3}>
       <Path d="M20 6L9 17L4 12" strokeLinecap="round" strokeLinejoin="round" />
     </Svg>
@@ -25,6 +28,7 @@ function FireIcon() {
       height={28}
       viewBox="0 0 24 24"
       fill="none"
+      // SVG の stroke 属性は文字列リテラルが必要なため colors.primary は使用不可
       stroke="#4D94FF"
       strokeWidth={1.5}
       opacity={0.7}
@@ -91,7 +95,11 @@ export function StreakCard({ trainingDates }: StreakCardProps) {
             今月のトレーニング
           </Text>
           <View className="flex-row items-end mt-1">
-            <Text className="text-[34px] font-bold leading-none" style={{ color: '#3385FF' }}>
+            {/* 34px は NativeWind の text-[34px] ではなく style で fontSize.xxxl を使用 */}
+            <Text
+              className="font-bold leading-none"
+              style={{ color: colors.primaryDark, fontSize: fontSize.xxxl }}
+            >
               {monthlyCount}
             </Text>
             <Text className="text-sm text-primary ml-0.5">日</Text>
@@ -108,12 +116,12 @@ export function StreakCard({ trainingDates }: StreakCardProps) {
             <View
               className="w-7 h-7 rounded-full items-center justify-center"
               style={{
-                backgroundColor: day.isDone ? '#4D94FF' : 'rgba(77, 148, 255, 0.10)',
+                backgroundColor: day.isDone ? colors.primary : 'rgba(77, 148, 255, 0.10)',
               }}
             >
               {day.isDone ? <CheckIcon /> : null}
             </View>
-            {/* 曜日ラベル */}
+            {/* 曜日ラベル: 12px は constants にない（xs=14）ためインラインのまま */}
             <Text className="text-primary" style={{ fontSize: 12, opacity: 0.7 }}>
               {DAY_LABELS[index]}
             </Text>

@@ -8,7 +8,7 @@ import { ja } from 'date-fns/locale';
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { colors } from '@/shared/constants/colors';
+import { borderRadius, colors, fontSize, fontWeight, spacing } from '@/shared/constants';
 import type { MuscleGroup, TimerStatus } from '@/types';
 
 /** 部位の日本語ラベル */
@@ -39,14 +39,18 @@ function formatDuration(seconds: number | null, timerStatus?: TimerStatus): stri
 /** 部位別アイコン背景色（WF L673-675） */
 function getIconBackgroundColor(muscleGroup?: string): string {
   switch (muscleGroup) {
-    case 'chest':
+    case 'chest': {
       return colors.primaryBg;
-    case 'back':
+    }
+    case 'back': {
       return colors.primaryBgMedium;
-    case 'legs':
+    }
+    case 'legs': {
       return colors.primaryBgStrong;
-    default:
+    }
+    default: {
       return colors.neutralBg;
+    }
   }
 }
 
@@ -158,8 +162,8 @@ const styles = StyleSheet.create({
   // カードコンテナ（WF L646-653 .task-card）
   card: {
     backgroundColor: colors.white,
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
     marginBottom: 12,
     borderWidth: 1,
     borderColor: colors.border,
@@ -175,13 +179,13 @@ const styles = StyleSheet.create({
   icon: {
     width: 40,
     height: 40,
-    borderRadius: 12,
+    borderRadius: borderRadius.lg,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
   },
   iconEmoji: {
-    fontSize: 20,
+    fontSize: fontSize.lg,
   },
   // task-info（WF L677-692）
   info: {
@@ -195,26 +199,28 @@ const styles = StyleSheet.create({
   },
   // 日付: 補助情報として部位名より小さく
   dateLabel: {
-    fontSize: 14,
-    fontWeight: '400',
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.normal,
     color: colors.textSecondary,
   },
-  // 部位名: メイン情報として大きく・太く
+  // 部位名: メイン情報として大きく・太く（17px は constants にないためそのまま維持）
   muscleLabel: {
     fontSize: 17,
-    fontWeight: '600',
+    fontWeight: fontWeight.semibold,
     color: colors.textPrimary,
   },
   // 完了バッジ（WF L551-560, L567-570）
   badge: {
-    backgroundColor: '#cce5ff',
-    paddingVertical: 4,
+    // badgeBlueBg = '#cce5ff'
+    backgroundColor: colors.badgeBlueBg,
+    paddingVertical: spacing.xs,
     paddingHorizontal: 12,
+    // 4px は borderRadius constants の最小値（6px）より小さいため、そのまま維持
     borderRadius: 4,
   },
   badgeText: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.semibold,
     color: colors.primary,
   },
   // task-tags 行（WF L694-711）
@@ -222,23 +228,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 6,
     flexWrap: 'wrap',
-    marginBottom: 8,
+    marginBottom: spacing.sm,
   },
   // タグ共通（WF L701-707）
   tag: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.sm,
+    // 4px は borderRadius constants の最小値（6px）より小さいため、そのまま維持
     borderRadius: 4,
   },
   tagText: {
+    // 13px は constants にないためそのまま維持
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: fontWeight.semibold,
   },
   // ワークアウトメモ: タグ行の下にグレーで表示
   memo: {
+    // 13px は constants にないためそのまま維持
     fontSize: 13,
     color: colors.textSecondary,
-    marginTop: 8,
+    marginTop: spacing.sm,
     lineHeight: 18,
   },
 });

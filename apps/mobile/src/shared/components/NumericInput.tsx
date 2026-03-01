@@ -6,9 +6,7 @@
 import React, { useCallback, useState } from 'react';
 import { type StyleProp, Text, TextInput, View, type ViewStyle } from 'react-native';
 
-import { borderRadius } from '@/shared/constants/borderRadius';
-import { colors } from '@/shared/constants/colors';
-import { fontSize, fontWeight } from '@/shared/constants/typography';
+import { borderRadius, colors, fontSize, fontWeight, spacing } from '@/shared/constants';
 
 type NumericInputProps = {
   /** 入力値（null は未入力状態） */
@@ -100,18 +98,18 @@ export function NumericInput({
         style={{
           width: 56,
           paddingVertical: 6,
-          paddingHorizontal: 8,
+          paddingHorizontal: spacing.sm,
           borderRadius: borderRadius.md,
           fontSize: fontSize.sm,
           fontWeight: fontWeight.semibold,
-          color: '#334155',
-          backgroundColor: '#FAFBFC',
+          color: colors.textTertiary,
+          backgroundColor: colors.inputBg,
         }}
       />
       {!!unit && (
         <Text
           style={{
-            marginLeft: 4,
+            marginLeft: spacing.xs,
             fontSize: fontSize.xs,
             color: colors.textSecondary,
           }}

@@ -45,6 +45,14 @@ export const colors = {
   tagPurpleBg: '#EDE9FE',
   /** タグ: 紫テキスト（時間など） */
   tagPurpleText: '#6D28D9',
+  /** より濃いテキスト（SetRow の入力値・強調テキスト） */
+  textTertiary: '#334155',
+  /** 入力フィールドの背景色 */
+  inputBg: '#FAFBFC',
+  /** 成功/追加済みバッジ背景（緑系） */
+  successBg: '#E6FAF1',
+  /** 汎用バッジ青背景 */
+  badgeBlueBg: '#cce5ff',
 } as const;
 
 /** カラーの型 */

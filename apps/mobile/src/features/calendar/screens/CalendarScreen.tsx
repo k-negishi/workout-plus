@@ -18,6 +18,7 @@ import { getDatabase } from '@/database/client';
 import { PersonalRecordRepository } from '@/database/repositories/pr';
 import { WorkoutRepository } from '@/database/repositories/workout';
 import type { WorkoutRow } from '@/database/types';
+import { borderRadius, colors, fontSize, fontWeight, spacing } from '@/shared/constants';
 import type { CalendarStackParamList } from '@/types';
 
 import { DaySummary } from '../components/DaySummary';
@@ -181,7 +182,7 @@ export function CalendarScreen() {
   if (loading) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator size="large" color="#4D94FF" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -218,15 +219,18 @@ export function CalendarScreen() {
             testID="record-or-edit-button"
             onPress={() => void handleRecordOrEdit()}
             style={{
-              backgroundColor: '#4D94FF',
-              borderRadius: 8,
-              paddingHorizontal: 16,
-              paddingVertical: 12,
+              backgroundColor: colors.primary,
+              borderRadius: borderRadius.md,
+              paddingHorizontal: spacing.md,
+              paddingVertical: 12, // 12px は spacing tokens にないためインラインのまま
               alignItems: 'center',
-              marginTop: 12,
+              marginTop: 12, // 12px は spacing tokens にないためインラインのまま
             }}
           >
-            <Text style={{ fontSize: 15, fontWeight: '600', color: '#ffffff' }}>記録・編集</Text>
+            {/* fontSize: 15 は tokens にない（xs=14, sm=16）ためインラインのまま */}
+            <Text style={{ fontSize: 15, fontWeight: fontWeight.semibold, color: colors.white }}>
+              記録・編集
+            </Text>
           </TouchableOpacity>
         )}
 
@@ -237,14 +241,20 @@ export function CalendarScreen() {
             onPress={() => handleDeleteWorkout(currentWorkoutId)}
             style={{
               alignItems: 'center',
-              marginTop: 16,
-              paddingVertical: 12,
+              marginTop: spacing.md,
+              paddingVertical: 12, // 12px は spacing tokens にないためインラインのまま
               borderWidth: 1,
-              borderColor: '#EF4444',
-              borderRadius: 8,
+              borderColor: colors.error,
+              borderRadius: borderRadius.md,
             }}
           >
-            <Text style={{ color: '#EF4444', fontSize: 14, fontWeight: '600' }}>
+            <Text
+              style={{
+                color: colors.error,
+                fontSize: fontSize.xs,
+                fontWeight: fontWeight.semibold,
+              }}
+            >
               ワークアウトを削除
             </Text>
           </TouchableOpacity>

@@ -32,7 +32,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Polyline, Svg } from 'react-native-svg';
 
 import { ExerciseRepository } from '@/database/repositories/exercise';
-import { colors } from '@/shared/constants/colors';
+import { borderRadius, colors, fontSize, fontWeight, spacing } from '@/shared/constants';
 import type { Equipment, MuscleGroup } from '@/types';
 
 import { useExerciseHistory } from '../hooks/useExerciseHistory';
@@ -292,7 +292,7 @@ export function ExerciseHistoryFullScreen() {
       <View
         testID="exercise-history-header"
         style={{
-          backgroundColor: '#FFFFFF',
+          backgroundColor: colors.white,
           paddingTop: insets.top,
           paddingBottom: 12,
           paddingHorizontal: 16,
@@ -308,7 +308,7 @@ export function ExerciseHistoryFullScreen() {
           accessibilityLabel="戻る"
           style={{ width: 40, alignItems: 'flex-start' }}
         >
-          <Ionicons name="chevron-back" size={24} color="#475569" />
+          <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
         </Pressable>
 
         {/* タイトル: 中央寄せ（Issue #213: fontSize 17 → 20 に拡大） */}
@@ -317,9 +317,9 @@ export function ExerciseHistoryFullScreen() {
           style={{
             flex: 1,
             textAlign: 'center',
-            fontSize: 20,
-            fontWeight: '600',
-            color: '#334155',
+            fontSize: fontSize.lg,
+            fontWeight: fontWeight.semibold,
+            color: colors.textTertiary,
           }}
         >
           {displayName}
@@ -352,7 +352,7 @@ export function ExerciseHistoryFullScreen() {
               accessibilityLabel="種目を削除"
               style={{ padding: 6 }}
             >
-              <Ionicons name="trash-outline" size={22} color="#EF4444" />
+              <Ionicons name="trash-outline" size={22} color={colors.error} />
             </Pressable>
           </View>
         ) : (
@@ -501,7 +501,9 @@ export function ExerciseHistoryFullScreen() {
                         backgroundColor: colors.primaryBg,
                       }}
                     >
-                      <Text style={{ fontSize: 10, fontWeight: '700', color: colors.primary }}>
+                      <Text
+                        style={{ fontSize: 10, fontWeight: fontWeight.bold, color: colors.primary }}
+                      >
                         PR
                       </Text>
                     </View>
@@ -530,10 +532,10 @@ export function ExerciseHistoryFullScreen() {
                       {/* 重量×rep数: 視認性向上のため 16px→18px に拡大 */}
                       <Text
                         style={{
-                          fontSize: 18,
-                          fontWeight: '600',
+                          fontSize: fontSize.md,
+                          fontWeight: fontWeight.semibold,
                           flex: 1,
-                          color: '#334155',
+                          color: colors.textTertiary,
                         }}
                       >
                         {set.weight ?? '-'}kg × {set.reps ?? '-'}
@@ -566,9 +568,11 @@ function StatCard({ label, value, unit }: { label: string; value: string; unit?:
   // 値の文字数に応じてフォントサイズを動的調整（長い数値がカードからはみ出ないよう制御）
   // 例: "9"(1) → 22px, "1,000"(5) → 18px, "10,000"(6) → 18px, "100,000"(7) → 15px
   let valueFontSize = 13;
-  if (value.length <= 4) valueFontSize = 22;
-  else if (value.length <= 6) valueFontSize = 18;
-  else if (value.length <= 8) valueFontSize = 15;
+  if (value.length <= 4)
+    valueFontSize = fontSize.xl; // 22px
+  else if (value.length <= 6)
+    valueFontSize = fontSize.md; // 18px
+  else if (value.length <= 8) valueFontSize = 15; // 定数なし・そのまま
 
   return (
     <View
@@ -592,7 +596,13 @@ function StatCard({ label, value, unit }: { label: string; value: string; unit?:
       </Text>
       <View style={{ flexDirection: 'row', alignItems: 'flex-end', marginTop: 4 }}>
         {/* 値: 文字数に応じてフォントサイズ動的調整 */}
-        <Text style={{ fontSize: valueFontSize, fontWeight: '700', color: colors.textPrimary }}>
+        <Text
+          style={{
+            fontSize: valueFontSize,
+            fontWeight: fontWeight.bold,
+            color: colors.textPrimary,
+          }}
+        >
           {value}
         </Text>
         {unit ? (
@@ -608,25 +618,25 @@ const editFormStyles = StyleSheet.create({
   container: {
     paddingHorizontal: 20,
     paddingVertical: 12,
-    backgroundColor: '#f9fafb',
+    backgroundColor: colors.background,
     borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
+    borderBottomColor: colors.border,
   },
   nameInput: {
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
-    borderRadius: 8,
+    borderColor: colors.border,
+    borderRadius: borderRadius.md,
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 17,
-    color: '#475569',
-    marginBottom: 12,
+    color: colors.textPrimary,
+    marginBottom: spacing.md - 4,
   },
   sectionLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#64748b',
+    fontSize: fontSize.xs,
+    fontWeight: fontWeight.semibold,
+    color: colors.textSecondary,
     letterSpacing: 0.5,
     marginBottom: 6,
   },
@@ -634,50 +644,50 @@ const editFormStyles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
-    marginBottom: 12,
+    marginBottom: spacing.md - 4,
   },
   chip: {
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: spacing.xs,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: colors.border,
   },
   chipSelected: {
-    backgroundColor: '#E6F2FF',
-    borderColor: '#4D94FF',
+    backgroundColor: colors.primaryBg,
+    borderColor: colors.primary,
   },
   chipText: {
     fontSize: 15,
-    color: '#64748b',
+    color: colors.textSecondary,
   },
   chipTextSelected: {
-    color: '#4D94FF',
-    fontWeight: '600',
+    color: colors.primary,
+    fontWeight: fontWeight.semibold,
   },
   buttonRow: {
     flexDirection: 'row',
-    gap: 8,
+    gap: spacing.sm,
   },
   saveButton: {
     flex: 1,
     paddingVertical: 10,
-    backgroundColor: '#4D94FF',
-    borderRadius: 8,
+    backgroundColor: colors.primary,
+    borderRadius: borderRadius.md,
     alignItems: 'center',
   },
   saveButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#ffffff',
+    fontSize: fontSize.sm,
+    fontWeight: fontWeight.semibold,
+    color: colors.white,
   },
   cancelButton: {
-    paddingHorizontal: 16,
+    paddingHorizontal: spacing.md,
     paddingVertical: 10,
     alignItems: 'center',
   },
   cancelButtonText: {
-    fontSize: 16,
-    color: '#64748b',
+    fontSize: fontSize.sm,
+    color: colors.textSecondary,
   },
 });

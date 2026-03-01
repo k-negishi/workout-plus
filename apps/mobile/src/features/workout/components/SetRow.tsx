@@ -11,6 +11,7 @@
 import React, { useCallback, useState } from 'react';
 import { Text, TextInput, TouchableOpacity, View } from 'react-native';
 
+import { borderRadius, colors, fontSize, fontWeight, spacing } from '@/shared/constants';
 import type { WorkoutSet } from '@/types';
 
 import { calculate1RM } from '../utils/calculate1RM';
@@ -113,15 +114,15 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
 
   return (
     // 外枠: 上下に余白を追加してセット間の行間を広げる（Issue #128）
-    <View testID="set-row-container" style={{ paddingVertical: 4 }}>
+    <View testID="set-row-container" style={{ paddingVertical: spacing.xs }}>
       {/* 行本体: 枠線・背景なしの軽量レイアウト */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
         {/* セット番号: 幅32・中央揃えでヘッダー "Set" と位置を一致させる */}
         <Text
           style={{
             width: 32,
             fontSize: 15,
-            color: '#64748b',
+            color: colors.textSecondary,
             textAlign: 'center',
           }}
         >
@@ -133,14 +134,14 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
           testID="weight-input"
           style={{
             flex: 1,
-            backgroundColor: '#FAFBFC',
+            backgroundColor: colors.inputBg,
             borderWidth: 1,
-            borderColor: '#e2e8f0',
-            borderRadius: 8,
-            paddingVertical: 8,
-            fontSize: 16,
-            fontWeight: '600',
-            color: '#334155',
+            borderColor: colors.border,
+            borderRadius: borderRadius.md,
+            paddingVertical: spacing.sm,
+            fontSize: fontSize.sm,
+            fontWeight: fontWeight.semibold,
+            color: colors.textTertiary,
             textAlign: 'center',
           }}
           keyboardType="decimal-pad"
@@ -150,21 +151,23 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
         />
 
         {/* 区切り文字: "x"（乗算の意味を持つ小文字）カラムヘッダーの16px スペーサーと幅を合わせる */}
-        <Text style={{ width: 16, fontSize: 15, color: '#64748b', textAlign: 'center' }}>x</Text>
+        <Text style={{ width: 16, fontSize: 15, color: colors.textSecondary, textAlign: 'center' }}>
+          x
+        </Text>
 
         {/* レップ数入力（number-pad: 整数のみ）flex:1 でkg/rep入力が均等に残りスペースを分配する */}
         <TextInput
           testID="reps-input"
           style={{
             flex: 1,
-            backgroundColor: '#FAFBFC',
+            backgroundColor: colors.inputBg,
             borderWidth: 1,
-            borderColor: '#e2e8f0',
-            borderRadius: 8,
-            paddingVertical: 8,
-            fontSize: 16,
-            fontWeight: '600',
-            color: '#334155',
+            borderColor: colors.border,
+            borderRadius: borderRadius.md,
+            paddingVertical: spacing.sm,
+            fontSize: fontSize.sm,
+            fontWeight: fontWeight.semibold,
+            color: colors.textTertiary,
             textAlign: 'center',
           }}
           keyboardType="number-pad"
@@ -177,8 +180,8 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
         <Text
           style={{
             width: 48,
-            fontSize: 14,
-            color: '#64748b',
+            fontSize: fontSize.xs,
+            color: colors.textSecondary,
             textAlign: 'center',
           }}
         >
@@ -197,7 +200,7 @@ export const SetRow: React.FC<SetRowProps> = ({ set, onWeightChange, onRepsChang
           }}
           accessibilityLabel={`セット${set.setNumber}を削除`}
         >
-          <Text style={{ fontSize: 13, color: '#64748b' }}>{'\u2715'}</Text>
+          <Text style={{ fontSize: 13, color: colors.textSecondary }}>{'\u2715'}</Text>
         </TouchableOpacity>
       </View>
     </View>

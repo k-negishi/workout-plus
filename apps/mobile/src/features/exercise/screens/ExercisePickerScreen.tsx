@@ -27,6 +27,7 @@ import { ExerciseRepository } from '@/database/repositories/exercise';
 import { AlertDialog } from '@/shared/components/AlertDialog';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { showErrorToast } from '@/shared/components/Toast';
+import { borderRadius, colors, fontSize, fontWeight, spacing } from '@/shared/constants';
 import { useWorkoutSessionStore } from '@/stores/workoutSessionStore';
 import type { Equipment, Exercise, HomeStackParamList, MuscleGroup } from '@/types';
 
@@ -116,10 +117,20 @@ const ExerciseItemActions: React.FC<{
   onToggleFavorite: () => void;
 }> = ({ isAdded, isFavorite, onToggleFavorite }) => (
   <View className="flex-row items-center gap-1">
-    {/* Issue #116: 追加済みバッジ */}
+    {/* Issue #116: 追加済みバッジ（successBg = '#E6FAF1', success = '#10B981'） */}
     {!!isAdded && (
-      <View className="px-2 py-[3px] rounded-lg bg-[#E6FAF1]">
-        <Text className="text-[13px] font-semibold text-[#10B981]">追加済み</Text>
+      <View
+        style={{
+          paddingHorizontal: spacing.sm,
+          paddingVertical: 3,
+          borderRadius: borderRadius.md,
+          backgroundColor: colors.successBg,
+        }}
+      >
+        {/* 13px は constants にないためそのまま維持 */}
+        <Text style={{ fontSize: 13, fontWeight: fontWeight.semibold, color: colors.success }}>
+          追加済み
+        </Text>
       </View>
     )}
     {/* お気に入りボタン: Ionicons でサイズ・コントラストを確保 */}
@@ -132,7 +143,7 @@ const ExerciseItemActions: React.FC<{
       <Ionicons
         name={isFavorite ? 'star' : 'star-outline'}
         size={20}
-        color={isFavorite ? '#F59E0B' : '#CBD5E1'}
+        color={isFavorite ? colors.warning : '#CBD5E1'}
       />
     </TouchableOpacity>
   </View>
@@ -169,14 +180,42 @@ const ExerciseListHeader: React.FC<{
   }) =>
     isCreating ? (
       <View className="px-5 py-4">
-        <View className="border border-dashed border-[#e2e8f0] rounded-lg p-4">
+        {/* border色はcolors.border = '#e2e8f0' */}
+        <View
+          style={{
+            borderWidth: 1,
+            borderStyle: 'dashed',
+            borderColor: colors.border,
+            borderRadius: borderRadius.md,
+            padding: spacing.md,
+          }}
+        >
           <TextInput
-            className="bg-white border border-[#e2e8f0] rounded-lg px-3 py-2.5 text-[18px] text-[#475569] mb-3"
+            style={{
+              backgroundColor: colors.white,
+              borderWidth: 1,
+              borderColor: colors.border,
+              borderRadius: borderRadius.md,
+              paddingHorizontal: 12,
+              paddingVertical: 10,
+              fontSize: fontSize.md,
+              color: colors.textPrimary,
+              marginBottom: 12,
+            }}
             placeholder="種目名を入力"
             value={newExerciseName}
             onChangeText={onNameChange}
           />
-          <Text className="text-[16px] font-semibold text-[#64748b] tracking-wide mb-1.5">
+          {/* fontSize.sm = 16px, textSecondary = '#64748b' */}
+          <Text
+            style={{
+              fontSize: fontSize.sm,
+              fontWeight: fontWeight.semibold,
+              color: colors.textSecondary,
+              letterSpacing: 0.5,
+              marginBottom: 6,
+            }}
+          >
             部位
           </Text>
           <View className="flex-row flex-wrap gap-1.5 mb-3">
@@ -190,18 +229,20 @@ const ExerciseListHeader: React.FC<{
                 activeOpacity={0.7}
                 style={{
                   paddingHorizontal: 10,
-                  paddingVertical: 4,
+                  paddingVertical: spacing.xs,
+                  // ピル形状のため999は固定値として維持
                   borderRadius: 999,
                   borderWidth: 1,
-                  borderColor: newMuscleGroup === opt.key ? '#4D94FF' : '#CBD5E1',
-                  backgroundColor: newMuscleGroup === opt.key ? '#E6F2FF' : '#F8FAFC',
+                  borderColor: newMuscleGroup === opt.key ? colors.primary : '#CBD5E1',
+                  backgroundColor: newMuscleGroup === opt.key ? colors.primaryBg : colors.inputBg,
                 }}
               >
                 <Text
                   style={{
-                    fontSize: 16,
-                    color: newMuscleGroup === opt.key ? '#4D94FF' : '#64748b',
-                    fontWeight: newMuscleGroup === opt.key ? '600' : '400',
+                    fontSize: fontSize.sm,
+                    color: newMuscleGroup === opt.key ? colors.primary : colors.textSecondary,
+                    fontWeight:
+                      newMuscleGroup === opt.key ? fontWeight.semibold : fontWeight.normal,
                   }}
                 >
                   {opt.label}
@@ -209,7 +250,16 @@ const ExerciseListHeader: React.FC<{
               </TouchableOpacity>
             ))}
           </View>
-          <Text className="text-[16px] font-semibold text-[#64748b] tracking-wide mb-1.5">
+          {/* fontSize.sm = 16px, textSecondary = '#64748b' */}
+          <Text
+            style={{
+              fontSize: fontSize.sm,
+              fontWeight: fontWeight.semibold,
+              color: colors.textSecondary,
+              letterSpacing: 0.5,
+              marginBottom: 6,
+            }}
+          >
             器具
           </Text>
           <View className="flex-row flex-wrap gap-1.5 mb-3">
@@ -223,18 +273,19 @@ const ExerciseListHeader: React.FC<{
                 activeOpacity={0.7}
                 style={{
                   paddingHorizontal: 10,
-                  paddingVertical: 4,
+                  paddingVertical: spacing.xs,
+                  // ピル形状のため999は固定値として維持
                   borderRadius: 999,
                   borderWidth: 1,
-                  borderColor: newEquipment === opt.key ? '#4D94FF' : '#CBD5E1',
-                  backgroundColor: newEquipment === opt.key ? '#E6F2FF' : '#F8FAFC',
+                  borderColor: newEquipment === opt.key ? colors.primary : '#CBD5E1',
+                  backgroundColor: newEquipment === opt.key ? colors.primaryBg : colors.inputBg,
                 }}
               >
                 <Text
                   style={{
-                    fontSize: 16,
-                    color: newEquipment === opt.key ? '#4D94FF' : '#64748b',
-                    fontWeight: newEquipment === opt.key ? '600' : '400',
+                    fontSize: fontSize.sm,
+                    color: newEquipment === opt.key ? colors.primary : colors.textSecondary,
+                    fontWeight: newEquipment === opt.key ? fontWeight.semibold : fontWeight.normal,
                   }}
                 >
                   {opt.label}
@@ -242,14 +293,24 @@ const ExerciseListHeader: React.FC<{
               </TouchableOpacity>
             ))}
           </View>
+          {/* 17px は constants にないためそのまま維持（white = colors.white） */}
           <TouchableOpacity
             onPress={onSubmit}
-            className="mt-4 py-2.5 bg-[#4D94FF] rounded-lg items-center"
+            style={{
+              marginTop: spacing.md,
+              paddingVertical: 10,
+              backgroundColor: colors.primary,
+              borderRadius: borderRadius.md,
+              alignItems: 'center',
+            }}
           >
-            <Text className="text-[17px] font-semibold text-white">作成して追加</Text>
+            <Text style={{ fontSize: 17, fontWeight: fontWeight.semibold, color: colors.white }}>
+              作成して追加
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={onCancel} className="items-center mt-2 mb-1">
-            <Text className="text-[17px] text-[#64748b]">キャンセル</Text>
+            {/* 17px は constants にないためそのまま維持 */}
+            <Text style={{ fontSize: 17, color: colors.textSecondary }}>キャンセル</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -419,14 +480,16 @@ export const ExercisePickerScreen: React.FC = () => {
       <View
         testID="exercise-picker-header"
         style={{
-          backgroundColor: '#FFFFFF',
+          // white = colors.white
+          backgroundColor: colors.white,
           paddingTop: insets.top,
           paddingBottom: 12,
-          paddingHorizontal: 16,
+          paddingHorizontal: spacing.md,
           flexDirection: 'row',
           alignItems: 'center',
           borderBottomWidth: 1,
-          borderBottomColor: '#e2e8f0',
+          // border = '#e2e8f0'
+          borderBottomColor: colors.border,
         }}
       >
         {/* 戻るボタン: テキスト「‹」から Ionicons chevron-back に変更 */}
@@ -435,17 +498,18 @@ export const ExercisePickerScreen: React.FC = () => {
           accessibilityLabel="戻る"
           style={{ width: 40, alignItems: 'flex-start' }}
         >
-          <Ionicons name="chevron-back" size={24} color="#475569" />
+          {/* textPrimary = '#475569' */}
+          <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
         </TouchableOpacity>
 
-        {/* タイトル: fontSize 17 / fontWeight '600' に統一 */}
+        {/* タイトル: fontSize 17（constants にないためそのまま維持） / fontWeight semibold / textTertiary = '#334155' */}
         <Text
           style={{
             flex: 1,
             textAlign: 'center',
             fontSize: 17,
-            fontWeight: '600',
-            color: '#334155',
+            fontWeight: fontWeight.semibold,
+            color: colors.textTertiary,
           }}
         >
           種目を選択
@@ -466,12 +530,26 @@ export const ExercisePickerScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* 検索バー */}
+      {/* 検索バー（inputBg = '#FAFBFC', border = '#e2e8f0', textSecondary = '#64748b', textPrimary = '#475569'） */}
       <View className="px-4 py-2">
-        <View className="flex-row items-center bg-[#FAFBFC] border border-[#e2e8f0] rounded-lg px-3 py-2.5">
-          <Text className="text-[16px] text-[#64748b] mr-2">{'🔍'}</Text>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            backgroundColor: colors.inputBg,
+            borderWidth: 1,
+            borderColor: colors.border,
+            borderRadius: borderRadius.md,
+            paddingHorizontal: 12,
+            paddingVertical: 10,
+          }}
+        >
+          {/* 15px は constants にないためそのまま維持 */}
+          <Text style={{ fontSize: 15, color: colors.textSecondary, marginRight: spacing.sm }}>
+            {'🔍'}
+          </Text>
           <TextInput
-            className="flex-1 text-[16px] text-[#475569]"
+            style={{ flex: 1, fontSize: fontSize.sm, color: colors.textPrimary }}
             placeholder="種目を検索..."
             placeholderTextColor="#94a3b8"
             value={query}
@@ -481,8 +559,15 @@ export const ExercisePickerScreen: React.FC = () => {
         </View>
       </View>
 
-      {/* カテゴリタブ */}
-      <View className="px-4 pb-2 border-b border-[#e2e8f0]">
+      {/* カテゴリタブ（border = '#e2e8f0'） */}
+      <View
+        style={{
+          paddingHorizontal: spacing.md,
+          paddingBottom: spacing.sm,
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+        }}
+      >
         <FlatList
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -491,16 +576,24 @@ export const ExercisePickerScreen: React.FC = () => {
           renderItem={({ item }) => (
             <TouchableOpacity
               onPress={() => setSelectedCategory(item.key)}
-              className={`px-4 py-1.5 mr-1.5 rounded-lg border ${
-                selectedCategory === item.key
-                  ? 'bg-[#4D94FF] border-[#4D94FF]'
-                  : 'bg-white border-[#e2e8f0]'
-              }`}
+              style={{
+                paddingHorizontal: spacing.md,
+                paddingVertical: 6,
+                marginRight: 6,
+                borderRadius: borderRadius.md,
+                borderWidth: 1,
+                backgroundColor: selectedCategory === item.key ? colors.primary : colors.white,
+                borderColor: selectedCategory === item.key ? colors.primary : colors.border,
+              }}
             >
+              {/* 15px は constants にないためそのまま維持 */}
               <Text
-                className={`text-[15px] ${
-                  selectedCategory === item.key ? 'text-white font-semibold' : 'text-[#64748b]'
-                }`}
+                style={{
+                  fontSize: 15,
+                  color: selectedCategory === item.key ? colors.white : colors.textSecondary,
+                  fontWeight:
+                    selectedCategory === item.key ? fontWeight.semibold : fontWeight.normal,
+                }}
               >
                 {item.label}
               </Text>
@@ -528,13 +621,14 @@ export const ExercisePickerScreen: React.FC = () => {
         }
         renderSectionHeader={({ section }) => (
           /* Issue #166: 背景色・文字色・サイズで種目行と明確に差別化 */
+          /* inputBg = '#FAFBFC' に近い '#F8FAFC' はcolors.inputBgより微妙に異なるが近似としてcolors.inputBgを使用 */
           <View
             style={{
-              backgroundColor: '#F8FAFC',
+              backgroundColor: colors.inputBg,
               paddingHorizontal: 20,
-              paddingVertical: 8,
+              paddingVertical: spacing.sm,
               borderTopWidth: 1,
-              borderTopColor: '#e2e8f0',
+              borderTopColor: colors.border,
               flexDirection: 'row',
               justifyContent: 'space-between',
               alignItems: 'center',
@@ -542,11 +636,15 @@ export const ExercisePickerScreen: React.FC = () => {
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
               {/* お気に入りセクションにはスターアイコンを前置して視認性を高める */}
-              {section.title === 'お気に入り' && <Ionicons name="star" size={13} color="#F59E0B" />}
+              {/* warning = '#F59E0B' */}
+              {section.title === 'お気に入り' && (
+                <Ionicons name="star" size={13} color={colors.warning} />
+              )}
+              {/* 12px は constants にないためそのまま維持 */}
               <Text
                 style={{
                   fontSize: 12,
-                  fontWeight: '700',
+                  fontWeight: fontWeight.bold,
                   color: '#94a3b8',
                   letterSpacing: 0.3,
                 }}
@@ -554,6 +652,7 @@ export const ExercisePickerScreen: React.FC = () => {
                 {section.title}
               </Text>
             </View>
+            {/* 11px は constants にないためそのまま維持 */}
             <Text style={{ fontSize: 11, color: '#cbd5e1' }}>{section.data.length}件</Text>
           </View>
         )}
@@ -588,37 +687,96 @@ export const ExercisePickerScreen: React.FC = () => {
                 onPress={() => handleSelectExercise(item)}
                 // Issue #116: 追加済み種目はタップ無効 + 半透明
                 disabled={isAdded}
-                style={isAdded ? { opacity: 0.5 } : undefined}
-                className={`flex-row items-center px-5 py-3 border-b border-[#e2e8f0] ${
-                  isSelected ? 'bg-[#E6F2FF] border-l-[3px] border-l-[#4D94FF]' : 'bg-white'
-                }`}
+                style={[
+                  {
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    paddingHorizontal: 20,
+                    paddingVertical: 12,
+                    borderBottomWidth: 1,
+                    borderBottomColor: colors.border,
+                    // primaryBg = '#E6F2FF', white = colors.white
+                    backgroundColor: isSelected ? colors.primaryBg : colors.white,
+                    // 選択中は左ボーダーでアクセント
+                    borderLeftWidth: isSelected ? 3 : 0,
+                    borderLeftColor: isSelected ? colors.primary : 'transparent',
+                  },
+                  isAdded ? { opacity: 0.5 } : undefined,
+                ]}
               >
                 {/* T038: multi モード時のチェックボックス */}
                 {mode === 'multi' && (
                   <View
-                    className={`w-[22px] h-[22px] rounded-lg border-2 mr-3 items-center justify-center ${
-                      isSelected ? 'bg-[#4D94FF] border-[#4D94FF]' : 'bg-white border-[#e2e8f0]'
-                    }`}
+                    style={{
+                      width: 22,
+                      height: 22,
+                      borderRadius: borderRadius.md,
+                      borderWidth: 2,
+                      marginRight: 12,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      // primary = '#4D94FF', white = colors.white, border = '#e2e8f0'
+                      backgroundColor: isSelected ? colors.primary : colors.white,
+                      borderColor: isSelected ? colors.primary : colors.border,
+                    }}
                   >
                     {!!isSelected && (
-                      <Text className="text-white text-[14px] font-bold">{'✓'}</Text>
+                      // fontSize.xs = 14px
+                      <Text
+                        style={{
+                          color: colors.white,
+                          fontSize: fontSize.xs,
+                          fontWeight: fontWeight.bold,
+                        }}
+                      >
+                        {'✓'}
+                      </Text>
                     )}
                   </View>
                 )}
 
                 {/* 種目情報 */}
                 <View className="flex-1">
-                  <Text className="text-[16px] font-semibold text-[#334155]">{item.name}</Text>
+                  {/* textTertiary = '#334155', fontSize.sm = 16px */}
+                  <Text
+                    style={{
+                      fontSize: fontSize.sm,
+                      fontWeight: fontWeight.semibold,
+                      color: colors.textTertiary,
+                    }}
+                  >
+                    {item.name}
+                  </Text>
                   <View className="flex-row gap-1.5 mt-1">
-                    {/* Issue #205: 部位バッジのフォントサイズを 13px → 14px に拡大 */}
-                    <View className="px-2 py-[2px] rounded-lg bg-[#E6F2FF]">
-                      <Text className="text-[14px] font-semibold text-[#3385FF]">
+                    {/* Issue #205: 部位バッジ（primaryBg = '#E6F2FF', primaryDark = '#3385FF', fontSize.xs = 14px） */}
+                    <View
+                      style={{
+                        paddingHorizontal: spacing.sm,
+                        paddingVertical: 2,
+                        borderRadius: borderRadius.md,
+                        backgroundColor: colors.primaryBg,
+                      }}
+                    >
+                      <Text
+                        style={{
+                          fontSize: fontSize.xs,
+                          fontWeight: fontWeight.semibold,
+                          color: colors.primaryDark,
+                        }}
+                      >
                         {getMuscleGroupLabel(item.muscleGroup)}
                       </Text>
                     </View>
-                    {/* Issue #205: 器具バッジのフォントサイズを 15px → 16px に拡大 */}
-                    <View className="px-2 py-[2px] rounded-lg bg-[#F1F3F5]">
-                      <Text className="text-[16px] text-[#64748b]">
+                    {/* Issue #205: 器具バッジ（neutralBg = '#F1F5F9', textSecondary = '#64748b', fontSize.sm = 16px） */}
+                    <View
+                      style={{
+                        paddingHorizontal: spacing.sm,
+                        paddingVertical: 2,
+                        borderRadius: borderRadius.md,
+                        backgroundColor: colors.neutralBg,
+                      }}
+                    >
+                      <Text style={{ fontSize: fontSize.sm, color: colors.textSecondary }}>
                         {getEquipmentLabel(item.equipment)}
                       </Text>
                     </View>
@@ -657,28 +815,82 @@ export const ExercisePickerScreen: React.FC = () => {
         }
       />
 
-      {/* T038: multi モード時のフッター */}
+      {/* T038: multi モード時のフッター（border = colors.border, white = colors.white） */}
       {mode === 'multi' && (
-        <View className="flex-row gap-3 px-5 py-3 border-t border-[#e2e8f0] bg-white">
+        <View
+          style={{
+            flexDirection: 'row',
+            gap: 12,
+            paddingHorizontal: 20,
+            paddingVertical: 12,
+            borderTopWidth: 1,
+            borderTopColor: colors.border,
+            backgroundColor: colors.white,
+          }}
+        >
           <TouchableOpacity
             onPress={handleClose}
-            className="flex-1 py-3 border border-[#e2e8f0] rounded-lg items-center"
+            style={{
+              flex: 1,
+              paddingVertical: 12,
+              borderWidth: 1,
+              borderColor: colors.border,
+              borderRadius: borderRadius.md,
+              alignItems: 'center',
+            }}
           >
-            <Text className="text-[16px] font-semibold text-[#64748b]">キャンセル</Text>
+            {/* fontSize.sm = 16px, textSecondary = '#64748b' */}
+            <Text
+              style={{
+                fontSize: fontSize.sm,
+                fontWeight: fontWeight.semibold,
+                color: colors.textSecondary,
+              }}
+            >
+              キャンセル
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleAddSelected}
             disabled={selectedIds.size === 0}
-            className={`flex-[2] py-3 rounded-lg items-center flex-row justify-center gap-1 ${
-              selectedIds.size === 0 ? 'bg-[#4D94FF] opacity-50' : 'bg-[#4D94FF]'
-            }`}
+            style={{
+              flex: 2,
+              paddingVertical: 12,
+              borderRadius: borderRadius.md,
+              alignItems: 'center',
+              flexDirection: 'row',
+              justifyContent: 'center',
+              gap: 4,
+              backgroundColor: colors.primary,
+              opacity: selectedIds.size === 0 ? 0.5 : 1,
+            }}
           >
             {selectedIds.size > 0 && (
-              <View className="w-5 h-5 rounded-full bg-white/30 items-center justify-center mr-1">
-                <Text className="text-[13px] font-bold text-white">{selectedIds.size}</Text>
+              <View
+                style={{
+                  width: 20,
+                  height: 20,
+                  borderRadius: 10,
+                  backgroundColor: 'rgba(255,255,255,0.3)',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginRight: 4,
+                }}
+              >
+                {/* 13px は constants にないためそのまま維持 */}
+                <Text style={{ fontSize: 13, fontWeight: fontWeight.bold, color: colors.white }}>
+                  {selectedIds.size}
+                </Text>
               </View>
             )}
-            <Text className="text-[16px] font-semibold text-white">
+            {/* fontSize.sm = 16px */}
+            <Text
+              style={{
+                fontSize: fontSize.sm,
+                fontWeight: fontWeight.semibold,
+                color: colors.white,
+              }}
+            >
               {selectedIds.size > 0 ? `${selectedIds.size}種目を追加` : '種目を選択'}
             </Text>
           </TouchableOpacity>
@@ -718,18 +930,19 @@ export const ExercisePickerScreen: React.FC = () => {
   );
 };
 
-/** Issue #155: スワイプ「履歴」ボタンスタイル */
+/** Issue #155: スワイプ「履歴」ボタンスタイル（primaryBg = '#E6F2FF', primary = '#4D94FF'） */
 const swipeStyles = StyleSheet.create({
   historyButton: {
     width: 72,
-    backgroundColor: '#E6F2FF',
+    backgroundColor: colors.primaryBg,
     justifyContent: 'center',
     alignItems: 'center',
   },
   historyButtonText: {
+    // 13px は constants にないためそのまま維持
     fontSize: 13,
-    fontWeight: '600',
-    color: '#4D94FF',
+    fontWeight: fontWeight.semibold,
+    color: colors.primary,
     marginTop: 2,
   },
 });
@@ -738,12 +951,13 @@ const swipeStyles = StyleSheet.create({
 const fabStyles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 24,
-    right: 24,
+    bottom: spacing.lg,
+    right: spacing.lg,
     width: 56,
     height: 56,
+    // ピル形状のため28は固定値として維持
     borderRadius: 28,
-    backgroundColor: '#4D94FF',
+    backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',

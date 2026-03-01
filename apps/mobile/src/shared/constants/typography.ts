@@ -16,6 +16,8 @@ export const fontSize = {
   xl: 22,
   /** 26px - 画面タイトル（Issue #118: 24→26） */
   xxl: 26,
+  /** 34px - StreakCard 等の大数字表示用 */
+  xxxl: 34,
 } as const;
 
 export const fontWeight = {
