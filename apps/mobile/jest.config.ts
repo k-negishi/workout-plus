@@ -31,6 +31,9 @@ const config: Config = {
         '^@/(.*)$': '<rootDir>/src/$1',
         // expo-sqlite は ESM のみ配布。babel-jest 環境でのパースエラーを回避するためスタブ化
         '^expo-sqlite$': '<rootDir>/__mocks__/expo-sqlite.js',
+        // babel-preset-expo が process.env.EXPO_PUBLIC_* を expo/virtual/env インポートに変換する。
+        // logic プロジェクトは babel-jest + CJS のため ESM の expo/virtual/env が読めない → モックで差し替え
+        '^expo/virtual/env$': '<rootDir>/__mocks__/expo-virtual-env.js',
       },
     },
   ],

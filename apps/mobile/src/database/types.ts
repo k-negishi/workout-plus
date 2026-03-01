@@ -80,3 +80,16 @@ export type PRRow = {
   workout_id: string;
   achieved_at: number;
 };
+
+/** user_settings テーブル行型（単一行: id 常に 1） */
+export type UserSettingsRow = {
+  id: 1;
+  weekly_goal_count: number; // 1〜7
+  invite_code_unlocked: 0 | 1; // 0: 未解禁, 1: 解禁済み
+};
+
+/** UserSettings ドメインオブジェクト（camelCase 変換済み） */
+export type UserSettings = {
+  weeklyGoalCount: number; // 1〜7
+  inviteCodeUnlocked: boolean;
+};

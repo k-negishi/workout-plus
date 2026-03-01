@@ -9,7 +9,7 @@ import { ALL_CREATE_TABLES, CREATE_INDEXES } from './schema';
 import { generateDevWorkoutSeedSQL, generateSeedSQL } from './seed';
 
 /** 現在の最新スキーマバージョン */
-const LATEST_VERSION = 7;
+const LATEST_VERSION = 8;
 
 /**
  * 現在のスキーマバージョンを取得する
@@ -210,6 +210,30 @@ async function migrateV6ToV7(db: SQLiteDatabase): Promise<void> {
   }
 }
 
+/**
+ * バージョン 7 → 8: user_settings テーブルを追加
+ *
+ * user_settings はアプリ設定を保存する単一行テーブル（id = 1 固定）。
+ * weekly_goal_count: 週の目標ワークアウト回数（1〜7、デフォルト3）
+ * invite_code_unlocked: 招待コード解禁フラグ（0=未解禁, 1=解禁済み）
+ *
+ * 冪等性: CREATE TABLE IF NOT EXISTS + INSERT OR IGNORE で再実行しても安全。
+ */
+async function migrateV7ToV8(db: SQLiteDatabase): Promise<void> {
+  await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS user_settings (
+      id                   INTEGER PRIMARY KEY CHECK (id = 1),
+      weekly_goal_count    INTEGER NOT NULL DEFAULT 3,
+      invite_code_unlocked INTEGER NOT NULL DEFAULT 0
+    )
+  `);
+  // デフォルト行を挿入（既に存在する場合はスキップ）
+  await db.execAsync(
+    `INSERT OR IGNORE INTO user_settings (id, weekly_goal_count, invite_code_unlocked)
+     VALUES (1, 3, 0)`,
+  );
+}
+
 /** マイグレーション関数の型 */
 type Migration = (db: SQLiteDatabase) => Promise<void>;
 
@@ -222,6 +246,7 @@ const MIGRATIONS: Record<number, Migration> = {
   5: migrateV4ToV5,
   6: migrateV5ToV6,
   7: migrateV6ToV7,
+  8: migrateV7ToV8,
 };
 
 /**

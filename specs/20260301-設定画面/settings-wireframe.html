@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workout+ 設定画面 ワイヤーフレーム</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  /* ===============================================
+     Design System Tokens (v5 MD3 準拠)
+     =============================================== */
+  :root {
+    --md-ref-palette-primary40: #3385FF;
+    --md-ref-palette-primary50: #4D94FF;
+    --md-ref-palette-primary90: #D1E6FF;
+    --md-ref-palette-primary95: #E6F2FF;
+    --md-ref-palette-primary100: #FFFFFF;
+    --md-ref-palette-neutral10: #1e293b;
+    --md-ref-palette-neutral17: #334155;
+    --md-ref-palette-neutral25: #475569;
+    --md-ref-palette-neutral40: #64748b;
+    --md-ref-palette-neutral87: #e2e8f0;
+    --md-ref-palette-neutral92: #F1F3F5;
+    --md-ref-palette-neutral96: #f9fafb;
+    --md-ref-palette-neutral100: #FFFFFF;
+    --md-ref-palette-tertiary50: #10B981;
+    --md-ref-palette-tertiary95: #F0FDF4;
+    --md-ref-palette-error40: #EF4444;
+    --md-ref-palette-error90: #FEE2E2;
+
+    --md-sys-color-primary: var(--md-ref-palette-primary50);
+    --md-sys-color-on-primary: var(--md-ref-palette-primary100);
+    --md-sys-color-primary-container: var(--md-ref-palette-primary95);
+    --md-sys-color-tertiary: var(--md-ref-palette-tertiary50);
+    --md-sys-color-tertiary-container: var(--md-ref-palette-tertiary95);
+    --md-sys-color-error: var(--md-ref-palette-error40);
+    --md-sys-color-error-container: var(--md-ref-palette-error90);
+    --md-sys-color-surface: var(--md-ref-palette-neutral100);
+    --md-sys-color-on-surface: var(--md-ref-palette-neutral25);
+    --md-sys-color-on-surface-variant: var(--md-ref-palette-neutral40);
+    --md-sys-color-outline-variant: var(--md-ref-palette-neutral87);
+    --md-sys-color-background: var(--md-ref-palette-neutral96);
+    --md-sys-color-surface-container-low: #FAFBFC;
+    --md-sys-color-surface-container-high: var(--md-ref-palette-neutral92);
+    --md-custom-color-on-surface-strong: var(--md-ref-palette-neutral17);
+
+    --md-sys-shape-extra-small: 4px;
+    --md-sys-shape-small: 8px;
+    --md-sys-shape-medium: 12px;
+    --md-sys-shape-large: 16px;
+    --md-sys-shape-full: 9999px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #f0f4f8;
+    font-family: 'Noto Sans JP', -apple-system, sans-serif;
+    color: var(--md-sys-color-on-surface);
+    min-height: 100vh;
+    padding: 32px 16px 64px;
+  }
+
+  button { font-family: inherit; cursor: pointer; }
+
+  /* ── ページタイトル ── */
+  .page-header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .page-header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--md-custom-color-on-surface-strong);
+  }
+  .page-header p {
+    font-size: 13px;
+    color: var(--md-sys-color-on-surface-variant);
+    margin-top: 4px;
+  }
+
+  /* ── 状態切替タブ ── */
+  .state-tabs {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 28px;
+  }
+  .state-tabs button {
+    padding: 7px 14px;
+    border-radius: var(--md-sys-shape-small);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    background: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface-variant);
+    font-size: 12px;
+    font-weight: 400;
+  }
+  .state-tabs button.active {
+    background: var(--md-sys-color-primary);
+    border-color: var(--md-sys-color-primary);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  /* ── 複数フォンを横並び ── */
+  .phones-row {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .phone-label {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface-variant);
+    margin-bottom: 10px;
+    letter-spacing: 0.3px;
+  }
+
+  /* ── スマホフレーム ── */
+  .phone {
+    width: 375px;
+    height: 812px;
+    background: var(--md-sys-color-background);
+    border-radius: 44px;
+    border: 3px solid #D1D5DB;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.12);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .phone.compact {
+    height: auto;
+    min-height: 480px;
+  }
+
+  /* ── ステータスバー ── */
+  .status-bar {
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    background: var(--md-sys-color-surface);
+    flex-shrink: 0;
+    position: relative;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  }
+  .status-bar .time {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--md-custom-color-on-surface-strong);
+  }
+  .notch {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 130px;
+    height: 30px;
+    background: #000;
+    border-radius: 0 0 20px 20px;
+    z-index: 3;
+  }
+  .status-icons {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+  }
+  .status-icons svg { width: 16px; height: 16px; color: var(--md-custom-color-on-surface-strong); }
+
+  /* ── スクロールエリア ── */
+  .screen-scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .screen-scroll::-webkit-scrollbar { display: none; }
+
+  /* ── 設定ヘッダー ── */
+  .settings-header {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--md-sys-color-surface);
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .settings-back-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: var(--md-sys-color-on-surface);
+    border-radius: var(--md-sys-shape-small);
+  }
+  .settings-back-btn svg { width: 22px; height: 22px; }
+  .settings-header-title {
+    flex: 1;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--md-custom-color-on-surface-strong);
+    text-align: center;
+  }
+  .settings-header-spacer { width: 36px; }
+
+  /* ── 設定本文エリア ── */
+  .settings-body {
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  /* ── セクショングループ ── */
+  .settings-group-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface-variant);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 8px;
+    padding-left: 4px;
+  }
+
+  /* ── カードリスト ── */
+  .settings-card {
+    background: var(--md-sys-color-surface);
+    border-radius: var(--md-sys-shape-medium);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    overflow: hidden;
+  }
+
+  /* ── 通常行 ── */
+  .settings-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  }
+  .settings-row:last-child { border-bottom: none; }
+
+  .settings-row-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--md-sys-color-on-surface-variant);
+    flex-shrink: 0;
+  }
+  .settings-row-icon svg { width: 20px; height: 20px; }
+
+  .settings-row-label {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  .settings-row-value {
+    font-size: 14px;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  /* ── ステッパー（週の目標） ── */
+  .stepper {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: var(--md-sys-color-surface-container-high);
+    border-radius: var(--md-sys-shape-small);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    overflow: hidden;
+  }
+  .stepper-btn {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    font-size: 18px;
+    font-weight: 400;
+    color: var(--md-sys-color-primary);
+    line-height: 1;
+  }
+  .stepper-btn:disabled {
+    color: var(--md-sys-color-outline-variant);
+    cursor: default;
+  }
+  .stepper-value {
+    min-width: 52px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--md-custom-color-on-surface-strong);
+    padding: 0 4px;
+    border-left: 1px solid var(--md-sys-color-outline-variant);
+    border-right: 1px solid var(--md-sys-color-outline-variant);
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── 招待コード：展開フォーム ── */
+  .invite-expand {
+    padding: 12px 16px 16px;
+    border-top: 1px solid var(--md-sys-color-outline-variant);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    background: var(--md-sys-color-surface-container-low);
+  }
+
+  .invite-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--md-sys-color-surface);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    border-radius: var(--md-sys-shape-small);
+    padding: 0 12px;
+    height: 44px;
+  }
+  .invite-input-wrap.error {
+    border-color: var(--md-sys-color-error);
+  }
+  .invite-input-wrap input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 15px;
+    font-family: inherit;
+    color: var(--md-sys-color-on-surface);
+    outline: none;
+    letter-spacing: 0.5px;
+  }
+  .invite-input-wrap input::placeholder {
+    color: var(--md-sys-color-outline-variant);
+    letter-spacing: 0;
+  }
+  .invite-clear-btn {
+    background: none;
+    border: none;
+    color: var(--md-sys-color-on-surface-variant);
+    display: flex;
+    align-items: center;
+    padding: 4px;
+  }
+  .invite-clear-btn svg { width: 16px; height: 16px; }
+
+  .invite-error-msg {
+    font-size: 12px;
+    color: var(--md-sys-color-error);
+    padding-left: 2px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .invite-error-msg svg { width: 14px; height: 14px; flex-shrink: 0; }
+
+  .invite-apply-btn {
+    height: 44px;
+    border-radius: var(--md-sys-shape-small);
+    background: var(--md-sys-color-primary);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    width: 100%;
+  }
+  .invite-apply-btn:disabled {
+    background: var(--md-sys-color-outline-variant);
+    color: var(--md-sys-color-surface);
+    cursor: default;
+  }
+
+  /* ── 解禁済みバッジ ── */
+  .unlocked-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--md-sys-color-tertiary);
+    background: var(--md-sys-color-tertiary-container);
+    padding: 3px 8px;
+    border-radius: var(--md-sys-shape-full);
+  }
+  .unlocked-badge svg { width: 13px; height: 13px; }
+
+  /* ── chevron ── */
+  .chevron {
+    width: 18px;
+    height: 18px;
+    color: var(--md-sys-color-outline-variant);
+    flex-shrink: 0;
+  }
+  .chevron svg { width: 18px; height: 18px; }
+
+  /* ── 非タップ行（バージョン・準備中） ── */
+  .settings-row.no-tap {
+    cursor: default;
+  }
+
+  /* ── 準備中バッジ ── */
+  .coming-soon-badge {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface-variant);
+    background: var(--md-sys-color-surface-container-high);
+    border: 1px solid var(--md-sys-color-outline-variant);
+    padding: 2px 7px;
+    border-radius: var(--md-sys-shape-full);
+    flex-shrink: 0;
+  }
+
+  /* ── 準備中行はラベルもグレー ── */
+  .settings-row.disabled .settings-row-label {
+    color: var(--md-sys-color-on-surface-variant);
+  }
+  .settings-row.disabled .settings-row-icon {
+    opacity: 0.4;
+  }
+
+  /* ── タブバー（実際のアプリに合わせた5タブ構成） ── */
+  .tab-bar {
+    height: 82px;
+    background: var(--md-sys-color-surface);
+    border-top: 1px solid var(--md-sys-color-outline-variant);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-around;
+    padding: 10px 4px 0;
+    flex-shrink: 0;
+  }
+  .tab-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    padding: 4px 2px;
+    background: none;
+    border: none;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+  .tab-item.active { color: var(--md-sys-color-primary); }
+  .tab-item.active .tab-label { font-weight: 700; }
+  .tab-icon svg { width: 24px; height: 24px; }
+  .tab-label { font-size: 11px; font-weight: 400; }
+
+  /* ── Dynamic Island ── */
+  .dynamic-island {
+    position: absolute;
+    top: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120px;
+    height: 34px;
+    background: #000;
+    border-radius: 20px;
+    z-index: 3;
+  }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>設定画面 ワイヤーフレーム</h1>
+  <p>Issue #169 · MVP スコープ（週の目標 / 招待コード / 利用規約・PP準備中 / バージョン）</p>
+</div>
+
+<!-- ── 状態切替タブ ── -->
+<div class="state-tabs">
+  <button class="active" onclick="showState('default')">① デフォルト</button>
+  <button onclick="showState('invite-open')">② 招待コード入力中</button>
+  <button onclick="showState('invite-error')">③ コードエラー</button>
+  <button onclick="showState('invite-unlocked')">④ 解禁済み</button>
+  <button onclick="showState('goal-min')">⑤ 目標 最小値(1)</button>
+  <button onclick="showState('goal-max')">⑥ 目標 最大値(7)</button>
+</div>
+
+<div class="phones-row">
+
+  <!-- ══════════════════════════════════
+       PHONE: 現在の状態
+       ══════════════════════════════════ -->
+  <div>
+    <div class="phone-label" id="phone-label">① デフォルト表示</div>
+    <div class="phone">
+      <!-- ステータスバー -->
+      <div class="status-bar">
+        <div class="dynamic-island"></div>
+        <span class="time">14:34</span>
+        <div class="status-icons">
+          <!-- 電波 -->
+          <svg viewBox="0 0 24 24" fill="currentColor"><rect x="2" y="16" width="3" height="5" rx="1"/><rect x="7" y="12" width="3" height="9" rx="1"/><rect x="12" y="8" width="3" height="13" rx="1"/><rect x="17" y="4" width="3" height="17" rx="1" opacity="0.3"/></svg>
+          <!-- バッテリー -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="18" height="10" rx="2"/><path d="M22 11v2"/></svg>
+        </div>
+      </div>
+
+      <!-- スクロールエリア -->
+      <div class="screen-scroll">
+
+        <!-- ── ヘッダー（タブ画面のため戻るボタンなし） ── -->
+        <div class="settings-header">
+          <span class="settings-header-title" style="text-align:left; padding-left:4px;">設定</span>
+        </div>
+
+        <!-- ── 本文 ── -->
+        <div class="settings-body">
+
+          <!-- ワークアウト -->
+          <div>
+            <div class="settings-group-title">ワークアウト</div>
+            <div class="settings-card">
+              <div class="settings-row">
+                <div class="settings-row-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                  </svg>
+                </div>
+                <span class="settings-row-label">週の目標</span>
+                <!-- ステッパー -->
+                <div class="stepper" id="stepper">
+                  <button class="stepper-btn" id="btn-minus" onclick="changeGoal(-1)">−</button>
+                  <div class="stepper-value"><span id="goal-val">3</span>回</div>
+                  <button class="stepper-btn" id="btn-plus" onclick="changeGoal(1)">+</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 招待コード（セクションタイトルなし） -->
+          <div>
+            <div class="settings-card">
+
+              <!-- 招待コード行 -->
+              <div class="settings-row" id="invite-row" onclick="toggleInvite()" style="cursor:pointer;">
+                <div class="settings-row-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="7" width="20" height="14" rx="2"/>
+                    <path d="M16 3l-4 4-4-4"/>
+                  </svg>
+                </div>
+                <span class="settings-row-label">招待コード</span>
+                <!-- 状態によって切り替わるエリア -->
+                <div id="invite-status-default">
+                  <div class="chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg></div>
+                </div>
+                <div id="invite-status-unlocked" style="display:none;">
+                  <div class="unlocked-badge">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    解禁済み
+                  </div>
+                </div>
+                <div id="invite-status-chevron-open" style="display:none;">
+                  <div class="chevron"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg></div>
+                </div>
+              </div>
+
+              <!-- 展開フォーム -->
+              <div class="invite-expand" id="invite-form" style="display:none;">
+                <div class="invite-input-wrap" id="invite-input-wrap">
+                  <input type="text" id="invite-input" placeholder="コードを入力" oninput="onInviteInput()" />
+                  <button class="invite-clear-btn" onclick="clearInvite()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  </button>
+                </div>
+                <div class="invite-error-msg" id="invite-error" style="display:none;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                  コードが正しくありません
+                </div>
+                <button class="invite-apply-btn" id="invite-apply-btn" disabled onclick="applyInvite()">適用</button>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- データ管理 -->
+          <div>
+            <div class="settings-group-title">データ管理</div>
+            <div class="settings-card">
+              <div class="settings-row no-tap disabled">
+                <div class="settings-row-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                  </svg>
+                </div>
+                <span class="settings-row-label">データインポート</span>
+                <span class="coming-soon-badge">準備中</span>
+              </div>
+              <div class="settings-row no-tap disabled">
+                <div class="settings-row-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                </div>
+                <span class="settings-row-label">データエクスポート</span>
+                <span class="coming-soon-badge">準備中</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- その他 -->
+          <div>
+            <div class="settings-group-title">その他</div>
+            <div class="settings-card">
+              <!-- 利用規約（準備中） -->
+              <div class="settings-row no-tap disabled">
+                <div class="settings-row-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                  </svg>
+                </div>
+                <span class="settings-row-label">利用規約</span>
+                <span class="coming-soon-badge">準備中</span>
+              </div>
+              <!-- プライバシーポリシー（準備中） -->
+              <div class="settings-row no-tap disabled">
+                <div class="settings-row-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  </svg>
+                </div>
+                <span class="settings-row-label">プライバシーポリシー</span>
+                <span class="coming-soon-badge">準備中</span>
+              </div>
+              <!-- バージョン -->
+              <div class="settings-row no-tap">
+                <div class="settings-row-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="12" y1="16" x2="12" y2="12"/>
+                    <line x1="12" y1="8" x2="12.01" y2="8"/>
+                  </svg>
+                </div>
+                <span class="settings-row-label">バージョン</span>
+                <span class="settings-row-value">v1.0.0</span>
+              </div>
+            </div>
+          </div>
+
+        </div><!-- /settings-body -->
+      </div><!-- /screen-scroll -->
+
+      <!-- タブバー（実際のアプリに合わせた5タブ構成） -->
+      <div class="tab-bar">
+        <button class="tab-item">
+          <div class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+          <span class="tab-label">ホーム</span>
+        </button>
+        <button class="tab-item">
+          <div class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+          <span class="tab-label">カレンダー</span>
+        </button>
+        <button class="tab-item">
+          <div class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+          <span class="tab-label">統計</span>
+        </button>
+        <button class="tab-item">
+          <div class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+          <span class="tab-label">AI</span>
+        </button>
+        <button class="tab-item active">
+          <div class="tab-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+          <span class="tab-label">設定</span>
+        </button>
+      </div>
+
+    </div><!-- /phone -->
+  </div>
+
+</div><!-- /phones-row -->
+
+<script>
+  /* ── 状態管理 ── */
+  var goalValue = 3;
+  var inviteOpen = false;
+
+  /* ── 状態切替タブ ── */
+  function showState(state) {
+    // タブのactive切替
+    document.querySelectorAll('.state-tabs button').forEach(function(b) { b.classList.remove('active'); });
+    event.target.classList.add('active');
+
+    var labels = {
+      'default':          '① デフォルト表示',
+      'invite-open':      '② 招待コード入力中',
+      'invite-error':     '③ コードエラー',
+      'invite-unlocked':  '④ 解禁済み',
+      'goal-min':         '⑤ 週の目標：最小値(1)',
+      'goal-max':         '⑥ 週の目標：最大値(7)'
+    };
+    document.getElementById('phone-label').textContent = labels[state];
+
+    // リセット
+    resetState();
+
+    if (state === 'default') {
+      // 何もしない（リセット済み）
+    } else if (state === 'invite-open') {
+      openInviteForm();
+    } else if (state === 'invite-error') {
+      openInviteForm();
+      document.getElementById('invite-input').value = 'WRONG123';
+      document.getElementById('invite-apply-btn').disabled = false;
+      document.getElementById('invite-error').style.display = 'flex';
+      document.getElementById('invite-input-wrap').classList.add('error');
+    } else if (state === 'invite-unlocked') {
+      document.getElementById('invite-row').onclick = null;
+      document.getElementById('invite-status-default').style.display = 'none';
+      document.getElementById('invite-status-unlocked').style.display = 'flex';
+    } else if (state === 'goal-min') {
+      goalValue = 1;
+      updateStepper();
+    } else if (state === 'goal-max') {
+      goalValue = 7;
+      updateStepper();
+    }
+  }
+
+  function resetState() {
+    goalValue = 3;
+    inviteOpen = false;
+    document.getElementById('invite-form').style.display = 'none';
+    document.getElementById('invite-status-default').style.display = 'flex';
+    document.getElementById('invite-status-unlocked').style.display = 'none';
+    document.getElementById('invite-status-chevron-open').style.display = 'none';
+    document.getElementById('invite-input').value = '';
+    document.getElementById('invite-apply-btn').disabled = true;
+    document.getElementById('invite-error').style.display = 'none';
+    document.getElementById('invite-input-wrap').classList.remove('error');
+    document.getElementById('invite-row').onclick = toggleInvite;
+    updateStepper();
+  }
+
+  /* ── ステッパー ── */
+  function changeGoal(delta) {
+    goalValue = Math.min(7, Math.max(1, goalValue + delta));
+    updateStepper();
+  }
+
+  function updateStepper() {
+    document.getElementById('goal-val').textContent = goalValue;
+    document.getElementById('btn-minus').disabled = goalValue <= 1;
+    document.getElementById('btn-plus').disabled  = goalValue >= 7;
+  }
+
+  /* ── 招待コードフォーム ── */
+  function toggleInvite() {
+    inviteOpen = !inviteOpen;
+    openInviteForm(inviteOpen);
+  }
+
+  function openInviteForm(open) {
+    if (open === undefined) open = true;
+    inviteOpen = open;
+    document.getElementById('invite-form').style.display = open ? 'flex' : 'none';
+    document.getElementById('invite-status-default').style.display = open ? 'none' : 'flex';
+    document.getElementById('invite-status-chevron-open').style.display = open ? 'flex' : 'none';
+    if (open) {
+      setTimeout(function() { document.getElementById('invite-input').focus(); }, 100);
+    }
+  }
+
+  function onInviteInput() {
+    var val = document.getElementById('invite-input').value.trim();
+    document.getElementById('invite-apply-btn').disabled = val.length === 0;
+    // エラー状態をリセット
+    document.getElementById('invite-error').style.display = 'none';
+    document.getElementById('invite-input-wrap').classList.remove('error');
+  }
+
+  function clearInvite() {
+    document.getElementById('invite-input').value = '';
+    document.getElementById('invite-apply-btn').disabled = true;
+    document.getElementById('invite-error').style.display = 'none';
+    document.getElementById('invite-input-wrap').classList.remove('error');
+    document.getElementById('invite-input').focus();
+  }
+
+  function applyInvite() {
+    // WFなのでバリデーション結果は固定（エラーを表示）
+    document.getElementById('invite-error').style.display = 'flex';
+    document.getElementById('invite-input-wrap').classList.add('error');
+  }
+
+  // 初期化
+  updateStepper();
+</script>
+
+</body>
+</html>

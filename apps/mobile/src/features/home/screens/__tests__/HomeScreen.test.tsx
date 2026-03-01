@@ -68,6 +68,17 @@ jest.mock('@/database/repositories/workout', () => ({
   },
 }));
 
+// T011 [US1]: UserSettingsRepository モック（週の目標取得用）
+const mockUserSettingsGet = jest.fn().mockResolvedValue({
+  weeklyGoalCount: 3,
+  inviteCodeUnlocked: false,
+});
+jest.mock('@/database/repositories/userSettings', () => ({
+  UserSettingsRepository: {
+    get: (...args: unknown[]) => mockUserSettingsGet(...args),
+  },
+}));
+
 // @expo/vector-icons モック（Ionicons 等をシンプルなコンポーネントに差し替え）
 jest.mock('@expo/vector-icons', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -123,6 +134,8 @@ beforeEach(() => {
   mockFindTodayActiveRecording.mockResolvedValue(null);
   mockFindTodayCompleted.mockResolvedValue(null);
   mockNavigate.mockClear();
+  // T011: UserSettingsRepository のデフォルトリセット
+  mockUserSettingsGet.mockResolvedValue({ weeklyGoalCount: 3, inviteCodeUnlocked: false });
   // データ取得が useFocusEffect に統合されたため、コールバックをデフォルトで実行する
   mockUseFocusEffect.mockImplementation((cb: () => void) => cb());
 });
@@ -255,13 +268,13 @@ describe('HomeScreen タイトルヘッダー', () => {
     expect(within(scrollView).getByText('Workout Plus')).toBeTruthy();
   });
 
-  it('設定アイコンボタンが表示される (testID: settings-button)', async () => {
+  it('設定アイコンボタンが表示されないこと（FR-020: タブバーに移動済み）', async () => {
     render(<HomeScreen />);
 
     await screen.findByText('今月のトレーニング');
 
-    // 設定ボタンが testID で取得できる（presence チェックは getBy 系）
-    expect(screen.getByTestId('settings-button')).toBeTruthy();
+    // FR-020: ホームヘッダーの設定ボタンは削除済み（タブバー5番目のタブに移動）
+    expect(screen.queryByTestId('settings-button')).toBeNull();
   });
 });
 
@@ -393,5 +406,18 @@ describe('HomeScreen 当日完了済みボタンテキスト', () => {
       expect(screen.getByText('本日のワークアウトを再開する')).toBeTruthy();
     });
     expect(screen.queryByText('本日のワークアウトを記録')).toBeNull();
+  });
+});
+
+// ---- T011 [US1]: 週の目標取得テスト -------------------------------------------
+
+describe('HomeScreen US1: UserSettingsRepository から weeklyGoalCount を取得', () => {
+  it('フォーカス時に UserSettingsRepository.get() が呼ばれること', async () => {
+    render(<HomeScreen />);
+    await screen.findByText('今月のトレーニング');
+
+    await waitFor(() => {
+      expect(mockUserSettingsGet).toHaveBeenCalled();
+    });
   });
 });

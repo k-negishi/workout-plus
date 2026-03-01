@@ -3,7 +3,6 @@
  * ワイヤーフレーム: home-header + home-main セクション準拠
  * StreakCard、最近のワークアウト3件、QuickStatsWidget
  */
-import { Ionicons } from '@expo/vector-icons';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import type { CompositeNavigationProp } from '@react-navigation/native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -21,6 +20,7 @@ import { ActivityIndicator, ScrollView, Text, TouchableOpacity, View } from 'rea
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getDatabase } from '@/database/client';
+import { UserSettingsRepository } from '@/database/repositories/userSettings';
 import { WorkoutRepository } from '@/database/repositories/workout';
 import type { ExerciseRow, SetRow, WorkoutExerciseRow, WorkoutRow } from '@/database/types';
 import { colors } from '@/shared/constants/colors';
@@ -170,6 +170,8 @@ export function HomeScreen() {
   const [isRecording, setIsRecording] = useState(false);
   /** 当日完了済みワークアウトの有無（ボタンテキスト切替用） */
   const [hasTodayCompleted, setHasTodayCompleted] = useState(false);
+  /** US1: 週の目標ワークアウト回数（UserSettings から取得、デフォルト 3） */
+  const [weeklyGoalCount, setWeeklyGoalCount] = useState(3);
 
   /**
    * 画面フォーカス時にすべてのデータを取得する。
@@ -182,6 +184,10 @@ export function HomeScreen() {
       const fetchData = async () => {
         try {
           const db = await getDatabase();
+
+          // US1: 週の目標をユーザー設定から取得する
+          const userSettings = await UserSettingsRepository.get();
+          setWeeklyGoalCount(userSettings.weeklyGoalCount);
 
           // 本日の「実質的に記録中」セッション確認（有効セットのない空 recording を除外: Issue #203）
           const [recording, todayCompleted] = await Promise.all([
@@ -358,27 +364,11 @@ export function HomeScreen() {
             borderBottomColor: colors.border,
           }}
         >
-          {/* タイトルヘッダー行: アプリ名 + 設定ボタン（設定機能は将来対応） */}
-          <View
-            style={{
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: 16,
-            }}
-          >
+          {/* タイトルヘッダー行: アプリ名（FR-020: 設定ボタン削除、タブバー5番目のタブに移動） */}
+          <View style={{ marginBottom: 16 }}>
             <Text style={{ fontSize: 22, fontWeight: '700', color: colors.primary }}>
               Workout Plus
             </Text>
-            {/* 設定ボタン: タップ時アクションは将来対応 */}
-            <TouchableOpacity
-              testID="settings-button"
-              accessibilityLabel="設定"
-              style={{ padding: 8 }}
-              // onPress は将来の設定機能実装時に追加する
-            >
-              <Ionicons name="settings-outline" size={22} color={colors.textSecondary} />
-            </TouchableOpacity>
           </View>
           <StreakCard trainingDates={trainingDates} />
         </View>
@@ -441,6 +431,7 @@ export function HomeScreen() {
               thisWeekWorkouts={weeklyWorkouts}
               thisWeekSets={dashboardStats.weeklySetCount}
               lastWeekWorkouts={lastWeekWorkouts}
+              targetWorkouts={weeklyGoalCount}
             />
           )}
 

@@ -13,6 +13,7 @@ import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { SettingsScreen } from '@/features/settings/screens/SettingsScreen';
 import { colors } from '@/shared/constants/colors';
 import type { MainTabParamList } from '@/types';
 
@@ -167,6 +168,16 @@ export function MainTabs() {
           tabBarLabel: 'AI',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="chatbubble-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="SettingsTab"
+        component={SettingsScreen}
+        options={{
+          tabBarLabel: '設定',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="settings-outline" size={size} color={color} />
           ),
         }}
       />

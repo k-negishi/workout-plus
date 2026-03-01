@@ -17,7 +17,7 @@ export type RootStackParamList = {
 
 /**
  * メインタブ（T07: 4タブ化 RecordTab 廃止）
- * Home / Calendar / Stats / AI の4タブ構成
+ * Home / Calendar / Stats / AI / Settings の5タブ構成
  *
  * T7: CalendarTab に NavigatorScreenParams を指定することで、
  * 別タブから navigate('CalendarTab', { screen: 'Calendar', params: { targetDate } }) の
@@ -28,6 +28,7 @@ export type MainTabParamList = {
   CalendarTab: NavigatorScreenParams<CalendarStackParamList>;
   StatsTab: undefined;
   AITab: undefined;
+  SettingsTab: undefined; // 設定画面（Issue #169）
 };
 
 /**

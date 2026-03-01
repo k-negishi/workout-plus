@@ -220,8 +220,8 @@ describe('runMigrations V4 → V5', () => {
 
     await runMigrations(db as unknown as SQLiteDatabase);
 
-    // v5 → v6 → v7 の 2 回マイグレーションが実行される（LATEST_VERSION = 7 のため）
-    expect(db.withTransactionAsync).toHaveBeenCalledTimes(2);
+    // v5 → v6 → v7 → v8 の 3 回マイグレーションが実行される（LATEST_VERSION = 8 のため）
+    expect(db.withTransactionAsync).toHaveBeenCalledTimes(3);
   });
 });
 
@@ -325,8 +325,8 @@ describe('runMigrations V5 → V6', () => {
     expect(hasAlterTable).toBe(false);
   });
 
-  it('既にバージョン 7（最新）の場合はマイグレーションをスキップすること', async () => {
-    let schemaVersion = 7;
+  it('既にバージョン 8（最新）の場合はマイグレーションをスキップすること', async () => {
+    let schemaVersion = 8;
     const db = {
       getFirstAsync: jest.fn(async (sql: string) => {
         if (sql === 'PRAGMA user_version') return { user_version: schemaVersion };
