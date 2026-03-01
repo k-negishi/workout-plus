@@ -18,7 +18,6 @@ function makeExercise(
   const now = Date.now();
   return {
     equipment: 'barbell',
-    isCustom: false,
     isFavorite: false,
     isDeleted: false,
     createdAt: now,
@@ -40,7 +39,7 @@ const testExercises: Exercise[] = [
   makeExercise({ id: 'ex-3', name: 'デッドリフト', muscleGroup: 'back' }),
   makeExercise({ id: 'ex-4', name: 'ラットプルダウン', muscleGroup: 'back', equipment: 'cable' }),
   makeExercise({ id: 'ex-5', name: 'スクワット', muscleGroup: 'legs', isFavorite: true }),
-  makeExercise({ id: 'ex-6', name: 'カスタム種目', muscleGroup: 'shoulders', isCustom: true }),
+  makeExercise({ id: 'ex-6', name: 'カスタム種目', muscleGroup: 'shoulders' }),
   makeExercise({ id: 'ex-7', name: 'バーベルカール', muscleGroup: 'biceps' }),
 ];
 
@@ -52,7 +51,6 @@ describe('toExercise: DBの行からExerciseへの変換', () => {
       name: 'ベンチプレス',
       muscle_group: 'chest' as MuscleGroup,
       equipment: 'barbell',
-      is_custom: 0 as 0 | 1,
       is_favorite: 1 as 0 | 1,
       is_deleted: 0 as 0 | 1,
       created_at: now,
@@ -64,28 +62,27 @@ describe('toExercise: DBの行からExerciseへの変換', () => {
     expect(exercise.name).toBe('ベンチプレス');
     expect(exercise.muscleGroup).toBe('chest');
     expect(exercise.equipment).toBe('barbell');
-    expect(exercise.isCustom).toBe(false); // is_custom === 0 → false
     expect(exercise.isFavorite).toBe(true); // is_favorite === 1 → true
+    expect(exercise.isDeleted).toBe(false); // is_deleted === 0 → false
     expect(exercise.createdAt).toBe(now);
   });
 
-  it('is_custom=1, is_favorite=0のカスタム種目を正しく変換する', () => {
+  it('is_favorite=0, is_deleted=1 の種目を正しく変換する', () => {
     const now = Date.now();
     const row = {
-      id: 'ex-custom',
-      name: 'マイ種目',
+      id: 'ex-deleted',
+      name: '削除済み種目',
       muscle_group: 'back' as MuscleGroup,
       equipment: 'bodyweight',
-      is_custom: 1 as 0 | 1,
       is_favorite: 0 as 0 | 1,
-      is_deleted: 0 as 0 | 1,
+      is_deleted: 1 as 0 | 1,
       created_at: now,
       updated_at: now,
       sort_order: 3,
     };
     const exercise = toExercise(row);
-    expect(exercise.isCustom).toBe(true);
     expect(exercise.isFavorite).toBe(false);
+    expect(exercise.isDeleted).toBe(true); // is_deleted === 1 → true
   });
 });
 
@@ -135,7 +132,7 @@ describe('useExerciseSearch セクション計算ロジック', () => {
       const shouldersSection = sections.find((s) => s.title === '肩の種目');
       expect(shouldersSection).toBeDefined();
       expect(shouldersSection!.data).toHaveLength(1);
-      expect(shouldersSection!.data[0]!.isCustom).toBe(true);
+      expect(shouldersSection!.data[0]!.name).toBe('カスタム種目');
     });
 
     it('データなしでは空配列を返す', () => {

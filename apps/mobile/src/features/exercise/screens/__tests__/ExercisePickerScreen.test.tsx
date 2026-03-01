@@ -8,8 +8,9 @@
  * - Issue #184: 種目タップ後 goBack() が即座に呼ばれる（addExercise 完了を待たない）
  * - Issue #180: FAB タップ後のフォーム表示でスクロールが起きない（autoFocus なし）
  */
-import { fireEvent, render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import React from 'react';
+import { Alert } from 'react-native';
 
 // --- モック定義 ---
 
@@ -84,12 +85,14 @@ jest.mock('@/shared/components/Toast', () => ({
 // ExerciseRepository は空実装で十分
 const mockFindByExactName = jest.fn();
 const mockCreate = jest.fn();
+const mockRestore = jest.fn();
 jest.mock('@/database/repositories/exercise', () => ({
   ExerciseRepository: {
     toggleFavorite: jest.fn(),
     create: (...args: unknown[]) => mockCreate(...args),
     update: jest.fn(),
     findByExactName: (...args: unknown[]) => mockFindByExactName(...args),
+    restore: (...args: unknown[]) => mockRestore(...args),
   },
 }));
 
@@ -122,7 +125,6 @@ const TEST_SECTIONS = [
         name: 'ベンチプレス',
         muscleGroup: 'chest',
         equipment: 'barbell',
-        isCustom: false,
         isFavorite: false,
         isDeleted: false,
         createdAt: 1000,
@@ -134,7 +136,6 @@ const TEST_SECTIONS = [
         name: 'スクワット',
         muscleGroup: 'legs',
         equipment: 'barbell',
-        isCustom: false,
         isFavorite: false,
         isDeleted: false,
         createdAt: 1000,
@@ -379,7 +380,6 @@ describe('ExercisePickerScreen - お気に入りトグルの即時反映（Issue
             name: 'ベンチプレス',
             muscleGroup: 'chest',
             equipment: 'barbell',
-            isCustom: false,
             isFavorite: true,
             isDeleted: false,
             createdAt: 1000,
@@ -396,7 +396,6 @@ describe('ExercisePickerScreen - お気に入りトグルの即時反映（Issue
             name: 'スクワット',
             muscleGroup: 'legs',
             equipment: 'barbell',
-            isCustom: false,
             isFavorite: false,
             isDeleted: false,
             createdAt: 1000,
@@ -518,7 +517,7 @@ describe('ExercisePickerScreen - チップボタンのスタイル（Issue #205�
    * - Pressable の style prop は ({ pressed }) => ({...}) 形式の関数
    * - pressed: false の状態でスタイルを評価する
    */
-  it('未選択の部位チップ（背中）は #CBD5E1 のボーダーと #F8FAFC の背景を持つ', () => {
+  it('未選択の部位チップ（背中）は #CBD5E1 のボーダーと #FAFBFC の背景を持つ', () => {
     render(<ExercisePickerScreen />);
     fireEvent.press(screen.getByLabelText('カスタム種目を追加'));
 
@@ -530,7 +529,7 @@ describe('ExercisePickerScreen - チップボタンのスタイル（Issue #205�
         : chip.props.style;
 
     expect(style.borderColor).toBe('#CBD5E1');
-    expect(style.backgroundColor).toBe('#F8FAFC');
+    expect(style.backgroundColor).toBe('#FAFBFC');
   });
 
   it('選択中の部位チップ（胸、初期値）は #4D94FF のボーダーと #E6F2FF の背景を持つ', () => {
@@ -548,7 +547,7 @@ describe('ExercisePickerScreen - チップボタンのスタイル（Issue #205�
     expect(style.backgroundColor).toBe('#E6F2FF');
   });
 
-  it('未選択の器具チップ（ダンベル）は #CBD5E1 のボーダーと #F8FAFC の背景を持つ', () => {
+  it('未選択の器具チップ（ダンベル）は #CBD5E1 のボーダーと #FAFBFC の背景を持つ', () => {
     render(<ExercisePickerScreen />);
     fireEvent.press(screen.getByLabelText('カスタム種目を追加'));
 
@@ -560,7 +559,7 @@ describe('ExercisePickerScreen - チップボタンのスタイル（Issue #205�
         : chip.props.style;
 
     expect(style.borderColor).toBe('#CBD5E1');
-    expect(style.backgroundColor).toBe('#F8FAFC');
+    expect(style.backgroundColor).toBe('#FAFBFC');
   });
 
   it('選択中の器具チップ（バーベル、初期値）は #4D94FF のボーダーと #E6F2FF の背景を持つ', () => {
@@ -630,7 +629,6 @@ describe('ExercisePickerScreen - 種目名重複登録不可（Issue #205）', (
       name: '新しい種目',
       muscle_group: 'chest',
       equipment: 'barbell',
-      is_custom: 1,
       is_favorite: 0,
       is_deleted: 0,
       created_at: Date.now(),
@@ -647,5 +645,91 @@ describe('ExercisePickerScreen - 種目名重複登録不可（Issue #205）', (
     // create が呼ばれること
     await screen.findByText('種目を選択');
     expect(mockCreate).toHaveBeenCalledWith(expect.objectContaining({ name: '新しい種目' }));
+  });
+});
+
+describe('ExercisePickerScreen - 削除済み種目の復元フロー（Issue #207）', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockUseExerciseSearch.mockReturnValue(DEFAULT_SEARCH_STATE);
+  });
+
+  it('削除済み種目と同名の種目を作成しようとすると復元ダイアログが表示される', async () => {
+    const alertSpy = jest.spyOn(Alert, 'alert');
+    // findByExactName が削除済み種目を返す
+    mockFindByExactName.mockResolvedValue({
+      id: 'deleted-ex',
+      name: 'ベンチプレス',
+      is_deleted: 1,
+      muscle_group: 'chest',
+      equipment: 'barbell',
+      is_favorite: 0,
+      created_at: 123,
+      updated_at: 123,
+      sort_order: 1,
+    });
+
+    render(<ExercisePickerScreen />);
+
+    // FABタップ → 種目名入力 → 作成ボタンタップ
+    fireEvent.press(screen.getByLabelText('カスタム種目を追加'));
+    fireEvent.changeText(screen.getByPlaceholderText('種目名を入力'), 'ベンチプレス');
+    fireEvent.press(screen.getByText('作成して追加'));
+
+    // 復元ダイアログが表示されること
+    await waitFor(() => {
+      expect(alertSpy).toHaveBeenCalledWith(
+        '削除済み種目の復元',
+        expect.stringContaining('ベンチプレス'),
+        expect.any(Array),
+      );
+    });
+
+    // 新規作成は呼ばれないこと
+    expect(mockCreate).not.toHaveBeenCalled();
+    alertSpy.mockRestore();
+  });
+
+  it('復元ダイアログで「復元する」を選択すると restore が呼ばれる', async () => {
+    mockRestore.mockResolvedValue(undefined);
+    mockFindByExactName.mockResolvedValue({
+      id: 'deleted-ex',
+      name: 'ベンチプレス',
+      is_deleted: 1,
+      muscle_group: 'chest',
+      equipment: 'barbell',
+      is_favorite: 0,
+      created_at: 123,
+      updated_at: 123,
+      sort_order: 1,
+    });
+
+    // Alert.alert の第3引数（ボタン配列）から「復元する」ボタンの onPress を取り出して実行する
+    let restoreOnPress: (() => void) | undefined;
+    const alertSpy = jest.spyOn(Alert, 'alert').mockImplementation((_title, _message, buttons) => {
+      const restoreButton = (buttons as Array<{ text: string; onPress?: () => void }>).find(
+        (b) => b.text === '復元する',
+      );
+      restoreOnPress = restoreButton?.onPress;
+    });
+
+    render(<ExercisePickerScreen />);
+
+    fireEvent.press(screen.getByLabelText('カスタム種目を追加'));
+    fireEvent.changeText(screen.getByPlaceholderText('種目名を入力'), 'ベンチプレス');
+    fireEvent.press(screen.getByText('作成して追加'));
+
+    // alertSpy が呼ばれてから restoreOnPress を実行する
+    await waitFor(() => {
+      expect(alertSpy).toHaveBeenCalled();
+    });
+    restoreOnPress?.();
+
+    // restore が deleted-ex を引数として呼ばれること
+    await waitFor(() => {
+      expect(mockRestore).toHaveBeenCalledWith('deleted-ex');
+    });
+
+    alertSpy.mockRestore();
   });
 });

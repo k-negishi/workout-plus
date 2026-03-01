@@ -5,9 +5,10 @@
  * T058: 統計サマリーセクション
  * T059: 重量推移チャート（react-native-gifted-charts BarChart）
  * T060: PR履歴 + 全履歴リスト
- * Issue #155: カスタム種目のみヘッダー右上に ✎ 🗑 アイコン表示
+ * Issue #155: ヘッダー右上に ✎ 🗑 アイコン表示
  *             ✎ → インラインフォームで編集・保存
  *             🗑 → 確認ダイアログ → 論理削除 → 前画面に戻る
+ * Issue #207: is_custom 区別廃止 → 全種目に編集・削除ボタンを表示
  * Issue #142: ヘッダースタイル統一（Ionicons chevron-back に変更）
  */
 import { Ionicons } from '@expo/vector-icons';
@@ -208,9 +209,8 @@ export function ExerciseHistoryFullScreen() {
   // SafeArea 対応: ノッチ・ダイナミックアイランド対応
   const insets = useSafeAreaInsets();
 
-  // 種目履歴データ（isCustom を追加で取得）
-  const { stats, weeklyData, prHistory, allHistory, loading, isCustom } =
-    useExerciseHistory(exerciseId);
+  // 種目履歴データ
+  const { stats, weeklyData, prHistory, allHistory, loading } = useExerciseHistory(exerciseId);
 
   // Issue #155: ヘッダー表示名（編集後に更新するため state 管理）
   const [displayName, setDisplayName] = useState(exerciseName);
@@ -325,39 +325,35 @@ export function ExerciseHistoryFullScreen() {
           {displayName}
         </Text>
 
-        {/* Issue #155: カスタム種目のみ編集・削除アイコンを表示 */}
-        {isCustom ? (
-          <View
-            style={{
-              flexDirection: 'row',
-              gap: 4,
-              alignItems: 'center',
-              width: 72,
-              justifyContent: 'flex-end',
-            }}
+        {/* 全種目に編集・削除アイコンを表示（Issue #207: is_custom 区別廃止） */}
+        <View
+          style={{
+            flexDirection: 'row',
+            gap: 4,
+            alignItems: 'center',
+            width: 72,
+            justifyContent: 'flex-end',
+          }}
+        >
+          <Pressable
+            testID="edit-button"
+            onPress={handleStartEdit}
+            hitSlop={8}
+            accessibilityLabel="種目を編集"
+            style={{ padding: 6 }}
           >
-            <Pressable
-              testID="edit-button"
-              onPress={handleStartEdit}
-              hitSlop={8}
-              accessibilityLabel="種目を編集"
-              style={{ padding: 6 }}
-            >
-              <Ionicons name="create-outline" size={22} color={colors.textSecondary} />
-            </Pressable>
-            <Pressable
-              testID="delete-button"
-              onPress={handleDelete}
-              hitSlop={8}
-              accessibilityLabel="種目を削除"
-              style={{ padding: 6 }}
-            >
-              <Ionicons name="trash-outline" size={22} color={colors.error} />
-            </Pressable>
-          </View>
-        ) : (
-          <View style={{ width: 72 }} />
-        )}
+            <Ionicons name="create-outline" size={22} color={colors.textSecondary} />
+          </Pressable>
+          <Pressable
+            testID="delete-button"
+            onPress={handleDelete}
+            hitSlop={8}
+            accessibilityLabel="種目を削除"
+            style={{ padding: 6 }}
+          >
+            <Ionicons name="trash-outline" size={22} color={colors.error} />
+          </Pressable>
+        </View>
       </View>
 
       {/* Issue #155: 編集フォーム（isEditing の場合にヘッダー下に展開） */}

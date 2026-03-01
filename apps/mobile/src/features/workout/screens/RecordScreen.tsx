@@ -199,7 +199,6 @@ export const RecordScreen: React.FC = () => {
         name: string;
         muscle_group: string;
         equipment: string;
-        is_custom: 0 | 1;
         is_favorite: 0 | 1;
         is_deleted: 0 | 1;
         created_at: number;
@@ -213,7 +212,6 @@ export const RecordScreen: React.FC = () => {
           name: row.name,
           muscleGroup: row.muscle_group as Exercise['muscleGroup'],
           equipment: row.equipment as Exercise['equipment'],
-          isCustom: row.is_custom === 1,
           isFavorite: row.is_favorite === 1,
           isDeleted: row.is_deleted === 1,
           createdAt: row.created_at,

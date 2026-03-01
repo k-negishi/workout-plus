@@ -14,7 +14,7 @@ import {
 } from './seed';
 
 /** 現在の最新スキーマバージョン */
-const LATEST_VERSION = 11;
+const LATEST_VERSION = 12;
 
 /**
  * 現在のスキーマバージョンを取得する
@@ -306,6 +306,60 @@ async function migrateV10ToV11(db: SQLiteDatabase): Promise<void> {
   await refreshPresetExercises(db);
 }
 
+/**
+ * バージョン 11 → 12: exercises テーブルから is_custom カラムを削除
+ *
+ * 種目のプリセット/カスタム区別を廃止し、全種目を統一管理する（Issue #207）。
+ * is_custom フラグはプリセット種目の編集・削除をブロックしていたが、
+ * ユーザーにとって負の体験のみを生んでいたため廃止する。
+ *
+ * SQLite は ALTER TABLE DROP COLUMN を Expo SDK 52 では未サポートのため、
+ * テーブル再作成マイグレーション（RENAME → CREATE → INSERT SELECT → DROP）で対応する。
+ *
+ * 合わせて idx_exercises_is_custom インデックスを削除し、
+ * idx_exercises_is_deleted インデックスを追加する。
+ */
+async function migrateV11ToV12(db: SQLiteDatabase): Promise<void> {
+  // 1. 既存テーブルをリネーム（データは保持）
+  await db.execAsync('ALTER TABLE exercises RENAME TO exercises_old');
+
+  // 2. is_custom なしで新テーブルを作成（schema.ts と同じ定義）
+  await db.execAsync(`
+    CREATE TABLE exercises (
+      id            TEXT PRIMARY KEY,
+      name          TEXT NOT NULL,
+      muscle_group  TEXT NOT NULL,
+      equipment     TEXT NOT NULL,
+      is_favorite   INTEGER NOT NULL DEFAULT 0,
+      is_deleted    INTEGER NOT NULL DEFAULT 0,
+      created_at    INTEGER NOT NULL,
+      updated_at    INTEGER NOT NULL,
+      sort_order    INTEGER NOT NULL DEFAULT 0
+    )
+  `);
+
+  // 3. is_custom を除いたカラムのみコピー
+  await db.execAsync(`
+    INSERT INTO exercises (id, name, muscle_group, equipment, is_favorite, is_deleted, created_at, updated_at, sort_order)
+    SELECT id, name, muscle_group, equipment, is_favorite, is_deleted, created_at, updated_at, sort_order
+    FROM exercises_old
+  `);
+
+  // 4. 旧テーブルを削除
+  await db.execAsync('DROP TABLE exercises_old');
+
+  // 5. インデックスを再作成（is_custom インデックスは除外し is_deleted を追加）
+  await db.execAsync(
+    'CREATE INDEX IF NOT EXISTS idx_exercises_muscle_group ON exercises(muscle_group)',
+  );
+  await db.execAsync(
+    'CREATE INDEX IF NOT EXISTS idx_exercises_is_favorite ON exercises(is_favorite)',
+  );
+  await db.execAsync(
+    'CREATE INDEX IF NOT EXISTS idx_exercises_is_deleted ON exercises(is_deleted)',
+  );
+}
+
 /** マイグレーション関数の型 */
 type Migration = (db: SQLiteDatabase) => Promise<void>;
 
@@ -322,6 +376,7 @@ const MIGRATIONS: Record<number, Migration> = {
   9: migrateV8ToV9,
   10: migrateV9ToV10,
   11: migrateV10ToV11,
+  12: migrateV11ToV12,
 };
 
 /**

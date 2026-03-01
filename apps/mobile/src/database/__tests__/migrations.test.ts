@@ -215,13 +215,13 @@ describe('runMigrations V4 → V5', () => {
     expect(updatedIds).toContain('workout-b');
   });
 
-  it('バージョン 5 からは V6 〜 V11 の 6 回マイグレーションが実行されること', async () => {
+  it('バージョン 5 からは V6 〜 V12 の 7 回マイグレーションが実行されること', async () => {
     const db = createMockDb(5);
 
     await runMigrations(db as unknown as SQLiteDatabase);
 
-    // v5 → v6 → v7 → v8 → v9 → v10 → v11 の 6 回マイグレーション（LATEST_VERSION = 11 のため）
-    expect(db.withTransactionAsync).toHaveBeenCalledTimes(6);
+    // v5 → v6 → v7 → v8 → v9 → v10 → v11 → v12 の 7 回マイグレーション（LATEST_VERSION = 12 のため）
+    expect(db.withTransactionAsync).toHaveBeenCalledTimes(7);
   });
 });
 
@@ -325,8 +325,8 @@ describe('runMigrations V5 → V6', () => {
     expect(hasAlterTable).toBe(false);
   });
 
-  it('既にバージョン 11（最新）の場合はマイグレーションをスキップすること', async () => {
-    let schemaVersion = 11;
+  it('既にバージョン 12（最新）の場合はマイグレーションをスキップすること', async () => {
+    let schemaVersion = 12;
     const db = {
       getFirstAsync: jest.fn(async (sql: string) => {
         if (sql === 'PRAGMA user_version') return { user_version: schemaVersion };
@@ -580,8 +580,8 @@ describe('runMigrations V8 → V9: dev fixture 整合性確保', () => {
     // エラーが発生しても runMigrations が throw しないこと（try-catch で吸収される）
     await expect(runMigrations(db as unknown as SQLiteDatabase)).resolves.toBeUndefined();
 
-    // schema version が最新（11）に更新されていること（V9 完了扱い → V10・V11 も続けて実行）
-    expect(db.getSchemaVersion()).toBe(11);
+    // schema version が最新（12）に更新されていること（V9 完了扱い → V10・V11・V12 も続けて実行）
+    expect(db.getSchemaVersion()).toBe(12);
   });
 
   it('__DEV__ = false のとき V9 マイグレーションは workouts を INSERT しないこと', async () => {
@@ -691,13 +691,13 @@ describe('runMigrations V9 → V10: dev fixture の安全なクリーンアッ�
     }
   });
 
-  it('V10 マイグレーション後 schema version が 11（最新）に更新されること', async () => {
+  it('V10 マイグレーション後 schema version が 12（最新）に更新されること', async () => {
     const db = createMockDbV9();
 
     await runMigrations(db as unknown as SQLiteDatabase);
 
-    // V9→10 の後、V10→11 も続けて実行されるため最終バージョンは 11
-    expect(db.getSchemaVersion()).toBe(11);
+    // V9→10 の後、V10→11→12 も続けて実行されるため最終バージョンは 12
+    expect(db.getSchemaVersion()).toBe(12);
   });
 });
 
@@ -775,11 +775,12 @@ describe('runMigrations V10 → V11: プリセット種目の差分追加', () =
     expect(hasInklineChestPress).toBe(true);
   });
 
-  it('V11 マイグレーション後 schema version が 11 に更新されること', async () => {
+  it('V11 マイグレーション後 schema version が 12（最新）に更新されること', async () => {
     const db = createMockDbV10();
 
     await runMigrations(db as unknown as SQLiteDatabase);
 
-    expect(db.getSchemaVersion()).toBe(11);
+    // V10→11 の後、V11→12 も続けて実行されるため最終バージョンは 12
+    expect(db.getSchemaVersion()).toBe(12);
   });
 });

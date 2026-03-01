@@ -35,11 +35,9 @@ export type ExerciseRow = {
   name: string;
   muscle_group: MuscleGroup;
   equipment: Equipment;
-  /** 0: プリセット、1: ユーザー作成カスタム */
-  is_custom: 0 | 1;
   /** 0: 通常、1: お気に入り */
   is_favorite: 0 | 1;
-  /** 0: 通常、1: 論理削除済み（カスタム種目のみ対象） */
+  /** 0: 通常、1: 論理削除済み */
   is_deleted: 0 | 1;
   created_at: number;
   updated_at: number;

@@ -12,7 +12,6 @@ function makeExercise(overrides: Partial<Exercise> & { id: string; name: string 
   return {
     muscleGroup: 'chest',
     equipment: 'barbell',
-    isCustom: false,
     isFavorite: false,
     isDeleted: false,
     createdAt: now,

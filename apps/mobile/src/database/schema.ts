@@ -14,19 +14,18 @@
  *         カレンダー機能のクエリが簡潔になる（例: WHERE date(created_at) = '2026-02-22'）。
  *
  * ## is_*** フラグの設計方針
- *   is_custom は将来的に TEXT enum（'preset' | 'custom'）への変更を検討。
  *   is_favorite は boolean 的な意味が強いため INTEGER 0|1 のまま維持。
  */
 
 /**
- * exercises テーブル - 種目マスタ（プリセット + ユーザー作成カスタム）
+ * exercises テーブル - 種目マスタ
  *
  * @column id            - ULID形式の主キー。タイムスタンプ埋め込みで時刻順ソート可能、UUID互換
- * @column name          - 種目名。プリセットは英語表記、カスタムはユーザー入力
+ * @column name          - 種目名。ユーザーが自由に編集可能
  * @column muscle_group  - 対象部位カテゴリ（MuscleGroup）。有効値: 'chest' | 'back' | 'legs' | 'shoulders' | 'biceps' | 'triceps' | 'abs'
  * @column equipment     - 使用器具タイプ（Equipment）。有効値: 'barbell' | 'dumbbell' | 'machine' | 'cable' | 'bodyweight'
- * @column is_custom     - 種目の出所フラグ（0: プリセット、1: ユーザー作成カスタム）。カスタムのみ編集・削除可能。TODO: 将来的に TEXT enum（'preset' | 'custom'）への変更を検討
  * @column is_favorite   - お気に入り登録フラグ（0: 通常、1: お気に入り）。種目選択モーダルのフィルタリングに使用
+ * @column is_deleted    - 論理削除フラグ（0: 通常、1: 削除済み）。削除後も過去のワークアウト記録は保持
  * @column created_at    - レコード作成日時（UNIX ミリ秒 UTC）
  * @column updated_at    - レコード最終更新日時（UNIX ミリ秒 UTC）。name・muscle_group・equipment・is_favorite の変更時に更新
  * @column sort_order    - ユーザー定義の並び順。新規インストール時は Migration v6 の rowid 初期化と同等の値が設定される。一意制約なし（バルクUPDATE中の一時的重複を避けるため）
@@ -37,8 +36,8 @@ CREATE TABLE IF NOT EXISTS exercises (
   name          TEXT NOT NULL,
   muscle_group  TEXT NOT NULL,
   equipment     TEXT NOT NULL,
-  is_custom     INTEGER NOT NULL DEFAULT 0,
   is_favorite   INTEGER NOT NULL DEFAULT 0,
+  is_deleted    INTEGER NOT NULL DEFAULT 0,
   created_at    INTEGER NOT NULL,
   updated_at    INTEGER NOT NULL,
   sort_order    INTEGER NOT NULL DEFAULT 0
@@ -147,7 +146,7 @@ export const CREATE_INDEXES = [
   // exercises
   'CREATE INDEX IF NOT EXISTS idx_exercises_muscle_group ON exercises(muscle_group);',
   'CREATE INDEX IF NOT EXISTS idx_exercises_is_favorite ON exercises(is_favorite);',
-  'CREATE INDEX IF NOT EXISTS idx_exercises_is_custom ON exercises(is_custom);',
+  'CREATE INDEX IF NOT EXISTS idx_exercises_is_deleted ON exercises(is_deleted);',
   // workouts
   'CREATE INDEX IF NOT EXISTS idx_workouts_status ON workouts(status);',
   'CREATE INDEX IF NOT EXISTS idx_workouts_created_at ON workouts(created_at);',

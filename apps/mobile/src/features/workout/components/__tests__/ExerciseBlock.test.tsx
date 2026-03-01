@@ -33,7 +33,6 @@ const mockExercise: Exercise = {
   name: EXERCISE_NAME,
   muscleGroup: 'chest',
   equipment: 'barbell',
-  isCustom: false,
   isFavorite: false,
   isDeleted: false,
   createdAt: 1000,

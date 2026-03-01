@@ -75,7 +75,6 @@ describe('ExerciseRepository.create（sort_order追加）', () => {
         name: 'テスト種目',
         muscle_group: 'chest',
         equipment: 'barbell',
-        is_custom: 1,
         is_favorite: 0,
         created_at: 1000,
         updated_at: 1000,
@@ -113,7 +112,6 @@ describe('ExerciseRepository.create（sort_order追加）', () => {
         name: 'テスト種目',
         muscle_group: 'chest',
         equipment: 'barbell',
-        is_custom: 1,
         is_favorite: 0,
         created_at: 1000,
         updated_at: 1000,
@@ -158,7 +156,6 @@ describe('ExerciseRepository.findById', () => {
       name: 'テスト',
       muscle_group: 'chest',
       equipment: 'barbell',
-      is_custom: 1,
       is_favorite: 0,
       is_deleted: 0,
       created_at: 1000,
@@ -229,7 +226,6 @@ describe('ExerciseRepository.findByExactName', () => {
       name: 'ベンチプレス',
       muscle_group: 'chest',
       equipment: 'barbell',
-      is_custom: 0,
       is_favorite: 0,
       is_deleted: 0,
       created_at: 1000,
@@ -257,15 +253,29 @@ describe('ExerciseRepository.findByExactName', () => {
     expect(result).toBeNull();
   });
 
-  it('論理削除済み (is_deleted=1) の種目は除外すること', async () => {
+  it('論理削除済み (is_deleted=1) の種目も返すこと（復元フロー対応）', async () => {
     const mockDb = createMockDb();
     mockGetDatabase.mockResolvedValue(mockDb as never);
-    mockDb.getFirstAsync.mockResolvedValue(null);
+    const deletedRow = {
+      id: 'ex-deleted',
+      name: '削除済み種目',
+      muscle_group: 'chest',
+      equipment: 'barbell',
+      is_favorite: 0,
+      is_deleted: 1,
+      created_at: 1000,
+      updated_at: 1000,
+      sort_order: 1,
+    };
+    mockDb.getFirstAsync.mockResolvedValue(deletedRow);
 
-    await ExerciseRepository.findByExactName('削除済み種目');
+    const result = await ExerciseRepository.findByExactName('削除済み種目');
 
+    // is_deleted フィルタなしで全件を対象にクエリすること
     const sql = String(mockDb.getFirstAsync.mock.calls[0]?.[0] ?? '');
-    expect(sql).toMatch(/is_deleted\s*=\s*0/i);
+    expect(sql).not.toMatch(/is_deleted\s*=\s*0/i);
+    // 削除済み種目の行も返すこと
+    expect(result).toEqual(deletedRow);
   });
 });
 

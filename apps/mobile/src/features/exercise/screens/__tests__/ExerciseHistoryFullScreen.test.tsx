@@ -60,8 +60,6 @@ jest.mock('date-fns/locale', () => ({
 // loading 状態をテストごとに切り替えられるよう変数で管理する
 // jest.mock のファクトリはホイストされるため、変数は let で宣言し参照渡しする
 let mockLoading = false;
-// isCustom をテストごとに差し替え可能にする
-let mockIsCustom = false;
 // allHistory をテストごとに差し替え可能にする
 let mockAllHistory: Array<{
   workoutId: string;
@@ -97,9 +95,6 @@ jest.mock('../../hooks/useExerciseHistory', () => ({
     get loading() {
       return mockLoading;
     },
-    get isCustom() {
-      return mockIsCustom;
-    },
   }),
 }));
 
@@ -125,7 +120,6 @@ describe('ExerciseHistoryFullScreen', () => {
     mockUpdate.mockClear();
     // 各テスト前にローディング状態と履歴をリセット
     mockLoading = false;
-    mockIsCustom = false;
     mockAllHistory = [];
   });
 
@@ -241,30 +235,20 @@ describe('ExerciseHistoryFullScreen', () => {
     });
   });
 
-  describe('Issue #155: カスタム種目の編集・削除UI', () => {
-    it('プリセット種目（isCustom=false）は ✎ 🗑 アイコンが表示されない', () => {
-      mockIsCustom = false;
-      render(<ExerciseHistoryFullScreen />);
-      expect(screen.queryByTestId('edit-button')).toBeNull();
-      expect(screen.queryByTestId('delete-button')).toBeNull();
-    });
-
-    it('カスタム種目（isCustom=true）は ✎ 🗑 アイコンが表示される', () => {
-      mockIsCustom = true;
+  describe('Issue #155: 種目の編集・削除UI', () => {
+    it('全種目に ✎ 🗑 アイコンが表示される', () => {
       render(<ExerciseHistoryFullScreen />);
       expect(screen.getByTestId('edit-button')).toBeTruthy();
       expect(screen.getByTestId('delete-button')).toBeTruthy();
     });
 
     it('✎ タップで編集フォームが開く', async () => {
-      mockIsCustom = true;
       // findById がフォームの初期値設定に使われる
       mockFindById.mockResolvedValue({
         id: 'ex-1',
         name: 'ベンチプレス',
         muscle_group: 'chest',
         equipment: 'barbell',
-        is_custom: 1,
         is_favorite: 0,
         is_deleted: 0,
         created_at: 1000,
@@ -280,7 +264,6 @@ describe('ExerciseHistoryFullScreen', () => {
     });
 
     it('🗑 タップで Alert.alert が呼ばれる', () => {
-      mockIsCustom = true;
       const alertSpy = jest.spyOn(Alert, 'alert');
       render(<ExerciseHistoryFullScreen />);
       const deleteBtn = screen.getByTestId('delete-button');

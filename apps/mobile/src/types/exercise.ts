@@ -9,9 +9,8 @@ export type Exercise = {
   name: string;
   muscleGroup: MuscleGroup;
   equipment: Equipment;
-  isCustom: boolean;
   isFavorite: boolean;
-  /** 論理削除フラグ（カスタム種目のみ対象）。true の場合は種目選択リストから除外される */
+  /** 論理削除フラグ。true の場合は種目選択リストから除外される */
   isDeleted: boolean;
   createdAt: number;
   updatedAt: number;

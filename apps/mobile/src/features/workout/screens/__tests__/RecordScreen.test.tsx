@@ -255,7 +255,6 @@ describe('RecordScreen', () => {
           name: 'ベンチプレス',
           muscle_group: 'chest',
           equipment: 'barbell',
-          is_custom: 0,
           is_favorite: 0,
           created_at: 1000,
           updated_at: 1000,

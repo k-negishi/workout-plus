@@ -238,7 +238,6 @@ describe('HomeScreen EmptyState 廃止', () => {
       name: 'ベンチプレス',
       muscle_group: 'chest',
       equipment: 'barbell',
-      is_custom: 0,
       is_favorite: 0,
       created_at: 1_700_000_000_000,
       updated_at: 1_700_000_000_000,

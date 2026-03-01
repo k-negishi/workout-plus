@@ -39,7 +39,6 @@ export function toExercise(row: {
   name: string;
   muscle_group: MuscleGroup;
   equipment: string;
-  is_custom: 0 | 1;
   is_favorite: 0 | 1;
   is_deleted: 0 | 1;
   created_at: number;
@@ -51,7 +50,6 @@ export function toExercise(row: {
     name: row.name,
     muscleGroup: row.muscle_group,
     equipment: row.equipment as Exercise['equipment'],
-    isCustom: row.is_custom === 1,
     isFavorite: row.is_favorite === 1,
     isDeleted: row.is_deleted === 1,
     createdAt: row.created_at,
@@ -108,7 +106,7 @@ export function computeSections(
   // お気に入りセクション
   const favorites = filtered.filter((e) => e.isFavorite);
 
-  // カテゴリ別（お気に入り以外）—— カスタム種目もカテゴリに含める
+  // カテゴリ別（お気に入り以外）
   const remaining = filtered.filter((e) => !e.isFavorite);
 
   // カテゴリでグルーピング

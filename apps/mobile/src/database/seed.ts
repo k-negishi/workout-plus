@@ -93,10 +93,10 @@ export function generateSeedSQL(): string {
   const now = Date.now();
   const values = SEED_EXERCISES.map((exercise) => {
     const id = ulid();
-    return `('${id}', '${exercise.name}', '${exercise.muscle_group}', '${exercise.equipment}', 0, 0, ${now}, ${now})`;
+    return `('${id}', '${exercise.name}', '${exercise.muscle_group}', '${exercise.equipment}', 0, ${now}, ${now})`;
   });
 
-  return `INSERT OR IGNORE INTO exercises (id, name, muscle_group, equipment, is_custom, is_favorite, created_at, updated_at) VALUES
+  return `INSERT OR IGNORE INTO exercises (id, name, muscle_group, equipment, is_favorite, created_at, updated_at) VALUES
 ${values.join(',\n')};`;
 }
 
@@ -908,8 +908,8 @@ export async function refreshPresetExercises(db: SQLiteDatabase): Promise<void> 
   for (const exercise of SEED_EXERCISES) {
     const id = ulid();
     await db.runAsync(
-      `INSERT INTO exercises (id, name, muscle_group, equipment, is_custom, is_favorite, created_at, updated_at, sort_order)
-       SELECT ?, ?, ?, ?, 0, 0, ?, ?,
+      `INSERT INTO exercises (id, name, muscle_group, equipment, is_favorite, created_at, updated_at, sort_order)
+       SELECT ?, ?, ?, ?, 0, ?, ?,
          COALESCE((SELECT MAX(sort_order) FROM exercises), 0) + 1
        WHERE NOT EXISTS (SELECT 1 FROM exercises WHERE name = ?)`,
       [id, exercise.name, exercise.muscle_group, exercise.equipment, now, now, exercise.name],
