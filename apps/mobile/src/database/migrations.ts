@@ -14,7 +14,7 @@ import {
 } from './seed';
 
 /** 現在の最新スキーマバージョン */
-const LATEST_VERSION = 12;
+const LATEST_VERSION = 13;
 
 /**
  * 現在のスキーマバージョンを取得する
@@ -318,8 +318,26 @@ async function migrateV10ToV11(db: SQLiteDatabase): Promise<void> {
  *
  * 合わせて idx_exercises_is_custom インデックスを削除し、
  * idx_exercises_is_deleted インデックスを追加する。
+ *
+ * 冪等性チェック:
+ * 新規インストール時（schema.ts から直接作成される場合）は is_custom カラムが存在しないため、
+ * テーブル再作成をスキップし、インデックスのみ追加する。
+ * PRAGMA foreign_keys = ON が有効な状態でテーブル再作成を行うと
+ * workout_exercises の FK が壊れる可能性があるため、不要な再作成は省略する。
  */
 async function migrateV11ToV12(db: SQLiteDatabase): Promise<void> {
+  // is_custom カラムが存在しない場合（新規インストール時など）はテーブル再作成をスキップ
+  const tableInfo = await db.getAllAsync<{ name: string }>('PRAGMA table_info(exercises)');
+  const hasIsCustom = tableInfo.some((col) => col.name === 'is_custom');
+  if (!hasIsCustom) {
+    // 既に is_custom がない（新規インストール時は schema.ts から直接 is_custom なしで作成済み）
+    // テーブル再作成は不要。idx_exercises_is_deleted のみ追加する
+    await db.execAsync(
+      'CREATE INDEX IF NOT EXISTS idx_exercises_is_deleted ON exercises(is_deleted)',
+    );
+    return;
+  }
+
   // 1. 既存テーブルをリネーム（データは保持）
   await db.execAsync('ALTER TABLE exercises RENAME TO exercises_old');
 
@@ -360,6 +378,29 @@ async function migrateV11ToV12(db: SQLiteDatabase): Promise<void> {
   );
 }
 
+/**
+ * バージョン 12 → 13: dev fixture ワークアウトの整合性再確認
+ *
+ * v12 マイグレーション（exercises テーブル再作成）後に dev fixture が
+ * 正しく存在するかを確認し、不足があれば再投入する。
+ *
+ * 背景: 新規インストール時に v2 や v9 で dev fixture の投入が
+ * 失敗したケースへの追加の安全網として機能する。
+ *
+ * try-catch の理由:
+ * V13 は開発用データの補完のみを担うため、失敗してもアプリ起動を妨げるべきではない。
+ * エラーを吸収してバージョンを 13 に進めることで、次回起動時の再試行ループを防ぐ。
+ */
+async function migrateV12ToV13(db: SQLiteDatabase): Promise<void> {
+  try {
+    await ensureDevWorkoutFixtures(db);
+  } catch (error) {
+    // dev fixture 整合性確保の失敗はアプリ起動を妨げない
+    // エラーを記録して V13 を完了扱いにし、次回起動での無限リトライを防ぐ
+    console.warn('[migration V13] dev fixture 整合性確保に失敗（スキップ）:', error);
+  }
+}
+
 /** マイグレーション関数の型 */
 type Migration = (db: SQLiteDatabase) => Promise<void>;
 
@@ -377,6 +418,7 @@ const MIGRATIONS: Record<number, Migration> = {
   10: migrateV9ToV10,
   11: migrateV10ToV11,
   12: migrateV11ToV12,
+  13: migrateV12ToV13,
 };
 
 /**
