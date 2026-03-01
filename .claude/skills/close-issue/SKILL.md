@@ -28,17 +28,28 @@ GitHub Issue に実装完了コメントを追加してクローズするスキ�
 ### 1. コミット情報の収集
 
 ```bash
-git log origin/main..HEAD --pretty=format:"%h %H %s"
-# → origin/main に未送信のコミット（=今回のタスク分）を取得
-# → 短縮ハッシュ・フルハッシュ・コミットメッセージの一覧
-
+# リポジトリURLを取得
 REPO_URL=$(gh repo view --json url -q .url)
-# → コミットURLを組み立てる: ${REPO_URL}/commit/${FULL_HASH}
+
+# push 前にコミットがある場合（未 push 分）
+git log origin/main..HEAD --pretty=format:"%H %h %s"
+
+# push 済みの場合（main ブランチで直接作業＋push 後）は上が空になる。
+# その場合は origin/main の直近コミットを取得する
+git log origin/main -n 10 --pretty=format:"%H %h %s"
 ```
 
-> **注意**: `git log -1` は使わない。直近1件を取るだけなので、別タスクのコミットが混入する恐れがある。
-> `origin/main..HEAD` なら「このタスクで push したコミット」だけに絞れる。
-> 複数コミットがある場合は全てコメントに列挙する。
+**コミットURLの組み立て方（必須）**:
+```
+${REPO_URL}/commit/${フルハッシュ}
+例: https://github.com/xxx/workout-plus/commit/abc123def456...
+```
+
+> **注意**: `git log -1` は使わない。
+> `origin/main..HEAD` が空（=push済み）の場合は `git log origin/main -n 10` で直近コミットを取得し、
+> 会話コンテキスト（コミットメッセージ・変更ファイル）から Issue に関連するものを選択する。
+> 複数コミットがある場合は全て列挙する。
+> **コミット URL は必ずコメント本文に含めること。省略しない。**
 
 ### 2. コメントを投稿
 
@@ -87,9 +98,11 @@ GitHub に投稿するコメントは以下の構成で作成する。
 
 ### コミット
 
-<!-- コミットURLをリンク形式で記載する。複数コミットがあれば全て列挙する。 -->
+<!-- ⚠️ 必須: git log で取得した実際のハッシュとメッセージを使う。テンプレート文字列のまま残さない。
+     REPO_URL = gh repo view --json url -q .url の結果
+     例: https://github.com/xxx/workout-plus/commit/abc123def456789... -->
 
-- [`<短縮ハッシュ>`](<REPO_URL>/commit/<フルハッシュ>) — <コミットメッセージ>
+- [`<7桁の短縮ハッシュ>`](<REPO_URL>/commit/<40桁のフルハッシュ>) — <コミットメッセージ>
 
 ### 関連仕様書
 

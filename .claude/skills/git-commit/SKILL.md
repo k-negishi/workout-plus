@@ -47,6 +47,21 @@ allowed-tools: Read, Write, Bash
 
 分割が必要かどうか迷ったら、「1つの目的を1文で言えるか」を確認する。言えなければ分割する。後から分割するより、作業の区切りで都度コミットする方が確実。
 
+## Issue番号の特定
+
+コミットに紐づく Issue 番号を以下の優先順位で特定する:
+
+1. 会話コンテキストに `#123`・`Issue 42`・`Issue #213` のような言及がある → その番号を使う
+2. ブランチ名に番号が含まれる（例: `feature/issue-42` → `42`）
+3. 特定できない場合は `Refs:` 行を省略してコミットし、クローズ時に補完する
+
+```bash
+# Issue URL の組み立て
+REPO_URL=$(gh repo view --json url -q .url)
+echo "${REPO_URL}/issues/<issue番号>"
+# 例: https://github.com/xxx/workout-plus/issues/213
+```
+
 ## メッセージ形式
 
 ```text
@@ -56,12 +71,14 @@ allowed-tools: Read, Write, Bash
 - <file path 1>
 - <file path 2>
 
+Refs: <issue URL>
 Co-Authored-By: <モデル名> <noreply@anthropic.com>
 ```
 
 - `summary` は 30〜60 文字目安
 - `detail` は 1〜3 行で要点のみ記載
 - 修正ファイル名は本文に含めてよい（簡潔に列挙）
+- `Refs:` は Issue をクローズしない参照。Issue 番号が不明な場合は省略する
 
 例:
 
@@ -71,6 +88,9 @@ add: セット入力画面に前回記録のインライン表示を追加
 前回ワークアウトのセット数・重量をグレーで表示し、入力補助とする。
 - apps/mobile/src/screens/WorkoutScreen.tsx
 - apps/mobile/src/components/SetRow.tsx
+
+Refs: https://github.com/xxx/workout-plus/issues/42
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 ```
 
 ```text
@@ -78,6 +98,9 @@ fix: ワークアウト保存時に空セットが登録される不具合を修
 
 セット追加前のバリデーション漏れを修正。
 - apps/mobile/src/stores/workoutStore.ts
+
+Refs: https://github.com/xxx/workout-plus/issues/108
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 ```
 
 ```text
@@ -85,6 +108,8 @@ docs: ワークフロー表に各コマンドの成果物列を追加
 
 READMEの手順を最新構成に合わせて整理。
 - README.md
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 ```
 
 ## 実行フロー
@@ -204,6 +229,7 @@ ci: github actions ci をセットアップ
 - 本文に主要な修正ファイル名を記載した
 - テストまたは最低限の動作確認を実施した
 - コンテキストウィンドウと無関係な変更を含めていない
+- Issue 番号が特定できた場合、`Refs: <URL>` を本文に含めた
 
 ## クイックコマンド
 
