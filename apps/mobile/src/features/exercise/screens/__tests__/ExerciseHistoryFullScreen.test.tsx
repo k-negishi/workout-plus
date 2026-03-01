@@ -83,8 +83,8 @@ jest.mock('../../hooks/useExerciseHistory', () => ({
       maxReps: 12,
       averageWeight: 80,
       totalSessions: 10,
-      totalVolume: 30000,
-      lastPRDate: 1700000000000,
+      totalVolume: 30_000,
+      lastPRDate: 1_700_000_000_000,
       totalSets: 50,
       maxEstimated1RM: 116,
     },
@@ -291,6 +291,30 @@ describe('ExerciseHistoryFullScreen', () => {
         expect.any(Array),
       );
       alertSpy.mockRestore();
+    });
+  });
+
+  describe('Issue #213: 見出し・日付フォントサイズ拡大', () => {
+    it('ヘッダータイトルのフォントサイズが 20px である', () => {
+      render(<ExerciseHistoryFullScreen />);
+      const titleElement = screen.getByTestId('exercise-history-header-title');
+      // fontSize: 17 → 20 に変更されていること
+      expect(titleElement.props.style).toMatchObject({ fontSize: 20 });
+    });
+
+    it('全履歴リストの日付テキストのフォントサイズが 15px である', () => {
+      mockAllHistory = [
+        {
+          workoutId: 'w1',
+          completedAt: new Date('2026-02-18T10:00:00.000Z').getTime(),
+          sets: [{ setNumber: 1, weight: 80, reps: 10, estimated1RM: 107 }],
+          hasPR: false,
+        },
+      ];
+      render(<ExerciseHistoryFullScreen />);
+      // testID="exercise-history-date-text" を追加して fontSize: 13 → 15 を検証
+      const dateElement = screen.getByTestId('exercise-history-date-text');
+      expect(dateElement.props.style).toMatchObject({ fontSize: 15 });
     });
   });
 
