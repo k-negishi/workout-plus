@@ -88,17 +88,30 @@ import type { MuscleGroup } from '../types/workout';
 ### StyleSheet
 
 ```typescript
-// NG: インラインスタイル（再レンダー時にオブジェクト生成が走る）
+// NG: ハードコードカラー・フォントサイズの直書き（style-constants.md 参照）
 <View style={{ flex: 1, backgroundColor: '#f9fafb' }} />
+const styles = StyleSheet.create({
+  title: { fontSize: 22, fontWeight: '700', color: '#475569' },
+});
 
-// OK: StyleSheet.create でまとめる
+// OK: @/shared/constants を import して定数参照にする
+import { colors, fontSize, fontWeight, spacing } from '@/shared/constants';
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb', // アプリ背景色
+    backgroundColor: colors.background, // '#f9fafb'
+    padding: spacing.md,                // 16
+  },
+  title: {
+    fontSize: fontSize.xl,              // 22
+    fontWeight: fontWeight.bold,        // '700'
+    color: colors.textPrimary,          // '#475569'
   },
 });
 ```
+
+> **NativeWind との使い分け**: `flex-1`, `items-center`, `px-4` などレイアウト系は `className` で OK。
+> カラー（`text-[#475569]`）・フォントサイズ（`text-[14px]`）の任意値は禁止 → `style={}` + 定数参照へ。
 
 ### Platform 分岐
 
