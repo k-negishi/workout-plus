@@ -72,8 +72,8 @@ async function resolveWeightAndReps(
     throw new Error('更新対象のセットが見つかりません');
   }
   return {
-    weight: paramsWeight !== undefined ? paramsWeight : current.weight,
-    reps: paramsReps !== undefined ? paramsReps : current.reps,
+    weight: paramsWeight === undefined ? current.weight : paramsWeight,
+    reps: paramsReps === undefined ? current.reps : paramsReps,
   };
 }
 
@@ -145,9 +145,7 @@ export const SetRepository = {
 
     // estimated_1rm を再計算して追加
     fields.push('estimated_1rm = ?', 'updated_at = ?');
-    values.push(calculateEstimated1RM(newWeight, newReps), Date.now());
-
-    values.push(id);
+    values.push(calculateEstimated1RM(newWeight, newReps), Date.now(), id);
     await db.runAsync(`UPDATE sets SET ${fields.join(', ')} WHERE id = ?`, values);
   },
 

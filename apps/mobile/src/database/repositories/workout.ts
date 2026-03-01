@@ -96,7 +96,7 @@ export const WorkoutRepository = {
     const db = await getDatabase();
     const today = new Date();
     const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
-    const dayEnd = dayStart + 86400000; // 翌日 0:00
+    const dayEnd = dayStart + 86_400_000; // 翌日 0:00
     return db.getFirstAsync<WorkoutRow>(
       "SELECT * FROM workouts WHERE status = 'recording' AND created_at >= ? AND created_at < ? LIMIT 1",
       [dayStart, dayEnd],
@@ -115,7 +115,7 @@ export const WorkoutRepository = {
     const db = await getDatabase();
     const today = new Date();
     const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
-    const dayEnd = dayStart + 86400000;
+    const dayEnd = dayStart + 86_400_000;
     return db.getFirstAsync<WorkoutRow>(
       `SELECT w.*
        FROM workouts w
@@ -153,7 +153,7 @@ export const WorkoutRepository = {
     const db = await getDatabase();
     const today = new Date();
     const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
-    const dayEnd = dayStart + 86400000; // 翌日0:00
+    const dayEnd = dayStart + 86_400_000; // 翌日0:00
     return db.getFirstAsync<WorkoutRow>(
       "SELECT * FROM workouts WHERE status = 'completed' AND completed_at >= ? AND completed_at < ? ORDER BY completed_at DESC LIMIT 1",
       [dayStart, dayEnd],
@@ -205,7 +205,7 @@ export const WorkoutRepository = {
     const [year, month, day] = dateString.split('-').map(Number);
     // month は 0-indexed
     const dayStart = new Date(year!, month! - 1, day!).getTime();
-    const dayEnd = dayStart + 86400000; // 翌日0:00
+    const dayEnd = dayStart + 86_400_000; // 翌日0:00
     return db.getFirstAsync<WorkoutRow>(
       "SELECT * FROM workouts WHERE status = 'completed' AND completed_at >= ? AND completed_at < ? ORDER BY completed_at DESC LIMIT 1",
       [dayStart, dayEnd],

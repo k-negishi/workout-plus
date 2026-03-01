@@ -125,9 +125,7 @@ export const ExerciseRepository = {
 
     // updated_at を自動更新
     fields.push('updated_at = ?');
-    values.push(Date.now());
-
-    values.push(id);
+    values.push(Date.now(), id);
     await db.runAsync(`UPDATE exercises SET ${fields.join(', ')} WHERE id = ?`, values);
   },
 
