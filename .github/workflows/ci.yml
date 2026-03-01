@@ -5,45 +5,85 @@ on:
     branches: [main]
     paths:
       - 'apps/mobile/**'
-      - 'packages/**'
+      - 'packages/api/**'
       - '.github/workflows/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'turbo.json'
   pull_request:
     branches: [main]
     paths:
       - 'apps/mobile/**'
-      - 'packages/**'
+      - 'packages/api/**'
       - '.github/workflows/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'turbo.json'
   workflow_dispatch:
 
 jobs:
-  lint-and-test:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      mobile: ${{ steps.filter.outputs.mobile || github.event_name == 'workflow_dispatch' }}
+      api: ${{ steps.filter.outputs.api || github.event_name == 'workflow_dispatch' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            mobile:
+              - 'apps/mobile/**'
+              - '.github/workflows/ci.yml'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'turbo.json'
+            api:
+              - 'packages/api/**'
+              - '.github/workflows/ci.yml'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'turbo.json'
+
+  lint-test-mobile:
+    needs: changes
+    if: needs.changes.outputs.mobile == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: pnpm/action-setup@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
-
       - run: pnpm install --frozen-lockfile
-
       - name: Lint (mobile)
         run: pnpm --filter mobile lint
-
       - name: Format check (mobile)
         run: pnpm --filter mobile format:check
-
       - name: Test (mobile)
         run: pnpm --filter mobile test:coverage
 
+  lint-test-api:
+    needs: changes
+    if: needs.changes.outputs.api == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
       - name: Lint (API)
         run: pnpm --filter @workout-plus/api lint
-
       - name: Format check (API)
         run: pnpm --filter @workout-plus/api format:check
-
       - name: Test (API)
         run: pnpm --filter @workout-plus/api test
