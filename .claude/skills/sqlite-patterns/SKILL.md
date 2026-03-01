@@ -305,3 +305,115 @@ expo-sqlite は JavaScript 関数をカスタム SQL 関数として登録でき
 
 - テーブルの役割
 - 各 `@column` の意味・有効値・NULL 許容の理由・制約の意図
+
+---
+
+## ALTER TABLE RENAME + DROP と PRAGMA foreign_keys の罠
+
+### 問題
+
+SQLite 3.26.0+ では `ALTER TABLE t RENAME TO t_old` 実行時、
+他テーブルの FK 参照が**自動更新**される（`REFERENCES exercises(id)` → `REFERENCES exercises_old(id)`）。
+
+その後 `DROP TABLE exercises_old` を実行すると FK 参照先テーブルが存在しなくなる。
+`PRAGMA foreign_keys = ON` が有効な場合、以降のすべての FK 参照操作が失敗する。
+
+```sql
+-- ❌ PRAGMA foreign_keys = ON 環境での危険な手順
+ALTER TABLE exercises RENAME TO exercises_old;
+-- → workout_exercises.exercise_id が REFERENCES exercises_old(id) に自動更新される
+CREATE TABLE exercises (...);
+INSERT INTO exercises SELECT ... FROM exercises_old;
+DROP TABLE exercises_old;
+-- → workout_exercises の FK 参照先テーブルが消滅！以降の INSERT/SELECT が全て失敗
+```
+
+**実害の例**: シードデータ投入（`ensureDevWorkoutFixtures`）が FK 整合性エラーで静かに失敗し、
+アプリ再インストール後にテストデータが一切表示されなくなる（Issue #206 の再発類型）。
+
+### 解決策: マイグレーション内で FK を一時無効化する
+
+```typescript
+async function migrateV11ToV12(db: SQLiteDatabase): Promise<void> {
+  await db.execAsync('PRAGMA foreign_keys = OFF');
+  try {
+    await db.withTransactionAsync(async () => {
+      await db.execAsync('ALTER TABLE exercises RENAME TO exercises_old');
+      await db.execAsync('CREATE TABLE exercises (...)');
+      await db.execAsync('INSERT INTO exercises SELECT ... FROM exercises_old');
+      await db.execAsync('DROP TABLE exercises_old');
+    });
+  } finally {
+    await db.execAsync('PRAGMA foreign_keys = ON');
+  }
+}
+```
+
+### 適用基準
+
+テーブル削除（`DROP TABLE`）を伴う DDL を書く場合は**必ず** FK を一時無効化する。
+
+| DDL 操作 | FK 一時無効化の要否 |
+|---|---|
+| `ALTER TABLE ADD COLUMN` | 不要 |
+| `CREATE TABLE IF NOT EXISTS` | 不要 |
+| `CREATE TABLE` → `INSERT SELECT` → `DROP TABLE` | **必須** |
+| `ALTER TABLE RENAME` → `DROP TABLE` | **必須** |
+
+---
+
+## マイグレーション冪等性チェック（PRAGMA table_info）
+
+### 問題
+
+「新規インストール（`schema.ts` から直接テーブル作成）」と
+「既存インストール（マイグレーション経由）」では、マイグレーション実行時点のテーブル状態が異なる。
+
+廃止カラムを削除するマイグレーションを書いた場合、
+そのカラムが最初から存在しない新規インストール環境でも同マイグレーションが実行されクラッシュする。
+
+### 解決策: PRAGMA table_info でカラム存在確認してから分岐する
+
+```typescript
+async function migrateV11ToV12(db: SQLiteDatabase): Promise<void> {
+  // カラムが存在するか確認
+  const tableInfo = await db.getAllAsync<{ name: string }>('PRAGMA table_info(exercises)');
+  const hasIsCustom = tableInfo.some((col) => col.name === 'is_custom');
+
+  if (!hasIsCustom) {
+    // 新規インストール: schema.ts から is_custom なしで作成済み → スキップ
+    await db.execAsync('CREATE INDEX IF NOT EXISTS idx_exercises_is_deleted ON exercises(is_deleted)');
+    return;
+  }
+
+  // 既存インストール: is_custom を削除するためテーブル再作成
+  await db.execAsync('PRAGMA foreign_keys = OFF');
+  try {
+    await db.withTransactionAsync(async () => {
+      // ... テーブル再作成処理
+    });
+  } finally {
+    await db.execAsync('PRAGMA foreign_keys = ON');
+  }
+}
+```
+
+### 適用基準
+
+| マイグレーションの種類 | 冪等性チェックの要否 |
+|---|---|
+| `ALTER TABLE ADD COLUMN` | 不要（存在すれば失敗するが、スキーマ直接作成との競合は起きない） |
+| `CREATE TABLE IF NOT EXISTS` | 不要（`IF NOT EXISTS` で冪等） |
+| テーブル再作成（カラム削除目的） | **必須** — 新規インストールでは対象カラムが存在しない |
+| カラム名変更（Expo SDK 52: RENAME COLUMN 不可のため再作成） | **必須** |
+
+### チェックリスト
+
+```
+カラム削除・テーブル再作成マイグレーションを書く前に確認:
+
+□ 新規インストール（schema.ts から直接作成）でも安全か？
+□ PRAGMA table_info で対象カラムの存在確認を入れたか？
+□ 早期リターン後にも必要なインデックスを作成しているか？
+□ テーブル削除を伴う場合、PRAGMA foreign_keys = OFF を設定したか？
+```
