@@ -1,5 +1,82 @@
 # SQLite パターン集
 
+## `INSERT OR IGNORE` の後に FK 参照してはならない
+
+### 問題：沈黙は成功ではない
+
+`INSERT OR IGNORE` は UNIQUE / NOT NULL / PK 制約違反を**静かにスキップ**するが、
+**FK 制約は抑制しない**。スキップされた行の ID を子テーブルの FK として使うと
+`FOREIGN KEY constraint failed` になる。
+
+```typescript
+// NG: INSERT がスキップされた場合に FK エラー
+await db.execAsync(
+  `INSERT OR IGNORE INTO workouts (id, workout_date, ...) VALUES ('dev-001', '2026-01-01', ...)`
+);
+// ↑ workout_date が UNIQUE 競合 → 静かにスキップ。エラーなし。
+
+await db.execAsync(
+  `INSERT INTO workout_exercises (workout_id, ...) VALUES ('dev-001', ...)`
+);
+// ↑ 'dev-001' は workouts に存在しない → FOREIGN KEY constraint failed!
+```
+
+**なぜ起きるか**: `OR IGNORE` は「例外なし」を保証するだけで「挿入成功」を保証しない。
+呼び出し側は INSERT の成否を知らないまま次の処理に進む。これがバグの本質。
+
+---
+
+### 解決策：モバイル SQLite（シングルライター）では Pattern C を使う
+
+```typescript
+// ✅ Pattern C（推奨）: SELECT → 条件分岐 → INSERT
+// 存在確認を先に行い、INSERT 前に行の存在を保証する。
+const existing = await db.getFirstAsync<{ id: string }>(
+  `SELECT id FROM workouts WHERE id = ?`, [workoutId]
+);
+if (!existing) {
+  await db.runAsync(`INSERT INTO workouts (id, ...) VALUES (?)`, [workoutId, ...]);
+}
+// この時点で行の存在が保証されている → FK 参照しても安全
+await db.runAsync(`INSERT INTO workout_exercises (workout_id, ...) VALUES (?)`, [workoutId, ...]);
+```
+
+**なぜ Pattern C か**: 意図が自己説明的で、FK 保証が構造的に得られる。
+競合状態（TOCTOU）の心配がないシングルライター環境では往復 1 回増えるだけでデメリットなし。
+
+---
+
+### Pattern C を使えない場合（高並列システム）
+
+並列書き込みがある環境では TOCTOU 問題が発生するため、
+`INSERT OR IGNORE` + `changes()` チェック（アトミック）を使う:
+
+```typescript
+// ✅ Pattern A: changes() で成否を確認（並列環境向け）
+await db.runAsync(`INSERT OR IGNORE INTO workouts (id, ...) VALUES (?)`, [workoutId, ...]);
+const { changes } = await db.getFirstAsync<{ changes: number }>(`SELECT changes() as changes`);
+if (changes === 0) return; // スキップされた → 子テーブルへの INSERT も中止
+await db.runAsync(`INSERT INTO workout_exercises (workout_id, ...) VALUES (?)`, [workoutId, ...]);
+```
+
+モバイルアプリのローカル SQLite は完全シングルライターなので、**Pattern C 一択**。
+
+---
+
+### チェックリスト
+
+```
+INSERT OR IGNORE の後に FK 参照する実装を書く前に確認:
+
+□ INSERT がスキップされた場合の分岐を明示しているか？
+□ 子テーブルへの INSERT が「親が存在する前提」になっていないか？
+□ モバイル SQLite（シングルライター）か高並列システムか？
+  → モバイル: Pattern C（SELECT → 条件分岐 → INSERT）
+  → 高並列: Pattern A（INSERT OR IGNORE + changes() チェック）
+```
+
+---
+
 ## 子レコードを保持しつつ親を削除する（アプリ層事前処理パターン）
 
 ### 問題

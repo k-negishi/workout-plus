@@ -376,3 +376,43 @@ test.each([
 **適用タイミング**: `test.each` にラベル・メモ用の文字列を追加した直後。
 `_description` のアンダースコアプレフィックスで「意図的な未使用」を明示する。
 
+---
+
+## 13. `unicorn/consistent-function-scoping`: テストヘルパーは describe 外に置く
+
+`unicorn` プラグインを ESLint に追加すると、`describe` ブロック内で定義された
+関数が外部スコープの変数を一切使っていない場合にエラーになる。
+
+**対象**: モック DB ファクトリ、`createMock*`、`setupMock*`、`makeXxx` 系のヘルパー関数
+
+```typescript
+// NG: describe 内に定義 → unicorn/consistent-function-scoping エラー
+describe('runMigrations V5 → V6', () => {
+  function createMockDbV5() {   // error: Move function to the outer scope
+    let schemaVersion = 5;
+    // ...
+  }
+  it('...', () => { const db = createMockDbV5(); });
+});
+
+// ✅ OK: describe の外（モジュールレベル）に移動
+function createMockDbV5() {
+  let schemaVersion = 5;
+  // ...
+}
+
+describe('runMigrations V5 → V6', () => {
+  it('...', () => { const db = createMockDbV5(); });
+});
+```
+
+**なぜルールが存在するか**: 外部スコープの変数を使わない関数を describe 内に閉じ込めても
+メモリ的・意味的メリットがなく、テストヘルパーの再利用性が下がるため。
+
+**発生タイミング**: eslint.config.mjs に `unicorn` プラグインを追加したとき、
+既存テストの `createMock*` 関数が**一括して**エラーになる。
+unicorn を導入する前から「モジュールレベルに置く」習慣を持つと修正コストがゼロになる。
+
+**注意**: 外部スコープの `let` や `const` を参照している場合はルール対象外（外に出せない）。
+例: `beforeEach` で定義した変数を参照するクロージャは describe 内に留まって問題ない。
+
