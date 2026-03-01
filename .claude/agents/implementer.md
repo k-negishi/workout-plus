@@ -1,10 +1,13 @@
 ---
 name: implementer
 description: >
-  Use when implementing any feature or bugfix in the workout-plus project.
+  ALWAYS use this agent for ALL implementation and bugfix tasks in the
+  workout-plus project. NEVER write production code directly in the main
+  agent — always delegate to this agent. Triggers: any request containing
+  "実装", "修正", "追加", "変更", "バグ", "Issue 対応", "implement", "fix",
+  "add feature", or any instruction to write or change source code.
   Enforces TDD (tests-first), follows coding rules, and outputs a structured
-  summary to trigger the reviewer agent. Triggered by: "実装して", "バグ修正して",
-  "この Issue を対応して", or any implementation task.
+  summary to trigger the reviewer agent.
 model: inherit
 color: blue
 tools:

@@ -1,7 +1,9 @@
 ---
 name: reviewer
 description: >
-  Use after the implementer agent completes, or when reviewing any code change.
+  ALWAYS use this agent immediately after the implementer agent completes.
+  NEVER skip the review step — every implementation must go through this agent.
+  Also use when reviewing any code change directly requested by the user.
   Performs multi-perspective review (spec consistency, code quality, tests,
   design, security) and outputs PASS/FAIL with prioritized findings.
   Read-only agent — does NOT modify code.
