@@ -54,6 +54,36 @@ workout-plus プロジェクト固有のデザイン方針・決定事項を管�
 
 ---
 
+## グラフ（LineChart）のデザイン方針
+
+### ツールチップ
+
+- **縦線（pointerStrip）は表示しない** → `showPointerStrip: false`
+  - タップしたデータポイントの上にツールチップを浮かせるだけで十分。縦線は「引き算デザイン」に反する
+- ツールチップスタイル: 白背景 + ボーダー線（`colors.border`）、シャドウなし
+- 値（重量）を大きく表示し、週ラベルを小さく配置（情報の優先度を明確化）
+- `pointerVanishDelay: 150`（指を離してからの消える速度）が体感的に適切
+
+### `pointerConfig` 基本セット（`react-native-gifted-charts` LineChart）
+
+```typescript
+pointerConfig={{
+  showPointerStrip: false,               // 縦線は不要
+  radius: 5,
+  pointer1Color: colors.primary,
+  pointerLabelComponent: renderTooltip,
+  pointerLabelWidth: 80,
+  pointerLabelHeight: 50,
+  autoAdjustPointerLabelPosition: true,  // 画面端はみ出し防止
+  activatePointersInstantlyOnTouch: true,
+  activatePointersOnLongPress: false,    // ScrollView との競合を回避
+  persistPointer: false,
+  pointerVanishDelay: 150,
+}}
+```
+
+---
+
 ## 統計サマリーカード（StatCard）
 
 > **A案（StatCard 作業時のみ Read）**: `Read .claude/skills/workout-design/stat-card.md`

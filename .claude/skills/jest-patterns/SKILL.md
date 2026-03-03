@@ -451,3 +451,35 @@ it('招待コード行が表示されないこと', () => {
 | 機能を完全削除（ロジックごと） | テスト削除 OK |
 | describe ブロック全体（招待コード操作 UI 等） | 削除 OK（ロジック側テストは別ファイルに残す） |
 
+---
+
+## 15. style が配列/オブジェクトどちらでも動くアサーションパターン
+
+RN コンポーネントの `el.props.style` は、選択状態・非選択状態などの条件によって
+**配列**（`[baseStyle, selectedStyle]`）になる場合と**フラットオブジェクト**になる場合がある。
+
+`expect.arrayContaining` は style がフラットオブジェクトのときに **FAIL** する。
+
+```typescript
+// NG: style が配列前提 → フラットオブジェクト時にFAIL
+// Expected: ArrayContaining [ObjectContaining {width: 83}]
+// Received: {"alignItems": "center", ..., "width": 83}  ← 配列ではないのでマッチしない
+expect(chip.props.style).toEqual(
+  expect.arrayContaining([expect.objectContaining({ width: EXPECTED_CHIP_WIDTH })]),
+);
+
+// OK: 配列・オブジェクトどちらでも動く形
+const style = Array.isArray(chip.props.style)
+  ? Object.assign({}, ...chip.props.style)
+  : chip.props.style;
+expect(style).toMatchObject({ width: EXPECTED_CHIP_WIDTH });
+```
+
+**発生タイミング**:
+- `TouchableOpacity` や `View` に `style={[baseStyle, condition && extraStyle]}` のように配列スタイルを渡している場合
+- 選択中チップ・アクティブ状態などで StyleSheet のマージ結果が変わる場合
+
+**なぜ起きるか**: RN のスタイルは「配列スタイルは RN ランタイムがマージする」仕様であり、
+テスト環境では `StyleSheet.flatten` が呼ばれないためフラットオブジェクトとして露出することがある。
+`el.props.style` の型は常に `StyleProp<ViewStyle>` であり、配列とオブジェクトどちらもあり得る。
+
