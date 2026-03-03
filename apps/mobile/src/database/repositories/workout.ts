@@ -217,4 +217,33 @@ export const WorkoutRepository = {
     const db = await getDatabase();
     await db.runAsync('DELETE FROM workouts WHERE id = ?', [id]);
   },
+
+  /**
+   * 完了されなかった recording ワークアウトを一括 completed に変換する。
+   *
+   * CalendarScreen のフォーカス時に呼ばれ、前日以前に取り残された
+   * recording ワークアウトをデータ整合のために completed に変換する。
+   * completed_at は created_at の日付の 23:59:59 に設定する
+   *（その日の最後に完了したとみなす）。
+   */
+  async completeAbandonedRecordings(): Promise<void> {
+    const db = await getDatabase();
+    // 本日0:00より前に作成された recording ワークアウトを対象にする
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const rows = await db.getAllAsync<WorkoutRow>(
+      "SELECT * FROM workouts WHERE status = 'recording' AND created_at < ?",
+      [todayStart.getTime()],
+    );
+    for (const row of rows) {
+      // created_at の日付の 23:59:59 を completed_at にする
+      const completedAt = new Date(row.created_at);
+      completedAt.setHours(23, 59, 59, 0);
+      await this.update(row.id, {
+        status: 'completed',
+        timer_status: 'discarded',
+        completed_at: completedAt.getTime(),
+      });
+    }
+  },
 };

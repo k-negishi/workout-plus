@@ -62,6 +62,9 @@ export function CalendarScreen() {
   // useEffect では初回マウント時しか実行されず、タブ切替で戻ってきた際に最新データが反映されない
   useFocusEffect(
     useCallback(() => {
+      // 前日以前に取り残された recording ワークアウトを completed に整合する
+      // （アプリを日をまたいで使い続けた場合に DB が不整合状態になるのを防ぐ）
+      void WorkoutRepository.completeAbandonedRecordings();
       void fetchTrainingDates();
       // DaySummary のデータも再取得するために refreshKey をインクリメント（Issue #176）
       setRefreshKey((prev) => prev + 1);

@@ -245,6 +245,73 @@ describe('WorkoutRepository.update（workout_date 自動算出）', () => {
   });
 });
 
+describe('WorkoutRepository.completeAbandonedRecordings', () => {
+  it('昨日以前の recording ワークアウトを completed に変換すること', async () => {
+    const mockDb = createMockDb();
+    mockGetDatabase.mockResolvedValue(mockDb as never);
+
+    // 昨日の日付で recording 状態のワークアウト
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStart = new Date(
+      yesterday.getFullYear(),
+      yesterday.getMonth(),
+      yesterday.getDate(),
+    ).getTime();
+
+    const abandonedRow = {
+      id: 'abandoned-workout-1',
+      status: 'recording',
+      created_at: yesterdayStart + 3_600_000, // 昨日の1時間後
+      started_at: null,
+      completed_at: null,
+      timer_status: 'not_started',
+      elapsed_seconds: 0,
+      timer_started_at: null,
+      memo: null,
+      workout_date: null,
+    };
+
+    // getAllAsync で昨日の recording ワークアウトが返る
+    mockDb.getAllAsync.mockResolvedValue([abandonedRow]);
+
+    // 単一行を SELECT するための getFirstAsync モック
+    mockDb.getFirstAsync.mockResolvedValue({ ...abandonedRow });
+
+    await WorkoutRepository.completeAbandonedRecordings();
+
+    // UPDATE が呼ばれていること
+    expect(mockDb.runAsync).toHaveBeenCalled();
+    const updateCall = mockDb.runAsync.mock.calls.find((call: unknown[]) =>
+      (call[0] as string).includes('UPDATE workouts'),
+    ) as [string, (string | number | null)[]] | undefined;
+    expect(updateCall).toBeDefined();
+    // status='completed' と timer_status='discarded' が含まれていること
+    expect(updateCall![1]).toContain('completed');
+    expect(updateCall![1]).toContain('discarded');
+  });
+
+  it('本日の recording ワークアウトには触れないこと', async () => {
+    const mockDb = createMockDb();
+    mockGetDatabase.mockResolvedValue(mockDb as never);
+
+    // getAllAsync が空配列を返す（本日のワークアウトは条件外のため返らない）
+    mockDb.getAllAsync.mockResolvedValue([]);
+
+    await WorkoutRepository.completeAbandonedRecordings();
+
+    // UPDATE が呼ばれないこと（本日のワークアウトは変換対象外）
+    const updateCalls = mockDb.runAsync.mock.calls.filter((call: unknown[]) =>
+      (call[0] as string).includes('UPDATE workouts'),
+    );
+    expect(updateCalls).toHaveLength(0);
+  });
+
+  it('completeAbandonedRecordings が関数として存在すること', () => {
+    expect(typeof WorkoutRepository.completeAbandonedRecordings).toBe('function');
+  });
+});
+
 describe('WorkoutRepository.create（createdAt オプション）', () => {
   it('createdAt を指定すると INSERT クエリに渡される', async () => {
     const mockDb = createMockDb();

@@ -71,13 +71,16 @@ jest.mock('../../components/DaySummary', () => ({
   },
 }));
 
-// WorkoutRepository のモック: delete と findCompletedByDate を差し替え可能にする
+// WorkoutRepository のモック: delete・findCompletedByDate・completeAbandonedRecordings を差し替え可能にする
 const mockWorkoutRepositoryDelete = jest.fn().mockResolvedValue(undefined);
 const mockWorkoutRepositoryFindCompletedByDate = jest.fn().mockResolvedValue(null);
+const mockWorkoutRepositoryCompleteAbandonedRecordings = jest.fn().mockResolvedValue(undefined);
 jest.mock('@/database/repositories/workout', () => ({
   WorkoutRepository: {
     delete: (...args: unknown[]) => mockWorkoutRepositoryDelete(...args),
     findCompletedByDate: (...args: unknown[]) => mockWorkoutRepositoryFindCompletedByDate(...args),
+    completeAbandonedRecordings: (...args: unknown[]) =>
+      mockWorkoutRepositoryCompleteAbandonedRecordings(...args),
   },
 }));
 
@@ -116,6 +119,7 @@ describe('CalendarScreen', () => {
     mockGetAllAsync.mockResolvedValue([]);
     mockWorkoutRepositoryDelete.mockResolvedValue(undefined);
     mockWorkoutRepositoryFindCompletedByDate.mockResolvedValue(null);
+    mockWorkoutRepositoryCompleteAbandonedRecordings.mockResolvedValue(undefined);
     mockPRFindExerciseIdsByWorkoutId.mockResolvedValue([]);
     mockPRDeleteByWorkoutId.mockResolvedValue(undefined);
     mockPRRecalculateForExercise.mockResolvedValue(undefined);
@@ -446,6 +450,18 @@ describe('CalendarScreen', () => {
       // 月変更後は currentWorkoutId がリセットされ削除ボタンが非表示になること
       await waitFor(() => {
         expect(screen.queryByTestId('delete-workout-button')).toBeNull();
+      });
+    });
+  });
+
+  describe('completeAbandonedRecordings: フォーカス時の取り残しワークアウト整合', () => {
+    it('フォーカス時に completeAbandonedRecordings が呼ばれること', async () => {
+      (useRoute as jest.Mock).mockReturnValue({ params: undefined });
+      render(<CalendarScreen />);
+
+      // useFocusEffect のコールバックが実行されていること（useEffect 経由でシミュレート）
+      await waitFor(() => {
+        expect(mockWorkoutRepositoryCompleteAbandonedRecordings).toHaveBeenCalled();
       });
     });
   });
