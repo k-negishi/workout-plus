@@ -236,14 +236,18 @@ export function buildHistory(
     }
   }
 
-  return [...workoutMap.entries()]
-    .map(([workoutId, data]) => ({
-      workoutId,
-      completedAt: data.completedAt,
-      sets: data.sets,
-      hasPR: prWorkoutIds.has(workoutId),
-    }))
-    .toSorted((a, b) => b.completedAt - a.completedAt);
+  return (
+    [...workoutMap.entries()]
+      .map(([workoutId, data]) => ({
+        workoutId,
+        completedAt: data.completedAt,
+        sets: data.sets,
+        hasPR: prWorkoutIds.has(workoutId),
+      }))
+      // .toSorted() は ES2023 で Hermes 未実装のため .slice().sort() で代替
+      .slice()
+      .sort((a, b) => b.completedAt - a.completedAt)
+  );
 }
 
 /**
@@ -285,14 +289,18 @@ export function buildWeeklyData(sets: SetWithWorkout[], cutoffAt: number): Weekl
     }
   }
 
-  return [...weekMap.values()]
-    .toSorted((a, b) => a.weekStart.getTime() - b.weekStart.getTime())
-    .map((w) => ({
-      weekLabel: format(w.weekStart, 'M/d'),
-      weekStart: w.weekStart,
-      averageWeight: Math.round(w.totalWeight / w.count),
-      maxEstimated1RM: w.maxEstimated1RM,
-    }));
+  return (
+    [...weekMap.values()]
+      // .toSorted() は ES2023 で Hermes 未実装のため .slice().sort() で代替
+      .slice()
+      .sort((a, b) => a.weekStart.getTime() - b.weekStart.getTime())
+      .map((w) => ({
+        weekLabel: format(w.weekStart, 'M/d'),
+        weekStart: w.weekStart,
+        averageWeight: Math.round(w.totalWeight / w.count),
+        maxEstimated1RM: w.maxEstimated1RM,
+      }))
+  );
 }
 
 /* istanbul ignore next -- React hook本体はrenderHookが必要。純粋関数（calculateStats/buildHistory）はカバー済み */

@@ -41,7 +41,7 @@ export class RecentMonthsStrategy implements WorkoutHistoryStrategy {
   buildPromptText(context: WorkoutHistoryContext): string {
     if (context.data.length === 0) return '';
 
-    // toSorted() で元配列を変更せずに昇順ソート
+    // toSorted() で元配列を変更せずに昇順ソート（api は Node.js 環境のため ES2023 利用可）
     const sorted = context.data.toSorted((a, b) => a.date.localeCompare(b.date));
     const lines: string[] = ['【直近のトレーニング履歴】'];
 
