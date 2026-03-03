@@ -122,10 +122,12 @@ export default [
       // DB row-to-model 変換関数を .map()/.filter() に直接渡すパターン（リポジトリ層で多用）では
       // TypeScript が厳密に型付けされており false positive が多いため off
       'unicorn/no-array-callback-reference': 'off',
-      // Hermes（Expo Go）は .toSorted() / .toReversed() 等の ES2023 配列メソッドを未実装のため
-      // .slice().sort() による代替実装を強制する lint ルールは off に設定
+      // unicorn/no-array-sort は Array#sort() を toSorted() に置き換えるよう要求するが、
+      // Hermes（Expo Go）は ES2023 の toSorted() を未実装のため off にする。
+      // unicorn/prefer-spread は Array#slice() を [...array] に変換しようとするため、
+      // .slice().sort() パターン（Hermes 互換の toSorted() 代替）で誤検知が生じる。
+      // Hermes が toSorted() を実装するまで両ルールを off に維持する。
       'unicorn/no-array-sort': 'off',
-      // .slice() より spread を好むルールも Hermes 互換コードと競合するため off
       'unicorn/prefer-spread': 'off',
     },
   },

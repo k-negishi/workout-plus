@@ -244,7 +244,7 @@ export function buildHistory(
         sets: data.sets,
         hasPR: prWorkoutIds.has(workoutId),
       }))
-      // .toSorted() は ES2023 で Hermes 未実装のため .slice().sort() で代替
+      // .toSorted() は Hermes 未実装のため .slice().sort() で代替（セマンティクスは等価）
       .slice()
       .sort((a, b) => b.completedAt - a.completedAt)
   );
@@ -291,7 +291,7 @@ export function buildWeeklyData(sets: SetWithWorkout[], cutoffAt: number): Weekl
 
   return (
     [...weekMap.values()]
-      // .toSorted() は ES2023 で Hermes 未実装のため .slice().sort() で代替
+      // .toSorted() は Hermes 未実装のため .slice().sort() で代替（セマンティクスは等価）
       .slice()
       .sort((a, b) => a.weekStart.getTime() - b.weekStart.getTime())
       .map((w) => ({
