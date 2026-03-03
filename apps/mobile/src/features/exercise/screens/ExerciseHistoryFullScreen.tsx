@@ -101,7 +101,10 @@ function formatJapaneseDate(timestamp: number): string {
   return `${month}月${day}日(${dayOfWeek})`;
 }
 
-/** 部位チップ選択肢 */
+/** 部位チップ選択肢
+ * ExercisePickerScreen と同じ8選択肢（「その他」含む）に統一。
+ * 追加前は「腹筋」が最終行に1個だけ残り視覚的に不自然だった。
+ */
 const MUSCLE_GROUP_OPTIONS: Array<{ key: MuscleGroup; label: string }> = [
   { key: 'chest', label: '胸' },
   { key: 'back', label: '背中' },
@@ -110,15 +113,20 @@ const MUSCLE_GROUP_OPTIONS: Array<{ key: MuscleGroup; label: string }> = [
   { key: 'biceps', label: '二頭筋' },
   { key: 'triceps', label: '三頭筋' },
   { key: 'abs', label: '腹筋' },
+  { key: 'other', label: 'その他' },
 ];
 
-/** 器具チップ選択肢 */
+/** 器具チップ選択肢
+ * ExercisePickerScreen と同じ6選択肢（「その他」含む）に統一。
+ * 追加前は「自重」が最終行に1個だけ残り視覚的に不自然だった。
+ */
 const EQUIPMENT_OPTIONS: Array<{ key: Equipment; label: string }> = [
   { key: 'barbell', label: 'バーベル' },
   { key: 'dumbbell', label: 'ダンベル' },
   { key: 'machine', label: 'マシン' },
   { key: 'cable', label: 'ケーブル' },
   { key: 'bodyweight', label: '自重' },
+  { key: 'other', label: 'その他' },
 ];
 
 /**

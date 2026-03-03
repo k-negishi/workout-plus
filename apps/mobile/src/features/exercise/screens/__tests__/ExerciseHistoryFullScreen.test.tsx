@@ -277,6 +277,55 @@ describe('ExerciseHistoryFullScreen', () => {
     });
   });
 
+  describe('編集フォームのチップ選択肢', () => {
+    beforeEach(async () => {
+      // findById がフォームの初期値設定に使われる
+      mockFindById.mockResolvedValue({
+        id: 'ex-1',
+        name: 'ベンチプレス',
+        muscle_group: 'chest',
+        equipment: 'barbell',
+        is_favorite: 0,
+        is_deleted: 0,
+        created_at: 1000,
+        updated_at: 1000,
+        sort_order: 1,
+      });
+    });
+
+    it('部位チップに「その他」が表示される', async () => {
+      render(<ExerciseHistoryFullScreen />);
+      // 編集フォームを開く
+      fireEvent.press(screen.getByTestId('edit-button'));
+      await screen.findByText('保存');
+      // 「その他」チップが存在すること（部位・器具それぞれに1件ずつ）
+      const otherChips = screen.getAllByText('その他');
+      expect(otherChips.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('部位チップが8個表示される（「その他」追加後）', async () => {
+      render(<ExerciseHistoryFullScreen />);
+      fireEvent.press(screen.getByTestId('edit-button'));
+      await screen.findByText('保存');
+      // 部位: 胸/背中/脚/肩/二頭筋/三頭筋/腹筋/その他 = 8個
+      const muscleGroupLabels = ['胸', '背中', '脚', '肩', '二頭筋', '三頭筋', '腹筋', 'その他'];
+      for (const label of muscleGroupLabels) {
+        expect(screen.getAllByText(label).length).toBeGreaterThanOrEqual(1);
+      }
+    });
+
+    it('器具チップが6個表示される（「その他」追加後）', async () => {
+      render(<ExerciseHistoryFullScreen />);
+      fireEvent.press(screen.getByTestId('edit-button'));
+      await screen.findByText('保存');
+      // 器具: バーベル/ダンベル/マシン/ケーブル/自重/その他 = 6個
+      const equipmentLabels = ['バーベル', 'ダンベル', 'マシン', 'ケーブル', '自重', 'その他'];
+      for (const label of equipmentLabels) {
+        expect(screen.getAllByText(label).length).toBeGreaterThanOrEqual(1);
+      }
+    });
+  });
+
   describe('Issue #213: 見出し・日付フォントサイズ拡大', () => {
     it('ヘッダータイトルのフォントサイズが 20px である', () => {
       render(<ExerciseHistoryFullScreen />);
