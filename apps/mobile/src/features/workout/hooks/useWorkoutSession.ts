@@ -133,6 +133,109 @@ export function dateStringToMs(dateString: string): number {
 }
 
 /**
+ * 今日の日付を 'yyyy-MM-dd' 形式の文字列で返す（端末ローカル時刻）
+ * isPastDateEdit 判定などで使用する
+ */
+function getTodayString(): string {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+/**
+ * 指定した targetDate が過去日付編集モードかどうかを判定する。
+ * targetDate が今日以外の日付である場合に true を返す。
+ * startSession の cognitive complexity を抑制するためモジュールレベルに分離。
+ */
+function isPastDateEdit(targetDate: string | undefined): boolean {
+  if (!targetDate) return false;
+  return targetDate !== getTodayString();
+}
+
+/**
+ * 継続モード（workoutId 指定）のセッション開始処理。
+ * 過去日付編集時はタイマー値を DB から復元し、当日継続時はリセットする。
+ * startSession の cognitive complexity を抑制するためモジュールレベルに分離。
+ */
+async function startContinuationSession(
+  workoutId: string,
+  targetDate: string | undefined,
+  store: ReturnType<typeof useWorkoutSessionStore.getState>,
+): Promise<boolean> {
+  const targetWorkout = await WorkoutRepository.findById(workoutId);
+  if (!targetWorkout) {
+    showErrorToast('継続対象のワークアウトが見つかりません');
+    return false;
+  }
+
+  // completed → recording に再オープン
+  // 注意: completed_at は意図的にクリアしない。
+  // WorkoutRepository.findTodayActiveRecording() が「今回セッションで追加したセット」を
+  // sets.created_at > workouts.completed_at で識別するために必要。（Issue #203）
+  // この前提を変更する場合は findTodayActiveRecording() の SQL も合わせて修正すること。
+  await WorkoutRepository.update(workoutId, { status: 'recording' });
+
+  // 過去日付編集モード（当日以外の日付が指定されている場合）は
+  // DB に保存されたタイマー値を復元する。
+  // 当日継続モードの場合はタイマーをリセットする（新たにカウント開始させるため）。
+  const pastEdit = isPastDateEdit(targetDate);
+  const restoredTimerStatus = pastEdit
+    ? (targetWorkout.timer_status as TimerStatus)
+    : TimerStatus.NOT_STARTED;
+  const restoredElapsedSeconds = pastEdit ? targetWorkout.elapsed_seconds : 0;
+  const restoredTimerStartedAt = pastEdit ? targetWorkout.timer_started_at : null;
+
+  store.setCurrentWorkout({
+    id: targetWorkout.id,
+    status: 'recording',
+    createdAt: targetWorkout.created_at,
+    startedAt: targetWorkout.started_at,
+    completedAt: targetWorkout.completed_at,
+    timerStatus: restoredTimerStatus,
+    elapsedSeconds: restoredElapsedSeconds,
+    timerStartedAt: restoredTimerStartedAt,
+    memo: targetWorkout.memo,
+  });
+  store.setTimerStatus(restoredTimerStatus);
+  store.setElapsedSeconds(restoredElapsedSeconds);
+  store.setTimerStartedAt(restoredTimerStartedAt);
+
+  // 既存の種目・セットを復元
+  const db = await getDatabase();
+  const exercises = await db.getAllAsync<{
+    id: string;
+    workout_id: string;
+    exercise_id: string;
+    display_order: number;
+    memo: string | null;
+    created_at: number;
+  }>('SELECT * FROM workout_exercises WHERE workout_id = ? ORDER BY display_order', [workoutId]);
+
+  const baseExerciseIds: string[] = [];
+  for (const ex of exercises) {
+    const workoutExercise: WorkoutExercise = {
+      id: ex.id,
+      workoutId: ex.workout_id,
+      exerciseId: ex.exercise_id,
+      displayOrder: ex.display_order,
+      memo: ex.memo,
+      createdAt: ex.created_at,
+    };
+    store.addExercise(workoutExercise);
+    baseExerciseIds.push(ex.id);
+
+    // findByWorkoutExerciseId は WorkoutSet[]（camelCase 変換済み）を返す
+    const sets = await SetRepository.findByWorkoutExerciseId(ex.id);
+    store.setSetsForExercise(ex.id, sets);
+  }
+  // 継続モードの基準種目IDリストを記録
+  store.setContinuationBaseExerciseIds(baseExerciseIds);
+  return true;
+}
+
+/**
  * recording 状態の既存ワークアウトをストアに復元する。
  * startSession の cyclomatic complexity を抑制するためモジュールレベルに分離。
  */
@@ -270,66 +373,10 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
         if (targetDate) {
           store.setSessionTargetDate(targetDate);
         }
-        // 継続モード: workoutId が指定されている場合（当日ワークアウトへの追記）
+        // 継続モード: workoutId が指定されている場合（当日ワークアウトへの追記または過去日付編集）
+        // ヘルパーに委譲して complexity を抑制する
         if (workoutId) {
-          const targetWorkout = await WorkoutRepository.findById(workoutId);
-          if (!targetWorkout) {
-            showErrorToast('継続対象のワークアウトが見つかりません');
-            return;
-          }
-          // completed → recording に再オープン
-          // 注意: completed_at は意図的にクリアしない。
-          // WorkoutRepository.findTodayActiveRecording() が「今回セッションで追加したセット」を
-          // sets.created_at > workouts.completed_at で識別するために必要。（Issue #203）
-          // この前提を変更する場合は findTodayActiveRecording() の SQL も合わせて修正すること。
-          await WorkoutRepository.update(workoutId, { status: 'recording' });
-          store.setCurrentWorkout({
-            id: targetWorkout.id,
-            status: 'recording',
-            createdAt: targetWorkout.created_at,
-            startedAt: targetWorkout.started_at,
-            completedAt: targetWorkout.completed_at,
-            timerStatus: TimerStatus.NOT_STARTED,
-            elapsedSeconds: 0,
-            timerStartedAt: null,
-            memo: targetWorkout.memo,
-          });
-          store.setTimerStatus(TimerStatus.NOT_STARTED);
-          store.setElapsedSeconds(0);
-          store.setTimerStartedAt(null);
-
-          // 既存の種目・セットを復元
-          const db = await getDatabase();
-          const exercises = await db.getAllAsync<{
-            id: string;
-            workout_id: string;
-            exercise_id: string;
-            display_order: number;
-            memo: string | null;
-            created_at: number;
-          }>('SELECT * FROM workout_exercises WHERE workout_id = ? ORDER BY display_order', [
-            workoutId,
-          ]);
-
-          const baseExerciseIds: string[] = [];
-          for (const ex of exercises) {
-            const workoutExercise: WorkoutExercise = {
-              id: ex.id,
-              workoutId: ex.workout_id,
-              exerciseId: ex.exercise_id,
-              displayOrder: ex.display_order,
-              memo: ex.memo,
-              createdAt: ex.created_at,
-            };
-            store.addExercise(workoutExercise);
-            baseExerciseIds.push(ex.id);
-
-            // findByWorkoutExerciseId は WorkoutSet[]（camelCase 変換済み）を返す
-            const sets = await SetRepository.findByWorkoutExerciseId(ex.id);
-            store.setSetsForExercise(ex.id, sets);
-          }
-          // 継続モードの基準種目IDリストを記録
-          store.setContinuationBaseExerciseIds(baseExerciseIds);
+          await startContinuationSession(workoutId, targetDate, store);
           return;
         }
 
@@ -519,10 +566,12 @@ export function useWorkoutSession(): UseWorkoutSessionReturn {
         };
       }
 
-      // ステータスを completed に更新
+      // ステータスを completed に更新し、経過秒数とタイマー状態も永続化する
       await WorkoutRepository.update(store.currentWorkout.id, {
         status: 'completed',
         completed_at: now,
+        elapsed_seconds: store.elapsedSeconds,
+        timer_status: store.timerStatus,
       });
 
       // サマリーデータを集計
