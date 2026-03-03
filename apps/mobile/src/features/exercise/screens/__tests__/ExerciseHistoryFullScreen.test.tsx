@@ -409,4 +409,48 @@ describe('ExerciseHistoryFullScreen', () => {
       expect(screen.queryByText(/1RM:/)).toBeNull();
     });
   });
+
+  describe('4列グリッドレイアウト: チップ幅の均等計算', () => {
+    // jest-expo preset の useWindowDimensions デフォルト幅は 750
+    // chipWidth = (screenWidth - paddingHorizontal×2 - gap×3) / 4
+    //           = (750 - 20×2 - 6×3) / 4 = (750 - 40 - 18) / 4 = 173
+    const MOCK_SCREEN_WIDTH = 750;
+    const EXPECTED_CHIP_WIDTH = (MOCK_SCREEN_WIDTH - 40 - 18) / 4;
+
+    beforeEach(async () => {
+      mockFindById.mockResolvedValue({
+        id: 'ex-1',
+        name: 'ベンチプレス',
+        muscle_group: 'chest',
+        equipment: 'barbell',
+        is_favorite: 0,
+        is_deleted: 0,
+        created_at: 1000,
+        updated_at: 1000,
+        sort_order: 1,
+      });
+    });
+
+    it('部位チップに計算された均等幅が適用されている', async () => {
+      render(<ExerciseHistoryFullScreen />);
+      fireEvent.press(screen.getByTestId('edit-button'));
+      await screen.findByText('保存');
+
+      // 部位の「胸」チップが均等幅で表示されること
+      // テスト環境では StyleSheet がスタイルをフラットなオブジェクトに統合する
+      const chestChip = screen.getByTestId('muscle-chip-chest');
+      expect(chestChip.props.style).toMatchObject({ width: EXPECTED_CHIP_WIDTH });
+    });
+
+    it('器具チップに計算された均等幅が適用されている', async () => {
+      render(<ExerciseHistoryFullScreen />);
+      fireEvent.press(screen.getByTestId('edit-button'));
+      await screen.findByText('保存');
+
+      // 器具の「バーベル」チップが均等幅で表示されること
+      // テスト環境では StyleSheet がスタイルをフラットなオブジェクトに統合する
+      const barbellChip = screen.getByTestId('equipment-chip-barbell');
+      expect(barbellChip.props.style).toMatchObject({ width: EXPECTED_CHIP_WIDTH });
+    });
+  });
 });

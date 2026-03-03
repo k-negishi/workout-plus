@@ -26,6 +26,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { LineChart } from 'react-native-gifted-charts';
@@ -151,64 +152,85 @@ const ExerciseEditForm: React.FC<{
   onEquipmentChange,
   onSave,
   onCancel,
-}) => (
-  <View style={editFormStyles.container}>
-    <TextInput
-      style={editFormStyles.nameInput}
-      placeholder="種目名"
-      value={editName}
-      onChangeText={onNameChange}
-      autoFocus
-    />
-    <Text style={editFormStyles.sectionLabel}>部位</Text>
-    <View style={editFormStyles.chipRow}>
-      {MUSCLE_GROUP_OPTIONS.map((opt) => (
-        <TouchableOpacity
-          key={opt.key}
-          onPress={() => onMuscleGroupChange(opt.key)}
-          style={[editFormStyles.chip, editMuscleGroup === opt.key && editFormStyles.chipSelected]}
-        >
-          <Text
+}) => {
+  // 4列均等グリッド: (screenWidth - paddingHorizontal×2 - gap×(columns-1)) / columns
+  // container の paddingHorizontal=20, chip間のgap=6、4列なのでgapは3つ
+  const { width: screenWidth } = useWindowDimensions();
+  const CHIP_COLUMNS = 4;
+  const CONTAINER_PADDING = 20 * 2; // 左右合計
+  const CHIP_GAP = 6;
+  const chipWidth =
+    (screenWidth - CONTAINER_PADDING - CHIP_GAP * (CHIP_COLUMNS - 1)) / CHIP_COLUMNS;
+
+  return (
+    <View style={editFormStyles.container}>
+      <TextInput
+        style={editFormStyles.nameInput}
+        placeholder="種目名"
+        value={editName}
+        onChangeText={onNameChange}
+        autoFocus
+      />
+      <Text style={editFormStyles.sectionLabel}>部位</Text>
+      <View style={editFormStyles.chipRow}>
+        {MUSCLE_GROUP_OPTIONS.map((opt) => (
+          <TouchableOpacity
+            key={opt.key}
+            testID={`muscle-chip-${opt.key}`}
+            onPress={() => onMuscleGroupChange(opt.key)}
             style={[
-              editFormStyles.chipText,
-              editMuscleGroup === opt.key && editFormStyles.chipTextSelected,
+              editFormStyles.chip,
+              { width: chipWidth, alignItems: 'center' },
+              editMuscleGroup === opt.key && editFormStyles.chipSelected,
             ]}
           >
-            {opt.label}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-    <Text style={editFormStyles.sectionLabel}>器具</Text>
-    <View style={editFormStyles.chipRow}>
-      {EQUIPMENT_OPTIONS.map((opt) => (
-        <TouchableOpacity
-          key={opt.key}
-          onPress={() => onEquipmentChange(opt.key)}
-          style={[editFormStyles.chip, editEquipment === opt.key && editFormStyles.chipSelected]}
-        >
-          <Text
+            <Text
+              style={[
+                editFormStyles.chipText,
+                editMuscleGroup === opt.key && editFormStyles.chipTextSelected,
+              ]}
+            >
+              {opt.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+      <Text style={editFormStyles.sectionLabel}>器具</Text>
+      <View style={editFormStyles.chipRow}>
+        {EQUIPMENT_OPTIONS.map((opt) => (
+          <TouchableOpacity
+            key={opt.key}
+            testID={`equipment-chip-${opt.key}`}
+            onPress={() => onEquipmentChange(opt.key)}
             style={[
-              editFormStyles.chipText,
-              editEquipment === opt.key && editFormStyles.chipTextSelected,
+              editFormStyles.chip,
+              { width: chipWidth, alignItems: 'center' },
+              editEquipment === opt.key && editFormStyles.chipSelected,
             ]}
           >
-            {opt.label}
-          </Text>
+            <Text
+              style={[
+                editFormStyles.chipText,
+                editEquipment === opt.key && editFormStyles.chipTextSelected,
+              ]}
+            >
+              {opt.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+      <View style={editFormStyles.buttonRow}>
+        {/* キャンセル（左）→ 保存（右）: アプリ全体の統一配置に合わせる */}
+        <TouchableOpacity onPress={onCancel} style={editFormStyles.cancelButton}>
+          <Text style={editFormStyles.cancelButtonText}>キャンセル</Text>
         </TouchableOpacity>
-      ))}
+        <TouchableOpacity onPress={onSave} style={editFormStyles.saveButton}>
+          <Text style={editFormStyles.saveButtonText}>保存</Text>
+        </TouchableOpacity>
+      </View>
     </View>
-    <View style={editFormStyles.buttonRow}>
-      {/* キャンセル（左）→ 保存（右）: アプリ全体の統一配置に合わせる */}
-      <TouchableOpacity onPress={onCancel} style={editFormStyles.cancelButton}>
-        <Text style={editFormStyles.cancelButtonText}>キャンセル</Text>
-      </TouchableOpacity>
-      <TouchableOpacity onPress={onSave} style={editFormStyles.saveButton}>
-        <Text style={editFormStyles.saveButtonText}>保存</Text>
-      </TouchableOpacity>
-    </View>
-  </View>
-);
+  );
+};
 
 export function ExerciseHistoryFullScreen() {
   // goBack() のみ使用するため ParamListBase で十分（スタック非依存）
@@ -235,6 +257,52 @@ export function ExerciseHistoryFullScreen() {
     value: w.maxEstimated1RM,
     label: w.weekLabel,
   }));
+
+  /**
+   * グラフタッチ時のツールチップコンポーネント。
+   * items[0].value: 推定1RM（kg）, items[0].label: 週ラベル 'M/d' 形式
+   * useCallback でメモ化し、再レンダリング時の不要な関数生成を防ぐ
+   */
+  const renderTooltip = useCallback((items: Array<{ value: number; label?: string }>) => {
+    const item = items[0];
+    if (!item) return null;
+    return (
+      <View
+        style={{
+          backgroundColor: colors.white,
+          borderWidth: 1,
+          borderColor: colors.border,
+          borderRadius: borderRadius.sm,
+          paddingHorizontal: spacing.xs,
+          // デザイントークン準拠: 3px → spacing.xs（4px）に統一
+          paddingVertical: spacing.xs,
+          alignItems: 'center',
+          minWidth: 72,
+        }}
+      >
+        {/* 推定1RM値: 小数点切り捨てで「Nkg」形式表示 */}
+        <Text
+          style={{
+            fontSize: fontSize.xs,
+            fontWeight: fontWeight.semibold,
+            color: colors.textTertiary,
+          }}
+        >
+          {Math.round(item.value)}kg
+        </Text>
+        {/* 週ラベル: 'M/d' 形式（例: '2/3'）*/}
+        <Text
+          style={{
+            fontSize: 11,
+            color: colors.textSecondary,
+            marginTop: 1,
+          }}
+        >
+          {item.label ?? ''}
+        </Text>
+      </View>
+    );
+  }, []);
 
   /**
    * Issue #155: 編集フォームを開く
@@ -429,6 +497,30 @@ export function ExerciseHistoryFullScreen() {
                   noOfSections={5}
                   maxValue={Math.ceil(Math.max(...chartData.map((d) => d.value), 1) * 1.2)}
                   isAnimated
+                  pointerConfig={{
+                    // タッチ時の縦線（ポインタストリップ）設定
+                    showPointerStrip: false,
+                    // noOfSections(5) × stepHeight(40) = 200px（チャート高さに合わせる）
+                    pointerStripHeight: 200,
+                    pointerStripWidth: 1,
+                    pointerStripColor: colors.border,
+                    pointerStripUptoDataPoint: true,
+                    // データポイントの強調表示
+                    radius: 5,
+                    pointer1Color: colors.primary,
+                    // ツールチップコンポーネント
+                    pointerLabelComponent: renderTooltip,
+                    pointerLabelWidth: 80,
+                    pointerLabelHeight: 50,
+                    // ツールチップが画面端に被らないよう自動位置調整
+                    autoAdjustPointerLabelPosition: true,
+                    // タッチ開始と同時に即座にポインタを表示（長押し不要）
+                    activatePointersInstantlyOnTouch: true,
+                    activatePointersOnLongPress: false,
+                    // 指を離したらポインタを消す（persistPointer: false + vanishDelay: 150ms）
+                    persistPointer: false,
+                    pointerVanishDelay: 150,
+                  }}
                 />
               </View>
             </View>
