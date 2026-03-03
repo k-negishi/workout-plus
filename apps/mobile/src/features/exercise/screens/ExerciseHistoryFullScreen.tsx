@@ -191,11 +191,12 @@ const ExerciseEditForm: React.FC<{
       ))}
     </View>
     <View style={editFormStyles.buttonRow}>
-      <TouchableOpacity onPress={onSave} style={editFormStyles.saveButton}>
-        <Text style={editFormStyles.saveButtonText}>保存</Text>
-      </TouchableOpacity>
+      {/* キャンセル（左）→ 保存（右）: アプリ全体の統一配置に合わせる */}
       <TouchableOpacity onPress={onCancel} style={editFormStyles.cancelButton}>
         <Text style={editFormStyles.cancelButtonText}>キャンセル</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={onSave} style={editFormStyles.saveButton}>
+        <Text style={editFormStyles.saveButtonText}>保存</Text>
       </TouchableOpacity>
     </View>
   </View>
