@@ -74,6 +74,11 @@ export type TimerBarProps = {
   onManualTimeSet: (seconds: number) => void;
   /** 終了ボタンの無効化（種目0件時） */
   isCompleteDisabled?: boolean;
+  /**
+   * 読み取り専用モード（過去日付編集時）。
+   * true の場合: 再生/停止・中止・完了ボタンを非表示にし、時間表示のみ残す。
+   */
+  isReadonly?: boolean;
 };
 
 export const TimerBar: React.FC<TimerBarProps> = ({
@@ -87,6 +92,7 @@ export const TimerBar: React.FC<TimerBarProps> = ({
   onComplete,
   onManualTimeSet,
   isCompleteDisabled = false,
+  isReadonly = false,
 }) => {
   // 手入力モードの状態管理
   const [isEditing, setIsEditing] = useState(false);
@@ -188,27 +194,29 @@ export const TimerBar: React.FC<TimerBarProps> = ({
         経過時間
       </Text>
 
-      {/* 再生/一時停止ボタン: discarded でも有効（Issue #175） */}
-      <TouchableOpacity
-        onPress={handleToggle}
-        style={{
-          width: 24,
-          height: 24,
-          borderRadius: 12,
-          borderWidth: 1.5,
-          borderColor: playButtonStyle.borderColor,
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
-        accessibilityLabel={timerStatus === 'running' ? '一時停止' : '開始'}
-      >
-        <Text style={{ fontSize: 12, color: playButtonStyle.textColor, lineHeight: 12 }}>
-          {toggleLabel}
-        </Text>
-      </TouchableOpacity>
+      {/* 再生/一時停止ボタン: 読み取り専用モードでは非表示（過去日付編集時）*/}
+      {!isReadonly && (
+        <TouchableOpacity
+          onPress={handleToggle}
+          style={{
+            width: 24,
+            height: 24,
+            borderRadius: 12,
+            borderWidth: 1.5,
+            borderColor: playButtonStyle.borderColor,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+          accessibilityLabel={timerStatus === 'running' ? '一時停止' : '開始'}
+        >
+          <Text style={{ fontSize: 12, color: playButtonStyle.textColor, lineHeight: 12 }}>
+            {toggleLabel}
+          </Text>
+        </TouchableOpacity>
+      )}
 
-      {/* 一時停止中ラベル */}
-      {timerStatus === 'paused' && (
+      {/* 一時停止中ラベル: 読み取り専用モードでは非表示 */}
+      {!isReadonly && timerStatus === 'paused' && (
         <Text style={{ fontSize: 13, color: '#64748b', fontWeight: '400', marginLeft: 8 }}>
           一時停止中
         </Text>
@@ -242,8 +250,8 @@ export const TimerBar: React.FC<TimerBarProps> = ({
         elapsedTimeDisplay
       )}
 
-      {/* 中止ボタン */}
-      {!isTimerDiscarded && (
+      {/* 中止ボタン: 読み取り専用モードでは非表示 */}
+      {!isReadonly && !isTimerDiscarded && (
         <TouchableOpacity
           onPress={onStopTimer}
           style={{
@@ -259,21 +267,23 @@ export const TimerBar: React.FC<TimerBarProps> = ({
         </TouchableOpacity>
       )}
 
-      {/* 完了ボタン */}
-      <TouchableOpacity
-        onPress={onComplete}
-        disabled={isCompleteDisabled}
-        style={{
-          marginLeft: 12,
-          paddingHorizontal: 20,
-          paddingVertical: 8,
-          borderRadius: 8,
-          backgroundColor: isCompleteDisabled ? '#d1d5db' : '#10B981',
-        }}
-        accessibilityLabel="ワークアウトを完了"
-      >
-        <Text style={{ fontSize: 16, fontWeight: '600', color: '#FFFFFF' }}>完了</Text>
-      </TouchableOpacity>
+      {/* 完了ボタン: 読み取り専用モードでは非表示 */}
+      {!isReadonly && (
+        <TouchableOpacity
+          onPress={onComplete}
+          disabled={isCompleteDisabled}
+          style={{
+            marginLeft: 12,
+            paddingHorizontal: 20,
+            paddingVertical: 8,
+            borderRadius: 8,
+            backgroundColor: isCompleteDisabled ? '#d1d5db' : '#10B981',
+          }}
+          accessibilityLabel="ワークアウトを完了"
+        >
+          <Text style={{ fontSize: 16, fontWeight: '600', color: '#FFFFFF' }}>完了</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
