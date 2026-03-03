@@ -307,8 +307,8 @@ describe('ExerciseHistoryFullScreen', () => {
       render(<ExerciseHistoryFullScreen />);
       fireEvent.press(screen.getByTestId('edit-button'));
       await screen.findByText('保存');
-      // 部位: 胸/背中/脚/肩/二頭筋/三頭筋/腹筋/その他 = 8個
-      const muscleGroupLabels = ['胸', '背中', '脚', '肩', '二頭筋', '三頭筋', '腹筋', 'その他'];
+      // 部位: 胸/背中/脚/肩/二頭/三頭/腹筋/その他 = 8個（ExercisePickerScreen と統一）
+      const muscleGroupLabels = ['胸', '背中', '脚', '肩', '二頭', '三頭', '腹筋', 'その他'];
       for (const label of muscleGroupLabels) {
         expect(screen.getAllByText(label).length).toBeGreaterThanOrEqual(1);
       }

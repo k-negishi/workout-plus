@@ -31,6 +31,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { getDatabase } from '@/database/client';
+import { WorkoutRepository } from '@/database/repositories/workout';
 import { EmptyState } from '@/shared/components/EmptyState';
 import { showSuccessToast } from '@/shared/components/Toast';
 import { useWorkoutSessionStore } from '@/stores/workoutSessionStore';
@@ -40,7 +41,7 @@ import { ExerciseBlock } from '../components/ExerciseBlock';
 import { TimerBar } from '../components/TimerBar';
 import { usePreviousRecord } from '../hooks/usePreviousRecord';
 import { useTimer } from '../hooks/useTimer';
-import { useWorkoutSession } from '../hooks/useWorkoutSession';
+import { dateStringToMs, useWorkoutSession } from '../hooks/useWorkoutSession';
 
 /**
  * ワークアウト完了処理をモジュールレベルに分離して RecordScreen の複雑度を下げる。
@@ -167,6 +168,10 @@ export const RecordScreen: React.FC = () => {
   /** 編集モード: workoutId が params に含まれている場合 */
   const isEditMode = !!workoutId;
 
+  /** 過去日付編集モード: 編集モード かつ 今日以外の日付が指定されている場合 */
+  const today = format(new Date(), 'yyyy-MM-dd');
+  const isPastEditMode = isEditMode && !!targetDate && targetDate !== today;
+
   const store = useWorkoutSessionStore();
   const timer = useTimer();
   const session = useWorkoutSession();
@@ -182,7 +187,10 @@ export const RecordScreen: React.FC = () => {
   useEffect(() => {
     if (workoutId) {
       // 編集モード: 既存ワークアウトを開く
-      void session.startSession({ workoutId });
+      // バグ修正: workoutId のみ渡していたが targetDate も含める
+      // （targetDate がないとヘッダーが今日の日付にフォールバックするため）
+      // exactOptionalPropertyTypes 制約: targetDate が undefined の場合はキーを省略する
+      void session.startSession(targetDate ? { workoutId, targetDate } : { workoutId });
     } else {
       // 新規記録モード: 当日 or 過去日付（targetDate）
       void session.startSession(targetDate === undefined ? undefined : { targetDate });
@@ -242,6 +250,24 @@ export const RecordScreen: React.FC = () => {
       }),
     [session.completeWorkout, store.currentWorkout, store.currentExercises.length, navigation],
   );
+
+  /**
+   * 戻るボタンのハンドラー。
+   * isPastEditMode の場合は DB に status='completed' を保存してから goBack する。
+   * 通常モードはそのまま goBack する。
+   */
+  const handleBack = useCallback(async () => {
+    if (isPastEditMode && workoutId && targetDate) {
+      // 過去日付編集モード: 変更を completed として保存してから画面を閉じる
+      await WorkoutRepository.update(workoutId, {
+        status: 'completed',
+        completed_at: dateStringToMs(targetDate),
+        elapsed_seconds: store.elapsedSeconds,
+        timer_status: store.timerStatus,
+      });
+    }
+    navigation.goBack();
+  }, [isPastEditMode, workoutId, targetDate, navigation, store.elapsedSeconds, store.timerStatus]);
 
   /** タイマー計測停止（ワークアウトは継続） */
   const handleStopTimer = useCallback(() => {
@@ -355,9 +381,9 @@ export const RecordScreen: React.FC = () => {
           alignItems: 'center',
         }}
       >
-        {/* 戻るボタン: 前の画面（HomeScreen / CalendarScreen）に戻る */}
+        {/* 戻るボタン: 過去日付編集モードでは DB 保存してから戻る */}
         <TouchableOpacity
-          onPress={() => navigation.goBack()}
+          onPress={() => void handleBack()}
           accessibilityLabel="戻る"
           style={{ width: 40, alignItems: 'flex-start' }}
         >
@@ -383,6 +409,7 @@ export const RecordScreen: React.FC = () => {
       </View>
 
       {/* タイマーバー: recording モード（新規登録・再開）のみ表示する */}
+      {/* 過去日付編集モードでは isReadonly=true を渡し、操作ボタン類を非表示にする */}
       {!!isRecordingMode && (
         <TimerBar
           timerStatus={timer.timerStatus}
@@ -395,6 +422,7 @@ export const RecordScreen: React.FC = () => {
           onComplete={handleComplete}
           onManualTimeSet={timer.setManualTime}
           isCompleteDisabled={!hasExercises}
+          isReadonly={isPastEditMode}
         />
       )}
 

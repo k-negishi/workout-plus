@@ -110,8 +110,8 @@ const MUSCLE_GROUP_OPTIONS: Array<{ key: MuscleGroup; label: string }> = [
   { key: 'back', label: '背中' },
   { key: 'legs', label: '脚' },
   { key: 'shoulders', label: '肩' },
-  { key: 'biceps', label: '二頭筋' },
-  { key: 'triceps', label: '三頭筋' },
+  { key: 'biceps', label: '二頭' },
+  { key: 'triceps', label: '三頭' },
   { key: 'abs', label: '腹筋' },
   { key: 'other', label: 'その他' },
 ];

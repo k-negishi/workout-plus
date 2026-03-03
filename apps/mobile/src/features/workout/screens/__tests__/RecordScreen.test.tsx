@@ -100,6 +100,11 @@ jest.mock('../../hooks/useWorkoutSession', () => ({
     addSet: jest.fn().mockResolvedValue(undefined),
     updateWorkoutMemo: jest.fn().mockResolvedValue(undefined),
   }),
+  // RecordScreen.tsx が dateStringToMs を直接インポートしているため実装を提供する
+  dateStringToMs: (dateString: string): number => {
+    const [year, month, day] = dateString.split('-').map(Number);
+    return new Date(year!, month! - 1, day!).getTime();
+  },
 }));
 
 jest.mock('../../hooks/usePreviousRecord', () => ({
@@ -495,6 +500,66 @@ describe('RecordScreen', () => {
 
       render(<RecordScreen />);
       expect(screen.queryByLabelText('ワークアウトを完了')).toBeNull();
+    });
+  });
+
+  describe('過去日付編集モード（isPastEditMode）', () => {
+    it('startSession に targetDate が渡されること（バグ再発防止）', () => {
+      // 過去日付の workoutId 編集モード: targetDate も一緒に渡す必要がある
+      mockRouteParams = { workoutId: 'past-workout-id', targetDate: '2026-02-01' };
+      render(<RecordScreen />);
+      // バグ修正前は { workoutId } のみ渡されていた。targetDate も含まれることを検証する
+      expect(mockStartSession).toHaveBeenCalledWith({
+        workoutId: 'past-workout-id',
+        targetDate: '2026-02-01',
+      });
+    });
+
+    it('isPastEditMode 時に TimerBar が isReadonly=true で描画されること', () => {
+      // 過去日付（今日ではない）+ 編集モード → isPastEditMode = true
+      mockRouteParams = { workoutId: 'past-workout-id', targetDate: '2026-02-01' };
+      mockUseWorkoutSessionStore.mockReturnValue({
+        currentWorkout: { id: 'past-workout-id', memo: '', status: 'recording' as const },
+        currentExercises: [],
+        currentSets: {},
+        timerStatus: 'not_started' as const,
+        elapsedSeconds: 0,
+        continuationBaseExerciseIds: null,
+        setContinuationBaseExerciseIds: jest.fn(),
+      } as ReturnType<typeof useWorkoutSessionStore>);
+
+      render(<RecordScreen />);
+      // isReadonly=true の場合、TimerBar は再生/停止/完了ボタンを非表示にする
+      // → 「ワークアウトを完了」ボタンが表示されないことを確認
+      expect(screen.queryByLabelText('ワークアウトを完了')).toBeNull();
+      // → 「開始」ボタン（再生/停止）も非表示
+      expect(screen.queryByLabelText('開始')).toBeNull();
+    });
+
+    it('isPastEditMode 時に戻るボタン押下で WorkoutRepository.update が呼ばれること', async () => {
+      mockRouteParams = { workoutId: 'past-workout-id', targetDate: '2026-02-01' };
+      mockUseWorkoutSessionStore.mockReturnValue({
+        currentWorkout: { id: 'past-workout-id', memo: '', status: 'recording' as const },
+        currentExercises: [],
+        currentSets: {},
+        timerStatus: 'not_started' as const,
+        elapsedSeconds: 120,
+        continuationBaseExerciseIds: null,
+        setContinuationBaseExerciseIds: jest.fn(),
+      } as ReturnType<typeof useWorkoutSessionStore>);
+
+      render(<RecordScreen />);
+      fireEvent.press(screen.getByLabelText('戻る'));
+
+      // WorkoutRepository.update が status:'completed' で呼ばれることを確認
+      await waitFor(() =>
+        expect(mockRunAsync).toHaveBeenCalledWith(
+          expect.stringContaining('UPDATE workouts SET'),
+          expect.arrayContaining(['completed', 'past-workout-id']),
+        ),
+      );
+      // goBack が呼ばれることも確認
+      await waitFor(() => expect(mockGoBack).toHaveBeenCalledTimes(1));
     });
   });
 
