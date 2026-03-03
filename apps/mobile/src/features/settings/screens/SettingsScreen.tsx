@@ -1,24 +1,21 @@
 /**
  * SettingsScreen - 設定画面
  *
- * 4セクション構成:
+ * 3セクション構成:
  * 1. ワークアウト: 週の目標（ステッパー [−] N回 [+]）
- * 2. （タイトルなし）: 招待コード（アコーディオン / 解禁済みバッジ）
- * 3. データ管理: インポート・エクスポート（準備中）
- * 4. その他: 利用規約・プライバシーポリシー（準備中）・バージョン
+ * 2. データ管理: インポート・エクスポート（準備中）
+ * 3. その他: 利用規約・プライバシーポリシー（準備中）・バージョン
  *
  * Issue #169
  */
 import { useFocusEffect } from '@react-navigation/native';
 import Constants from 'expo-constants';
 import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { UserSettingsRepository } from '@/database/repositories/userSettings';
 import { colors } from '@/shared/constants/colors';
-
-import { validateInviteCode } from '../utils/inviteCode';
 
 /** アプリバージョン（expo-constants から取得） */
 const APP_VERSION = Constants.expoConfig?.version ?? '1.0.0';
@@ -90,11 +87,6 @@ export function SettingsScreen() {
   const insets = useSafeAreaInsets();
 
   const [weeklyGoalCount, setWeeklyGoalCount] = useState(3);
-  const [isInviteCodeUnlocked, setIsInviteCodeUnlocked] = useState(false);
-  const [isFormExpanded, setIsFormExpanded] = useState(false);
-  const [inviteCodeInput, setInviteCodeInput] = useState('');
-  const [inviteCodeError, setInviteCodeError] = useState('');
-  const [inviteCodeSuccess, setInviteCodeSuccess] = useState(false);
 
   // 画面フォーカス時に設定を取得する
   useFocusEffect(
@@ -102,7 +94,6 @@ export function SettingsScreen() {
       void (async () => {
         const settings = await UserSettingsRepository.get();
         setWeeklyGoalCount(settings.weeklyGoalCount);
-        setIsInviteCodeUnlocked(settings.inviteCodeUnlocked);
       })();
     }, []),
   );
@@ -121,27 +112,6 @@ export function SettingsScreen() {
     setWeeklyGoalCount(next);
     void UserSettingsRepository.setWeeklyGoalCount(next);
   }, [weeklyGoalCount]);
-
-  // 招待コードのフォーム展開切り替え
-  const handleInviteCodeRowPress = useCallback(() => {
-    if (isInviteCodeUnlocked) return;
-    setIsFormExpanded((prev) => !prev);
-    setInviteCodeError('');
-    setInviteCodeSuccess(false);
-  }, [isInviteCodeUnlocked]);
-
-  // 招待コードを適用する
-  const handleApplyInviteCode = useCallback(async () => {
-    const isValid = validateInviteCode(inviteCodeInput);
-    if (isValid) {
-      await UserSettingsRepository.setInviteCodeUnlocked(true);
-      setIsInviteCodeUnlocked(true);
-      setInviteCodeSuccess(true);
-      setInviteCodeError('');
-    } else {
-      setInviteCodeError('コードが正しくありません');
-    }
-  }, [inviteCodeInput]);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -241,120 +211,7 @@ export function SettingsScreen() {
           </View>
         </View>
 
-        {/* ---- セクション2: 招待コード（タイトルなし） ---- */}
-        <Text style={SECTION_TITLE_STYLE}> </Text>
-        <View style={CARD_STYLE}>
-          {/* 招待コード行（タップでアコーディオン展開 or 解禁済みバッジ） */}
-          <TouchableOpacity
-            testID="invite-code-row"
-            onPress={handleInviteCodeRowPress}
-            disabled={isInviteCodeUnlocked}
-            activeOpacity={isInviteCodeUnlocked ? 1 : 0.7}
-            style={ROW_STYLE}
-          >
-            <Text style={ROW_LABEL_STYLE}>招待コード</Text>
-            {isInviteCodeUnlocked ? (
-              <View
-                testID="invite-code-unlocked-badge"
-                style={{
-                  backgroundColor: '#E6F9F0',
-                  borderRadius: 4,
-                  paddingHorizontal: 8,
-                  paddingVertical: 3,
-                }}
-              >
-                <Text style={{ fontSize: 12, color: '#10B981', fontWeight: '600' }}>解禁済み</Text>
-              </View>
-            ) : (
-              <Text style={{ fontSize: 16, color: colors.textSecondary }}>›</Text>
-            )}
-          </TouchableOpacity>
-
-          {/* アコーディオン展開フォーム（未解禁時のみ） */}
-          {!isInviteCodeUnlocked && !!isFormExpanded && (
-            <View
-              testID="invite-code-form"
-              style={{
-                paddingHorizontal: 20,
-                paddingTop: 4,
-                paddingBottom: 16,
-                borderTopWidth: 1,
-                borderTopColor: colors.border,
-              }}
-            >
-              <TextInput
-                testID="invite-code-input"
-                value={inviteCodeInput}
-                onChangeText={(text) => {
-                  setInviteCodeInput(text);
-                  // 入力変更時はエラーと成功をリセット
-                  setInviteCodeError('');
-                  setInviteCodeSuccess(false);
-                }}
-                placeholder="招待コードを入力"
-                autoCapitalize="none"
-                autoCorrect={false}
-                style={{
-                  borderWidth: 1,
-                  borderColor: inviteCodeError ? '#EF4444' : colors.border,
-                  borderRadius: 8,
-                  paddingHorizontal: 12,
-                  paddingVertical: 10,
-                  fontSize: 16,
-                  color: colors.textPrimary,
-                  marginTop: 12,
-                  marginBottom: 8,
-                }}
-              />
-
-              {/* エラーメッセージ */}
-              {inviteCodeError.length > 0 && (
-                <Text
-                  testID="invite-code-error"
-                  style={{ fontSize: 13, color: '#EF4444', marginBottom: 8 }}
-                >
-                  {inviteCodeError}
-                </Text>
-              )}
-
-              {/* 成功メッセージ */}
-              {!!inviteCodeSuccess && (
-                <Text
-                  testID="invite-code-success"
-                  style={{ fontSize: 13, color: '#10B981', marginBottom: 8 }}
-                >
-                  ✓ 限定機能が解禁されました
-                </Text>
-              )}
-
-              {/* 適用ボタン */}
-              <TouchableOpacity
-                testID="invite-code-apply-button"
-                onPress={() => void handleApplyInviteCode()}
-                disabled={inviteCodeInput.trim().length === 0}
-                accessibilityState={{ disabled: inviteCodeInput.trim().length === 0 }}
-                style={{
-                  backgroundColor: inviteCodeInput.trim().length === 0 ? '#E2E8F0' : colors.primary,
-                  borderRadius: 8,
-                  paddingVertical: 12,
-                  alignItems: 'center',
-                }}
-              >
-                <Text
-                  style={{
-                    fontSize: 16,
-                    fontWeight: '600',
-                    color: inviteCodeInput.trim().length === 0 ? colors.textSecondary : '#FFFFFF',
-                  }}
-                >
-                  適用
-                </Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
-
-        {/* ---- セクション3: データ管理 ---- */}
+        {/* ---- セクション2: データ管理 ---- */}
         <Text style={SECTION_TITLE_STYLE}>データ管理</Text>
         <View style={CARD_STYLE}>
           <View style={ROW_STYLE}>
@@ -368,7 +225,7 @@ export function SettingsScreen() {
           </View>
         </View>
 
-        {/* ---- セクション4: その他 ---- */}
+        {/* ---- セクション3: その他 ---- */}
         <Text style={SECTION_TITLE_STYLE}>その他</Text>
         <View style={CARD_STYLE}>
           <View style={ROW_STYLE}>
