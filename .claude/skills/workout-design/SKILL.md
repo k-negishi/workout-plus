@@ -84,6 +84,45 @@ pointerConfig={{
 
 ---
 
+## チップ選択肢のレイアウト
+
+### flexWrap は使わない（最終行孤立問題が発生する）
+
+`flexWrap: 'wrap'` のままではテキスト長に依存して最終行に1個だけ残ることがある。
+要素数を増やして偶数にしようとしても、増やした要素が全部1行に収まってしまい改善にならないケースがある。
+
+### useWindowDimensions + 均等幅計算グリッドを使う
+
+```typescript
+import { useWindowDimensions } from 'react-native';
+
+// コンポーネント内（フックなので関数本体内で呼ぶ）
+const { width } = useWindowDimensions();
+const CHIP_COLUMNS = 4;
+const CONTAINER_PADDING = containerPaddingHorizontal * 2;  // 例: 20 * 2 = 40
+const CHIP_GAP = gap * (CHIP_COLUMNS - 1);                 // 例: 6 * 3 = 18
+const chipWidth = (width - CONTAINER_PADDING - CHIP_GAP) / CHIP_COLUMNS;
+
+// 各チップに適用
+<TouchableOpacity style={[styles.chip, { width: chipWidth, alignItems: 'center' }]} />
+```
+
+### チップ数と列数の選び方
+
+| チップ数 | 推奨列数 | 結果 |
+|---|---|---|
+| 8個 | 4列 | 4+4（均等） |
+| 6個 | 4列 | 4+2 |
+| 6個 | 3列 | 3+3（均等） |
+| 5個 | 4列 | 4+1（孤立） → 3列推奨 |
+
+### 実績
+
+- `ExerciseHistoryFullScreen.tsx` の `ExerciseEditForm`（部位8個 → 4列4+4、器具6個 → 4列4+2）
+- `containerPaddingHorizontal=20`、`gap=6`、`columns=4`
+
+---
+
 ## 統計サマリーカード（StatCard）
 
 > **A案（StatCard 作業時のみ Read）**: `Read .claude/skills/workout-design/stat-card.md`
