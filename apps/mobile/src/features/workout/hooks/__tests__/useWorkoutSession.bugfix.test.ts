@@ -1,160 +1,13 @@
 /**
- * useWorkoutSession バグ修正テスト
+ * useWorkoutSession Bug 2 修正テスト
  *
- * Bug 1: completeWorkout が elapsed_seconds / timer_status を DB に保存していない
  * Bug 2: startSession が過去日付編集時も elapsed_seconds / timer_status をリセットしている
+ *
+ * 注意: Bug 1（completeWorkout が elapsed_seconds を保存すること）のテストは
+ * renderHook を使用するため useWorkoutSession.bugfix.test.tsx に分離した。
  */
-import { WorkoutRepository } from '@/database/repositories/workout';
 import { useWorkoutSessionStore } from '@/stores/workoutSessionStore';
-import type { Workout } from '@/types';
-
-// WorkoutRepository をモックして DB 呼び出しを記録する
-jest.mock('@/database/repositories/workout');
-
-// cleanupExerciseSets / PR チェックで使うモジュールをスタブ化
-jest.mock('@/database/repositories/set');
-jest.mock('@/database/repositories/pr');
-jest.mock('@/database/client');
-
-const mockWorkoutUpdate = WorkoutRepository.update as jest.MockedFunction<
-  typeof WorkoutRepository.update
->;
-const mockWorkoutDelete = WorkoutRepository.delete as jest.MockedFunction<
-  typeof WorkoutRepository.delete
->;
-const mockWorkoutFindById = WorkoutRepository.findById as jest.MockedFunction<
-  typeof WorkoutRepository.findById
->;
-
-// ============================================================
-// テスト用ヘルパー
-// ============================================================
-
-/** completeWorkout 相当のロジックを再現し、update に渡した引数を返す */
-async function simulateCompleteWorkout(
-  workout: Workout,
-  elapsedSeconds: number,
-  timerStatus: string,
-): Promise<Parameters<typeof WorkoutRepository.update>[1]> {
-  // 有効種目が 0 件の場合は DELETE → reset となるため、ここでは省略する
-  // 修正前: elapsed_seconds と timer_status が渡されない
-  // 修正後: elapsed_seconds と timer_status が渡される（テストで検証する）
-  await WorkoutRepository.update(workout.id, {
-    status: 'completed',
-    completed_at: Date.now(),
-    elapsed_seconds: elapsedSeconds,
-    timer_status: timerStatus as never,
-  });
-
-  return mockWorkoutUpdate.mock.calls[0]![1]!;
-}
-
-// ============================================================
-// Bug 1: completeWorkout が elapsed_seconds を DB に保存していない
-// ============================================================
-
-describe('Bug 1: completeWorkout - elapsed_seconds / timer_status を DB に保存する', () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    useWorkoutSessionStore.getState().reset();
-    mockWorkoutUpdate.mockResolvedValue(undefined);
-    mockWorkoutDelete.mockResolvedValue(undefined);
-  });
-
-  it('completeWorkout で WorkoutRepository.update に elapsed_seconds が渡される', async () => {
-    // Arrange: ストアにワークアウトと経過秒数をセット
-    const store = useWorkoutSessionStore.getState();
-    const mockWorkout: Workout = {
-      id: 'workout-bug1',
-      status: 'recording',
-      createdAt: Date.now(),
-      startedAt: null,
-      completedAt: null,
-      timerStatus: 'running',
-      elapsedSeconds: 0,
-      timerStartedAt: null,
-      memo: null,
-    };
-    store.setCurrentWorkout(mockWorkout);
-    store.setElapsedSeconds(300); // 5分
-    store.setTimerStatus('running');
-
-    // Act: completeWorkout のロジックをシミュレート
-    const updateArgs = await simulateCompleteWorkout(
-      useWorkoutSessionStore.getState().currentWorkout!,
-      useWorkoutSessionStore.getState().elapsedSeconds,
-      useWorkoutSessionStore.getState().timerStatus,
-    );
-
-    // Assert: elapsed_seconds が update に渡されている
-    expect(updateArgs).toMatchObject({
-      status: 'completed',
-      elapsed_seconds: 300,
-    });
-  });
-
-  it('completeWorkout で WorkoutRepository.update に timer_status が渡される', async () => {
-    // Arrange
-    const store = useWorkoutSessionStore.getState();
-    const mockWorkout: Workout = {
-      id: 'workout-bug1-timer',
-      status: 'recording',
-      createdAt: Date.now(),
-      startedAt: null,
-      completedAt: null,
-      timerStatus: 'running',
-      elapsedSeconds: 0,
-      timerStartedAt: null,
-      memo: null,
-    };
-    store.setCurrentWorkout(mockWorkout);
-    store.setElapsedSeconds(120);
-    store.setTimerStatus('running');
-
-    // Act
-    const updateArgs = await simulateCompleteWorkout(
-      useWorkoutSessionStore.getState().currentWorkout!,
-      useWorkoutSessionStore.getState().elapsedSeconds,
-      useWorkoutSessionStore.getState().timerStatus,
-    );
-
-    // Assert: timer_status が update に渡されている
-    expect(updateArgs).toMatchObject({
-      status: 'completed',
-      timer_status: 'running',
-    });
-  });
-
-  it('elapsed_seconds が 0 の場合でも DB に保存される', async () => {
-    // Arrange: タイマーを起動していない状態（elapsed_seconds = 0）
-    const store = useWorkoutSessionStore.getState();
-    const mockWorkout: Workout = {
-      id: 'workout-no-timer',
-      status: 'recording',
-      createdAt: Date.now(),
-      startedAt: null,
-      completedAt: null,
-      timerStatus: 'not_started',
-      elapsedSeconds: 0,
-      timerStartedAt: null,
-      memo: null,
-    };
-    store.setCurrentWorkout(mockWorkout);
-    store.setElapsedSeconds(0);
-    store.setTimerStatus('not_started');
-
-    // Act
-    const updateArgs = await simulateCompleteWorkout(
-      useWorkoutSessionStore.getState().currentWorkout!,
-      useWorkoutSessionStore.getState().elapsedSeconds,
-      useWorkoutSessionStore.getState().timerStatus,
-    );
-
-    // Assert: elapsed_seconds=0 でも渡される（undefined ではない）
-    expect(updateArgs).toHaveProperty('elapsed_seconds', 0);
-    expect(updateArgs).toHaveProperty('timer_status', 'not_started');
-  });
-});
+import { TimerStatus } from '@/types';
 
 // ============================================================
 // Bug 2: startSession が過去日付編集時も elapsed_seconds をリセットしている
@@ -162,10 +15,7 @@ describe('Bug 1: completeWorkout - elapsed_seconds / timer_status を DB に保�
 
 describe('Bug 2: startSession - 過去日付編集時に DB の値を復元する', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
     useWorkoutSessionStore.getState().reset();
-    mockWorkoutUpdate.mockResolvedValue(undefined);
-    mockWorkoutFindById.mockResolvedValue(null);
   });
 
   /**
@@ -176,7 +26,7 @@ describe('Bug 2: startSession - 過去日付編集時に DB の値を復元す�
     workoutId: string;
     targetDate: string;
     todayStr: string;
-    dbTimerStatus: string;
+    dbTimerStatus: TimerStatus;
     dbElapsedSeconds: number;
     dbTimerStartedAt: number | null;
   }): void {
@@ -185,12 +35,13 @@ describe('Bug 2: startSession - 過去日付編集時に DB の値を復元す�
     // 過去日付編集モードかどうかを判定する（修正後のロジック）
     const isPastEdit = !!targetDate && targetDate !== todayStr;
 
-    const restoredTimerStatus = isPastEdit ? dbTimerStatus : 'not_started';
+    const restoredTimerStatus: TimerStatus = isPastEdit ? dbTimerStatus : TimerStatus.NOT_STARTED;
     const restoredElapsedSeconds = isPastEdit ? dbElapsedSeconds : 0;
     const restoredTimerStartedAt = isPastEdit ? dbTimerStartedAt : null;
 
     const store = useWorkoutSessionStore.getState();
-    store.setTimerStatus(restoredTimerStatus as never);
+    // TimerStatus 型を明示して型安全に setTimerStatus を呼ぶ
+    store.setTimerStatus(restoredTimerStatus);
     store.setElapsedSeconds(restoredElapsedSeconds);
     store.setTimerStartedAt(restoredTimerStartedAt);
   }
@@ -201,7 +52,7 @@ describe('Bug 2: startSession - 過去日付編集時に DB の値を復元す�
       workoutId: 'workout-past-1',
       targetDate: '2026-02-20',
       todayStr: '2026-03-04', // 今日とは別の日付
-      dbTimerStatus: 'discarded',
+      dbTimerStatus: TimerStatus.DISCARDED,
       dbElapsedSeconds: 450,
       dbTimerStartedAt: null,
     });
@@ -217,7 +68,7 @@ describe('Bug 2: startSession - 過去日付編集時に DB の値を復元す�
       workoutId: 'workout-past-2',
       targetDate: '2026-02-20',
       todayStr: '2026-03-04',
-      dbTimerStatus: 'discarded',
+      dbTimerStatus: TimerStatus.DISCARDED,
       dbElapsedSeconds: 600,
       dbTimerStartedAt: null,
     });
@@ -233,7 +84,7 @@ describe('Bug 2: startSession - 過去日付編集時に DB の値を復元す�
       workoutId: 'workout-today',
       targetDate: '2026-03-04',
       todayStr: '2026-03-04', // 同じ日付
-      dbTimerStatus: 'running',
+      dbTimerStatus: TimerStatus.RUNNING,
       dbElapsedSeconds: 300,
       dbTimerStartedAt: Date.now() - 300_000,
     });
@@ -251,7 +102,7 @@ describe('Bug 2: startSession - 過去日付編集時に DB の値を復元す�
       workoutId: 'workout-today-continue',
       targetDate: '', // undefined 相当（空文字で isPastEdit = false になる）
       todayStr: '2026-03-04',
-      dbTimerStatus: 'running',
+      dbTimerStatus: TimerStatus.RUNNING,
       dbElapsedSeconds: 180,
       dbTimerStartedAt: Date.now() - 180_000,
     });
