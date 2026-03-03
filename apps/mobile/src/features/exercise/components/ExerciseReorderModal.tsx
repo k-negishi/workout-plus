@@ -180,7 +180,7 @@ export function ExerciseReorderModal({
                 paddingVertical: 2,
                 paddingHorizontal: 8,
                 borderRadius: borderRadius.md,
-                backgroundColor: '#F1F3F5',
+                backgroundColor: colors.border,
               }}
             >
               <Text
@@ -282,7 +282,7 @@ export function ExerciseReorderModal({
               <TouchableOpacity
                 onPress={handleSave}
                 style={{
-                  paddingVertical: 7,
+                  paddingVertical: 8,
                   paddingHorizontal: 16,
                   borderRadius: borderRadius.md,
                   backgroundColor: colors.primary,
